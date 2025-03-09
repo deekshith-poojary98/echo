@@ -1,0 +1,58 @@
+// Variable Declaration
+x: int = 10;               // Integer variable 
+y: float = 100.12;		   // Float variable
+name: str = "John";        // String variable  
+is_ready: bool = true;     // Boolean variable  
+anything: dynamic = 10;    // Dynamic variable  
+
+anything = "Now I'm a string!";  // Reassigning a dynamic variable
+
+fruits: list = ["apple", "mango", "orange"];   // List
+nested: hash = {"person": {"name": "Dee", "age": 20}, "scores": [95, 85, 75]};		// Hash (HashMap)
+
+// Input Handling (ask())
+// Type Conversion Methods:
+// .asInt() – Converts input to an integer.
+// .asFloat() – Converts input to a float.
+// .asBool() – Converts input to a boolean (0 = false, 1 = true).
+// .default(value) – Sets a default value if conversion fails.
+age = ask("Enter your age:").asInt();
+height = ask("Enter your height:").asFloat();
+status = ask("Are you ready? (0/1)").asBool();
+city = ask("Where are you from?").default("unknown");
+
+
+// Output (say())
+say("Your age is:", age);
+say("Your height is:", height);
+
+
+// for loop
+for i in 0..10 by 2 {
+    say("Iteration:", i);
+}
+
+//foreach loop
+fruits = ["apple", "banana", "cherry"];
+foreach fruit in fruits {
+    say("Fruit:", fruit);
+}
+
+
+// Multiline Function
+fn greet(name) {
+    say("Hello,", name);
+}
+greet("Alice");
+
+// Single line Function
+fn square(x) => x * x;
+result = square(5);
+say("Result:", result);
+
+
+// String Manipulation & Interpolation
+name = "John";
+age = 30;
+say("My name is ${name} and I am ${age} years old.");
+
