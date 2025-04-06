@@ -1,0 +1,152 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Neura",
+	"patterns": [
+	  {
+		"include": "#keywords"
+	  },
+	  {
+		"include": "#operators"
+	  },
+	  {
+		"include": "#strings"
+	  },
+	  {
+		"include": "#comments"
+	  },
+	  {
+		"include": "#numbers"
+	  },
+	  {
+		"include": "#functions"
+	  },
+	  {
+		"include": "#types"
+	  },
+	  {
+		"include": "#variables"
+	  }
+	],
+	"repository": {
+	  "keywords": {
+		"patterns": [
+		  {
+			"name": "keyword.control.neura",
+			"match": "\\b(if|else|while|for|foreach|return|break|continue|in|by|fn)\\b"
+		  },
+		  {
+			"name": "keyword.other.neura",
+			"match": "\\b(import|export|from|as)\\b"
+		  }
+		]
+	  },
+	  "operators": {
+		"patterns": [
+		  {
+			"name": "keyword.operator.assignment.neura",
+			"match": "=|\\+=|-=|\\*=|/=|%="
+		  },
+		  {
+			"name": "keyword.operator.arithmetic.neura",
+			"match": "\\+|-|\\*|/|%"
+		  },
+		  {
+			"name": "keyword.operator.logical.neura",
+			"match": "&&|\\|\\||!"
+		  },
+		  {
+			"name": "keyword.operator.comparison.neura",
+			"match": "==|!=|>|=|<="
+		  }
+		]
+	  },
+	  "strings": {
+		"patterns": [
+		  {
+			"name": "string.quoted.double.neura",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+			  {
+				"name": "constant.character.escape.neura",
+				"match": "\\\\."
+			  }
+			]
+		  },
+		  {
+			"name": "string.quoted.single.neura",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+			  {
+				"name": "constant.character.escape.neura",
+				"match": "\\\\."
+			  }
+			]
+		  }
+		]
+	  },
+	  "comments": {
+		"patterns": [
+		  {
+			"name": "comment.line.double-slash.neura",
+			"match": "(?<!\\w)//.*$"
+		  },
+		  {
+			"name": "comment.block.neura",
+			"begin": "/\\*",
+			"end": "\\*/"
+		  }
+		]
+	  },
+	  "numbers": {
+		"patterns": [
+		  {
+			"name": "constant.numeric.decimal.neura",
+			"match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+		  },
+		  {
+			"name": "constant.numeric.hex.neura",
+			"match": "\\b0x[0-9a-fA-F]+\\b"
+		  },
+		  {
+			"name": "constant.numeric.binary.neura",
+			"match": "\\b0b[01]+\\b"
+		  }
+		]
+	  },
+	  "functions": {
+		"patterns": [
+		  {
+			"name": "entity.name.function.neura",
+			"match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\("
+		  },
+		  {
+			"name": "support.function.builtin.neura",
+			"match": "\\b(say|ask|wait|notify|asInt|asBool|asString|asFloat|trim|upperCase|lowerCase|length|trim|default)\\b"
+		  }
+		]
+	  },
+	  "types": {
+		"patterns": [
+		  {
+			"name": "storage.type.neura",
+			"match": "\\b(int|float|str|bool|list|hash|dynamic)\\b"
+		  }
+		]
+	  },
+	  "variables": {
+		"patterns": [
+		  {
+			"name": "variable.other.constant.neura",
+			"match": "\\b[A-Z_][A-Z0-9_]*\\b"
+		  },
+		  {
+			"name": "variable.other.neura",
+			"match": "\\b[a-z_][a-zA-Z0-9_]*\\b"
+		  }
+		]
+	  }
+	},
+	"scopeName": "source.neura"
+  }

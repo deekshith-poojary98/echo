@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Neura Programming Language Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #7C3AED;
+            --secondary: #111827;
+            --dark: #1E1E2E;
+            --light: #FAFAFA;
+            --code-bg: #0F172A;
+            --code-text: #E0E8F9;
+            --gray-100: #F1F5F9;
+            --gray-200: #E2E8F0;
+            --gray-800: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.7;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 6rem 0 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('/api/placeholder/1200/300') center/cover;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        header .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            margin-right: 0.75rem;
+        }
+
+        nav {
+            background-color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+        }
+
+        .nav-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-brand i {
+            margin-right: 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-item {
+            margin: 0 0.75rem;
+        }
+
+        .nav-link {
+            color: var(--gray-800);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+            background-color: rgba(108, 99, 255, 0.1);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            text-align: center;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-container {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 5rem;
+            height: calc(100vh - 5rem);
+            overflow-y: auto;
+            padding-right: 1rem;
+            padding-bottom: 5rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .toc {
+            list-style: none;
+        }
+
+        .toc-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: var(--gray-800);
+            text-decoration: none;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .toc-link:hover,
+        .toc-link.active {
+            color: var(--primary);
+            background-color: rgba(108, 99, 255, 0.1);
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 100%;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 6rem;
+        }
+
+        .section:last-child {
+            margin-bottom: 5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 4px;
+            background: var(--primary);
+            margin-top: 0.5rem;
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem;
+            color: var(--dark);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            background-color: var(--gray-100);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            color: var(--primary);
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            position: relative;
+            font-family: 'Fira Code', 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        pre::before {
+            content: 'Neura';
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            font-size: 0.8rem;
+            color: rgba(171, 178, 191, 0.6);
+        }
+
+        ul {
+            margin: 1rem 0 1.5rem 1.5rem;
+        }
+
+        ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-description {
+            color: #4B5563;
+            font-size: 0.95rem;
+        }
+
+        .horizontal-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 1em 0;
+        }
+
+        .horizontal-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .horizontal-title {
+            font-weight: 600;
+
+            font-size: 1.25rem;
+
+        }
+
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            color: white;
+            margin-top: 0;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-link {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-link a {
+            color: #D1D5DB;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link a:hover {
+            color: white;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icon {
+            color: white;
+            font-size: 1.25rem;
+            transition: transform 0.2s ease;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #9CA3AF;
+        }
+
+        .highlight {
+            background: linear-gradient(to right, rgba(108, 99, 255, 0.2), rgba(108, 99, 255, 0));
+            padding: 0.1em 0.4em;
+            border-radius: 0.25rem;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 4rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            color: var(--code-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .keyword {
+            color: #ff6f00;
+        }
+
+        .variable {
+            color: #c678dd;
+        }
+
+        .operator {
+            color: #56b6c2;
+        }
+
+        .value {
+            color: #d19a66;
+        }
+
+        .type {
+            color: #ff6f00;
+        }
+
+        .function {
+            color: #61afef;
+        }
+
+        .string {
+            color: #98c379;
+        }
+
+        .comment {
+            color: #5c6370;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                padding-bottom: 0;
+                margin-bottom: 2rem;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .nav-container {
+                padding: 0.75rem 1rem;
+            }
+
+            header {
+                padding: 4rem 0 2rem;
+            }
+
+            header h1 {
+                font-size: 2.25rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--gray-800);
+            font-size: 1.25rem;
+            cursor: pointer;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--gray-100);
+        }
+
+        /* Mobile menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--gray-800);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-menu.active {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: white;
+                padding: 1rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .nav-item {
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <!-- <div class="logo">
+                <i class="fas fa-brain logo-icon"></i>
+            </div> -->
+            <h1>Neura</h1>
+            <p>A modern, intuitive programming language designed for general-purpose development with a focus on
+                simplicity and readability.</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <i class="fas fa-brain"></i>
+                Neura
+            </a>
+            <button class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#" class="nav-link active">Docs</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">API</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Examples</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Community</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Blog</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="#" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container page-container">
+        <aside class="sidebar">
+            <div class="sidebar-title">Documentation</div>
+            <ul class="toc">
+                <li class="toc-item"><a href="#introduction" class="toc-link active">Introduction</a></li>
+                <li class="toc-item"><a href="#variables" class="toc-link">Variables</a></li>
+                <li class="toc-item"><a href="#data-types" class="toc-link">Data Types</a></li>
+                <li class="toc-item"><a href="#control-flow" class="toc-link">Control Flow</a></li>
+                <li class="toc-item"><a href="#functions" class="toc-link">Functions</a></li>
+                <!-- <li class="toc-item"><a href="#classes-objects" class="toc-link">Classes & Objects</a></li>
+                <li class="toc-item"><a href="#modules-imports" class="toc-link">Modules & Imports</a></li>
+                <li class="toc-item"><a href="#error-handling" class="toc-link">Error Handling</a></li> -->
+                <li class="toc-item"><a href="#built-in-functions" class="toc-link">Built-in Functions</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <section id="introduction" class="section">
+                <h2>Introduction</h2>
+                <p>
+                    <strong>Neura</strong> is a statically-typed, Python-based programming language with a clean and expressive syntax.
+                    It draws inspiration from C-style structure, modern scripting languages, and Pythonic readability.
+                    Designed to be beginner-friendly yet powerful, Neura supports strong type annotations, readable control flow, 
+                    and simplified syntax for rapid development.
+                </p>
+                <pre>
+<span class="keyword">fn</span> <span class="function">greet</span>(<span class="variable">name</span>) {
+    <span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
+}
+
+<span class="function">greet</span>(<span class="string">"Neura"</span>);
+
+<span class="variable">x</span>: <span class="type">int</span> = <span class="number">10</span>;
+<span class="variable">y</span>: <span class="type">float</span> = <span class="number">20.5</span>;
+<span class="variable">name</span>: <span class="type">str</span> = <span class="string">"Alice"</span>;
+<span class="variable">is_valid</span>: <span class="type">bool</span> = <span class="boolean">true</span>;
+
+<span class="keyword">if</span> <span class="variable">x</span> > <span class="number">5</span> {
+    <span class="function">say</span>(<span class="string">"x is greater than 5"</span>);
+} <span class="keyword">else</span> {
+    <span class="function">say</span>(<span class="string">"x is 5 or less"</span>);
+}
+
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">5</span> {
+    <span class="function">say</span>(<span class="string">"Loop value:"</span>, <span class="variable">i</span>);
+}
+</pre>
+                    
+                <p>This example demonstrates Neura’s basic syntax including function declarations, conditionals, loops, and type-safe variables.</p>
+            </section>
+            
+            
+
+            <section id="variables" class="section">
+                <h2>Variables</h2>
+                <p>In Neura, variables are declared with the syntax <code>variable_name: type = value</code>.</p>
+
+                <h3>Variable Declaration</h3>
+                <p>Here's an example of declaring different types of variables:</p>
+                <pre>
+x: <span class="type">int</span> = <span class="value">10</span>;            <span class="comment">// Integer variable</span>
+y: <span class="type">float</span> = <span class="value">100.12</span>;      <span class="comment">// Float variable</span>
+name: <span class="type">str</span> = <span class="string">"John"</span>;    <span class="comment">// String variable</span>
+is_ready: <span class="type">bool</span> = <span class="value">true</span>;    <span class="comment">// Boolean variable</span>
+anything: <span class="type">dynamic</span> = <span class="value">10</span>;   <span class="comment">// Dynamic variable</span>
+</pre>
+
+                <h3>Reassigning Dynamic Variables</h3>
+                <p>You can reassign values to dynamic variables:</p>
+                <pre>
+anything = <span class="string">"Now I'm a string!"</span>;  <span class="comment">// Reassigning a dynamic variable</span>
+</pre>
+
+                <h3>Collections</h3>
+                <p>Neura also supports collections like lists and hashes (similar to maps in other languages):</p>
+                <pre>
+fruits: <span class="type">list</span> = [<span class="string">"apple"</span>, <span class="string">"mango"</span>, <span class="string">"orange"</span>];   <span class="comment">// List</span>
+nested: <span class="type">hash</span> = {<span class="string">"person"</span>: {<span class="string">"name"</span>: <span class="string">"Mark"</span>, <span class="string">"age"</span>: <span class="value">20</span>}, <span class="string">"scores"</span>: [<span class="value">95</span>, <span class="value">85</span>, <span class="value">75</span>]};  <span class="comment">// Hash (HashMap)</span>
+</pre>
+            </section>
+
+
+            <section id="data-types" class="section">
+                <h2>Data Types</h2>
+                <p>Neura supports the following data types:</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-dice-one"></i></div>
+                        <div class="feature-title">int</div>
+                        <div class="feature-description">Integer numbers for whole-value arithmetic operations and
+                            counting.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-wave-square"></i></div>
+                        <div class="feature-title">float</div>
+                        <div class="feature-description">Floating-point numbers for precise decimal calculations and
+                            scientific computations.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-font"></i></div>
+                        <div class="feature-title">str</div>
+                        <div class="feature-description">String data enclosed in double quotes with built-in
+                            manipulation methods.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-toggle-on"></i></div>
+                        <div class="feature-title">bool</div>
+                        <div class="feature-description">Logical values represented as <code>true</code> and
+                            <code>false</code> for conditional operations.
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-list"></i></div>
+                        <div class="feature-title">list</div>
+                        <div class="feature-description">Ordered collections of elements that can be accessed by index
+                            and modified dynamically.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-hashtag"></i></div>
+                        <div class="feature-title">hash</div>
+                        <div class="feature-description">Key-value mappings for efficient lookups and structured data
+                            organization.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                        <div class="feature-title">dynamic</div>
+                        <div class="feature-description">Flexible type that can hold any value and change types during
+                            runtime for adaptive programming.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="control-flow" class="section">
+                <h2>Control Flow</h2>
+                <p>Neura provides robust control flow structures including conditional statements and various loop types
+                    to control program execution.</p>
+
+                <h3>Conditional Statements</h3>
+                <p>Use <code>if</code>, <code>else if</code>, and <code>else</code> statements with curly braces to
+                    control program flow based on conditions:</p>
+                <pre>
+<span class="keyword">if</span> <span class="variable">user_age</span> <span class="operator">&gt;</span> <span class="value">18</span> {
+    <span class="function">say</span>(<span class="string">"User is an adult."</span>);
+} <span class="keyword">else if</span> <span class="variable">user_age</span> <span class="operator">==</span> <span class="value">18</span> {
+    <span class="function">say</span>(<span class="string">"User is exactly 18 years old."</span>);
+} <span class="keyword">else</span> {
+    <span class="function">say</span>(<span class="string">"User is a minor."</span>);
+}
+</pre>
+
+                <h3>While Loop</h3>
+                <p>Execute a block of code repeatedly as long as a condition is true:</p>
+                <pre>
+<span class="variable">count</span><span class="operator">:</span> <span class="type">int</span> <span class="operator">=</span> <span class="value">10</span>;
+<span class="keyword">while</span> <span class="variable">count</span> <span class="operator">&gt;</span> <span class="value">0</span> {
+    <span class="function">say</span>(<span class="variable">count</span>);
+    <span class="variable">count</span> <span class="operator">=</span> <span class="variable">count</span> <span class="operator">-</span> <span class="value">1</span>;
+}
+</pre>
+
+                <h3>For Loop</h3>
+                <p>Iterate through a range of values with optional step increment using the <code>by</code> keyword:</p>
+                <pre>
+<span class="comment">// for loop with range and step</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> <span class="keyword">by</span> <span class="value">2</span> {
+    <span class="function">say</span>(<span class="string">"Iteration:"</span>, <span class="variable">i</span>);
+}
+</pre>
+
+                <h3>Foreach Loop</h3>
+                <p>Iterate through all elements in a collection such as an array or list:</p>
+                <pre>
+<span class="comment">// foreach loop</span>
+<span class="variable">fruits</span> <span class="operator">=</span> [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"cherry"</span>];
+<span class="keyword">foreach</span> <span class="variable">fruit</span> <span class="keyword">in</span> <span class="variable">fruits</span> {
+    <span class="function">say</span>(<span class="string">"Fruit:"</span>, <span class="variable">fruit</span>);
+}
+</pre>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-code-branch"></i></div>
+                    <div class="feature-title">Control Flow Tips</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>All control structures in Neura use curly braces <code>{}</code> to define their scope
+                            </li>
+                            <li>Range notation uses two dots <code>..</code> to specify start and end values</li>
+                            <li>The <code>by</code> keyword allows custom increments in for loops</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="functions" class="section">
+                <h2>Functions</h2>
+                <p>Functions are defined using the <code>fn</code> keyword. Here is an example:</p>
+                <pre>
+<span class="keyword">fn</span> <span class="variable">greet</span>(<span class="variable">name</span>) {
+    <span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
+}</pre>
+                <p>You can call the function like this:</p>
+                <pre>
+<span class="function">greet</span>(<span class="string">"Alice"</span>);</pre>
+            </section>
+
+
+            <!-- <section id="classes-objects" class="section">
+                <h2>Classes & Objects</h2>
+                <p>Neura supports object-oriented programming with classes. Here's an example:</p>
+                <pre>
+class Person
+    var name
+    var age
+
+    func init(name, age)
+        this.name = name
+        this.age = age
+    end
+
+    func introduce()
+        print("Hi, my name is " + this.name + " and I am " + this.age + " years old.")
+    end
+end</pre>
+                <p>You can create an object from a class:</p>
+                <pre>
+var person1 = Person("John", 25)
+person1.introduce()</pre>
+            </section>
+
+            <section id="modules-imports" class="section">
+                <h2>Modules & Imports</h2>
+                <p>Modules can be imported using the <code>import</code> keyword:</p>
+                <pre>
+import utils
+utils.someFunction()</pre>
+            </section>
+
+            <section id="error-handling" class="section">
+                <h2>Error Handling</h2>
+                <p>Neura provides <code>try</code> and <code>catch</code> blocks for handling errors:</p>
+                <pre>
+try
+    var result = 10 / 0  // This will throw an error
+catch error
+    print("An error occurred: " + error)
+end</pre>
+            </section> -->
+
+            <section id="built-in-functions" class="section">
+                <h2>Built-in Functions</h2>
+                <p>Neura provides several built-in functions, grouped by their purpose:</p>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-keyboard"></i></div>
+                    <div class="horizontal-title">Input Functions</div>
+                </div>
+                <ul>
+                    <li><code class="func">ask(prompt)</code>: Prompts the user for input and returns the value.</li>
+                </ul>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-comment-dots"></i></div>
+                    <div class="horizontal-title">Output Functions</div>
+                </div>
+                <ul>
+                    <li><code class="func">say(message)</code>: Prints values to the console.</li>
+                    <li><code class="func">notify(message)</code>: Sends a short notification to the user.</li>
+                </ul>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="horizontal-title">Type Conversion</div>
+                </div>
+                <ul>
+                    <li><code class="func">asString()</code>: Converts a variable to a string.</li>
+                    <li><code class="func">asInt()</code>: Converts a variable to an integer.</li>
+                    <li><code class="func">asFloat()</code>: Converts a variable to a float.</li>
+                    <li><code class="func">asBool()</code>: Converts a variable to a boolean.</li>
+                </ul>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-toolbox"></i></div>
+                    <div class="horizontal-title">Utility Functions</div>
+                </div>
+                <ul>
+                    <li><code class="func">type(value)</code>: Returns the type of a variable as a string.</li>
+                    <li><code class="func">wait(seconds)</code>: Pauses execution for a specified number of seconds.
+                    </li>
+                    <li><code class="func">length(value)</code>: Returns the number of elements in a string, list, or
+                        hash.</li>
+                </ul>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-font"></i></div>
+                    <div class="horizontal-title">String Functions</div>
+                </div>
+                <ul>
+                    <li><code class="func">trim(text)</code>: Removes whitespace from both ends of the string.</li>
+                    <li><code class="func">upperCase(text)</code>: Converts all characters in the string to uppercase.
+                    </li>
+                    <li><code class="func">lowerCase(text)</code>: Converts all characters in the string to lowercase.
+                    </li>
+                </ul>
+            </section>
+
+
+
+        </main>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Documentation</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Getting Started</a></li>
+                    <li class="footer-link"><a href="#">Tutorials</a></li>
+                    <li class="footer-link"><a href="#">API Reference</a></li>
+                    <li class="footer-link"><a href="#">Examples</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Community</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Forum</a></li>
+                    <li class="footer-link"><a href="#">Discord</a></li>
+                    <li class="footer-link"><a href="#">GitHub</a></li>
+                    <li class="footer-link"><a href="#">Stack Overflow</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Blog</a></li>
+                    <li class="footer-link"><a href="#">Videos</a></li>
+                    <li class="footer-link"><a href="#">Ecosystem</a></li>
+                    <li class="footer-link"><a href="#">Roadmap</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect</h3>
+                <div class="footer-social">
+                    <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Neura Programming Language. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+
+        // Theme toggle functionality
+        const themeToggle = document.querySelector('.theme-toggle');
+        const themeIcon = themeToggle.querySelector('i');
+
+        // Add copy button to code blocks
+        document.querySelectorAll('pre').forEach(block => {
+            const button = document.createElement('button');
+            button.className = 'copy-btn';
+            button.textContent = 'Copy';
+            block.style.position = 'relative';
+            block.appendChild(button);
+
+            button.addEventListener('click', () => {
+                const code = block.textContent.replace('Copy', '').replace('Neura', '');
+                navigator.clipboard.writeText(code.trim());
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+
+        // Active link highlighting
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.toc-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

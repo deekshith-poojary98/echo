@@ -1,0 +1,61 @@
+fn process_user_data(age, is_active, membership_duration) {
+    if is_active {
+        if membership_duration >= 1 {
+            return age * 1.5;  
+        } else {
+            return age * 1.2;  
+        }
+    } else {
+        return age * 0.8;  
+    }
+}
+
+fn check_eligibility(age, is_active, membership_duration) {
+    if age >= 18 {
+        if is_active {
+            if membership_duration >= 1 {
+                return true;  
+            }
+        }
+    }
+    return false;
+}
+
+age: int = 25;
+is_active: bool = true;
+membership_duration: int = 2;  // In years
+
+processed_value: float = process_user_data(age, is_active, membership_duration);
+say("Processed value based on user data:", processed_value);
+
+eligibility: bool = check_eligibility(age, is_active, membership_duration);
+if eligibility {
+    say("User is eligible for a premium offer.");
+} else {
+    say("User is not eligible for a premium offer.");
+}
+
+user_name: str = ask("Please enter your name: ").asString();
+user_age: int = ask("Please enter your age: ").asInt();
+user_membership_duration: int = ask("How many years have you been a member? ").asInt();
+
+new_user_processed_value: float = process_user_data(user_age, true, user_membership_duration);
+say("Processed value for the new user:", new_user_processed_value);
+
+new_user_eligibility: bool = check_eligibility(user_age, true, user_membership_duration);
+if new_user_eligibility {
+    say(user_name, "is eligible for a premium offer.");
+} else {
+    say(user_name, "is not eligible for a premium offer.");
+}
+
+if user_age > 18 {
+    say("User is an adult.");
+} else if user_age == 18 {
+    say("User is exactly 18 years old.");
+} else {
+    say("User is a minor.");
+}
+
+notify("Your eligibility status has been processed. Please check the results.");
+wait(2);
