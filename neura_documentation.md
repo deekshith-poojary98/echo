@@ -18,7 +18,7 @@ Neura is a statically-typed programming language with dynamic capabilities. It s
 
 ### 1. Variable Declarations and Type Annotations
 
-```neura
+```c
 // Basic type declarations
 age: int = 25;
 name: str = "John";
@@ -35,7 +35,7 @@ say("Type of name:", name.type());
 
 ### 2. Function Definitions
 
-```neura
+```c
 // Standard function with block body and return type
 fn process_user_data(age: int, is_active: bool, membership_duration: int) {
     // Input validation
@@ -68,7 +68,7 @@ fn add(a: int, b: int) => a + b;
 
 #### If-Else Statements
 
-```neura
+```c
 if condition {
     // code
 } else if another_condition {
@@ -80,7 +80,7 @@ if condition {
 
 #### Loops
 
-```neura
+```c
 // For loop with step
 for i in 0..10 by 2 {
     say("Count:", i);
@@ -127,7 +127,7 @@ while counter < 5 {
 
 ### 5. Input/Output
 
-```neura
+```c
 // Output
 say("Hello, World!");
 say("Value:", some_variable);
@@ -142,7 +142,7 @@ if user_input.length() == 0 {
 
 ### 6. String Interpolation
 
-```neura
+```c
 name: str = "John";
 age: int = 30;
 say("Name: ${name}, Age: ${age}");
@@ -150,7 +150,7 @@ say("Name: ${name}, Age: ${age}");
 
 ### 7. Wait Function
 
-```neura
+```c
 wait(1); // Waits for 1 second
 say("waited 1 second");
 ```
@@ -161,7 +161,7 @@ say("waited 1 second");
 
 Always validate user input to ensure it meets the expected format and constraints:
 
-```neura
+```c
 // Age input with validation
 age_input: str = ask("Please enter your age: ");
 user_age: int = 0;
@@ -181,7 +181,7 @@ if age_input.length() > 0 {
 
 Implement error handling for potential issues:
 
-```neura
+```c
 // Division by zero handling
 divisor: int = 0;
 if divisor == 0 {
@@ -196,7 +196,7 @@ if divisor == 0 {
 
 Handle empty values appropriately:
 
-```neura
+```c
 // Empty string handling
 empty_str: str = "";
 say("Empty string length:", empty_str.length());
@@ -217,7 +217,7 @@ say("Empty hash length:", empty_hash.length());
 
 Validate type conversions to prevent errors:
 
-```neura
+```c
 str_num: str = "123";
 num: int = 0;
 if str_num.length() > 0 {
@@ -239,7 +239,7 @@ if invalid_int.length() > 0 {
 
 Validate method chaining to prevent errors:
 
-```neura
+```c
 input_str: str = ask("Enter a number: ");
 if input_str.length() > 0 {
     trimmed_input: str = input_str.trim();
@@ -258,7 +258,7 @@ if input_str.length() > 0 {
 
 Always return a value from functions:
 
-```neura
+```c
 fn process_list(items: list) {
     if items.length() == 0 {
         say("List is empty");
@@ -276,7 +276,7 @@ fn process_list(items: list) {
 
 Test boundary conditions to ensure robustness:
 
-```neura
+```c
 // Age classification with boundary testing
 if user_age > 18 {
     say("User is an adult.");
@@ -296,7 +296,7 @@ say("Maximum integer + 1:", max_int + 1);
 
 Handle null/undefined values appropriately:
 
-```neura
+```c
 // Null/undefined handling
 say("Empty string is falsy:", empty_str.asBool() == false);
 say("Empty list is falsy:", empty_list.asBool() == false);
@@ -309,7 +309,7 @@ say("Non-zero is truthy:", 1.asBool() == true);
 
 Handle dynamic type changes safely:
 
-```neura
+```c
 dynamic_var: dynamic = 42;
 say("Dynamic variable:", dynamic_var);
 say("Type of dynamic_var:", dynamic_var.type());
@@ -325,7 +325,7 @@ say("Type of dynamic_var:", dynamic_var.type());
 
 Every statement must end with a semicolon:
 
-```neura
+```c
 // Correct
 x: int = 10;
 say("Hello");
@@ -339,7 +339,7 @@ say("Hello")
 
 Functions must return a value. Empty returns are not allowed:
 
-```neura
+```c
 // Correct
 fn process_list(items: list) {
     if items.length() == 0 {
@@ -360,7 +360,7 @@ fn process_list(items: list) {
 
 Method calls must be followed by parentheses, even if there are no arguments:
 
-```neura
+```c
 // Correct
 text.trim();
 empty_list.length();
@@ -374,7 +374,7 @@ empty_list.length;
 
 Type annotations are required for function parameters and variable declarations:
 
-```neura
+```c
 // Correct
 fn greet(name: str) {
     say("Hello, ${name}!");
