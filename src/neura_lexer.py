@@ -15,7 +15,7 @@ class Lexer:
     token_patterns = {
         "KEYWORD": r'\b(fn|for|if|else|foreach|in|by|return|break|continue|while)\b',
         "DATATYPE": r'\b(int|float|str|bool|dynamic|list|hash)\b',
-        "METHOD": r'\b(notify|wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length)\b',
+        "METHOD": r'\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values)\b',
         "BOOLEAN": r'\b(true|false)\b',
         "FLOAT": r'\b\d+\.\d+\b',
         "NUMBER": r'\b\d+\b',

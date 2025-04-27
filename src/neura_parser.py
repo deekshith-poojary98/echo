@@ -149,9 +149,19 @@ class Parser:
         self.expect("PUNCTUATION", "(")
         # print("Parsed opening parenthesis")
         params = []
+        param_types = {}  # Store parameter types
         while self.peek() and not (self.peek().type == "PUNCTUATION" and self.peek().value == ")"):
             param = self.expect("IDENTIFIER").value
             # print(f"Parameter: {param}")
+            
+            # Check for type annotation
+            if self.peek() and self.peek().type == "PUNCTUATION" and self.peek().value == ":":
+                self.advance()  # consume the colon
+                param_type = self.expect("DATATYPE").value
+                param_types[param] = param_type
+            else:
+                raise SyntaxError(f"Type annotation required for parameter '{param}'")
+                
             params.append(param)
             if self.peek() and self.peek().value == ",":
                 self.advance()
@@ -164,7 +174,7 @@ class Parser:
             body = self.parse_expression()
             self.expect("PUNCTUATION", ";")
             # print("Finished parsing inline function")
-            return {"type": "func_def", "name": name, "params": params, "body": body, "inline": True}
+            return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "body": body, "inline": True}
         else:
             # print("Parsing function block")
             self.expect("PUNCTUATION", "{")
@@ -178,7 +188,7 @@ class Parser:
             self.expect("PUNCTUATION", "}")
             # print("Parsed closing brace")
             # print("Finished parsing function block")
-            return {"type": "func_def", "name": name, "params": params, "body": body, "inline": False}
+            return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "body": body, "inline": False}
 
     def parse_assignment_or_expr(self):
         # Check if this is a method call

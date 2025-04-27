@@ -28,8 +28,13 @@ class Context:
             return self.parent.get_type(name)
         return type_val
 
-    def define_function(self, name, params, body, inline):
-        self.functions[name] = {"params": params, "body": body, "inline": inline}
+    def define_function(self, name, params, body, inline, param_types=None):
+        self.functions[name] = {
+            "params": params,
+            "body": body,
+            "inline": inline,
+            "param_types": param_types or {}  # Store parameter types, default to empty dict if not provided
+        }
 
     def call_function(self, name, args, interpreter):
         func = self.functions.get(name)
@@ -42,10 +47,28 @@ class Context:
         # Create new context with current context as parent for closure support
         new_context = Context(parent=self)
         
-        # Set parameters in the new context
+        # Set parameters in the new context with type checking
         for i, param in enumerate(func["params"]):
             if i < len(args):
-                new_context.set(param, interpreter.evaluate(args[i], self))
+                value = interpreter.evaluate(args[i], self)
+                param_type = func["param_types"].get(param)
+                
+                if param_type:  # Only check type if it was specified
+                    # Type validation
+                    type_map = {
+                        "int": int,
+                        "float": float,
+                        "str": str,
+                        "bool": bool,
+                        "list": list,
+                        "hash": dict,
+                    }
+                    
+                    expected_type = type_map.get(param_type)
+                    if expected_type and not isinstance(value, expected_type):
+                        raise TypeError(f"Argument '{param}' in function '{name}' must be of type {param_type}, got {type(value).__name__}")
+                
+                new_context.set(param, value, param_type)
             else:
                 raise Exception(f"Missing argument for parameter '{param}' in function '{name}'")
 
@@ -126,46 +149,60 @@ class Interpreter:
         elif node_type == "method_call":
             if node["method"] == "say":
                 values = [self.evaluate(arg, context) for arg in node["args"]]
-                print(*values)
+                # Print each value with proper formatting
+                for i, value in enumerate(values):
+                    if i > 0:
+                        print(" ", end="")
+                    print(value, end="")
+                print()  # Add a newline at the end
             elif node["method"] == "wait":
                     # Get the duration in seconds
                     duration = self.evaluate(node["args"][0], context)
                     import time
                     time.sleep(duration)
-            elif node["method"] == "notify":
-                # Get message and optional title
-                message = self.evaluate(node["args"][0], context)
-                title = self.evaluate(node["args"][1], context) if len(node["args"]) > 1 else "Notification"
-                
-                try:
-                    # Try platform-specific notification methods
-                    import platform
-                    system = platform.system()
-                    
-                    if system == "Windows":
-                        from win10toast import ToastNotifier
-                        toaster = ToastNotifier()
-                        toaster.show_toast(title, str(message), duration=5, threaded=True)
-                        
-                    elif system == "Darwin":  # macOS
-                        import os
-                        os.system(f"""osascript -e 'display notification "{message}" with title "{title}"'""")
-                    elif system == "Linux":
-                        import os
-                        os.system(f"""notify-send "{title}" "{message}" """)
-                    else:
-                        # Fallback to printing if platform-specific method fails
-                        print(f"NOTIFICATION: {title} - {message}")
-                except Exception:
-                    # Fallback to printing if any exception occurs
-                    print(f"NOTIFICATION: {title} - {message}")
+            elif node["method"] == "ask":
+                prompt = self.evaluate(node["args"][0], context)
+                return input(prompt)
+            elif node["method"] == "asInt":
+                value = self.evaluate(node["args"][0], context)
+                return int(value)
+            elif node["method"] == "asFloat":
+                value = self.evaluate(node["args"][0], context)
+                return float(value)
+            elif node["method"] == "asBool":
+                value = self.evaluate(node["args"][0], context)
+                if isinstance(value, (str, list, dict)):
+                    return bool(len(value))  # Empty collections should be falsy
+                elif isinstance(value, (int, float)):
+                    return bool(value)  # Zero should be falsy, non-zero truthy
+                return bool(value)  # Default case
+            elif node["method"] == "asString":
+                value = self.evaluate(node["args"][0], context)
+                return str(value)
+            elif node["method"] == "type":
+                value = self.evaluate(node["args"][0], context)
+                return type(value).__name__
+            elif node["method"] == "trim":
+                value = self.evaluate(node["args"][0], context)
+                return value.strip()
+            elif node["method"] == "upperCase":
+                value = self.evaluate(node["args"][0], context)
+                return value.upper()
+            elif node["method"] == "lowerCase":
+                value = self.evaluate(node["args"][0], context)
+                return value.lower()
+            elif node["method"] == "length":
+                value = self.evaluate(node["args"][0], context)
+                if isinstance(value, (str, list, dict)):
+                    return len(value)
+                raise TypeError("length() can only be used on strings, lists, or hashes")
 
         elif node_type == "for":
             # Create a new context for the loop
             loop_context = Context(parent=context)
             loop_context.in_loop = True
             
-            i = node["start"]
+            i = int(node["start"])  # Convert to int
             try:
                 while i < node["end"]:
                     loop_context.set(node["var"], i)
@@ -174,7 +211,7 @@ class Interpreter:
                     except ContinueException:
                         # Just continue to the next iteration
                         pass
-                    i += node["by"]
+                    i += int(node["by"])  # Convert to int
             except BreakException:
                 # Exit the loop
                 pass
@@ -227,7 +264,11 @@ class Interpreter:
 
         elif node_type == "func_def":
             context.define_function(
-                node["name"], node["params"], node["body"], node["inline"]
+                node["name"],
+                node["params"],
+                node["body"],
+                node["inline"],
+                node.get("param_types", {})  # Pass parameter types
             )
 
         elif node_type == "function_call":
@@ -274,7 +315,15 @@ class Interpreter:
         elif expr_type == "float":
             return float(expr["value"])
         elif expr_type == "string":
-            return expr["value"].strip('"')
+            # Process escape sequences in string literals
+            value = expr["value"].strip('"')
+            # Replace escape sequences
+            value = value.replace('\\n', '\n')
+            value = value.replace('\\t', '\t')
+            value = value.replace('\\r', '\r')
+            value = value.replace('\\"', '"')
+            value = value.replace('\\\\', '\\')
+            return value
         elif expr_type == "boolean":
             return expr["value"]
         elif expr_type == "identifier":
@@ -312,20 +361,24 @@ class Interpreter:
                 return float(value)
             elif expr["method"] == "asBool":
                 value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return bool(int(value))
+                if isinstance(value, (str, list, dict)):
+                    return bool(len(value))  # Empty collections should be falsy
+                elif isinstance(value, (int, float)):
+                    return bool(value)  # Zero should be falsy, non-zero truthy
+                return bool(value)  # Default case
             elif expr["method"] == "asString":
                 value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
                 return str(value)
             elif expr["method"] == "type":
                 value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(value, int):
+                if isinstance(value, bool):
+                    return "bool"
+                elif isinstance(value, int):
                     return "int"
                 elif isinstance(value, float):
                     return "float"
                 elif isinstance(value, str):
                     return "str"
-                elif isinstance(value, bool):
-                    return "bool"
                 elif isinstance(value, list):
                     return "list"
                 elif isinstance(value, dict):
@@ -355,6 +408,16 @@ class Interpreter:
                 if isinstance(val, (str, list, dict)):
                     return len(val)
                 raise TypeError("length() can only be used on strings, lists, or hashes")  
+            elif expr["method"] == "keys":
+                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if isinstance(val, dict):
+                    return list(val.keys())
+                raise TypeError("keys() can only be called on hashes")
+            elif expr["method"] == "values":
+                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if isinstance(val, dict):
+                    return list(val.values())
+                raise TypeError("values() can only be called on hashes")
         elif expr_type == "string_interpolation":
             return "".join(
                 str(self.evaluate(part, context))

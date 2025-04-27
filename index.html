@@ -18,6 +18,33 @@
             --gray-100: #F1F5F9;
             --gray-200: #E2E8F0;
             --gray-800: #334155;
+            --bg-color: var(--light);
+            --text-color: var(--dark);
+            --card-bg: white;
+            --nav-bg: white;
+            --footer-bg: var(--dark);
+            --footer-text: white;
+            --nav-link-color: var(--gray-800);
+            --toc-link-color: var(--gray-800);
+            --heading-color: var(--dark);
+            --sidebar-title-color: var(--dark);
+            --feature-description-color: #4B5563;
+            --h3-color: var(--dark);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: var(--dark);
+            --text-color: var(--light);
+            --card-bg: #2D2D3A;
+            --nav-bg: #2D2D3A;
+            --footer-bg: #1A1A24;
+            --footer-text: #E0E8F9;
+            --nav-link-color: #E0E8F9;
+            --toc-link-color: #E0E8F9;
+            --heading-color: #E0E8F9;
+            --sidebar-title-color: #E0E8F9;
+            --feature-description-color: #E0E8F9;
+            --h3-color: #E0E8F9;
         }
 
         * {
@@ -28,9 +55,10 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             line-height: 1.7;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         header {
@@ -86,11 +114,12 @@
         }
 
         nav {
-            background-color: white;
+            background-color: var(--nav-bg);
             position: sticky;
             top: 0;
             z-index: 100;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
         }
 
         .nav-container {
@@ -125,7 +154,7 @@
         }
 
         .nav-link {
-            color: var(--gray-800);
+            color: var(--nav-link-color);
             text-decoration: none;
             font-weight: 500;
             padding: 0.5rem 0.75rem;
@@ -189,10 +218,11 @@
         .sidebar-title {
             font-size: 1.1rem;
             font-weight: 700;
-            color: var(--dark);
+            color: var(--sidebar-title-color);
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid var(--gray-200);
+            transition: color 0.3s ease;
         }
 
         .toc {
@@ -206,7 +236,7 @@
         .toc-link {
             display: block;
             padding: 0.5rem 0.75rem;
-            color: var(--gray-800);
+            color: var(--toc-link-color);
             text-decoration: none;
             border-radius: 0.375rem;
             transition: all 0.2s ease;
@@ -237,8 +267,9 @@
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            color: var(--dark);
+            color: var(--heading-color);
             position: relative;
+            transition: color 0.3s ease;
         }
 
         h2::after {
@@ -255,7 +286,8 @@
             font-size: 1.5rem;
             font-weight: 600;
             margin: 1.5rem 0 1rem;
-            color: var(--dark);
+            color: var(--h3-color);
+            transition: color 0.3s ease;
         }
 
         p {
@@ -311,16 +343,15 @@
         }
 
         .feature-card {
-            background-color: white;
+            background-color: var(--card-bg);
             border-radius: 0.5rem;
             padding: 1.5rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
         }
 
         .feature-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         .feature-icon {
@@ -336,8 +367,9 @@
         }
 
         .feature-description {
-            color: #4B5563;
+            color: var(--feature-description-color);
             font-size: 0.95rem;
+            transition: color 0.3s ease;
         }
 
         .horizontal-feature {
@@ -360,10 +392,11 @@
         }
 
         footer {
-            background-color: var(--dark);
-            color: white;
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
             padding: 3rem 0;
             margin-top: 4rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .footer-container {
@@ -634,7 +667,7 @@
                     and simplified syntax for rapid development.
                 </p>
                 <pre>
-<span class="keyword">fn</span> <span class="function">greet</span>(<span class="variable">name</span>) {
+<span class="keyword">fn</span> <span class="function">greet</span>(<span class="variable">name</span>: <span class="type">str</span>) {
     <span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
 }
 
@@ -656,7 +689,7 @@
 }
 </pre>
                     
-                <p>This example demonstrates Neura’s basic syntax including function declarations, conditionals, loops, and type-safe variables.</p>
+                <p>This example demonstrates Neura's basic syntax including function declarations, conditionals, loops, and type-safe variables.</p>
             </section>
             
             
@@ -807,7 +840,7 @@ nested: <span class="type">hash</span> = {<span class="string">"person"</span>: 
                 <h2>Functions</h2>
                 <p>Functions are defined using the <code>fn</code> keyword. Here is an example:</p>
                 <pre>
-<span class="keyword">fn</span> <span class="variable">greet</span>(<span class="variable">name</span>) {
+<span class="keyword">fn</span> <span class="variable">greet</span>(<span class="variable">name</span>: <span class="type">str</span>) {
     <span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
 }</pre>
                 <p>You can call the function like this:</p>
@@ -978,6 +1011,24 @@ end</pre>
         // Theme toggle functionality
         const themeToggle = document.querySelector('.theme-toggle');
         const themeIcon = themeToggle.querySelector('i');
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        }
 
         // Add copy button to code blocks
         document.querySelectorAll('pre').forEach(block => {
