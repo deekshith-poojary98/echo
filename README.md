@@ -43,7 +43,7 @@ Neura is a modern, statically-typed programming language designed for simplicity
 
 ### Basic Syntax Examples
 
-```neura
+```c
 // Variable Declaration with Types
 x: int = 10;
 name: str = "John";
@@ -62,7 +62,7 @@ fn greet(name: str) {
 fn square(x: int) => x * x;
 
 // Method Chaining
-result = ask("Enter a number:").asInt().toString().length();
+result: str = ask("Enter a number:").asInt().toString().length();
 
 // Loops
 for i in 0..10 by 2 {
@@ -89,13 +89,12 @@ if score >= 90 {
   - `neura_interpreter.py` - Code execution
 - `neura-syntax-highlighter/` - Syntax highlighting support
 - `source.neu` - Example Neura source file
-- `index.html` - Web interface/documentation
+- `index.html` - Web documentation
 
 ## Documentation
 
 For more detailed documentation, please refer to:
-- `Neura_docs.txt` - Basic language documentation
-- `Neura Design Plan.docx` - Detailed design specifications
+- `neura_documentation.md` - Basic language documentation
 
 ## Contributing
 
