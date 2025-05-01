@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #7C3AED;
+            --primary: #ed9f3a;
             --secondary: #111827;
             --dark: #1E1E2E;
             --light: #FAFAFA;
@@ -302,6 +302,12 @@
             padding: 0.2rem 0.4rem;
             border-radius: 0.25rem;
             color: var(--primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        [data-theme="dark"] code {
+            background-color: var(--gray-800);
+            color: var(--primary-light);
         }
 
         pre {
@@ -316,6 +322,27 @@
             font-size: 0.9rem;
             line-height: 1.5;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-800) var(--code-bg);
+        }
+
+        /* Webkit scrollbar styling */
+        pre::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: var(--code-bg);
+            border-radius: 3px;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background-color: var(--gray-800);
+            border-radius: 3px;
+        }
+
+        pre::-webkit-scrollbar-thumb:hover {
+            background-color: var(--gray-700);
         }
 
         pre::before {
@@ -339,7 +366,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
-            margin: 2rem 0;
+            /* margin: 2rem 0; */
         }
 
         .feature-card {
@@ -348,6 +375,7 @@
             padding: 1.5rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+            margin-bottom: 1rem;
         }
 
         .feature-card:hover {
@@ -355,21 +383,27 @@
         }
 
         .feature-icon {
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: var(--primary);
-            margin-bottom: 1rem;
+            margin-right: 1rem;
+            display: inline-block;
+            vertical-align: middle;
         }
 
         .feature-title {
             font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 0.75rem;
+            color: var(--heading-color);
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0;
         }
 
         .feature-description {
+            margin-top: 1rem;
             color: var(--feature-description-color);
             font-size: 0.95rem;
-            transition: color 0.3s ease;
+            line-height: 1.6;
         }
 
         .horizontal-feature {
@@ -553,7 +587,7 @@
         .theme-toggle {
             background: none;
             border: none;
-            color: var(--gray-800);
+            color: #5f6163;
             font-size: 1.25rem;
             cursor: pointer;
             margin-right: 1rem;
@@ -599,6 +633,239 @@
 
             .nav-item {
                 margin: 0.5rem 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .nav-container {
+                padding: 0.75rem 1.5rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 992px) {
+            .page-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                padding-bottom: 0;
+                margin-bottom: 2rem;
+            }
+
+            .toc {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .toc-item {
+                margin-bottom: 0;
+            }
+
+            .toc-link {
+                padding: 0.25rem 0.5rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+
+            .footer-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 4rem 0 2rem;
+            }
+
+            header h1 {
+                font-size: 2.25rem;
+            }
+
+            header p {
+                font-size: 1.1rem;
+                padding: 0 1rem;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .nav-container {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-right {
+                gap: 0.5rem;
+            }
+
+            .btn-primary {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .feature-card {
+                padding: 1rem;
+            }
+
+            .feature-icon {
+                font-size: 1.75rem;
+            }
+
+            .feature-title {
+                font-size: 1.1rem;
+            }
+
+            .feature-description {
+                font-size: 0.9rem;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+            }
+
+            h3 {
+                font-size: 1.25rem;
+            }
+
+            pre {
+                padding: 1rem;
+                font-size: 0.85rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .footer-section {
+                text-align: center;
+            }
+
+            .footer-social {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            header {
+                padding: 3rem 0 1.5rem;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-brand {
+                font-size: 1.1rem;
+            }
+
+            .nav-right {
+                gap: 0.25rem;
+            }
+
+            .theme-toggle {
+                width: 2rem;
+                height: 2rem;
+                font-size: 1rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card {
+                margin-bottom: 0.75rem;
+            }
+
+            .section {
+                margin-bottom: 2rem;
+            }
+
+            .footer-bottom {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .nav-brand {
+                font-size: 1rem;
+            }
+
+            .nav-container {
+                padding: 0.5rem;
+            }
+
+            .btn-primary {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            .feature-icon {
+                font-size: 1.5rem;
+            }
+
+            .feature-title {
+                font-size: 1rem;
+            }
+
+            pre {
+                padding: 0.75rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+            }
+
+            nav, .theme-toggle, .mobile-menu-toggle, .copy-btn {
+                display: none;
+            }
+
+            .page-container {
+                display: block;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .feature-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            pre {
+                background-color: white;
+                color: black;
+                border: 1px solid #ccc;
+            }
+
+            footer {
+                display: none;
             }
         }
     </style>
@@ -648,10 +915,10 @@
                 <li class="toc-item"><a href="#introduction" class="toc-link active">Introduction</a></li>
                 <li class="toc-item"><a href="#variables" class="toc-link">Variables</a></li>
                 <li class="toc-item"><a href="#data-types" class="toc-link">Data Types</a></li>
+                <li class="toc-item"><a href="#type-conversion" class="toc-link">Type Conversion</a></li>
                 <li class="toc-item"><a href="#control-flow" class="toc-link">Control Flow</a></li>
                 <li class="toc-item"><a href="#functions" class="toc-link">Functions</a></li>
-                <!-- <li class="toc-item"><a href="#classes-objects" class="toc-link">Classes & Objects</a></li>
-                <li class="toc-item"><a href="#modules-imports" class="toc-link">Modules & Imports</a></li>
+                <!-- <li class="toc-item"><a href="#modules-imports" class="toc-link">Modules & Imports</a></li>
                 <li class="toc-item"><a href="#error-handling" class="toc-link">Error Handling</a></li> -->
                 <li class="toc-item"><a href="#built-in-functions" class="toc-link">Built-in Functions</a></li>
             </ul>
@@ -661,13 +928,15 @@
             <section id="introduction" class="section">
                 <h2>Introduction</h2>
                 <p>
-                    <strong>Neura</strong> is a statically-typed, Python-based programming language with a clean and expressive syntax.
+                    <strong>Neura</strong> is a statically-typed, Python-based programming language with a clean and
+                    expressive syntax.
                     It draws inspiration from C-style structure, modern scripting languages, and Pythonic readability.
-                    Designed to be beginner-friendly yet powerful, Neura supports strong type annotations, readable control flow, 
+                    Designed to be beginner-friendly yet powerful, Neura supports strong type annotations, readable
+                    control flow,
                     and simplified syntax for rapid development.
                 </p>
                 <pre>
-<span class="keyword">fn</span> <span class="function">greet</span>(<span class="variable">name</span>: <span class="type">str</span>) {
+<span class="keyword">fn</span> <span class="function">greet</span>(<span class="variable">name</span>: <span class="type">str</span>) -> <span class="type">void</span> {
     <span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
 }
 
@@ -688,100 +957,259 @@
     <span class="function">say</span>(<span class="string">"Loop value:"</span>, <span class="variable">i</span>);
 }
 </pre>
-                    
-                <p>This example demonstrates Neura's basic syntax including function declarations, conditionals, loops, and type-safe variables.</p>
+
+                <p>This example demonstrates Neura's basic syntax including function declarations, conditionals, loops,
+                    and type-safe variables.</p>
             </section>
-            
-            
+
+
 
             <section id="variables" class="section">
                 <h2>Variables</h2>
-                <p>In Neura, variables are declared with the syntax <code>variable_name: type = value</code>.</p>
+                <p>Variables in Neura are strongly typed and must be declared with their type before use. The syntax
+                    follows the pattern <code>variable_name: type = value</code>.</p>
 
                 <h3>Variable Declaration</h3>
-                <p>Here's an example of declaring different types of variables:</p>
+                <p>Here's a comprehensive example of declaring different types of variables:</p>
                 <pre>
-x: <span class="type">int</span> = <span class="value">10</span>;            <span class="comment">// Integer variable</span>
-y: <span class="type">float</span> = <span class="value">100.12</span>;      <span class="comment">// Float variable</span>
-name: <span class="type">str</span> = <span class="string">"John"</span>;    <span class="comment">// String variable</span>
-is_ready: <span class="type">bool</span> = <span class="value">true</span>;    <span class="comment">// Boolean variable</span>
-anything: <span class="type">dynamic</span> = <span class="value">10</span>;   <span class="comment">// Dynamic variable</span>
-</pre>
+<span class="comment">// Basic types</span>
+<span class="variable">x</span>: <span class="type">int</span> = <span class="value">10</span>;            <span class="comment">// Integer variable</span>
+<span class="variable">y</span>: <span class="type">float</span> = <span class="value">100.12</span>;      <span class="comment">// Float variable</span>
+<span class="variable">name</span>: <span class="type">str</span> = <span class="string">"John"</span>;    <span class="comment">// String variable</span>
+<span class="variable">is_ready</span>: <span class="type">bool</span> = <span class="value">true</span>;    <span class="comment">// Boolean variable</span>
+<span class="variable">anything</span>: <span class="type">dynamic</span> = <span class="value">10</span>;   <span class="comment">// Dynamic variable</span>
 
-                <h3>Reassigning Dynamic Variables</h3>
-                <p>You can reassign values to dynamic variables:</p>
-                <pre>
-anything = <span class="string">"Now I'm a string!"</span>;  <span class="comment">// Reassigning a dynamic variable</span>
-</pre>
+<span class="comment">// Collections</span>
+<span class="variable">numbers</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="value">2</span>, <span class="value">3</span>];  <span class="comment">// List of integers</span>
+<span class="variable">mixed</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="string">"two"</span>, <span class="value">3.0</span>];  <span class="comment">// List with mixed types</span>
+<span class="variable">user</span>: <span class="type">hash</span> = {
+    <span class="string">"name"</span>: <span class="string">"Alice"</span>,
+    <span class="string">"age"</span>: <span class="value">25</span>,
+    <span class="string">"active"</span>: <span class="value">true</span>
+};  <span class="comment">// Hash (HashMap) with string keys</span></pre>
 
-                <h3>Collections</h3>
-                <p>Neura also supports collections like lists and hashes (similar to maps in other languages):</p>
+                <h3>Variable Reassignment</h3>
+                <p>Variables can be reassigned, but the new value must match the declared type:</p>
                 <pre>
-fruits: <span class="type">list</span> = [<span class="string">"apple"</span>, <span class="string">"mango"</span>, <span class="string">"orange"</span>];   <span class="comment">// List</span>
-nested: <span class="type">hash</span> = {<span class="string">"person"</span>: {<span class="string">"name"</span>: <span class="string">"Mark"</span>, <span class="string">"age"</span>: <span class="value">20</span>}, <span class="string">"scores"</span>: [<span class="value">95</span>, <span class="value">85</span>, <span class="value">75</span>]};  <span class="comment">// Hash (HashMap)</span>
-</pre>
+<span class="variable">x</span> = <span class="value">20</span>;  <span class="comment">// Valid: same type (int)</span>
+<span class="variable">name</span> = <span class="string">"Bob"</span>;  <span class="comment">// Valid: same type (str)</span>
+<span class="comment">// x = "hello";  // Error: cannot assign string to int</span>
+
+<span class="comment">// Dynamic variables can change type</span>
+<span class="variable">anything</span> = <span class="string">"Now I'm a string!"</span>;
+<span class="variable">anything</span> = <span class="value">42</span>;
+<span class="variable">anything</span> = <span class="value">true</span>;</pre>
+
+
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="feature-title">Important Notes</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>All variables must be declared with a type</li>
+                            <li>Variables cannot change their type after declaration (except dynamic)</li>
+                            <li>Variables have block scope and are not accessible outside their block</li>
+                            <li>Variable names must start with a letter and can contain letters, numbers, and
+                                underscores</li>
+                            <li>Variable names are case-sensitive</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="feature-title">Best Practices</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>Use descriptive variable names that indicate their purpose</li>
+                            <li>Declare variables as close as possible to where they are used</li>
+                            <li>Use <code>dynamic</code> type sparingly and only when necessary</li>
+                            <li>Initialize variables when declaring them when possible</li>
+                            <li>Use constants for values that shouldn't change</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
 
 
             <section id="data-types" class="section">
                 <h2>Data Types</h2>
-                <p>Neura supports the following data types:</p>
+                <p>Neura is a statically-typed language that supports several built-in data types. Each type has
+                    specific characteristics and use cases.</p>
 
                 <div class="feature-grid">
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-dice-one"></i></div>
                         <div class="feature-title">int</div>
-                        <div class="feature-description">Integer numbers for whole-value arithmetic operations and
-                            counting.</div>
+                        <div class="feature-description">
+                            <p>Integer numbers for whole-value arithmetic operations and counting.</p>
+                            <ul>
+                                <li>Range: -2^63 to 2^63-1</li>
+                                <li>No decimal points</li>
+                                <li>Supports all arithmetic operations</li>
+                            </ul>
+                            <pre>
+<span class="variable">age</span>: <span class="type">int</span> = <span class="value">25</span>;
+<span class="variable">count</span>: <span class="type">int</span> = <span class="value">-100</span>;
+<span class="variable">result</span>: <span class="type">int</span> = <span class="variable">age</span> + <span class="variable">count</span>;</pre>
+                        </div>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-wave-square"></i></div>
                         <div class="feature-title">float</div>
-                        <div class="feature-description">Floating-point numbers for precise decimal calculations and
-                            scientific computations.</div>
+                        <div class="feature-description">
+                            <p>Floating-point numbers for precise decimal calculations.</p>
+                            <ul>
+                                <li>64-bit double precision</li>
+                                <li>Supports scientific notation</li>
+                                <li>Handles decimal arithmetic</li>
+                            </ul>
+                            <pre>
+<span class="variable">pi</span>: <span class="type">float</span> = <span class="value">3.14159</span>;
+<span class="variable">scientific</span>: <span class="type">float</span> = <span class="value">1.23e-4</span>;
+<span class="variable">result</span>: <span class="type">float</span> = <span class="variable">pi</span> * <span class="value">2.0</span>;</pre>
+                        </div>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-font"></i></div>
                         <div class="feature-title">str</div>
-                        <div class="feature-description">String data enclosed in double quotes with built-in
-                            manipulation methods.</div>
+                        <div class="feature-description">
+                            <p>String data for text manipulation and storage.</p>
+                            <ul>
+                                <li>UTF-8 encoded</li>
+                                <li>Immutable</li>
+                                <li>Supports string interpolation</li>
+                            </ul>
+                            <pre>
+<span class="variable">name</span>: <span class="type">str</span> = <span class="string">"Alice"</span>;
+<span class="variable">message</span>: <span class="type">str</span> = <span class="string">"Hello, "</span> + <span class="variable">name</span>;
+<span class="variable">multiline</span>: <span class="type">str</span> = <span class="string">"Line 1\nLine 2"</span>;</pre>
+                        </div>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-toggle-on"></i></div>
                         <div class="feature-title">bool</div>
-                        <div class="feature-description">Logical values represented as <code>true</code> and
-                            <code>false</code> for conditional operations.
+                        <div class="feature-description">
+                            <p>Boolean values for logical operations.</p>
+                            <ul>
+                                <li>Values: true or false</li>
+                                <li>Used in conditionals</li>
+                                <li>Result of comparisons</li>
+                            </ul>
+                            <pre>
+<span class="variable">is_valid</span>: <span class="type">bool</span> = <span class="value">true</span>;
+<span class="variable">is_empty</span>: <span class="type">bool</span> = <span class="value">false</span>;
+<span class="variable">result</span>: <span class="type">bool</span> = <span class="variable">is_valid</span> && !<span class="variable">is_empty</span>;</pre>
                         </div>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-list"></i></div>
                         <div class="feature-title">list</div>
-                        <div class="feature-description">Ordered collections of elements that can be accessed by index
-                            and modified dynamically.</div>
+                        <div class="feature-description">
+                            <p>Ordered collections of elements.</p>
+                            <ul>
+                                <li>Zero-based indexing</li>
+                                <li>Mutable</li>
+                                <li>Can contain mixed types</li>
+                            </ul>
+                            <pre>
+<span class="variable">numbers</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="value">2</span>, <span class="value">3</span>];
+<span class="variable">mixed</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="string">"two"</span>, <span class="value">3.0</span>];
+<!-- <span class="variable">numbers</span>[<span class="value">0</span>] = <span class="value">10</span>;  <span class="comment">// Modify element</span></pre> -->
+                        </div>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-hashtag"></i></div>
                         <div class="feature-title">hash</div>
-                        <div class="feature-description">Key-value mappings for efficient lookups and structured data
-                            organization.</div>
+                        <div class="feature-description">
+                            <p>Key-value mappings for structured data.</p>
+                            <ul>
+                                <li>String keys only</li>
+                                <li>Mutable</li>
+                                <li>Supports nested structures</li>
+                            </ul>
+                            <pre>
+<span class="variable">user</span>: <span class="type">hash</span> = {
+    <span class="string">"name"</span>: <span class="string">"Alice"</span>,
+    <span class="string">"age"</span>: <span class="value">25</span>
+};
+<span class="variable">user</span>[<span class="string">"age"</span>] = <span class="value">26</span>;  <span class="comment">// Update value</span></pre>
+                        </div>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-bolt"></i></div>
                         <div class="feature-title">dynamic</div>
-                        <div class="feature-description">Flexible type that can hold any value and change types during
-                            runtime for adaptive programming.</div>
+                        <div class="feature-description">
+                            <p>Flexible type for runtime type changes.</p>
+                            <ul>
+                                <li>Can hold any type</li>
+                                <li>Type checked at runtime</li>
+                                <li>Use with caution</li>
+                            </ul>
+                            <pre>
+<span class="variable">value</span>: <span class="type">dynamic</span> = <span class="value">10</span>;
+<span class="variable">value</span> = <span class="string">"hello"</span>;
+<span class="variable">value</span> = <span class="value">true</span>;</pre>
+                        </div>
                     </div>
                 </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="feature-title">Type Safety</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>All variables must be explicitly typed</li>
+                            <li>Type checking is performed at compile time</li>
+                            <li>Type mismatches result in compilation errors</li>
+                            <li>Use <code>dynamic</code> only when necessary</li>
+                            <li>Type annotations are mandatory for function parameters and return types</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="type-conversion" class="section">
+                <h2>Type Conversion</h2>
+                <p>Neura provides built-in functions for type conversion:</p>
+                <ul>
+                    <li><code>asInt()</code>: Convert to integer</li>
+                    <li><code>asFloat()</code>: Convert to float</li>
+                    <li><code>asString()</code>: Convert to string</li>
+                    <li><code>asBool()</code>: Convert to boolean</li>
+                </ul>
+                <pre>
+<span class="comment">// String to integer conversion</span>
+<span class="variable">num_str</span>: <span class="type">str</span> = <span class="string">"123"</span>;
+<span class="variable">num</span>: <span class="type">int</span> = <span class="function">asInt</span>(<span class="variable">num_str</span>);
+
+<span class="comment">// Float to string conversion</span>
+<span class="variable">price</span>: <span class="type">float</span> = <span class="value">19.99</span>;
+<span class="variable">price_str</span>: <span class="type">str</span> = <span class="function">asString</span>(<span class="variable">price</span>);
+
+<span class="comment">// String to float conversion</span>
+<span class="variable">temp_str</span>: <span class="type">str</span> = <span class="string">"98.6"</span>;
+<span class="variable">temperature</span>: <span class="type">float</span> = <span class="function">asFloat</span>(<span class="variable">temp_str</span>);
+
+<span class="comment">// Integer to boolean conversion</span>
+<span class="variable">value</span>: <span class="type">int</span> = <span class="value">1</span>;
+<span class="variable">flag</span>: <span class="type">bool</span> = <span class="function">asBool</span>(<span class="variable">value</span>);  <span class="comment">// true</span>
+
+<span class="comment">// String to boolean conversion</span>
+<span class="variable">str_true</span>: <span class="type">str</span> = <span class="string">"true"</span>;
+<span class="variable">bool_value</span>: <span class="type">bool</span> = <span class="function">asBool</span>(<span class="variable">str_true</span>);</pre>
             </section>
 
             <section id="control-flow" class="section">
                 <h2>Control Flow</h2>
-                <p>Neura provides robust control flow structures including conditional statements and various loop types
-                    to control program execution.</p>
+                <p>Neura provides comprehensive control flow structures to manage program execution. These include
+                    conditional statements, loops, and control transfer statements.</p>
 
                 <h3>Conditional Statements</h3>
-                <p>Use <code>if</code>, <code>else if</code>, and <code>else</code> statements with curly braces to
-                    control program flow based on conditions:</p>
+                <p>Use <code>if</code>, <code>else if</code>, and <code>else</code> statements to control program flow
+                    based on conditions. All conditions must evaluate to a boolean value.</p>
                 <pre>
 <span class="keyword">if</span> <span class="variable">user_age</span> <span class="operator">&gt;</span> <span class="value">18</span> {
     <span class="function">say</span>(<span class="string">"User is an adult."</span>);
@@ -790,46 +1218,103 @@ nested: <span class="type">hash</span> = {<span class="string">"person"</span>: 
 } <span class="keyword">else</span> {
     <span class="function">say</span>(<span class="string">"User is a minor."</span>);
 }
-</pre>
+
+<span class="comment">// Nested conditionals</span>
+<span class="keyword">if</span> <span class="variable">is_logged_in</span> {
+    <span class="keyword">if</span> <span class="variable">has_permission</span> {
+        <span class="function">say</span>(<span class="string">"Access granted."</span>);
+    } <span class="keyword">else</span> {
+        <span class="function">say</span>(<span class="string">"Insufficient permissions."</span>);
+    }
+} <span class="keyword">else</span> {
+    <span class="function">say</span>(<span class="string">"Please log in first."</span>);
+}</pre>
 
                 <h3>While Loop</h3>
-                <p>Execute a block of code repeatedly as long as a condition is true:</p>
+                <p>The <code>while</code> loop executes a block of code repeatedly as long as a condition is true. Use
+                    with caution to avoid infinite loops.</p>
                 <pre>
-<span class="variable">count</span><span class="operator">:</span> <span class="type">int</span> <span class="operator">=</span> <span class="value">10</span>;
-<span class="keyword">while</span> <span class="variable">count</span> <span class="operator">&gt;</span> <span class="value">0</span> {
-    <span class="function">say</span>(<span class="variable">count</span>);
-    <span class="variable">count</span> <span class="operator">=</span> <span class="variable">count</span> <span class="operator">-</span> <span class="value">1</span>;
+<span class="comment">// Basic while loop</span>
+<span class="variable">count</span>: <span class="type">int</span> = <span class="value">0</span>;
+<span class="keyword">while</span> <span class="variable">count</span> <span class="operator">&lt;</span> <span class="value">5</span> {
+    <span class="function">say</span>(<span class="string">"Count:"</span>, <span class="variable">count</span>);
+    <span class="variable">count</span> = <span class="variable">count</span> + <span class="value">1</span>;
 }
-</pre>
+
+<span class="comment">// While loop with break</span>
+<span class="variable">found</span>: <span class="type">bool</span> = <span class="value">false</span>;
+<span class="variable">index</span>: <span class="type">int</span> = <span class="value">0</span>;
+<span class="keyword">while</span> !<span class="variable">found</span> && <span class="variable">index</span> <span class="operator">&lt;</span> <span class="variable">items</span>.<span class="function">length</span>() {
+    <span class="keyword">if</span> <span class="variable">items</span>[<span class="variable">index</span>] == <span class="variable">target</span> {
+        <span class="variable">found</span> = <span class="value">true</span>;
+        <span class="keyword">break</span>;
+    }
+    <span class="variable">index</span> = <span class="variable">index</span> + <span class="value">1</span>;
+}</pre>
 
                 <h3>For Loop</h3>
-                <p>Iterate through a range of values with optional step increment using the <code>by</code> keyword:</p>
+                <p>The <code>for</code> loop iterates through a range of values with optional step increment using the
+                    <code>by</code> keyword.</p>
                 <pre>
-<span class="comment">// for loop with range and step</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> <span class="keyword">by</span> <span class="value">2</span> {
+<span class="comment">// Basic for loop</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> {
     <span class="function">say</span>(<span class="string">"Iteration:"</span>, <span class="variable">i</span>);
 }
-</pre>
+
+<span class="comment">// For loop with step</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> <span class="keyword">by</span> <span class="value">2</span> {
+    <span class="function">say</span>(<span class="string">"Even iteration:"</span>, <span class="variable">i</span>);
+}
+
+<span class="comment">// Reverse for loop</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">10</span><span class="operator">..</span><span class="value">0</span> <span class="keyword">by</span> <span class="operator">-</span><span class="value">1</span> {
+    <span class="function">say</span>(<span class="string">"Countdown:"</span>, <span class="variable">i</span>);
+}</pre>
 
                 <h3>Foreach Loop</h3>
-                <p>Iterate through all elements in a collection such as an array or list:</p>
+                <p>The <code>foreach</code> loop iterates through all elements in a collection such as a list or hash.
+                </p>
                 <pre>
-<span class="comment">// foreach loop</span>
-<span class="variable">fruits</span> <span class="operator">=</span> [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"cherry"</span>];
+<span class="comment">// Foreach with list</span>
+<span class="variable">fruits</span>: <span class="type">list</span> = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"cherry"</span>];
 <span class="keyword">foreach</span> <span class="variable">fruit</span> <span class="keyword">in</span> <span class="variable">fruits</span> {
     <span class="function">say</span>(<span class="string">"Fruit:"</span>, <span class="variable">fruit</span>);
 }
-</pre>
+
+<span class="comment">// Foreach with hash</span>
+<span class="variable">user</span>: <span class="type">hash</span> = {
+    <span class="string">"name"</span>: <span class="string">"Alice"</span>,
+    <span class="string">"age"</span>: <span class="value">25</span>,
+    <span class="string">"city"</span>: <span class="string">"New York"</span>
+};
+<span class="keyword">foreach</span> <span class="variable">key</span>, <span class="variable">value</span> <span class="keyword">in</span> <span class="variable">user</span> {
+    <span class="function">say</span>(<span class="variable">key</span>, <span class="string">":"</span>, <span class="variable">value</span>);
+}</pre>
 
                 <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-code-branch"></i></div>
+                    <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="feature-title">Control Flow Tips</div>
                     <div class="feature-description">
                         <ul>
-                            <li>All control structures in Neura use curly braces <code>{}</code> to define their scope
-                            </li>
-                            <li>Range notation uses two dots <code>..</code> to specify start and end values</li>
-                            <li>The <code>by</code> keyword allows custom increments in for loops</li>
+                            <li>Always use curly braces <code>{}</code> for control structures</li>
+                            <li>Be careful with infinite loops in while loops</li>
+                            <li>Use <code>break</code> and <code>continue</code> sparingly</li>
+                            <li>Consider using <code>foreach</code> instead of indexed loops when possible</li>
+                            <li>Keep loop bodies small and focused</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="feature-title">Best Practices</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>Use meaningful variable names in loops</li>
+                            <li>Keep conditions simple and readable</li>
+                            <li>Use early returns in functions to reduce nesting</li>
+                            <li>Consider using guard clauses for error conditions</li>
+                            <li>Document complex control flow with comments</li>
                         </ul>
                     </div>
                 </div>
@@ -838,78 +1323,157 @@ nested: <span class="type">hash</span> = {<span class="string">"person"</span>: 
 
             <section id="functions" class="section">
                 <h2>Functions</h2>
-                <p>Functions are defined using the <code>fn</code> keyword. Here is an example:</p>
+                <p>Functions in Neura are defined using the <code>fn</code> keyword, with mandatory type annotations for
+                    parameters and return types. The syntax is:</p>
+                <p><code>fn function_name(param1: type1, param2: type2) -> return_type { ... }</code></p>
+
+                <h3>Return Types</h3>
+                <p>Every function must specify a return type using the <code>-></code> operator. Neura supports the
+                    following return types:</p>
+                <ul>
+                    <li><code>void</code> - For functions that don't return a value</li>
+                    <li><code>int</code> - For functions returning integer values</li>
+                    <li><code>float</code> - For functions returning floating-point numbers</li>
+                    <li><code>str</code> - For functions returning strings</li>
+                    <li><code>bool</code> - For functions returning boolean values</li>
+                    <li><code>list</code> - For functions returning lists</li>
+                    <li><code>hash</code> - For functions returning hash maps</li>
+                    <li><code>dynamic</code> - For functions that may return different types</li>
+                </ul>
+
+                
+                        <pre>
+<span class="comment">// Input and output</span>
+<span class="variable">name</span> = <span class="function">ask</span>(<span class="string">"What's your name? "</span>);
+<span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
+<span class="function">wait</span>(<span class="value">1.5</span>);  <span class="comment">// Wait for 1.5 seconds</span>
+
+<span class="comment">// Type conversion</span>
+<span class="variable">age</span> = <span class="function">asInt</span>(<span class="function">ask</span>(<span class="string">"How old are you? "</span>));
+<span class="variable">price</span> = <span class="function">asFloat</span>(<span class="string">"19.99"</span>);
+<span class="variable">is_valid</span> = <span class="function">asBool</span>(<span class="string">"true"</span>);
+
+<span class="comment">// String manipulation</span>
+<span class="variable">text</span> = <span class="string">"  Hello World  "</span>;
+<span class="variable">clean</span> = <span class="function">trim</span>(<span class="variable">text</span>);  <span class="comment">// "Hello World"</span>
+<span class="variable">upper</span> = <span class="function">upperCase</span>(<span class="variable">clean</span>);  <span class="comment">// "HELLO WORLD"</span>
+
+<span class="comment">// Collection operations</span>
+<span class="variable">user</span> = {
+    <span class="string">"name"</span>: <span class="string">"Alice"</span>,
+    <span class="string">"age"</span>: <span class="value">25</span>
+};
+<span class="variable">keys</span> = <span class="function">keys</span>(<span class="variable">user</span>);  <span class="comment">// ["name", "age"]</span>
+<span class="variable">values</span> = <span class="function">values</span>(<span class="variable">user</span>);  <span class="comment">// ["Alice", 25]</span></pre>
+                    
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="feature-title">Important Notes</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>All functions have strict type checking for their parameters</li>
+                            <li>Type conversion functions will raise errors if conversion is not possible</li>
+                            <li>String functions only work on string values and will raise TypeError otherwise</li>
+                            <li>Collection functions have specific type requirements (e.g., length() works on strings,
+                                lists, and hashes)</li>
+                            <li>The wait() function is useful for creating delays in animations or timed operations</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Type Safety</h3>
+                <p>Neura enforces strict type checking for function returns. If a function declares a specific return
+                    type, it must return a value of that type, or a TypeError will be raised. Here are some examples:
+                </p>
+
                 <pre>
-<span class="keyword">fn</span> <span class="variable">greet</span>(<span class="variable">name</span>: <span class="type">str</span>) {
+<span class="comment">// Function with void return type - doesn't return a value</span>
+<span class="keyword">fn</span> <span class="function">greet</span>(<span class="variable">name</span>: <span class="type">str</span>) -> <span class="type">void</span> {
     <span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
+}
+
+<span class="comment">// Function that returns an integer</span>
+<span class="keyword">fn</span> <span class="function">calculate_sum</span>(<span class="variable">a</span>: <span class="type">int</span>, <span class="variable">b</span>: <span class="type">int</span>) -> <span class="type">int</span> {
+    <span class="keyword">return</span> <span class="variable">a</span> + <span class="variable">b</span>;  <span class="comment">// Returns int as specified</span>
+}
+
+<span class="comment">// Function that returns a string</span>
+<span class="keyword">fn</span> <span class="function">get_full_name</span>(<span class="variable">first</span>: <span class="type">str</span>, <span class="variable">last</span>: <span class="type">str</span>) -> <span class="type">str</span> {
+    <span class="keyword">return</span> <span class="variable">first</span> + <span class="string">" "</span> + <span class="variable">last</span>;
+}
+
+<span class="comment">// Function with dynamic return type</span>
+<span class="keyword">fn</span> <span class="function">get_value</span>(<span class="variable">key</span>: <span class="type">str</span>) -> <span class="type">dynamic</span> {
+    <span class="keyword">if</span> <span class="variable">key</span> == <span class="string">"age"</span> {
+        <span class="keyword">return</span> <span class="value">25</span>;  <span class="comment">// Returns int</span>
+    } <span class="keyword">else</span> {
+        <span class="keyword">return</span> <span class="string">"unknown"</span>;  <span class="comment">// Returns string</span>
+    }
 }</pre>
-                <p>You can call the function like this:</p>
+
+                <h3>Type Errors</h3>
+                <p>The following examples demonstrate common type errors that Neura will catch:</p>
+
                 <pre>
-<span class="function">greet</span>(<span class="string">"Alice"</span>);</pre>
+<span class="comment">// Error: Function declares int return type but returns float</span>
+<span class="keyword">fn</span> <span class="function">calculate_average</span>(<span class="variable">a</span>: <span class="type">int</span>, <span class="variable">b</span>: <span class="type">int</span>) -> <span class="type">int</span> {
+    <span class="keyword">return</span> (<span class="variable">a</span> + <span class="variable">b</span>) / <span class="value">2.0</span>;  <span class="comment">// TypeError: Expected int, got float</span>
+}
+
+<span class="comment">// Error: Function declares void return type but returns a value</span>
+<span class="keyword">fn</span> <span class="function">print_message</span>(<span class="variable">msg</span>: <span class="type">str</span>) -> <span class="type">void</span> {
+    <span class="function">say</span>(<span class="variable">msg</span>);
+    <span class="keyword">return</span> <span class="string">"done"</span>;  <span class="comment">// TypeError: void function cannot return a value</span>
+}
+
+<span class="comment">// Error: Missing return type annotation</span>
+<span class="keyword">fn</span> <span class="function">add_numbers</span>(<span class="variable">a</span>: <span class="type">int</span>, <span class="variable">b</span>: <span class="type">int</span>) {  <span class="comment">// SyntaxError: Return type annotation required</span>
+    <span class="keyword">return</span> <span class="variable">a</span> + <span class="variable">b</span>;
+}</pre>
+
+                <h3>Best Practices</h3>
+                <ul>
+                    <li>Always specify return types for clarity and type safety</li>
+                    <li>Use <code>void</code> for functions that perform actions but don't return values</li>
+                    <li>Use <code>dynamic</code> sparingly, only when a function truly needs to return different types
+                    </li>
+                    <li>Match the declared return type exactly - type coercion is not automatic</li>
+                    <li>Consider breaking down complex functions that might return different types into smaller,
+                        type-specific functions</li>
+                </ul>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="feature-title">Important Notes</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>The <code>void</code> type can only be used as a return type, not as a variable type
+                            </li>
+                            <li>All functions must have an explicit return type annotation</li>
+                            <li>Type checking is performed at runtime to ensure type safety</li>
+                            <li>Return type mismatches will raise a TypeError</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
-
-
-            <!-- <section id="classes-objects" class="section">
-                <h2>Classes & Objects</h2>
-                <p>Neura supports object-oriented programming with classes. Here's an example:</p>
-                <pre>
-class Person
-    var name
-    var age
-
-    func init(name, age)
-        this.name = name
-        this.age = age
-    end
-
-    func introduce()
-        print("Hi, my name is " + this.name + " and I am " + this.age + " years old.")
-    end
-end</pre>
-                <p>You can create an object from a class:</p>
-                <pre>
-var person1 = Person("John", 25)
-person1.introduce()</pre>
-            </section>
-
-            <section id="modules-imports" class="section">
-                <h2>Modules & Imports</h2>
-                <p>Modules can be imported using the <code>import</code> keyword:</p>
-                <pre>
-import utils
-utils.someFunction()</pre>
-            </section>
-
-            <section id="error-handling" class="section">
-                <h2>Error Handling</h2>
-                <p>Neura provides <code>try</code> and <code>catch</code> blocks for handling errors:</p>
-                <pre>
-try
-    var result = 10 / 0  // This will throw an error
-catch error
-    print("An error occurred: " + error)
-end</pre>
-            </section> -->
 
             <section id="built-in-functions" class="section">
                 <h2>Built-in Functions</h2>
-                <p>Neura provides several built-in functions, grouped by their purpose:</p>
+                <p>Neura provides a set of built-in functions for common operations. These functions are categorized by
+                    their purpose and include detailed type information.</p>
 
                 <div class="horizontal-feature">
                     <div class="horizontal-icon"><i class="fas fa-keyboard"></i></div>
-                    <div class="horizontal-title">Input Functions</div>
+                    <div class="horizontal-title">Input/Output Functions</div>
                 </div>
                 <ul>
-                    <li><code class="func">ask(prompt)</code>: Prompts the user for input and returns the value.</li>
-                </ul>
-
-                <div class="horizontal-feature">
-                    <div class="horizontal-icon"><i class="fas fa-comment-dots"></i></div>
-                    <div class="horizontal-title">Output Functions</div>
-                </div>
-                <ul>
-                    <li><code class="func">say(message)</code>: Prints values to the console.</li>
-                    <li><code class="func">notify(message)</code>: Sends a short notification to the user.</li>
+                    <li><code class="func">ask(prompt: str) -> str</code>: Prompts the user for input with the given
+                        message and returns the user's input as a string.</li>
+                    <li><code class="func">say(...values: dynamic) -> void</code>: Prints values to the console,
+                        accepting multiple arguments of any type.</li>
+                    <li><code class="func">wait(seconds: float) -> void</code>: Pauses execution for the specified
+                        number of seconds.</li>
                 </ul>
 
                 <div class="horizontal-feature">
@@ -917,22 +1481,23 @@ end</pre>
                     <div class="horizontal-title">Type Conversion</div>
                 </div>
                 <ul>
-                    <li><code class="func">asString()</code>: Converts a variable to a string.</li>
-                    <li><code class="func">asInt()</code>: Converts a variable to an integer.</li>
-                    <li><code class="func">asFloat()</code>: Converts a variable to a float.</li>
-                    <li><code class="func">asBool()</code>: Converts a variable to a boolean.</li>
+                    <li><code class="func">asInt(value: dynamic) -> int</code>: Converts a value to an integer, raising
+                        an error if conversion is not possible.</li>
+                    <li><code class="func">asFloat(value: dynamic) -> float</code>: Converts a value to a float, raising
+                        an error if conversion is not possible.</li>
+                    <li><code class="func">asBool(value: dynamic) -> bool</code>: Converts a value to a boolean
+                        (true/false).</li>
+                    <li><code class="func">asString(value: dynamic) -> str</code>: Converts any value to its string
+                        representation.</li>
                 </ul>
 
                 <div class="horizontal-feature">
-                    <div class="horizontal-icon"><i class="fas fa-toolbox"></i></div>
-                    <div class="horizontal-title">Utility Functions</div>
+                    <div class="horizontal-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="horizontal-title">Type Information</div>
                 </div>
                 <ul>
-                    <li><code class="func">type(value)</code>: Returns the type of a variable as a string.</li>
-                    <li><code class="func">wait(seconds)</code>: Pauses execution for a specified number of seconds.
-                    </li>
-                    <li><code class="func">length(value)</code>: Returns the number of elements in a string, list, or
-                        hash.</li>
+                    <li><code class="func">type(value: dynamic) -> str</code>: Returns the type of a value as a string
+                        (e.g., "int", "str", "list", "hash").</li>
                 </ul>
 
                 <div class="horizontal-feature">
@@ -940,15 +1505,27 @@ end</pre>
                     <div class="horizontal-title">String Functions</div>
                 </div>
                 <ul>
-                    <li><code class="func">trim(text)</code>: Removes whitespace from both ends of the string.</li>
-                    <li><code class="func">upperCase(text)</code>: Converts all characters in the string to uppercase.
+                    <li><code class="func">trim(text: str) -> str</code>: Removes whitespace from both ends of a string.
                     </li>
-                    <li><code class="func">lowerCase(text)</code>: Converts all characters in the string to lowercase.
-                    </li>
+                    <li><code class="func">upperCase(text: str) -> str</code>: Converts all characters in a string to
+                        uppercase.</li>
+                    <li><code class="func">lowerCase(text: str) -> str</code>: Converts all characters in a string to
+                        lowercase.</li>
                 </ul>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-list"></i></div>
+                    <div class="horizontal-title">Collection Functions</div>
+                </div>
+                <ul>
+                    <li><code class="func">length() -> int</code>: Returns the length of a string,
+                        list, or hash.</li>
+                    <li><code class="func">keys() -> list</code>: Returns a list of keys from a hash.</li>
+                    <li><code class="func">values() -> list</code>: Returns a list of values from a hash.</li>
+                </ul>
+
+
             </section>
-
-
 
         </main>
     </div>
@@ -998,6 +1575,27 @@ end</pre>
     </footer>
 
     <script>
+        // Color palette for dynamic selection
+        const colorPalette = [
+            '#ed9f3a', // Orange
+            '#7C3AED', // Purple
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#EF4444', // Red
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1'  // Indigo
+        ];
+
+        // Function to get a random color from the palette
+        function getRandomColor() {
+            const randomIndex = Math.floor(Math.random() * colorPalette.length);
+            return colorPalette[randomIndex];
+        }
+
+        // Set the primary color on page load
+        document.documentElement.style.setProperty('--primary', getRandomColor());
+
         // Mobile menu toggle
         const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
         const navMenu = document.querySelector('.nav-menu');
@@ -1011,7 +1609,7 @@ end</pre>
         // Theme toggle functionality
         const themeToggle = document.querySelector('.theme-toggle');
         const themeIcon = themeToggle.querySelector('i');
-        
+
         // Check for saved theme preference
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1020,7 +1618,7 @@ end</pre>
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
+
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);

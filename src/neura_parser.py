@@ -169,12 +169,19 @@ class Parser:
         self.expect("PUNCTUATION", ")")
         # print("Parsed closing parenthesis")
         
+        # Require return type annotation
+        if not (self.peek() and self.peek().type == "RETURN_TYPE"):
+            raise SyntaxError(f"Return type annotation required for function '{name}'")
+        
+        self.advance()  # consume the return type arrow
+        return_type = self.expect("DATATYPE").value
+        
         if self.match("OPERATOR") and self.tokens[self.pos - 1].value == "=>":
             # print("Parsing inline function")
             body = self.parse_expression()
             self.expect("PUNCTUATION", ";")
             # print("Finished parsing inline function")
-            return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "body": body, "inline": True}
+            return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "return_type": return_type, "body": body, "inline": True}
         else:
             # print("Parsing function block")
             self.expect("PUNCTUATION", "{")
@@ -188,7 +195,7 @@ class Parser:
             self.expect("PUNCTUATION", "}")
             # print("Parsed closing brace")
             # print("Finished parsing function block")
-            return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "body": body, "inline": False}
+            return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "return_type": return_type, "body": body, "inline": False}
 
     def parse_assignment_or_expr(self):
         # Check if this is a method call
@@ -246,6 +253,9 @@ class Parser:
         if self.peek() and self.peek().type == "PUNCTUATION" and self.peek().value == ":":
             self.advance()
             var_type = self.expect("DATATYPE").value
+            # Check if the type is void
+            if var_type == "void":
+                raise SyntaxError("Cannot use 'void' as a variable type")
         else:
             var_type = None
             
@@ -307,6 +317,12 @@ class Parser:
         token = self.peek()
         if not token:
             raise SyntaxError("Unexpected end of input")
+            
+        # Handle unary operators
+        if token.type == "OPERATOR" and token.value == "!":
+            self.advance()  # consume the operator
+            operand = self.parse_primary()
+            return {"type": "unary", "operator": "!", "operand": operand}
             
         # print(f"Parsing primary with token: {token}")
         if token.type == "METHOD":

@@ -28,12 +28,13 @@ class Context:
             return self.parent.get_type(name)
         return type_val
 
-    def define_function(self, name, params, body, inline, param_types=None):
+    def define_function(self, name, params, body, inline, param_types=None, return_type=None):
         self.functions[name] = {
             "params": params,
             "body": body,
             "inline": inline,
-            "param_types": param_types or {}  # Store parameter types, default to empty dict if not provided
+            "param_types": param_types or {},  # Store parameter types, default to empty dict if not provided
+            "return_type": return_type  # Store return type
         }
 
     def call_function(self, name, args, interpreter):
@@ -73,13 +74,34 @@ class Context:
                 raise Exception(f"Missing argument for parameter '{param}' in function '{name}'")
 
         if func["inline"]:
-            return interpreter.evaluate(func["body"], new_context)
+            result = interpreter.evaluate(func["body"], new_context)
         else:
             try:
                 interpreter.execute_block(func["body"], new_context)
+                result = None
             except ReturnValue as r:
-                return r.value
-            return None
+                result = r.value
+
+        # Validate return type if specified
+        if func["return_type"]:
+            if func["return_type"] == "void":
+                if result is not None:
+                    raise TypeError(f"Function '{name}' is declared as void but returns a value")
+            else:
+                type_map = {
+                    "int": int,
+                    "float": float,
+                    "str": str,
+                    "bool": bool,
+                    "list": list,
+                    "hash": dict,
+                }
+                
+                expected_type = type_map.get(func["return_type"])
+                if expected_type and not isinstance(result, expected_type):
+                    raise TypeError(f"Function '{name}' must return type {func['return_type']}, got {type(result).__name__}")
+
+        return result
 
 
 class ReturnValue(Exception):
@@ -268,7 +290,8 @@ class Interpreter:
                 node["params"],
                 node["body"],
                 node["inline"],
-                node.get("param_types", {})  # Pass parameter types
+                node.get("param_types", {}),  # Pass parameter types
+                node.get("return_type")  # Pass return type
             )
 
         elif node_type == "function_call":
@@ -343,6 +366,10 @@ class Interpreter:
             right = self.evaluate(expr["right"], context)
             op = expr["operator"]
             return self._binary_op(op, left, right)
+        elif expr_type == "unary":
+            operand = self.evaluate(expr["operand"], context)
+            op = expr["operator"]
+            return self._unary_op(op, operand)
         elif expr_type == "function_call":
             return context.call_function(expr["name"], expr["args"], self)
         elif expr_type == "method_call":
@@ -447,5 +474,15 @@ class Interpreter:
             return left <= right
         elif op == ">=":
             return left >= right
+        elif op == "&&":
+            return bool(left) and bool(right)
+        elif op == "||":
+            return bool(left) or bool(right)
         else:
             raise Exception(f"Unknown operator: {op}")
+
+    def _unary_op(self, op, operand):
+        if op == "!":
+            return not bool(operand)
+        else:
+            raise Exception(f"Unknown unary operator: {op}")

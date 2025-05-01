@@ -1,4 +1,4 @@
-fn process_user_data(age: int, is_active: bool, membership_duration: int) {
+fn process_user_data(age: int, is_active: bool, membership_duration: int) -> dynamic {
     // Input validation
     if age <= 0 {
         say("Error: Age must be a positive number");
@@ -21,7 +21,7 @@ fn process_user_data(age: int, is_active: bool, membership_duration: int) {
     }
 }
 
-fn check_eligibility(age: int, is_active: bool, membership_duration: int) {
+fn check_eligibility(age: int, is_active: bool, membership_duration: int) -> bool{
     // Input validation
     if age <= 0 {
         say("Error: Age must be a positive number");
@@ -188,7 +188,7 @@ say("Name: ${name}, Age: ${x}");
 say("Config: ${config}");
 
 // Function Definitions
-fn greet(name: str) {
+fn greet(name: str) -> void {
     if name.length() == 0 {
         say("Hello, Anonymous!");
     } else {
@@ -196,9 +196,9 @@ fn greet(name: str) {
     }
 }
 
-fn add(a: int, b: int) => a + b;
+fn add(a: int, b: int) -> int => a + b;
 
-fn process_list(items: list) {
+fn process_list(items: list) -> bool {
     if items.length() == 0 {
         say("List is empty");
         return false;
@@ -271,6 +271,18 @@ if input_str.length() > 0 {
     say("Error: Empty input");
 }
 
+// Logical operations
+if x > 5 && y < 10 {
+    say("x is greater than 5 and y is less than 10");
+}
+
+is_valid: bool = true;
+has_permission: bool = false;
+
+if is_valid || has_permission {
+    say("Either valid or has permission");
+}
+
 // List operations
 say("\nList Operations:");
 say("List length:", numbers.length());
@@ -330,7 +342,7 @@ say("Maximum integer + 1:", max_int + 1); // This will cause an overflow in some
 // Division by zero handling
 say("\nDivision by Zero Handling:");
 divisor: int = 0;
-if divisor == 10 {
+if divisor == 0 {
     say("Error: Cannot divide by zero");
 } else {
     result = 10 / divisor;
@@ -344,3 +356,15 @@ say("Empty list is falsy:", empty_list.asBool() == false);   // Compare with fal
 say("Empty hash is falsy:", empty_hash.asBool() == false);   // Compare with false to check if it's falsy
 say("Zero is falsy:", 0.asBool() == false);                  // Compare with false to check if it's falsy
 say("Non-zero is truthy:", 1.asBool() == true);             // Compare with true for truthy check
+
+if (x > 5 || y < 10) && is_valid {
+    say("Complex condition met");
+}
+
+count: int = 0;
+fn make_counter() -> dynamic {
+    return count;
+}
+
+counter = make_counter();
+say(counter);

@@ -1,5 +1,23 @@
 # Neura Language Documentation
 
+## Table of Contents
+1. [Language Overview](#language-overview)
+2. [Data Types](#data-types)
+3. [Core Features](#core-features)
+   - [Variable Declarations and Type Annotations](#1-variable-declarations-and-type-annotations)
+   - [Functions](#2-functions)
+   - [Control Structures](#3-control-structures)
+   - [Logical Operators](#4-logical-operators)
+   - [Collection Methods](#5-collection-methods)
+   - [String Interpolation](#6-string-interpolation)
+   - [Method Chaining](#7-method-chaining)
+4. [Built-in Methods](#built-in-methods)
+5. [Advanced Features](#advanced-features)
+6. [Best Practices and Edge Cases](#best-practices-and-edge-cases)
+7. [Syntax Requirements](#syntax-requirements)
+8. [Known Issues and Limitations](#known-issues-and-limitations)
+9. [Future Improvements](#future-improvements)
+
 ## Language Overview
 
 Neura is a statically-typed programming language with dynamic capabilities. It supports various data types, control structures, and methods for data manipulation. The language emphasizes type safety while providing flexibility through dynamic typing when needed.
@@ -18,12 +36,12 @@ Neura is a statically-typed programming language with dynamic capabilities. It s
 
 ### 1. Variable Declarations and Type Annotations
 
-```c
+```neura
 // Basic type declarations
 age: int = 25;
 name: str = "John";
 is_active: bool = true;
-numbers: list = [1, 2, 3, 4, 5];
+numbers: list = [1, 2, 3];
 config: hash = {"debug": true, "port": 8080};
 dynamic_var: dynamic = 42;
 
@@ -33,42 +51,76 @@ say("Type of y:", y.type());
 say("Type of name:", name.type());
 ```
 
-### 2. Function Definitions
+### 2. Functions
 
-```c
+```neura
 // Standard function with block body and return type
-fn process_user_data(age: int, is_active: bool, membership_duration: int) {
-    // Input validation
-    if age <= 0 {
-        say("Error: Age must be a positive number");
-        return 0;
-    }
-    
-    if membership_duration < 0 {
-        say("Error: Membership duration cannot be negative");
-        return 0;
-    }
-    
+fn process_data(age: int, is_active: bool) -> int {
     if is_active {
-        if membership_duration >= 1 {
-            return age * 1.5;  
-        } else {
-            return age * 1.2;  
-        }
-    } else {
-        return age * 0.8;  
+        return age * 1.5;
     }
+    return age;
 }
 
-// Inline function with arrow syntax
-fn add(a: int, b: int) => a + b;
+// Inline function with arrow syntax and return type
+fn add(a: int, b: int) -> int => a + b;
+
+// Function with void return type
+fn greet(name: str) -> void {
+    say("Hello, ", name);
+}
+
+// Function with dynamic return type (use sparingly)
+fn get_value(key: str) -> dynamic {
+    if key == "age" {
+        return 25;  // Returns int
+    }
+    return "unknown";  // Returns string
+}
+```
+
+#### Function Return Types
+Every function must specify a return type using the `->` operator. Neura supports the following return types:
+- `void` - For functions that don't return a value
+- `int` - For functions returning integer values
+- `float` - For functions returning floating-point numbers
+- `str` - For functions returning strings
+- `bool` - For functions returning boolean values
+- `list` - For functions returning lists
+- `hash` - For functions returning hash maps
+- `dynamic` - For functions that may return different types (use sparingly)
+
+#### Type Safety in Functions
+- Return type annotations are mandatory
+- The actual return value must match the declared return type
+- Type mismatches will raise a TypeError
+- Void functions cannot return any value
+- Dynamic return types should be used sparingly and only when necessary
+
+#### Common Type Errors
+```neura
+// Error: Function declares int return type but returns float
+fn calculate_average(a: int, b: int) -> int {
+    return (a + b) / 2.0;  // TypeError: Expected int, got float
+}
+
+// Error: Function declares void return type but returns a value
+fn print_message(msg: str) -> void {
+    say(msg);
+    return "done";  // TypeError: void function cannot return a value
+}
+
+// Error: Missing return type annotation
+fn add_numbers(a: int, b: int) {  // SyntaxError: Return type annotation required
+    return a + b;
+}
 ```
 
 ### 3. Control Structures
 
 #### If-Else Statements
 
-```c
+```neura
 if condition {
     // code
 } else if another_condition {
@@ -80,7 +132,7 @@ if condition {
 
 #### Loops
 
-```c
+```neura
 // For loop with step
 for i in 0..10 by 2 {
     say("Count:", i);
@@ -92,68 +144,184 @@ foreach item in items {
 }
 
 // While loop
-while counter < 5 {
-    say("Counter:", counter);
-    counter = counter + 1;
+while condition {
+    // code
 }
 ```
 
-### 4. Methods
+### 4. Logical Operators
 
-#### String Methods
+Neura supports three logical operators for boolean operations:
 
-- `trim()`: Removes whitespace from the beginning and end
-- `upperCase()`: Converts to uppercase
-- `lowerCase()`: Converts to lowercase
-- `length()`: Returns the length of the string
+#### Logical AND (&&)
+- Returns `true` if both operands are `true`
+- Returns `false` if either operand is `false`
+- Short-circuits: if the first operand is `false`, the second operand is not evaluated
 
-#### Type Conversion Methods
-
-- `asInt()`: Converts to integer
-- `asFloat()`: Converts to float
-- `asBool()`: Converts to boolean
-- `asString()`: Converts to string
-- `type()`: Returns the type of the value as a string
-
-#### Hash Methods
-
-- `keys()`: Returns a list of keys
-- `values()`: Returns a list of values
-- `length()`: Returns the number of key-value pairs
-
-#### List Methods
-
-- `length()`: Returns the number of elements
-
-### 5. Input/Output
-
-```c
-// Output
-say("Hello, World!");
-say("Value:", some_variable);
-
-// Input with validation
-user_input: str = ask("Enter your name: ");
-if user_input.length() == 0 {
-    say("Error: Name cannot be empty");
-    user_input = "Anonymous";
+```neura
+// Basic AND operation
+is_valid: bool = true;
+has_permission: bool = true;
+if is_valid && has_permission {
+    say("Access granted");
 }
+
+// Short-circuit example
+if false && some_expensive_operation() {
+    // some_expensive_operation() will never be called
+    say("This will never execute");
+}
+```
+
+#### Logical OR (||)
+- Returns `true` if either operand is `true`
+- Returns `false` if both operands are `false`
+- Short-circuits: if the first operand is `true`, the second operand is not evaluated
+
+```neura
+// Basic OR operation
+is_admin: bool = false;
+has_privileges: bool = true;
+if is_admin || has_privileges {
+    say("User has sufficient privileges");
+}
+
+// Short-circuit example
+if true || some_expensive_operation() {
+    // some_expensive_operation() will never be called
+    say("This will execute immediately");
+}
+```
+
+#### Logical NOT (!)
+- Returns `true` if the operand is `false`
+- Returns `false` if the operand is `true`
+- Can be used to invert any boolean expression
+
+```neura
+// Basic NOT operation
+is_disabled: bool = false;
+if !is_disabled {
+    say("Feature is enabled");
+}
+
+// Complex NOT operation
+if !(x > 5 && y < 10) {
+    say("Either x is not greater than 5 or y is not less than 10");
+}
+```
+
+#### Operator Precedence
+1. `!` (highest precedence)
+2. `&&`
+3. `||` (lowest precedence)
+
+```neura
+// Parentheses can be used to override precedence
+if (x > 5 || y < 10) && !is_disabled {
+    say("Complex condition met");
+}
+```
+
+#### Type Safety
+- Logical operators only work with boolean values
+- Non-boolean values will raise a TypeError
+- Use `asBool()` for type conversion when needed
+
+```neura
+// Type-safe usage
+value: int = 42;
+if value.asBool() && is_valid {
+    say("Value is truthy and valid");
+}
+
+// Error: Cannot use non-boolean with logical operators
+if 42 && true {  // TypeError: Expected bool, got int
+    say("This will cause an error");
+}
+```
+
+#### Common Patterns
+```neura
+// Checking multiple conditions
+if age >= 18 && has_id && !is_banned {
+    say("User is eligible");
+}
+
+// Providing default values
+result = value || default_value;
+
+// Toggling boolean state
+is_enabled = !is_enabled;
+
+// Complex conditions
+if (!is_logged_in || !has_permission) && !is_guest {
+    say("Access denied");
+}
+```
+
+### 5. Collection Methods
+
+```neura
+// Length method
+str = "hello";
+list = [1, 2, 3];
+hash = {"a": 1, "b": 2};
+
+say(str.length());  // 5
+say(list.length()); // 3
+say(hash.length()); // 2
+
+// Keys and Values methods (for hashes only)
+keys = hash.keys();   // ["a", "b"]
+values = hash.values(); // [1, 2]
 ```
 
 ### 6. String Interpolation
 
-```c
-name: str = "John";
-age: int = 30;
-say("Name: ${name}, Age: ${age}");
+```neura
+name = "John";
+age = 25;
+say("Hello, ${name}! You are ${age} years old.");
 ```
 
-### 7. Wait Function
+### 7. Method Chaining
 
-```c
-wait(1); // Waits for 1 second
-say("waited 1 second");
+```neura
+result = ask("Enter a number:").asInt().toString().length();
 ```
+
+## Built-in Methods
+
+### I/O Methods
+- `say(...)`: Prints values to the console
+- `ask(prompt)`: Prompts user for input
+- `wait(seconds)`: Pauses execution for specified duration
+
+### Type Conversion Methods
+- `asInt()`: Converts to integer
+- `asFloat()`: Converts to float
+- `asBool()`: Converts to boolean
+- `asString()`: Converts to string
+
+### String Methods
+- `trim()`: Removes whitespace
+- `upperCase()`: Converts to uppercase
+- `lowerCase()`: Converts to lowercase
+- `length()`: Returns string length
+
+### Collection Methods
+- `length()`: Returns length of string, list, or hash
+- `keys()`: Returns list of hash keys
+- `values()`: Returns list of hash values
+
+## Advanced Features
+
+### Method Chaining
+Methods can be chained for concise code.
+
+### String Interpolation
+Supports embedding expressions in strings using ${expression} syntax.
 
 ## Best Practices and Edge Cases
 
@@ -161,7 +329,7 @@ say("waited 1 second");
 
 Always validate user input to ensure it meets the expected format and constraints:
 
-```c
+```neura
 // Age input with validation
 age_input: str = ask("Please enter your age: ");
 user_age: int = 0;
@@ -181,7 +349,7 @@ if age_input.length() > 0 {
 
 Implement error handling for potential issues:
 
-```c
+```neura
 // Division by zero handling
 divisor: int = 0;
 if divisor == 0 {
@@ -196,7 +364,7 @@ if divisor == 0 {
 
 Handle empty values appropriately:
 
-```c
+```neura
 // Empty string handling
 empty_str: str = "";
 say("Empty string length:", empty_str.length());
@@ -217,7 +385,7 @@ say("Empty hash length:", empty_hash.length());
 
 Validate type conversions to prevent errors:
 
-```c
+```neura
 str_num: str = "123";
 num: int = 0;
 if str_num.length() > 0 {
@@ -239,7 +407,7 @@ if invalid_int.length() > 0 {
 
 Validate method chaining to prevent errors:
 
-```c
+```neura
 input_str: str = ask("Enter a number: ");
 if input_str.length() > 0 {
     trimmed_input: str = input_str.trim();
@@ -258,8 +426,8 @@ if input_str.length() > 0 {
 
 Always return a value from functions:
 
-```c
-fn process_list(items: list) {
+```neura
+fn process_list(items: list) -> bool {
     if items.length() == 0 {
         say("List is empty");
         return false;
@@ -276,7 +444,7 @@ fn process_list(items: list) {
 
 Test boundary conditions to ensure robustness:
 
-```c
+```neura
 // Age classification with boundary testing
 if user_age > 18 {
     say("User is an adult.");
@@ -296,7 +464,7 @@ say("Maximum integer + 1:", max_int + 1);
 
 Handle null/undefined values appropriately:
 
-```c
+```neura
 // Null/undefined handling
 say("Empty string is falsy:", empty_str.asBool() == false);
 say("Empty list is falsy:", empty_list.asBool() == false);
@@ -309,7 +477,7 @@ say("Non-zero is truthy:", 1.asBool() == true);
 
 Handle dynamic type changes safely:
 
-```c
+```neura
 dynamic_var: dynamic = 42;
 say("Dynamic variable:", dynamic_var);
 say("Type of dynamic_var:", dynamic_var.type());
@@ -325,7 +493,7 @@ say("Type of dynamic_var:", dynamic_var.type());
 
 Every statement must end with a semicolon:
 
-```c
+```neura
 // Correct
 x: int = 10;
 say("Hello");
@@ -339,9 +507,9 @@ say("Hello")
 
 Functions must return a value. Empty returns are not allowed:
 
-```c
+```neura
 // Correct
-fn process_list(items: list) {
+fn process_list(items: list) -> bool {
     if items.length() == 0 {
         return false;
     }
@@ -349,7 +517,7 @@ fn process_list(items: list) {
 }
 
 // Incorrect - will cause syntax error
-fn process_list(items: list) {
+fn process_list(items: list) -> bool {
     if items.length() == 0 {
         return;
     }
@@ -360,7 +528,7 @@ fn process_list(items: list) {
 
 Method calls must be followed by parentheses, even if there are no arguments:
 
-```c
+```neura
 // Correct
 text.trim();
 empty_list.length();
@@ -374,15 +542,15 @@ empty_list.length;
 
 Type annotations are required for function parameters and variable declarations:
 
-```c
+```neura
 // Correct
-fn greet(name: str) {
+fn greet(name: str) -> void {
     say("Hello, ${name}!");
 }
 age: int = 25;
 
 // Incorrect - will cause syntax error
-fn greet(name) {
+fn greet(name) -> void {
     say("Hello, ${name}!");
 }
 age = 25;
