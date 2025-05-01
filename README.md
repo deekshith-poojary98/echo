@@ -31,8 +31,7 @@ Neura is a modern, statically-typed programming language designed for simplicity
   - String Manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`
 
 - **Advanced Features**
-  - Function closures
-  - Context-based scoping
+  - String Interpolation
   - Method chaining
 
 ## Getting Started
@@ -54,12 +53,12 @@ config: hash = {"debug": true, "port": 8080};
 say("Hello, ${name}! Your score is ${scores[0]}");
 
 // Function Definition (Block Style) with Type Annotations
-fn greet(name: str) {
+fn greet(name: str) -> void {
     say("Hello,", name);
 }
 
 // Function Definition (Inline) with Type Annotations
-fn square(x: int) => x * x;
+fn square(x: int) -> int => x * x;
 
 // Method Chaining
 result: str = ask("Enter a number:").asInt().toString().length();
