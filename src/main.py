@@ -10,7 +10,7 @@ from neura_interpreter import Interpreter
 
 if __name__ == "__main__":
     lex_obj = Lexer()
-    tokens = lex_obj.read_source(r".\source.neu")
+    tokens = lex_obj.read_source(r".\test.neu")
     # print("Tokens from lexer:", tokens)
 
     parser_obj = Parser(tokens)

@@ -16,13 +16,15 @@ class Lexer:
         "KEYWORD": r'\b(fn|for|if|else|foreach|in|by|return|break|continue|while)\b',
         "RETURN_TYPE": r'->',
         "DATATYPE": r'\b(int|float|str|bool|dynamic|list|hash|void)\b',
-        "METHOD": r'\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values)\b',
+        "METHOD": r'\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values|reverse|push|empty|clone|countOf|merge|find|insertAt|pull|removeValue|order)\b',
         "BOOLEAN": r'\b(true|false)\b',
         "FLOAT": r'\b\d+\.\d+\b',
         "NUMBER": r'\b\d+\b',
         "IDENTIFIER": r'\b[a-zA-Z_][a-zA-Z0-9_]*\b',
-        "OPERATOR": r'(==|=>|<=|>=|!=|[=+\-*/<>]|&&|\|\||!)',
-        "PUNCTUATION": r'[(),.;:{}\[\]]',
+        "OPERATOR": r'(==|=>|<=|>=|!=|[=+\-*/%<>]|&&|\|\||!)',
+        "RANGE_OPERATOR": r'\.{2,3}',
+        "METHOD_OPERATOR": r'\.',  # Separate pattern for method call dot operator
+        "PUNCTUATION": r'[(),;:{}\[\]]',  # Removed dot from punctuation
         "STRING": r'"[^"]*"',
         "INTERPOLATION_START": r'\${',
         "INTERPOLATION_END": r'}',

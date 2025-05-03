@@ -1009,8 +1009,8 @@
                         <ul>
                             <li>All variables must be declared with a type</li>
                             <li>Variables cannot change their type after declaration (except dynamic)</li>
-                            <li>Variables have block scope and are not accessible outside their block</li>
-                            <li>Variable names must start with a letter and can contain letters, numbers, and
+                            <li>Variables have block scope and are not accessible outside their block (WIP)</li>
+                            <li>Variable names must start with a letter or underscore and can contain letters, numbers, and
                                 underscores</li>
                             <li>Variable names are case-sensitive</li>
                         </ul>
@@ -1254,21 +1254,37 @@
 
                 <h3>For Loop</h3>
                 <p>The <code>for</code> loop iterates through a range of values with optional step increment using the
-                    <code>by</code> keyword.</p>
+                    <code>by</code> keyword. Use <code>..</code> for inclusive ranges (includes end value) and <code>...</code> for exclusive ranges (excludes end value). The <code>break</code> statement exits the loop early, while <code>continue</code> skips to the next iteration.</p>
                 <pre>
-<span class="comment">// Basic for loop</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> {
-    <span class="function">say</span>(<span class="string">"Iteration:"</span>, <span class="variable">i</span>);
+<span class="comment">// Basic for loop (exclusive range)</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">...</span><span class="value">10</span> {
+    <span class="function">say</span>(<span class="string">"Iteration:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 0 to 9</span>
 }
 
-<span class="comment">// For loop with step</span>
+<span class="comment">// For loop with step (inclusive range)</span>
 <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> <span class="keyword">by</span> <span class="value">2</span> {
-    <span class="function">say</span>(<span class="string">"Even iteration:"</span>, <span class="variable">i</span>);
+    <span class="function">say</span>(<span class="string">"Even iteration:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 0,2,4,6,8,10</span>
 }
 
-<span class="comment">// Reverse for loop</span>
+<span class="comment">// Reverse for loop (inclusive range)</span>
 <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">10</span><span class="operator">..</span><span class="value">0</span> <span class="keyword">by</span> <span class="operator">-</span><span class="value">1</span> {
-    <span class="function">say</span>(<span class="string">"Countdown:"</span>, <span class="variable">i</span>);
+    <span class="function">say</span>(<span class="string">"Countdown:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 10 down to 0</span>
+}
+
+<span class="comment">// Loop with break statement</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">1</span><span class="operator">...</span><span class="value">100</span> {
+    <span class="keyword">if</span> <span class="variable">i</span> <span class="operator">></span> <span class="value">5</span> {
+        <span class="keyword">break</span>;  <span class="comment">// Exit loop when i > 5</span>
+    }
+    <span class="function">say</span>(<span class="string">"Number:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 1 to 5</span>
+}
+
+<span class="comment">// Loop with continue statement</span>
+<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">1</span><span class="operator">...</span><span class="value">5</span> {
+    <span class="keyword">if</span> <span class="variable">i</span> <span class="operator">%</span> <span class="value">2</span> <span class="operator">==</span> <span class="value">0</span> {
+        <span class="keyword">continue</span>;  <span class="comment">// Skip even numbers</span>
+    }
+    <span class="function">say</span>(<span class="string">"Odd number:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 1, 3</span>
 }</pre>
 
                 <h3>Foreach Loop</h3>
@@ -1281,14 +1297,20 @@
     <span class="function">say</span>(<span class="string">"Fruit:"</span>, <span class="variable">fruit</span>);
 }
 
+<span class="comment">// Foreach with string</span>
+<span class="variable">text</span>: <span class="type">str</span> = <span class="string">"Hello, World!"</span>;
+<span class="keyword">foreach</span> <span class="variable">char</span> <span class="keyword">in</span> <span class="variable">text</span> {
+    <span class="function">say</span>(<span class="string">"Character:"</span>, <span class="variable">char</span>);
+}
+
 <span class="comment">// Foreach with hash</span>
 <span class="variable">user</span>: <span class="type">hash</span> = {
     <span class="string">"name"</span>: <span class="string">"Alice"</span>,
     <span class="string">"age"</span>: <span class="value">25</span>,
     <span class="string">"city"</span>: <span class="string">"New York"</span>
 };
-<span class="keyword">foreach</span> <span class="variable">key</span>, <span class="variable">value</span> <span class="keyword">in</span> <span class="variable">user</span> {
-    <span class="function">say</span>(<span class="variable">key</span>, <span class="string">":"</span>, <span class="variable">value</span>);
+<span class="keyword">foreach</span> <span class="variable">key</span> <span class="keyword">in</span> <span class="variable">user</span> {
+    <span class="function">say</span>(<span class="variable">key</span>, <span class="string">":"</span>, <span class="variable">user[</span><span class="variable">key</span><span class="string"></span>]</span>);
 }</pre>
 
                 <div class="feature-card">
@@ -1340,33 +1362,6 @@
                     <li><code>hash</code> - For functions returning hash maps</li>
                     <li><code>dynamic</code> - For functions that may return different types</li>
                 </ul>
-
-                
-                        <pre>
-<span class="comment">// Input and output</span>
-<span class="variable">name</span> = <span class="function">ask</span>(<span class="string">"What's your name? "</span>);
-<span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
-<span class="function">wait</span>(<span class="value">1.5</span>);  <span class="comment">// Wait for 1.5 seconds</span>
-
-<span class="comment">// Type conversion</span>
-<span class="variable">age</span> = <span class="function">asInt</span>(<span class="function">ask</span>(<span class="string">"How old are you? "</span>));
-<span class="variable">price</span> = <span class="function">asFloat</span>(<span class="string">"19.99"</span>);
-<span class="variable">is_valid</span> = <span class="function">asBool</span>(<span class="string">"true"</span>);
-
-<span class="comment">// String manipulation</span>
-<span class="variable">text</span> = <span class="string">"  Hello World  "</span>;
-<span class="variable">clean</span> = <span class="function">trim</span>(<span class="variable">text</span>);  <span class="comment">// "Hello World"</span>
-<span class="variable">upper</span> = <span class="function">upperCase</span>(<span class="variable">clean</span>);  <span class="comment">// "HELLO WORLD"</span>
-
-<span class="comment">// Collection operations</span>
-<span class="variable">user</span> = {
-    <span class="string">"name"</span>: <span class="string">"Alice"</span>,
-    <span class="string">"age"</span>: <span class="value">25</span>
-};
-<span class="variable">keys</span> = <span class="function">keys</span>(<span class="variable">user</span>);  <span class="comment">// ["name", "age"]</span>
-<span class="variable">values</span> = <span class="function">values</span>(<span class="variable">user</span>);  <span class="comment">// ["Alice", 25]</span></pre>
-                    
-
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="feature-title">Important Notes</div>
@@ -1432,16 +1427,21 @@
     <span class="keyword">return</span> <span class="variable">a</span> + <span class="variable">b</span>;
 }</pre>
 
-                <h3>Best Practices</h3>
-                <ul>
-                    <li>Always specify return types for clarity and type safety</li>
-                    <li>Use <code>void</code> for functions that perform actions but don't return values</li>
-                    <li>Use <code>dynamic</code> sparingly, only when a function truly needs to return different types
-                    </li>
-                    <li>Match the declared return type exactly - type coercion is not automatic</li>
-                    <li>Consider breaking down complex functions that might return different types into smaller,
-                        type-specific functions</li>
-                </ul>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="feature-title">Best Practices</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li>Always specify return types for clarity and type safety</li>
+                            <li>Use <code>void</code> for functions that perform actions but don't return values</li>
+                            <li>Use <code>dynamic</code> sparingly, only when a function truly needs to return different types
+                            </li>
+                            <li>Match the declared return type exactly - type coercion is not automatic</li>
+                            <li>Consider breaking down complex functions that might return different types into smaller,
+                                type-specific functions</li>
+                        </ul>
+                    </div>
+                </div>                
 
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
@@ -1476,6 +1476,13 @@
                         number of seconds.</li>
                 </ul>
 
+                <pre>
+<span class="comment">// Input and output</span>
+<span class="variable">name</span> = <span class="function">ask</span>(<span class="string">"What's your name? "</span>);
+<span class="function">say</span>(<span class="string">"Hello, "</span>, <span class="variable">name</span>);
+<span class="function">wait</span>(<span class="value">1.5</span>);  <span class="comment">// Wait for 1.5 seconds</span>
+</pre>
+
                 <div class="horizontal-feature">
                     <div class="horizontal-icon"><i class="fas fa-exchange-alt"></i></div>
                     <div class="horizontal-title">Type Conversion</div>
@@ -1491,14 +1498,31 @@
                         representation.</li>
                 </ul>
 
+                <pre>
+<span class="comment">// Type conversion</span>
+<span class="variable">age</span> = <span class="function">asInt</span>(<span class="function">ask</span>(<span class="string">"How old are you? "</span>));
+<span class="variable">price</span> = <span class="function">asFloat</span>(<span class="string">"19.99"</span>);
+<span class="variable">is_valid</span> = <span class="function">asBool</span>(<span class="string">"true"</span>);
+<span class="variable">name</span> = <span class="function">asString</span>(<span class="variable">age</span>);
+</pre>
+
                 <div class="horizontal-feature">
                     <div class="horizontal-icon"><i class="fas fa-info-circle"></i></div>
                     <div class="horizontal-title">Type Information</div>
                 </div>
                 <ul>
-                    <li><code class="func">type(value: dynamic) -> str</code>: Returns the type of a value as a string
+                    <li><code class="func">type() -> str</code>: Returns the type of a value as a string
                         (e.g., "int", "str", "list", "hash").</li>
                 </ul>
+
+                <pre>
+<span class="comment">// Type information</span>
+<span class="variable">value</span>: <span class="type">int</span> = <span class="value">10</span>;
+<span class="function">say</span>(<span class="variable">value</span>.<span class="function">type</span>());  <span class="comment">// "int"</span>
+
+<span class="variable">value</span>: <span class="type">str</span> = <span class="string">"Hello"</span>;
+<span class="function">say</span>(<span class="variable">value</span>.<span class="function">type</span>());  <span class="comment">// "str"</span>
+</pre>
 
                 <div class="horizontal-feature">
                     <div class="horizontal-icon"><i class="fas fa-font"></i></div>
@@ -1513,6 +1537,14 @@
                         lowercase.</li>
                 </ul>
 
+                <pre>
+<span class="comment">// String manipulation</span>
+<span class="variable">text</span>: <span class="type">str</span> = <span class="string">"  Hello World  "</span>;
+<span class="variable">clean</span>: <span class="type">str</span> = <span class="function">trim</span>(<span class="variable">text</span>);  <span class="comment">// "Hello World"</span>
+<span class="variable">upper</span>: <span class="type">str</span> = <span class="function">upperCase</span>(<span class="variable">clean</span>);  <span class="comment">// "HELLO WORLD"</span>
+<span class="variable">lower</span>: <span class="type">str</span> = <span class="function">lowerCase</span>(<span class="variable">clean</span>);  <span class="comment">// "hello world"</span>
+</pre>
+
                 <div class="horizontal-feature">
                     <div class="horizontal-icon"><i class="fas fa-list"></i></div>
                     <div class="horizontal-title">Collection Functions</div>
@@ -1520,10 +1552,90 @@
                 <ul>
                     <li><code class="func">length() -> int</code>: Returns the length of a string,
                         list, or hash.</li>
+                    <li><code class="func">reverse() -> list | str</code>: Reverses the elements of a list or string.</li>
                     <li><code class="func">keys() -> list</code>: Returns a list of keys from a hash.</li>
                     <li><code class="func">values() -> list</code>: Returns a list of values from a hash.</li>
                 </ul>
+                <pre>
+<span class="comment">// Collection operations</span>
+<span class="variable">user</span>: <span class="type">hash</span> = {<span class="string">"name"</span>: <span class="string">"Alice"</span>, <span class="string">"age"</span>: <span class="value">25</span>};
+<span class="variable">keys</span> = <span class="function">keys</span>(<span class="variable">user</span>);  <span class="comment">// ["name", "age"]</span>
+<span class="variable">values</span> = <span class="function">values</span>(<span class="variable">user</span>);  <span class="comment">// ["Alice", 25]</span>
 
+<span class="comment">// Length and reverse examples</span>
+<span class="variable">text</span>: <span class="type">str</span> = <span class="string">"Hello"</span>;
+<span class="function">say</span>(<span class="variable">text</span>.<span class="function">length</span>());  <span class="comment">// 5</span>
+<span class="function">say</span>(<span class="variable">text</span>.<span class="function">reverse</span>());  <span class="comment">// "olleH"</span>
+
+<span class="variable">nums</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="value">2</span>, <span class="value">3</span>];
+<span class="function">say</span>(<span class="variable">nums</span>.<span class="function">length</span>());  <span class="comment">// 3</span>
+<span class="function">say</span>(<span class="variable">nums</span>.<span class="function">reverse</span>());  <span class="comment">// [3, 2, 1]</span>
+</pre>
+
+                <div class="horizontal-feature">
+                    <div class="horizontal-icon"><i class="fas fa-list"></i></div>
+                    <div class="horizontal-title">List Methods</div>
+                </div>
+                <ul>
+                    <li><code class="func">push(value: dynamic) -> list</code>: Adds an element to the end of the list and returns the modified list.</li>
+                    <li><code class="func">empty() -> list</code>: Removes all elements from the list and returns the empty list.</li>
+                    <li><code class="func">clone() -> list</code>: Returns a copy of the list.</li>
+                    <li><code class="func">countOf(value: dynamic) -> int</code>: Returns the number of occurrences of a value in the list.</li>
+                    <li><code class="func">find(value: dynamic) -> int</code>: Returns the index of the first occurrence of a value, or raises an error if not found.</li>
+                    <li><code class="func">insertAt(index: int, value: dynamic) -> list</code>: Inserts a value at the specified index and returns the modified list.</li>
+                    <li><code class="func">pull() -> dynamic</code>: Removes and returns the element at the specified index (or the last element if no index is provided).</li>
+                    <li><code class="func">removeValue(value: dynamic) -> list</code>: Removes the first occurrence of a value and returns the modified list.</li>
+                    <li><code class="func">order() -> list</code>: Sorts the list in place and returns the sorted list.</li>
+                    <li><code class="func">merge(other: list) -> list</code>: Merges another list into the current list and returns the modified list.</li>
+                </ul>
+
+                <h3>List Methods Examples</h3>
+                <pre>
+<span class="comment">// Basic list operations</span>
+<span class="variable">numbers</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="value">2</span>, <span class="value">3</span>];
+<span class="function">say</span>(<span class="variable">numbers</span>.<span class="function">length</span>());  <span class="comment">// 3</span>
+
+<span class="comment">// Adding elements</span>
+<span class="variable">numbers</span>.<span class="function">push</span>(<span class="value">4</span>);
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// [1, 2, 3, 4]</span>
+
+<span class="comment">// Counting occurrences</span>
+<span class="variable">numbers</span>.<span class="function">push</span>(<span class="value">2</span>);
+<span class="function">say</span>(<span class="variable">numbers</span>.<span class="function">countOf</span>(<span class="value">2</span>));  <span class="comment">// 2</span>
+
+<span class="comment">// Finding elements</span>
+<span class="function">say</span>(<span class="variable">numbers</span>.<span class="function">find</span>(<span class="value">3</span>));  <span class="comment">// 2</span>
+
+<span class="comment">// Inserting elements</span>
+<span class="variable">numbers</span>.<span class="function">insertAt</span>(<span class="value">1</span>, <span class="value">10</span>);
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// [1, 10, 2, 3, 4, 2]</span>
+
+<span class="comment">// Removing elements</span>
+<span class="variable">removed</span> = <span class="variable">numbers</span>.<span class="function">pull</span>(<span class="value">2</span>);
+<span class="function">say</span>(<span class="variable">removed</span>);  <span class="comment">// 2</span>
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// [1, 10, 3, 4, 2]</span>
+
+<span class="comment">// Removing values</span>
+<span class="variable">numbers</span>.<span class="function">removeValue</span>(<span class="value">2</span>);
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// [1, 10, 3, 4]</span>
+
+<span class="comment">// Sorting</span>
+<span class="variable">numbers</span>.<span class="function">order</span>();
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// [1, 3, 4, 10]</span>
+
+<span class="comment">// Merging lists</span>
+<span class="variable">other</span>: <span class="type">list</span> = [<span class="value">20</span>, <span class="value">30</span>];
+<span class="variable">numbers</span>.<span class="function">merge</span>(<span class="variable">other</span>);
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// [1, 3, 4, 10, 20, 30]</span>
+
+<span class="comment">// Cloning lists</span>
+<span class="variable">copy</span> = <span class="variable">numbers</span>.<span class="function">clone</span>();
+<span class="function">say</span>(<span class="variable">copy</span>);  <span class="comment">// [1, 3, 4, 10, 20, 30]</span>
+
+<span class="comment">// Emptying lists</span>
+<span class="variable">numbers</span>.<span class="function">empty</span>();
+<span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// []</span>
+</pre>
 
             </section>
 

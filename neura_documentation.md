@@ -36,7 +36,7 @@ Neura is a statically-typed programming language with dynamic capabilities. It s
 
 ### 1. Variable Declarations and Type Annotations
 
-```c
+```neura
 // Basic type declarations
 age: int = 25;
 name: str = "John";
@@ -53,7 +53,7 @@ say("Type of name:", name.type());
 
 ### 2. Functions
 
-```c
+```neura
 // Standard function with block body and return type
 fn process_data(age: int, is_active: bool) -> int {
     if is_active {
@@ -98,7 +98,7 @@ Every function must specify a return type using the `->` operator. Neura support
 - Dynamic return types should be used sparingly and only when necessary
 
 #### Common Type Errors
-```c
+```neura
 // Error: Function declares int return type but returns float
 fn calculate_average(a: int, b: int) -> int {
     return (a + b) / 2.0;  // TypeError: Expected int, got float
@@ -120,7 +120,7 @@ fn add_numbers(a: int, b: int) {  // SyntaxError: Return type annotation require
 
 #### If-Else Statements
 
-```c
+```neura
 if condition {
     // code
 } else if another_condition {
@@ -132,7 +132,7 @@ if condition {
 
 #### Loops
 
-```c
+```neura
 // For loop with step
 for i in 0..10 by 2 {
     say("Count:", i);
@@ -158,7 +158,7 @@ Neura supports three logical operators for boolean operations:
 - Returns `false` if either operand is `false`
 - Short-circuits: if the first operand is `false`, the second operand is not evaluated
 
-```c
+```neura
 // Basic AND operation
 is_valid: bool = true;
 has_permission: bool = true;
@@ -178,7 +178,7 @@ if false && some_expensive_operation() {
 - Returns `false` if both operands are `false`
 - Short-circuits: if the first operand is `true`, the second operand is not evaluated
 
-```c
+```neura
 // Basic OR operation
 is_admin: bool = false;
 has_privileges: bool = true;
@@ -198,7 +198,7 @@ if true || some_expensive_operation() {
 - Returns `false` if the operand is `true`
 - Can be used to invert any boolean expression
 
-```c
+```neura
 // Basic NOT operation
 is_disabled: bool = false;
 if !is_disabled {
@@ -216,7 +216,7 @@ if !(x > 5 && y < 10) {
 2. `&&`
 3. `||` (lowest precedence)
 
-```c
+```neura
 // Parentheses can be used to override precedence
 if (x > 5 || y < 10) && !is_disabled {
     say("Complex condition met");
@@ -228,7 +228,7 @@ if (x > 5 || y < 10) && !is_disabled {
 - Non-boolean values will raise a TypeError
 - Use `asBool()` for type conversion when needed
 
-```c
+```neura
 // Type-safe usage
 value: int = 42;
 if value.asBool() && is_valid {
@@ -242,7 +242,7 @@ if 42 && true {  // TypeError: Expected bool, got int
 ```
 
 #### Common Patterns
-```c
+```neura
 // Checking multiple conditions
 if age >= 18 && has_id && !is_banned {
     say("User is eligible");
@@ -262,7 +262,7 @@ if (!is_logged_in || !has_permission) && !is_guest {
 
 ### 5. Collection Methods
 
-```c
+```neura
 // Length method
 str = "hello";
 list = [1, 2, 3];
@@ -275,11 +275,63 @@ say(hash.length()); // 2
 // Keys and Values methods (for hashes only)
 keys = hash.keys();   // ["a", "b"]
 values = hash.values(); // [1, 2]
+
+// List Methods
+numbers: list = [1, 2, 3];
+say(numbers.length());  // 3
+
+// Adding elements
+numbers.push(4);
+say(numbers);  // [1, 2, 3, 4]
+
+// Counting occurrences
+numbers.push(2);
+say(numbers.countOf(2));  // 2
+
+// Finding elements
+say(numbers.find(3));  // 2
+
+// Inserting elements
+numbers.insertAt(1, 10);
+say(numbers);  // [1, 10, 2, 3, 4, 2]
+
+// Removing elements
+removed = numbers.pull(2);
+say(removed);  // 2
+say(numbers);  // [1, 10, 3, 4, 2]
+
+// Removing values
+numbers.removeValue(2);
+say(numbers);  // [1, 10, 3, 4]
+
+// Sorting
+numbers.order();
+say(numbers);  // [1, 3, 4, 10]
+
+// Merging lists
+other: list = [20, 30];
+numbers.merge(other);
+say(numbers);  // [1, 3, 4, 10, 20, 30]
+
+// Cloning lists
+copy = numbers.clone();
+say(copy);  // [1, 3, 4, 10, 20, 30]
+
+// Emptying lists
+numbers.empty();
+say(numbers);  // []
+
+// String Methods
+text: str = "  Hello World  ";
+clean: str = text.trim();  // "Hello World"
+upper: str = text.upperCase();  // "HELLO WORLD"
+lower: str = text.lowerCase();  // "hello world"
+reversed: str = text.reverse();  // "dlroW olleH"
 ```
 
 ### 6. String Interpolation
 
-```c
+```neura
 name = "John";
 age = 25;
 say("Hello, ${name}! You are ${age} years old.");
@@ -287,7 +339,7 @@ say("Hello, ${name}! You are ${age} years old.");
 
 ### 7. Method Chaining
 
-```c
+```neura
 result = ask("Enter a number:").asInt().toString().length();
 ```
 
@@ -309,11 +361,26 @@ result = ask("Enter a number:").asInt().toString().length();
 - `upperCase()`: Converts to uppercase
 - `lowerCase()`: Converts to lowercase
 - `length()`: Returns string length
+- `reverse()`: Returns a reversed copy of the string
 
 ### Collection Methods
 - `length()`: Returns length of string, list, or hash
 - `keys()`: Returns list of hash keys
 - `values()`: Returns list of hash values
+- `reverse()`: Reverses the elements of a list or string
+
+### List Methods
+- `push(value: dynamic) -> list`: Adds an element to the end of the list and returns the modified list
+- `empty() -> list`: Removes all elements from the list and returns the empty list
+- `clone() -> list`: Returns a copy of the list
+- `countOf(value: dynamic) -> int`: Returns the number of occurrences of a value in the list
+- `find(value: dynamic) -> int`: Returns the index of the first occurrence of a value, or raises an error if not found
+- `insertAt(index: int, value: dynamic) -> list`: Inserts a value at the specified index and returns the modified list
+- `pull([index: int]) -> dynamic`: Removes and returns the element at the specified index (or the last element if no index is provided)
+- `removeValue(value: dynamic) -> list`: Removes the first occurrence of a value and returns the modified list
+- `order() -> list`: Sorts the list in place and returns the sorted list
+- `merge(other: list) -> list`: Merges another list into the current list and returns the modified list
+- `reverse() -> list`: Reverses the list in place and returns the reversed list
 
 ## Advanced Features
 
@@ -329,7 +396,7 @@ Supports embedding expressions in strings using ${expression} syntax.
 
 Always validate user input to ensure it meets the expected format and constraints:
 
-```c
+```neura
 // Age input with validation
 age_input: str = ask("Please enter your age: ");
 user_age: int = 0;
@@ -349,7 +416,7 @@ if age_input.length() > 0 {
 
 Implement error handling for potential issues:
 
-```c
+```neura
 // Division by zero handling
 divisor: int = 0;
 if divisor == 0 {
@@ -364,7 +431,7 @@ if divisor == 0 {
 
 Handle empty values appropriately:
 
-```c
+```neura
 // Empty string handling
 empty_str: str = "";
 say("Empty string length:", empty_str.length());
@@ -385,7 +452,7 @@ say("Empty hash length:", empty_hash.length());
 
 Validate type conversions to prevent errors:
 
-```c
+```neura
 str_num: str = "123";
 num: int = 0;
 if str_num.length() > 0 {
@@ -407,7 +474,7 @@ if invalid_int.length() > 0 {
 
 Validate method chaining to prevent errors:
 
-```c
+```neura
 input_str: str = ask("Enter a number: ");
 if input_str.length() > 0 {
     trimmed_input: str = input_str.trim();
@@ -426,7 +493,7 @@ if input_str.length() > 0 {
 
 Always return a value from functions:
 
-```c
+```neura
 fn process_list(items: list) -> bool {
     if items.length() == 0 {
         say("List is empty");
@@ -444,7 +511,7 @@ fn process_list(items: list) -> bool {
 
 Test boundary conditions to ensure robustness:
 
-```c
+```neura
 // Age classification with boundary testing
 if user_age > 18 {
     say("User is an adult.");
@@ -464,7 +531,7 @@ say("Maximum integer + 1:", max_int + 1);
 
 Handle null/undefined values appropriately:
 
-```c
+```neura
 // Null/undefined handling
 say("Empty string is falsy:", empty_str.asBool() == false);
 say("Empty list is falsy:", empty_list.asBool() == false);
@@ -477,7 +544,7 @@ say("Non-zero is truthy:", 1.asBool() == true);
 
 Handle dynamic type changes safely:
 
-```c
+```neura
 dynamic_var: dynamic = 42;
 say("Dynamic variable:", dynamic_var);
 say("Type of dynamic_var:", dynamic_var.type());
@@ -493,7 +560,7 @@ say("Type of dynamic_var:", dynamic_var.type());
 
 Every statement must end with a semicolon:
 
-```c
+```neura
 // Correct
 x: int = 10;
 say("Hello");
@@ -507,7 +574,7 @@ say("Hello")
 
 Functions must return a value. Empty returns are not allowed:
 
-```c
+```neura
 // Correct
 fn process_list(items: list) -> bool {
     if items.length() == 0 {
@@ -528,7 +595,7 @@ fn process_list(items: list) -> bool {
 
 Method calls must be followed by parentheses, even if there are no arguments:
 
-```c
+```neura
 // Correct
 text.trim();
 empty_list.length();
@@ -542,7 +609,7 @@ empty_list.length;
 
 Type annotations are required for function parameters and variable declarations:
 
-```c
+```neura
 // Correct
 fn greet(name: str) -> void {
     say("Hello, ${name}!");

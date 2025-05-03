@@ -5,6 +5,7 @@ class Context:
         self.functions = {}
         self.parent = parent  # For nested scopes
         self.in_loop = False  # Track if we're inside a loop
+        self.in_function = False  # Track if we're inside a function
 
     def get(self, name):
         value = self.variables.get(name)
@@ -47,6 +48,7 @@ class Context:
 
         # Create new context with current context as parent for closure support
         new_context = Context(parent=self)
+        new_context.in_function = True  # Mark that we're inside a function
         
         # Set parameters in the new context with type checking
         for i, param in enumerate(func["params"]):
@@ -218,22 +220,159 @@ class Interpreter:
                 if isinstance(value, (str, list, dict)):
                     return len(value)
                 raise TypeError("length() can only be used on strings, lists, or hashes")
+            elif node["method"] == "keys":
+                value = self.evaluate(node["args"][0], context)
+                if isinstance(value, dict):
+                    return list(value.keys())
+                raise TypeError("keys() can only be called on hashes")
+            elif node["method"] == "values":
+                value = self.evaluate(node["args"][0], context)
+                if isinstance(value, dict):
+                    return list(value.values())
+                raise TypeError("values() can only be called on hashes")
+            elif node["method"] == "reverse":
+                value = self.evaluate(node["args"][0], context)
+                if isinstance(value, str):
+                    return value[::-1]  # Reverse string using slice
+                elif isinstance(value, list):
+                    return value[::-1]  # Reverse list using slice
+                raise TypeError("reverse() can only be called on strings or lists")
+            elif node["method"] == "push":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("push() can only be called on lists")
+                if len(node["args"]) != 1:
+                    raise TypeError("push() requires exactly one argument")
+                element = self.evaluate(node["args"][0], context)
+                target.append(element)
+                return target
+            elif node["method"] == "empty":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("empty() can only be called on lists")
+                target.clear()
+                return target
+            elif node["method"] == "clone":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("clone() can only be called on lists")
+                return target.copy()
+            elif node["method"] == "countOf":
+                target = self.evaluate(node["args"][0], context)
+                if not isinstance(target, list):
+                    raise TypeError("countOf() can only be called on lists")
+                if len(node["args"]) != 1:
+                    raise TypeError("countOf() requires exactly one argument")
+                value = self.evaluate(node["args"][0], context)
+                return target.count(value)
+            elif node["method"] == "merge":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("merge() can only be called on lists")
+                if len(node["args"]) != 1:
+                    raise TypeError("merge() requires exactly one argument")
+                other = self.evaluate(node["args"][0], context)
+                if not isinstance(other, (list, str)):
+                    raise TypeError("merge() argument must be a list or string")
+                # Modify the target list in place by extending it
+                target.extend(other)
+                return target
+            elif node["method"] == "find":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("find() can only be called on lists")
+                if len(node["args"]) != 1:
+                    raise TypeError("find() requires exactly one argument")
+                value = self.evaluate(node["args"][0], context)
+                try:
+                    return target.index(value)
+                except ValueError:
+                    raise ValueError(f"Element {value} not found in list")
+            elif node["method"] == "insertAt":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("insertAt() can only be called on lists")
+                if len(node["args"]) != 2:
+                    raise TypeError("insertAt() requires exactly two arguments (index and value)")
+                index = self.evaluate(node["args"][0], context)
+                if not isinstance(index, int):
+                    raise TypeError("insertAt() index must be an integer")
+                if index < 0 or index > len(target):
+                    raise IndexError(f"Index {index} out of range for list of length {len(target)}")
+                value = self.evaluate(node["args"][1], context)
+                target.insert(index, value)
+                return target
+            elif node["method"] == "pull":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("pull() can only be called on lists")
+                if len(node["args"]) > 1:
+                    raise TypeError("pull() accepts at most one argument (index)")
+                if len(node["args"]) == 1:
+                    index = self.evaluate(node["args"][0], context)
+                    if not isinstance(index, int):
+                        raise TypeError("pull() index must be an integer")
+                    if index < 0 or index >= len(target):
+                        raise IndexError(f"Index {index} out of range for list of length {len(target)}")
+                    return target.pop(index)
+                else:
+                    if not target:
+                        raise IndexError("Cannot pull from empty list")
+                    return target.pop()
+            elif node["method"] == "removeValue":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("removeValue() can only be called on lists")
+                if len(node["args"]) != 1:
+                    raise TypeError("removeValue() requires exactly one argument (value)")
+                value = self.evaluate(node["args"][0], context)
+                try:
+                    target.remove(value)
+                    return target
+                except ValueError:
+                    raise ValueError(f"Value {value} not found in list")
+            elif node["method"] == "order":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("order() can only be called on lists")
+                target.sort()
+                return target
 
         elif node_type == "for":
             # Create a new context for the loop
             loop_context = Context(parent=context)
             loop_context.in_loop = True
             
-            i = int(node["start"])  # Convert to int
+            # Evaluate start, end, and step values (they could be numbers or variables)
+            start = self.evaluate(node["start"], context) if isinstance(node["start"], dict) else node["start"]
+            end = self.evaluate(node["end"], context) if isinstance(node["end"], dict) else node["end"]
+            by = self.evaluate(node["by"], context) if isinstance(node["by"], dict) else node["by"]
+            
+            # Convert to int for iteration
+            i = int(start)
+            end = int(end)
+            by = int(by)
+            is_inclusive = node.get("inclusive", True)  # Default to inclusive if not specified
+            
             try:
-                while i < node["end"]:
-                    loop_context.set(node["var"], i)
-                    try:
-                        self.execute_block(node["body"], loop_context)
-                    except ContinueException:
-                        # Just continue to the next iteration
-                        pass
-                    i += int(node["by"])  # Convert to int
+                if by > 0:
+                    while i < end or (is_inclusive and i == end):
+                        loop_context.set(node["var"], i)
+                        try:
+                            self.execute_block(node["body"], loop_context)
+                        except ContinueException:
+                            # Just continue to the next iteration
+                            pass
+                        i += by
+                else:  # by < 0
+                    while i > end or (is_inclusive and i == end):
+                        loop_context.set(node["var"], i)
+                        try:
+                            self.execute_block(node["body"], loop_context)
+                        except ContinueException:
+                            # Just continue to the next iteration
+                            pass
+                        i += by
             except BreakException:
                 # Exit the loop
                 pass
@@ -298,6 +437,8 @@ class Interpreter:
             return context.call_function(node["name"], node["args"], self)
         
         elif node_type == "return":
+            if not context.in_function and not any(parent.in_function for parent in self._get_parent_contexts(context)):
+                raise SyntaxError("'return' statement outside function")
             value = self.evaluate(node["value"], context) if node.get("value") else None
             raise ReturnValue(value)
             
@@ -372,6 +513,30 @@ class Interpreter:
             return self._unary_op(op, operand)
         elif expr_type == "function_call":
             return context.call_function(expr["name"], expr["args"], self)
+        elif expr_type == "index":
+            target = self.evaluate(expr["target"], context)
+            index = self.evaluate(expr["index"], context)
+            
+            if isinstance(target, dict):
+                if not isinstance(index, str):
+                    raise TypeError(f"Hash key must be a string, got {type(index).__name__}")
+                if index not in target:
+                    raise KeyError(f"Key '{index}' not found in hash")
+                return target[index]
+            elif isinstance(target, str):
+                if not isinstance(index, int):
+                    raise TypeError(f"String index must be an integer, got {type(index).__name__}")
+                if index < 0 or index >= len(target):
+                    raise IndexError(f"String index {index} out of range")
+                return target[index]
+            elif isinstance(target, list):
+                if not isinstance(index, int):
+                    raise TypeError(f"List index must be an integer, got {type(index).__name__}")
+                if index < 0 or index >= len(target):
+                    raise IndexError(f"List index {index} out of range")
+                return target[index]
+            else:
+                raise TypeError(f"Cannot index type {type(target).__name__}")
         elif expr_type == "method_call":
             # Handle method calls on targets if they exist
             target_value = None
@@ -445,6 +610,113 @@ class Interpreter:
                 if isinstance(val, dict):
                     return list(val.values())
                 raise TypeError("values() can only be called on hashes")
+            elif expr["method"] == "reverse":
+                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if isinstance(val, str):
+                    return val[::-1]  # Reverse string using slice
+                elif isinstance(val, list):
+                    return val[::-1]  # Reverse list using slice
+                raise TypeError("reverse() can only be called on strings or lists")
+            elif expr["method"] == "push":
+                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if not isinstance(target, list):
+                    raise TypeError("push() can only be called on lists")
+                if len(expr["args"]) != 1:
+                    raise TypeError("push() requires exactly one argument")
+                element = self.evaluate(expr["args"][0], context)
+                target.append(element)
+                return target
+            elif expr["method"] == "empty":
+                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if not isinstance(target, list):
+                    raise TypeError("empty() can only be called on lists")
+                target.clear()
+                return target
+            elif expr["method"] == "clone":
+                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if not isinstance(target, list):
+                    raise TypeError("clone() can only be called on lists")
+                return target.copy()
+            elif expr["method"] == "countOf":
+                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if not isinstance(target, list):
+                    raise TypeError("countOf() can only be called on lists")
+                if len(expr["args"]) != 1:
+                    raise TypeError("countOf() requires exactly one argument")
+                value = self.evaluate(expr["args"][0], context)
+                return target.count(value)
+            elif expr["method"] == "merge":
+                target = self.evaluate(expr["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("merge() can only be called on lists")
+                if len(expr["args"]) != 1:
+                    raise TypeError("merge() requires exactly one argument")
+                other = self.evaluate(expr["args"][0], context)
+                if not isinstance(other, (list, str)):
+                    raise TypeError("merge() argument must be a list or string")
+                # Modify the target list in place by extending it
+                target.extend(other)
+                return target
+            elif expr["method"] == "find":
+                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
+                if not isinstance(target, list):
+                    raise TypeError("find() can only be called on lists")
+                if len(expr["args"]) != 1:
+                    raise TypeError("find() requires exactly one argument")
+                value = self.evaluate(expr["args"][0], context)
+                try:
+                    return target.index(value)
+                except ValueError:
+                    raise ValueError(f"Element {value} not found in list")
+            elif expr["method"] == "insertAt":
+                target = self.evaluate(expr["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("insertAt() can only be called on lists")
+                if len(expr["args"]) != 2:
+                    raise TypeError("insertAt() requires exactly two arguments (index and value)")
+                index = self.evaluate(expr["args"][0], context)
+                if not isinstance(index, int):
+                    raise TypeError("insertAt() index must be an integer")
+                if index < 0 or index > len(target):
+                    raise IndexError(f"Index {index} out of range for list of length {len(target)}")
+                value = self.evaluate(expr["args"][1], context)
+                target.insert(index, value)
+                return target
+            elif expr["method"] == "pull":
+                target = self.evaluate(expr["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("pull() can only be called on lists")
+                if len(expr["args"]) > 1:
+                    raise TypeError("pull() accepts at most one argument (index)")
+                if len(expr["args"]) == 1:
+                    index = self.evaluate(expr["args"][0], context)
+                    if not isinstance(index, int):
+                        raise TypeError("pull() index must be an integer")
+                    if index < 0 or index >= len(target):
+                        raise IndexError(f"Index {index} out of range for list of length {len(target)}")
+                    return target.pop(index)
+                else:
+                    if not target:
+                        raise IndexError("Cannot pull from empty list")
+                    return target.pop()
+            elif expr["method"] == "removeValue":
+                target = self.evaluate(expr["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("removeValue() can only be called on lists")
+                if len(expr["args"]) != 1:
+                    raise TypeError("removeValue() requires exactly one argument (value)")
+                value = self.evaluate(expr["args"][0], context)
+                try:
+                    target.remove(value)
+                    return target
+                except ValueError:
+                    raise ValueError(f"Value {value} not found in list")
+            elif expr["method"] == "order":
+                target = self.evaluate(expr["target"], context)
+                if not isinstance(target, list):
+                    raise TypeError("order() can only be called on lists")
+                target.sort()
+                return target
         elif expr_type == "string_interpolation":
             return "".join(
                 str(self.evaluate(part, context))
@@ -462,6 +734,8 @@ class Interpreter:
             return left * right
         elif op == "/":
             return left / right
+        elif op == "%":
+            return left % right
         elif op == "==":
             return left == right
         elif op == "!=":
