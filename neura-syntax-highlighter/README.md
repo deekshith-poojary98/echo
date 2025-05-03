@@ -1,4 +1,4 @@
-# neura-syntax-highlighter README
+# neura-syntax-highlighter
 
 This is the README for your extension "neura-syntax-highlighter". After writing up a brief description, we recommend including the following sections.
 
