@@ -93,6 +93,8 @@ class Parser:
                 return self.parse_foreach()
             elif token.value == "fn":
                 return self.parse_function()
+            elif token.value == "use":
+                return self.parse_use_statement()
             elif token.value == "return":
                 self.advance()
                 expr = self.parse_expression()
@@ -202,8 +204,34 @@ class Parser:
                 if self.peek() and self.peek().value == ",":
                     self.advance()
             self.expect("PUNCTUATION", ")")
+            
+            # Create the initial method call
+            expr = {"type": "method_call", "target": {"type": "identifier", "name": target}, "method": method, "args": args}
+            
+            # Handle method chaining
+            while self.peek() and self.peek().type == "METHOD_OPERATOR":
+                self.advance()  # consume the dot
+                method_token = self.peek()
+                
+                if not method_token or (method_token.type != "METHOD" and method_token.type != "IDENTIFIER"):
+                    line_info = f" at line {method_token.line}, column {method_token.col}" if hasattr(method_token, 'line') and hasattr(method_token, 'col') else ""
+                    raise SyntaxError(f"Expected METHOD or IDENTIFIER after '.', got {method_token}{line_info}")
+                
+                method = self.advance().value
+                self.expect("PUNCTUATION", "(")
+                args = []
+                while self.peek() and not (self.peek().type == "PUNCTUATION" and self.peek().value == ")"):
+                    args.append(self.parse_expression())
+                    if self.peek() and self.peek().value == ",":
+                        self.advance()
+                self.expect("PUNCTUATION", ")")
+                
+                # Create a new method call with the previous expression as the target
+                expr = {"type": "method_call", "target": expr, "method": method, "args": args}
+            
+            # Only expect semicolon at the end of the entire chain
             self.expect("PUNCTUATION", ";")
-            return {"type": "method_call", "target": {"type": "identifier", "name": target}, "method": method, "args": args}
+            return expr
         
         # Check if this is a function call
         if self.peek() and self.peek().type == "PUNCTUATION" and self.peek().value == "(":
@@ -573,3 +601,22 @@ class Parser:
         self.expect("PUNCTUATION", "}")
         # print("Finished parsing while loop")
         return {"type": "while", "condition": condition, "body": body}
+
+    def parse_use_statement(self):
+        self.expect("KEYWORD", "use")
+        
+        # Check for mut keyword
+        is_mutable = False
+        if self.peek() and self.peek().type == "KEYWORD" and self.peek().value == "mut":
+            self.advance()  # consume 'mut'
+            is_mutable = True
+            
+        # Get the variable name
+        var_name = self.expect("IDENTIFIER").value
+        self.expect("PUNCTUATION", ";")
+        
+        return {
+            "type": "use_statement",
+            "var_name": var_name,
+            "is_mutable": is_mutable
+        }

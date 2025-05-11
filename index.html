@@ -1183,23 +1183,23 @@
                 <pre>
 <span class="comment">// String to integer conversion</span>
 <span class="variable">num_str</span>: <span class="type">str</span> = <span class="string">"123"</span>;
-<span class="variable">num</span>: <span class="type">int</span> = <span class="function">asInt</span>(<span class="variable">num_str</span>);
+<span class="variable">num</span>: <span class="type">int</span> = <span class="variable">num_str</span>.<span class="function">asInt</span>();
 
 <span class="comment">// Float to string conversion</span>
 <span class="variable">price</span>: <span class="type">float</span> = <span class="value">19.99</span>;
-<span class="variable">price_str</span>: <span class="type">str</span> = <span class="function">asString</span>(<span class="variable">price</span>);
+<span class="variable">price_str</span>: <span class="type">str</span> = <span class="variable">price</span>.<span class="function">asString</span>();
 
 <span class="comment">// String to float conversion</span>
 <span class="variable">temp_str</span>: <span class="type">str</span> = <span class="string">"98.6"</span>;
-<span class="variable">temperature</span>: <span class="type">float</span> = <span class="function">asFloat</span>(<span class="variable">temp_str</span>);
+<span class="variable">temperature</span>: <span class="type">float</span> = <span class="variable">temp_str</span>.<span class="function">asFloat</span>();
 
 <span class="comment">// Integer to boolean conversion</span>
 <span class="variable">value</span>: <span class="type">int</span> = <span class="value">1</span>;
-<span class="variable">flag</span>: <span class="type">bool</span> = <span class="function">asBool</span>(<span class="variable">value</span>);  <span class="comment">// true</span>
+<span class="variable">flag</span>: <span class="type">bool</span> = <span class="variable">value</span>.<span class="function">asBool</span>();  <span class="comment">// true</span>
 
 <span class="comment">// String to boolean conversion</span>
 <span class="variable">str_true</span>: <span class="type">str</span> = <span class="string">"true"</span>;
-<span class="variable">bool_value</span>: <span class="type">bool</span> = <span class="function">asBool</span>(<span class="variable">str_true</span>);</pre>
+<span class="variable">bool_value</span>: <span class="type">bool</span> = <span class="variable">str_true</span>.<span class="function">asBool</span>();</pre>
             </section>
 
             <section id="control-flow" class="section">
@@ -1500,10 +1500,10 @@
 
                 <pre>
 <span class="comment">// Type conversion</span>
-<span class="variable">age</span> = <span class="function">asInt</span>(<span class="function">ask</span>(<span class="string">"How old are you? "</span>));
-<span class="variable">price</span> = <span class="function">asFloat</span>(<span class="string">"19.99"</span>);
-<span class="variable">is_valid</span> = <span class="function">asBool</span>(<span class="string">"true"</span>);
-<span class="variable">name</span> = <span class="function">asString</span>(<span class="variable">age</span>);
+<span class="variable">age</span> = <span class="function">ask</span>(<span class="string">"How old are you? "</span>).<span class="function">asInt</span>();
+<span class="variable">price</span> = <span class="string">"19.99"</span>.<span class="function">asFloat</span>();
+<span class="variable">is_valid</span> = <span class="string">"true"</span>.<span class="function">asBool</span>();
+<span class="variable">name</span> = <span class="variable">age</span>.<span class="function">asString</span>();
 </pre>
 
                 <div class="horizontal-feature">
@@ -1637,6 +1637,73 @@
 <span class="function">say</span>(<span class="variable">numbers</span>);  <span class="comment">// []</span>
 </pre>
 
+                <div class="feature">
+                    <h3>Variable Scoping and Mutability</h3>
+                    <p>Neura provides explicit control over variable scoping and mutability through the <code>use</code> and <code>use mut</code> statements.</p>
+                    
+                    <h4>Basic Usage</h4>
+                    <pre>// Global variables
+<span class="variable"></span>counter</span>: <span class="type">int</span> = <span class="value">0</span>;
+<span class="variable">name</span>: <span class="type">str</span> = <span class="string">"Global"</span>;
+<span class="variable">config</span>: <span class="type">hash</span> = <span class="string">{<span class="string"></span>"enabled"</span>: <span class="value">true</span>}</span>;
+
+// Function with immutable access
+<span class="keyword">fn</span> <span class="function">readOnly</span>() -> <span class="type">void</span> {
+    <span class="keyword">use</span> <span class="variable">counter</span>;  // Read-only access to global counter
+    <span class="function">say</span>(<span class="string">"Counter value:"</span>, <span class="variable">counter</span>);
+}
+
+// Function with mutable access
+<span class="keyword">fn</span> <span class="function">modifyCounter</span>() -> <span class="type">void</span> {
+    <span class="keyword">use</span> <span class="keyword">mut</span> <span class="variable">counter</span>;  // Mutable access to global counter
+    <span class="variable">counter</span> = <span class="variable">counter</span> + <span class="value">1</span>;
+    <span class="function">say</span>(<span class="string">"Counter incremented:"</span>, <span class="variable">counter</span>);
+}
+
+// Multiple imports with nested function
+<span class="keyword">fn</span> <span class="function">multipleImports</span>() -> <span class="type">void</span> {
+    <span class="keyword">use</span> <span class="variable">name</span>;
+    <span class="keyword">use</span> <span class="variable">counter</span>;
+    
+    <span class="keyword">fn</span> <span class="function">nestedGreet</span>() -> <span class="type">void</span> {
+        <span class="keyword">use</span> <span class="variable">name</span>;
+        <span class="function">say</span>(<span class="string">"Hello from nested function,"</span>, <span class="variable">name</span>);
+    }
+    
+    <span class="function">say</span>(<span class="string">"Name:"</span>, <span class="variable">name</span>);
+    <span class="variable">counter</span> = <span class="variable">counter</span> + <span class="value">1</span>;
+    <span class="function">nestedGreet</span>();
+}</pre>
+
+                    <h4>Key Features</h4>
+                    <ul>
+                        <li><strong>Explicit Imports:</strong> Variables must be explicitly imported into function scope using <code>use</code></li>
+                        <li><strong>Mutability Control:</strong> <code>use mut</code> allows modification of imported variables</li>
+                        <li><strong>Shadowing Warning:</strong> Local variables that shadow globals trigger warnings</li>
+                        <li><strong>Nested Scopes:</strong> Inner functions can import variables from outer scopes</li>
+                    </ul>
+
+                    <h4>Best Practices</h4>
+                    <ul>
+                        <li>Always use <code>use</code> to make dependencies explicit</li>
+                        <li>Use <code>use mut</code> only when you need to modify the variable</li>
+                        <li>Be mindful of variable shadowing in nested functions</li>
+                        <li>Consider using immutable imports by default for better code safety</li>
+                    </ul>
+
+                    <h4>Error Cases</h4>
+                    <pre><span class="keyword">fn</span> <span class="function">errorExamples</span>() -> <span class="type">str</span> {
+    // Error: Using global without import
+    <span class="variable">counter</span> = <span class="value">1</span>;  // Will raise error
+
+    // Error: Modifying immutable import
+    <span class="keyword">use</span> <span class="variable">name</span>;
+    <span class="variable">name</span> = <span class="string">"New Name"</span>;  // Will raise error
+
+    // Warning: Variable shadowing
+    <span class="variable">name</span>: <span class="type">str</span> = <span class="string">"Local"</span>;  // Will show warning
+}</pre>
+                </div>
             </section>
 
         </main>

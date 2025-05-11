@@ -17,6 +17,7 @@
 7. [Syntax Requirements](#syntax-requirements)
 8. [Known Issues and Limitations](#known-issues-and-limitations)
 9. [Future Improvements](#future-improvements)
+10. [Variable Scoping and Mutability](#variable-scoping-and-mutability)
 
 ## Language Overview
 
@@ -36,7 +37,7 @@ Neura is a statically-typed programming language with dynamic capabilities. It s
 
 ### 1. Variable Declarations and Type Annotations
 
-```c
+```rust
 // Basic type declarations
 age: int = 25;
 name: str = "John";
@@ -53,7 +54,7 @@ say("Type of name:", name.type());
 
 ### 2. Functions
 
-```c
+```rust
 // Standard function with block body and return type
 fn process_data(age: int, is_active: bool) -> int {
     if is_active {
@@ -98,7 +99,7 @@ Every function must specify a return type using the `->` operator. Neura support
 - Dynamic return types should be used sparingly and only when necessary
 
 #### Common Type Errors
-```c
+```rust
 // Error: Function declares int return type but returns float
 fn calculate_average(a: int, b: int) -> int {
     return (a + b) / 2.0;  // TypeError: Expected int, got float
@@ -120,7 +121,7 @@ fn add_numbers(a: int, b: int) {  // SyntaxError: Return type annotation require
 
 #### If-Else Statements
 
-```c
+```rust
 if condition {
     // code
 } else if another_condition {
@@ -132,7 +133,7 @@ if condition {
 
 #### Loops
 
-```c
+```rust
 // For loop with step
 for i in 0..10 by 2 {
     say("Count:", i);
@@ -158,7 +159,7 @@ Neura supports three logical operators for boolean operations:
 - Returns `false` if either operand is `false`
 - Short-circuits: if the first operand is `false`, the second operand is not evaluated
 
-```c
+```rust
 // Basic AND operation
 is_valid: bool = true;
 has_permission: bool = true;
@@ -178,7 +179,7 @@ if false && some_expensive_operation() {
 - Returns `false` if both operands are `false`
 - Short-circuits: if the first operand is `true`, the second operand is not evaluated
 
-```c
+```rust
 // Basic OR operation
 is_admin: bool = false;
 has_privileges: bool = true;
@@ -198,7 +199,7 @@ if true || some_expensive_operation() {
 - Returns `false` if the operand is `true`
 - Can be used to invert any boolean expression
 
-```c
+```rust
 // Basic NOT operation
 is_disabled: bool = false;
 if !is_disabled {
@@ -216,7 +217,7 @@ if !(x > 5 && y < 10) {
 2. `&&`
 3. `||` (lowest precedence)
 
-```c
+```rust
 // Parentheses can be used to override precedence
 if (x > 5 || y < 10) && !is_disabled {
     say("Complex condition met");
@@ -228,7 +229,7 @@ if (x > 5 || y < 10) && !is_disabled {
 - Non-boolean values will raise a TypeError
 - Use `asBool()` for type conversion when needed
 
-```c
+```rust
 // Type-safe usage
 value: int = 42;
 if value.asBool() && is_valid {
@@ -242,7 +243,7 @@ if 42 && true {  // TypeError: Expected bool, got int
 ```
 
 #### Common Patterns
-```c
+```rust
 // Checking multiple conditions
 if age >= 18 && has_id && !is_banned {
     say("User is eligible");
@@ -262,7 +263,7 @@ if (!is_logged_in || !has_permission) && !is_guest {
 
 ### 5. Collection Methods
 
-```c
+```rust
 // Length method
 str = "hello";
 list = [1, 2, 3];
@@ -331,7 +332,7 @@ reversed: str = text.reverse();  // "dlroW olleH"
 
 ### 6. String Interpolation
 
-```c
+```rust
 name = "John";
 age = 25;
 say("Hello, ${name}! You are ${age} years old.");
@@ -339,7 +340,7 @@ say("Hello, ${name}! You are ${age} years old.");
 
 ### 7. Method Chaining
 
-```c
+```rust
 result = ask("Enter a number:").asInt().toString().length();
 ```
 
@@ -396,7 +397,7 @@ Supports embedding expressions in strings using ${expression} syntax.
 
 Always validate user input to ensure it meets the expected format and constraints:
 
-```c
+```rust
 // Age input with validation
 age_input: str = ask("Please enter your age: ");
 user_age: int = 0;
@@ -416,7 +417,7 @@ if age_input.length() > 0 {
 
 Implement error handling for potential issues:
 
-```c
+```rust
 // Division by zero handling
 divisor: int = 0;
 if divisor == 0 {
@@ -431,7 +432,7 @@ if divisor == 0 {
 
 Handle empty values appropriately:
 
-```c
+```rust
 // Empty string handling
 empty_str: str = "";
 say("Empty string length:", empty_str.length());
@@ -452,7 +453,7 @@ say("Empty hash length:", empty_hash.length());
 
 Validate type conversions to prevent errors:
 
-```c
+```rust
 str_num: str = "123";
 num: int = 0;
 if str_num.length() > 0 {
@@ -474,7 +475,7 @@ if invalid_int.length() > 0 {
 
 Validate method chaining to prevent errors:
 
-```c
+```rust
 input_str: str = ask("Enter a number: ");
 if input_str.length() > 0 {
     trimmed_input: str = input_str.trim();
@@ -493,7 +494,7 @@ if input_str.length() > 0 {
 
 Always return a value from functions:
 
-```c
+```rust
 fn process_list(items: list) -> bool {
     if items.length() == 0 {
         say("List is empty");
@@ -511,7 +512,7 @@ fn process_list(items: list) -> bool {
 
 Test boundary conditions to ensure robustness:
 
-```c
+```rust
 // Age classification with boundary testing
 if user_age > 18 {
     say("User is an adult.");
@@ -531,7 +532,7 @@ say("Maximum integer + 1:", max_int + 1);
 
 Handle null/undefined values appropriately:
 
-```c
+```rust
 // Null/undefined handling
 say("Empty string is falsy:", empty_str.asBool() == false);
 say("Empty list is falsy:", empty_list.asBool() == false);
@@ -544,7 +545,7 @@ say("Non-zero is truthy:", 1.asBool() == true);
 
 Handle dynamic type changes safely:
 
-```c
+```rust
 dynamic_var: dynamic = 42;
 say("Dynamic variable:", dynamic_var);
 say("Type of dynamic_var:", dynamic_var.type());
@@ -560,7 +561,7 @@ say("Type of dynamic_var:", dynamic_var.type());
 
 Every statement must end with a semicolon:
 
-```c
+```rust
 // Correct
 x: int = 10;
 say("Hello");
@@ -574,7 +575,7 @@ say("Hello")
 
 Functions must return a value. Empty returns are not allowed:
 
-```c
+```rust
 // Correct
 fn process_list(items: list) -> bool {
     if items.length() == 0 {
@@ -595,7 +596,7 @@ fn process_list(items: list) -> bool {
 
 Method calls must be followed by parentheses, even if there are no arguments:
 
-```c
+```rust
 // Correct
 text.trim();
 empty_list.length();
@@ -609,7 +610,7 @@ empty_list.length;
 
 Type annotations are required for function parameters and variable declarations:
 
-```c
+```rust
 // Correct
 fn greet(name: str) -> void {
     say("Hello, ${name}!");
@@ -649,4 +650,170 @@ age = 25;
 
 7. **Method Implementation**: Consolidate method implementations to avoid duplication between `execute_node` and `evaluate` methods.
 
-8. **Syntax Error Handling**: Improve error messages for syntax errors to provide more helpful information. 
+8. **Syntax Error Handling**: Improve error messages for syntax errors to provide more helpful information.
+
+## Variable Scoping and Mutability
+
+Neura provides explicit control over variable scoping and mutability through the `use` and `use mut` statements. This feature ensures clear and safe access to global variables within functions.
+
+### Basic Usage
+
+```rust
+// Global variables
+counter: int = 0;
+name: str = "Global";
+config: hash = {"enabled": true};
+
+// Function with immutable access
+fn readOnly() -> void {
+    use counter;  // Read-only access to global counter
+    say("Counter value:", counter);
+}
+
+// Function with mutable access
+fn modifyCounter() -> void {
+    use mut counter;  // Mutable access to global counter
+    counter = counter + 1;
+    say("Counter incremented:", counter);
+}
+
+// Multiple imports with nested function
+fn multipleImports() -> void {
+    use name;
+    use counter;
+    
+    fn nestedGreet() -> void {
+        use name;
+        say("Hello from nested function,", name);
+    }
+    
+    say("Name:", name);
+    counter = counter + 1;
+    nestedGreet();
+}
+```
+
+### Key Features
+
+1. **Explicit Imports**
+   - Variables must be explicitly imported into function scope using `use`
+   - Prevents accidental use of global variables
+   - Makes dependencies clear and visible
+
+2. **Mutability Control**
+   - `use mut` allows modification of imported variables
+   - Regular `use` provides read-only access
+   - Prevents accidental modifications
+
+3. **Shadowing Warning**
+   - Local variables that shadow globals trigger warnings
+   - Helps prevent naming conflicts
+   - Makes code intent clearer
+
+4. **Nested Scopes**
+   - Inner functions can import variables from outer scopes
+   - Maintains proper scoping rules
+   - Supports complex nested function structures
+
+### Best Practices
+
+1. **Explicit Dependencies**
+   - Always use `use` to make dependencies explicit
+   - Makes code more maintainable and self-documenting
+   - Helps prevent bugs from global state
+
+2. **Mutability Control**
+   - Use `use mut` only when you need to modify the variable
+   - Prefer immutable imports by default
+   - Makes code behavior more predictable
+
+3. **Variable Shadowing**
+   - Be mindful of variable shadowing in nested functions
+   - Use clear naming to avoid conflicts
+   - Consider using different names for local variables
+
+4. **Code Safety**
+   - Consider using immutable imports by default
+   - Only use mutable imports when necessary
+   - Makes code more robust and easier to reason about
+
+### Error Cases
+
+```rust
+fn errorExamples() -> void {
+    // Error: Using global without import
+    counter = 1;  // Will raise error
+
+    // Error: Modifying immutable import
+    use name;
+    name = "New Name";  // Will raise error
+
+    // Warning: Variable shadowing
+    name: str = "Local";  // Will show warning
+}
+```
+
+### Common Errors
+
+1. **Missing Import**
+   - Error: Using a global variable without `use`
+   - Solution: Add `use` statement for the variable
+
+2. **Immutable Modification**
+   - Error: Modifying a variable imported with `use`
+   - Solution: Use `use mut` if modification is needed
+
+3. **Shadowing Warning**
+   - Warning: Local variable shadows global
+   - Solution: Use different name or acknowledge warning
+
+### Examples
+
+1. **Basic Counter**
+```rust
+counter: int = 0;
+
+fn increment() -> void {
+    use mut counter;
+    counter = counter + 1;
+}
+
+fn display() -> void {
+    use counter;
+    say("Current count:", counter);
+}
+```
+
+2. **Configuration Management**
+```rust
+config: hash = {
+    "debug": true,
+    "max_retries": 3
+};
+
+fn updateConfig() -> void {
+    use mut config;
+    config["max_retries"] = 5;
+}
+
+fn readConfig() -> void {
+    use config;
+    say("Debug mode:", config["debug"]);
+}
+```
+
+3. **Nested Function Example**
+```rust
+name: str = "Global";
+
+fn outer() -> void {
+    use name;
+    
+    fn inner() -> void {
+        use name;
+        say("Hello from inner:", name);
+    }
+    
+    inner();
+}
+``` 

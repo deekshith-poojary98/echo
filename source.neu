@@ -1,3 +1,67 @@
+// Global variables
+pi: float = 3.14159;
+counter: int = 0;
+name: str = "Global Name";
+config: hash = {"debug": true, "version": "1.0"};
+
+// Example of using global variables in functions
+fn show_pi() -> void {
+    use pi;
+    say("The value of pi is: ${pi}");
+}
+
+fn increment_counter() -> void {
+    use mut counter;
+    counter = counter + 1;
+    say("Counter is now: ${counter}");
+}
+
+fn update_name() -> void {
+    use mut name;
+    name = "Updated Name";
+    say("Name is now: ${name}");
+}
+
+fn read_config() -> void {
+    use config;
+    say("Debug mode:", config["debug"]);
+    say("Version:", config["version"]);
+}
+
+fn update_config() -> void {
+    use mut config;
+    config["debug"] = false;
+    config["version"] = "2.0";
+    say("Config updated:", config);
+}
+
+// Example of shadowing warning
+fn demonstrate_shadowing() -> void {
+    pi: float = 3.14;  // Warning: shadows global 'pi'
+    say("Local pi:", pi);
+}
+
+// Example of error cases
+fn demonstrate_errors() -> void {
+    // This will cause an error because 'counter' is used without 'use'
+    say("Counter value:", counter);
+}
+
+fn demonstrate_immutable_error() -> void {
+    use pi;  // pi is imported as immutable
+    pi = 3.0;  // Error: cannot modify immutable import
+}
+
+// Run the examples
+say("\nDemonstrating use and use mut functionality:");
+show_pi();
+increment_counter();
+increment_counter();
+update_name();
+read_config();
+update_config();
+demonstrate_shadowing();
+
 fn process_user_data(age: int, is_active: bool, membership_duration: int) -> dynamic {
     // Input validation
     if age <= 0 {

@@ -13,7 +13,7 @@ class Token:
 
 class Lexer:
     token_patterns = {
-        "KEYWORD": r'\b(fn|for|if|else|foreach|in|by|return|break|continue|while)\b',
+        "KEYWORD": r'\b(fn|for|if|else|foreach|in|by|return|break|continue|while|use|mut)\b',
         "RETURN_TYPE": r'->',
         "DATATYPE": r'\b(int|float|str|bool|dynamic|list|hash|void)\b',
         "METHOD": r'\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values|reverse|push|empty|clone|countOf|merge|find|insertAt|pull|removeValue|order)\b',

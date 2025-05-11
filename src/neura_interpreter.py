@@ -6,15 +6,54 @@ class Context:
         self.parent = parent  # For nested scopes
         self.in_loop = False  # Track if we're inside a loop
         self.in_function = False  # Track if we're inside a function
+        self.imported_vars = {}  # Track imported variables and their mutability
 
     def get(self, name):
+        # If we're in a function, check if the variable is imported
+        if self.in_function:
+            if name not in self.imported_vars:
+                # Check if it's a local variable
+                if name in self.variables:
+                    return self.variables[name]
+                raise NameError(f"Variable '{name}' used without 'use' statement in function")
+            
+            # Get the value from parent context
+            value = self.parent.get(name)
+            if value is None:
+                raise NameError(f"Imported variable '{name}' not found in parent scope")
+            return value
+            
+        # For non-function contexts, check local then parent
         value = self.variables.get(name)
         if value is None and self.parent:
             return self.parent.get(name)
         return value
 
     def set(self, name, value, var_type=None):
-        # Check if variable exists in parent scopes for assignment
+        # If we're in a function, check if we can modify the variable
+        if self.in_function:
+            if name in self.imported_vars:
+                if not self.imported_vars[name]:
+                    raise NameError(f"Cannot modify immutable import '{name}', use 'use mut' to make it mutable")
+                # Find the context where the variable is defined
+                current = self
+                while current:
+                    if name in current.variables:
+                        current.variables[name] = value
+                        return
+                    current = current.parent
+            elif name not in self.variables and self.parent and name in self.parent.variables:
+                # If we're declaring a new variable (has var_type), allow shadowing
+                if var_type is not None:
+                    print(f"Warning: Variable '{name}' shadows a global variable")
+                    self.variables[name] = value
+                    if var_type:
+                        self.types[name] = var_type
+                    return
+                # Otherwise, it's an attempt to modify global without use mut
+                raise NameError(f"Cannot modify global variable '{name}' without 'use mut'")
+        
+        # For non-function contexts or local variables
         if name not in self.variables and self.parent and name in self.parent.variables:
             self.parent.set(name, value)
             return
@@ -22,6 +61,27 @@ class Context:
         self.variables[name] = value
         if var_type:
             self.types[name] = var_type
+
+    def import_variable(self, name, is_mutable):
+        if not self.in_function:
+            raise SyntaxError("'use' statements can only be used inside functions")
+        if name in self.imported_vars:
+            raise SyntaxError(f"Variable '{name}' already imported")
+            
+        # Check the entire context chain for the variable
+        current = self
+        while current:
+            if name in current.variables:
+                # If we're in a nested function and the variable is already imported in a parent context
+                if current != self and current.in_function and name in current.imported_vars:
+                    # Inherit mutability from parent context
+                    self.imported_vars[name] = current.imported_vars[name]
+                else:
+                    self.imported_vars[name] = is_mutable
+                return
+            current = current.parent
+            
+        raise NameError(f"Cannot import undefined variable '{name}'")
 
     def get_type(self, name):
         type_val = self.types.get(name)
@@ -136,6 +196,10 @@ class Interpreter:
     def execute_node(self, node, context):
         node_type = node["type"]
 
+        if node_type == "use_statement":
+            context.import_variable(node["var_name"], node["is_mutable"])
+            return
+
         if node_type == "assign":
             value = self.evaluate(node["value"], context)
             explicit_type = node.get("var_type")  # Type provided in code
@@ -157,8 +221,10 @@ class Interpreter:
                     raise TypeError(f"Cannot assign {type(value).__name__} to {expected_type} variable '{name}'")
 
             if explicit_type:
-                if existing_type is not None:
+                if existing_type is not None and not context.in_function:
                     raise NameError(f"Variable '{node['target']}' is already declared")
+                elif existing_type is not None and context.in_function:
+                    print(f"Warning: Variable '{node['target']}' shadows a global variable")
 
                 validate_type(node["target"], value, explicit_type)
                 context.set(node["target"], value, explicit_type)
@@ -171,6 +237,24 @@ class Interpreter:
                 context.set(node["target"], value)
 
         elif node_type == "method_call":
+            # List of methods that modify their target
+            modifying_methods = {
+                "push", "empty", "merge", "insertAt", "pull", "removeValue", "order"
+            }
+            
+            # Check if we're in a function and the method modifies the target
+            if context.in_function and node["method"] in modifying_methods:
+                # Get the variable name if it's an identifier
+                if isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
+                    var_name = node["target"]["name"]
+                    # Check if variable is imported
+                    if var_name in context.imported_vars:
+                        if not context.imported_vars[var_name]:
+                            raise NameError(f"Cannot modify immutable import '{var_name}', use 'use mut' to make it mutable")
+                    # Check if variable is global
+                    elif var_name not in context.variables and context.parent and var_name in context.parent.variables:
+                        raise NameError(f"Cannot modify global variable '{var_name}' without 'use mut'")
+
             if node["method"] == "say":
                 values = [self.evaluate(arg, context) for arg in node["args"]]
                 # Print each value with proper formatting
