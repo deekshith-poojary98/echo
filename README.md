@@ -1,6 +1,7 @@
 #  Echo Programming Language
 
 Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming.
+Checkout documentation [here](https://deekshith-poojary98.github.io/echo/).
 
 ## Features
 
