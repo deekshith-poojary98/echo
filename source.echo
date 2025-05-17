@@ -1,0 +1,518 @@
+// Global variables
+pi: float = 3.14159;
+counter: int = 0;
+name = "Global Name";
+config: hash = {"debug": true, "version": "1.0"};
+
+// Example of using global variables in functions
+fn show_pi() -> void {
+    use pi;
+    say("The value of pi is: ${pi}");
+}
+
+fn increment_counter() -> void {
+    use mut counter;
+    counter = counter + 1;
+    say("Counter is now: ${counter}");
+}
+
+fn update_name() -> void {
+    use mut name;
+    name = "Updated Name";
+    say("Name is now: ${name}");
+}
+
+fn read_config() -> void {
+    use config;
+    say("Debug mode:", config["debug"]);
+    say("Version:", config["version"]);
+}
+
+// fn update_config() -> void {
+//     use mut config;
+//     config["debug"] = false;
+//     config["version"] = "2.0";
+//     say("Config updated:", config);
+// }
+
+// Example of shadowing warning
+fn demonstrate_shadowing() -> void {
+    pi: float = 3.14;  // Warning: shadows global 'pi'
+    say("Local pi:", pi);
+}
+
+// Example of error cases
+fn demonstrate_errors() -> void {
+    // This will cause an error because 'counter' is used without 'use'
+    say("Counter value:", counter);
+}
+
+fn demonstrate_immutable_error() -> void {
+    use pi;  // pi is imported as immutable
+    pi = 3.0;  // Error: cannot modify immutable import
+}
+
+// Run the examples
+say("\nDemonstrating use and use mut functionality:");
+show_pi();
+increment_counter();
+increment_counter();
+update_name();
+read_config();
+// update_config();
+demonstrate_shadowing();
+
+fn process_user_data(age: int, is_active: bool, membership_duration: int) -> dynamic {
+    // Input validation
+    if age <= 0 {
+        say("Error: Age must be a positive number");
+        return 0;
+    }
+    
+    if membership_duration < 0 {
+        say("Error: Membership duration cannot be negative");
+        return 0;
+    }
+    
+    if is_active {
+        if membership_duration >= 1 {
+            return age * 1.5;  
+        } else {
+            return age * 1.2;  
+        }
+    } else {
+        return age * 0.8;  
+    }
+}
+
+fn check_eligibility(age: int, is_active: bool, membership_duration: int) -> bool{
+    // Input validation
+    if age <= 0 {
+        say("Error: Age must be a positive number");
+        return false;
+    }
+    
+    if membership_duration < 0 {
+        say("Error: Membership duration cannot be negative");
+        return false;
+    }
+    
+    if age >= 18 {
+        if is_active {
+            if membership_duration >= 1 {
+                return true;  
+            }
+        }
+    }
+    return false;
+}
+
+// Basic variable declarations with validation
+age: int = 25;
+is_active: bool = true;
+membership_duration: int = 2;  // In years
+
+// Process user data with validation
+processed_value: float = process_user_data(age, is_active, membership_duration);
+say("Processed value based on user data:", processed_value);
+
+// Check eligibility with validation
+eligibility: bool = check_eligibility(age, is_active, membership_duration);
+if eligibility {
+    say("User is eligible for a premium offer.");
+} else {
+    say("User is not eligible for a premium offer.");
+}
+
+// User input with validation
+say("\nUser Input Examples with Validation:");
+user_name: str = ask("Please enter your name: ").asString();
+if user_name.length() == 0 {
+    say("Error: Name cannot be empty");
+    user_name = "Anonymous";
+}
+
+// Age input with validation
+age_input: str = ask("Please enter your age: ");
+user_age: int = 0;
+if age_input.length() > 0 {
+    user_age = age_input.asInt();
+    if user_age <= 0 {
+        say("Error: Age must be a positive number");
+        user_age = 18; // Default value
+    }
+} else {
+    say("Error: Age input is empty");
+    user_age = 18; // Default value
+}
+
+// Membership duration input with validation
+duration_input: str = ask("How many years have you been a member? ");
+user_membership_duration: int = 0;
+if duration_input.length() > 0 {
+    user_membership_duration = duration_input.asInt();
+    if user_membership_duration < 0 {
+        say("Error: Membership duration cannot be negative");
+        user_membership_duration = 0; // Default value
+    }
+} else {
+    say("Error: Membership duration input is empty");
+    user_membership_duration = 0; // Default value
+}
+
+// Process new user data with validation
+new_user_processed_value: float = process_user_data(user_age, true, user_membership_duration);
+say("Processed value for the new user:", new_user_processed_value);
+
+// Check new user eligibility with validation
+new_user_eligibility: bool = check_eligibility(user_age, true, user_membership_duration);
+if new_user_eligibility {
+    say(user_name, "is eligible for a premium offer.");
+} else {
+    say(user_name, "is not eligible for a premium offer.");
+}
+
+// Age classification with boundary testing
+if user_age > 18 {
+    say("User is an adult.");
+} else if user_age == 18 {
+    say("User is exactly 18 years old.");
+} else {
+    say("User is a minor.");
+}
+
+// Wait example
+wait(1);
+say("waited 1 second");
+
+// Variable Declarations with Different Types
+x: int = 10;
+y: float = 3.14;
+name: str = "John";
+is_active = true;
+numbers: list = [1, 2, 3, 4, 5];
+config: hash = {"debug": true, "port": 8080};
+dynamic_var: dynamic = 42;
+
+// Type Conversion Examples with validation
+say("\nType Conversion Examples with Validation:");
+str_num: str = "123";
+num: int = 0;
+if str_num.length() > 0 {
+    num = str_num.asInt();
+    say("String to Int:", num);
+} else {
+    say("Error: Empty string cannot be converted to integer");
+}
+
+float_str: str = "3.14";
+float_val: float = 0.0;
+if float_str.length() > 0 {
+    float_val = float_str.asFloat();
+    say("String to Float:", float_val);
+} else {
+    say("Error: Empty string cannot be converted to float");
+}
+
+bool_str: str = "1";
+bool_val: bool = false;
+if bool_str.length() > 0 {
+    bool_val = bool_str.asBool();
+    say("String to Bool:", bool_val);
+} else {
+    say("Error: Empty string cannot be converted to boolean");
+}
+
+// Invalid type conversion examples
+invalid_int: str = "abc";
+say("Attempting to convert 'abc' to integer:");
+if invalid_int.length() > 0 {
+    // This will cause an error, but we're demonstrating the issue
+    say("This would cause an error in a real application");
+}
+
+// String Manipulation
+text: str = "  Hello, World!  ";
+say("\nString Manipulation Examples:");
+say("Original:", text);
+say("Trimmed:", text.trim());
+say("Uppercase:", text.upperCase());
+say("Lowercase:", text.lowerCase());
+say("Length:", text.length());
+
+// Empty string handling
+empty_str: str = "";
+say("\nEmpty String Handling:");
+say("Empty string length:", empty_str.length());
+say("Empty string trimmed:", empty_str.trim());
+
+// String Interpolation
+say("\nString Interpolation Examples:");
+say("Name: ${name}, Age: ${x}");
+say("Config: ${config}");
+
+// Function Definitions
+fn greet(name: str) -> void {
+    if name.length() == 0 {
+        say("Hello, Anonymous!");
+    } else {
+        say("Hello, ${name}!");
+    }
+}
+
+fn add(a: int, b: int) -> int => a + b;
+
+fn process_list(items: list) -> bool {
+    if items.length() == 0 {
+        say("List is empty");
+        return false;
+    }
+    
+    foreach item in items {
+        say("Processing:", item);
+    }
+    return true;
+}
+
+// Function Calls
+say("\nFunction Examples:");
+greet("Alice");
+greet(""); // Testing with empty string
+result: int = add(5, 3);
+say("5 + 3 =", result);
+
+// Loops
+say("\nLoop Examples:");
+
+// For loop with step
+for i in 0..10 by 2 {
+    say("Count:", i);
+}
+
+// Foreach loop
+say("\nProcessing list:");
+process_list(numbers);
+
+// Empty list handling
+empty_list: list = [];
+say("\nProcessing empty list:");
+process_list(empty_list);
+
+// While loop
+say("\nWhile loop:");
+counter: int = 0;
+while counter < 5 {
+    say("Counter:", counter);
+    counter = counter + 1;
+}
+
+// Conditionals
+say("\nConditional Examples:");
+score: int = 85;
+
+if score >= 90 {
+    say("Grade: A");
+} else if score >= 80 {
+    say("Grade: B");
+} else if score >= 70 {
+    say("Grade: C");
+} else {
+    say("Grade: F");
+}
+
+// Method Chaining with validation
+say("\nMethod Chaining Examples with Validation:");
+input_str: str = ask("Enter a number: ");
+if input_str.length() > 0 {
+    trimmed_input: str = input_str.trim();
+    if trimmed_input.length() > 0 {
+        result = trimmed_input.asInt();
+        say("Processed input:", result);
+    } else {
+        say("Error: Input contains only whitespace");
+    }
+} else {
+    say("Error: Empty input");
+}
+
+// Logical operations
+if x > 5 && y < 10 {
+    say("x is greater than 5 and y is less than 10");
+}
+
+is_valid: bool = true;
+has_permission: bool = false;
+
+if is_valid || has_permission {
+    say("Either valid or has permission");
+}
+
+// List operations
+say("\nList Operations:");
+say("List length:", numbers.length());
+say("Empty list length:", empty_list.length());
+
+// Hash operations
+say("\nHash Operations:");
+say("Config keys:", config.keys());
+say("Config values:", config.values());
+
+// Empty hash handling
+empty_hash: hash = {};
+say("\nEmpty Hash Handling:");
+say("Empty hash keys:", empty_hash.keys());
+say("Empty hash values:", empty_hash.values());
+say("Empty hash length:", empty_hash.length());
+
+// Dynamic type reassignment
+say("\nDynamic Type Examples:");
+dynamic_var = "Now I'm a string!";
+say("Dynamic variable:", dynamic_var);
+say("Type of dynamic_var:", dynamic_var.type());
+
+// Wait example
+say("\nWait Example:");
+say("Waiting for 1 second...");
+wait(1);
+say("Done waiting!");
+
+// Input/Output
+say("\nInput/Output Examples:");
+user_input: str = ask("Enter your name: ");
+if user_input.length() > 0 {
+    say("You entered:", user_input);
+} else {
+    say("You entered an empty string");
+}
+
+// Type checking
+say("\nType Checking Examples:");
+say("Type of x:", x.type());
+say("Type of y:", y.type());
+say("Type of name:", name.type());
+say("Type of is_active:", is_active.type());
+say("Type of numbers:", numbers.type());
+say("Type of config:", config.type());
+say("Type of empty_str:", empty_str.type());
+say("Type of empty_list:", empty_list.type());
+say("Type of empty_hash:", empty_hash.type());
+
+// Boundary testing
+say("\nBoundary Testing Examples:");
+max_int: int = 2147483647; // Maximum 32-bit integer
+say("Maximum integer:", max_int);
+say("Maximum integer + 1:", max_int + 1); // This will cause an overflow in some languages
+
+// Division by zero handling
+say("\nDivision by Zero Handling:");
+divisor: int = 0;
+if divisor == 0 {
+    say("Error: Cannot divide by zero");
+} else {
+    result = 10 / divisor;
+    say("10 /", divisor, "=", result);
+}
+
+// Null/undefined handling
+say("\nNull/Undefined Handling:");
+say("Empty string is falsy:", empty_str.asBool() == false);  // Compare with false to check if it's falsy
+say("Empty list is falsy:", empty_list.asBool() == false);   // Compare with false to check if it's falsy
+say("Empty hash is falsy:", empty_hash.asBool() == false);   // Compare with false to check if it's falsy
+say("Zero is falsy:", 0.asBool() == false);                  // Compare with false to check if it's falsy
+say("Non-zero is truthy:", 1.asBool() == true);             // Compare with true for truthy check
+
+if (x > 5 || y < 10) && is_valid {
+    say("Complex condition met");
+}
+
+// 1. FizzBuzz
+
+for i in 1...100{
+    if (i % 3 == 0) && (i % 5 == 0) {
+        say("FizzBuzz");
+    } 
+    else if i % 3 == 0 {
+        say("Fizz");
+    } 
+    else if i % 5 == 0 {
+        say("Buzz");
+    } 
+}
+
+// 2. Reverse a String using the reverse() method
+nameToReverse: str = "dee";
+rev: str = nameToReverse.reverse();
+say(rev);  // Should print "eed"
+
+// 3. Reverse a List using the reverse() method
+numbersList: list = [1, 2, 3, 4, 5];
+rev_numbersList: list = numbersList.reverse();
+say(rev_numbersList);  // Should print [5, 4, 3, 2, 1]
+
+// 4. Push elements to a list
+numbersList.push(6);
+say(numbersList);  // Should print [1, 2, 3, 4, 5, 6]
+numbersList.push(7);
+say(numbersList);  // Should print [1, 2, 3, 4, 5, 6, 7]
+
+// 5. Method chaining on list literals
+say([1, 2].push(3).push(4));  // Should print [1, 2, 3, 4]
+
+// 6. Test empty() method
+say(numbersList);  // Should print [1, 2, 3, 4, 5, 6, 7]
+numbersList.empty();
+say(numbersList);  // Should print []
+
+// 7. Test clone() method
+original: list = [1, 2, 3];
+copy: list = original.clone();
+say(original);  // Should print [1, 2, 3]
+say(copy);      // Should print [1, 2, 3]
+original.push(4);
+say(original);  // Should print [1, 2, 3, 4]
+say(copy);      // Should still print [1, 2, 3]
+
+// 8. Test countOf() method
+numbersList = [1, 2, 3, 4, 2, 6, 2];
+say(numbersList.countOf(2));  // Should print 3
+say(numbersList.countOf(5));  // Should print 0
+
+// 9. Test merge() method
+list1: list = [1, 2, 3];
+list2: list = [4, 5, 6];
+list1.merge(list2);
+say(list1);  // Should print [1, 2, 3, 4, 5, 6] (list1 is modified)
+say(list2);  // Should print [4, 5, 6] (list2 remains unchanged)
+
+// 10. Test find() method
+numbersListToFind: list = [10, 20, 30, 40, 50];
+say(numbersListToFind.find(30));  // Should print 2
+// say(numbersListToFind.find(60));
+
+// 11. Test insertAt() method
+numbersList = [1, 2, 3, 4, 5];
+numbersList.insertAt(2, 10);
+say(numbersList);  // Should print [1, 2, 10, 3, 4, 5]
+
+// 12. Test pull() method
+numbersList = [1, 2, 3, 4, 5];
+say(numbersList.pull(2));  // Should print 3
+say(numbersList);  // Should print [1, 2, 4, 5]
+say(numbersList.pull());  // Should print 5
+say(numbersList);  // Should print [1, 2, 4]
+
+// 13. Test removeValue() method
+numbersList = [1, 2, 3, 2, 4, 2];
+numbersList.removeValue(2);
+say(numbersList);  // Should print [1, 3, 2, 4, 2]
+
+// 14. Test order() method
+numbersList = [5, 3, 1, 4, 2];
+numbersList.order();
+say(numbersList);  // Should print [1, 2, 3, 4, 5]
+
+// Reverse for loop
+for i in 10..0 by -1 {
+    say("Countdown:", i);
+}
+

@@ -1,0 +1,227 @@
+// Echo Language Example File
+// This file demonstrates all aspects of the Echo language
+
+// 1. Variable Declarations with Type Annotations
+x: int = 10;
+y: float = 20.5;
+name: str = "John";
+is_active: bool = true;
+numbers: list = [1, 2, 3, 4, 5, [1, 2, 3, 4, 5]];
+config: hash = {"debug": true, "port": 8080, "max_connections": 100};
+dynamic_var: dynamic = 42;
+nested_hash: hash = {
+    "user1": {
+        "name": "Alice",
+        "age": 30,
+        "address": {
+            "street": "123 Main St",
+            "city": {
+                "name": "Springfield",
+                "state": "IL",
+                "country": {
+                    "name": "USA",
+                    "code": "US",
+                    "best_cities": ["Springfield", "Chicago", "New York"]
+                }
+            }
+        }
+    },
+    "user2": {
+        "name": "Bob",
+        "age": 25,
+        "address": {
+            "street": "456 Elm St",
+            "city": {
+                "name": "Chicago",
+                "state": "IL",
+                "country": {
+                    "name": "USA",
+                    "code": "US",   
+                    "best_cities": ["Chicago", "New York", "Los Angeles"]
+                }
+            }
+        }
+    }
+};
+
+say(nested_hash["user1"]["address"]["city"]["country"]["best_cities"][nested_hash["user1"]["address"]["city"]["country"]["best_cities"].length() - 1]);
+// 2. String Interpolation
+say("Hello, ${name}! Your score is ${numbers[0] + numbers[5][0]}");
+
+// 3. Function Definitions
+// Standard function with block body
+fn calculate_average(a: int, b: int) -> float {
+    return (a + b) / 2.0;
+}
+
+// Inline function with arrow syntax
+fn square(x: int) -> int => x * x;
+
+// Function with void return type
+fn greet(name: str) -> void {
+    say("Hello,", name);
+}
+
+// Function with dynamic return type
+fn get_value(key: str) -> dynamic {
+    if key == "age" {
+        return 25;  // Returns int
+    }
+    return "unknown";  // Returns string
+}
+
+// 4. Control Structures
+// If-Else statements
+if x > 5 && is_active {
+    say("x is greater than 5 and system is active");
+} else if x > 0 {
+    say("x is positive but less than or equal to 5");
+} else {
+    say("x is zero or negative");
+}
+
+// For loop with step
+for i in 0..10 by 2 {
+    say("Count:", i);
+}
+
+// Foreach loop
+foreach num in numbers {
+    say("Processing number:", num);
+}
+
+// While loop
+while x > 0 {
+    x = x - 1;
+    say("x is now:", x);
+}
+
+// 5. Hash Operations (Under Development)
+// Creating and accessing hash
+user_data: hash = {
+    "name": "Alice",
+    "age": 30,
+    "scores": [95, 85, 75]
+};
+
+// Accessing hash values
+say(user_data);
+say("User name:", user_data["name"]);
+say("User age:", user_data["age"]);
+say("First score:", user_data["scores"][0]);
+
+// Hash methods
+key: list = user_data.keys();
+value: list = user_data.values();
+say("User keys:", key);
+say("User values:", value);
+
+// 6. Method Chaining
+result: int = ask("Enter a number:").asInt().asString().length();
+say("Length of input:", result);
+
+// 7. Type Conversion Methods
+str_num: str = "42";
+num: int = str_num.asInt();
+float_num: float = num.asFloat();
+bool_val: bool = "true".asBool();
+str_val: str = num.asString();
+
+// 8. String Methods
+text: str = "  Hello, World!  ";
+trimmed: str = text.trim();
+upper: str = text.upperCase();
+lower: str = text.lowerCase();
+len: int = text.length();
+
+// 9. List Operations
+numbers.push(6);
+reversed_nums: list = numbers.reverse();
+first_num: int = numbers[0];
+last_num: int = numbers[numbers.length() - 1];
+
+// 10. Logical Operations
+is_valid: bool = true;
+has_permission: bool = false;
+if is_valid && has_permission {
+    say("Access granted");
+} else if is_valid || has_permission {
+    say("Partial access");
+} else {
+    say("Access denied");
+}
+
+// 11. Error Handling (Under Development)
+// Note: Try-catch blocks are planned for future implementation
+if numbers.length() > 0 {
+    say("First number:", numbers[0]);
+} else {
+    say("List is empty");
+}
+
+// 12. Dynamic Type Handling
+dynamic_var = "Now I'm a string!";
+say("Dynamic variable:", dynamic_var);
+say("Type of dynamic_var:", dynamic_var.type());
+
+// 13. Comments
+// Single-line comment
+/* Multi-line
+   comment */
+
+// 14. Built-in Functions
+say("Hello, World!");  // Output to console
+input: str = ask("Enter your name:");  // Get user input
+wait(1);  // Wait for 1 second
+
+
+fn process_user_data(age: int, is_active: bool, membership_duration: int) -> dynamic {
+    // Input validation
+    if age <= 0 {
+        say("Error: Age must be a positive number");
+        return 0;
+    }
+    
+    if membership_duration < 0 {
+        say("Error: Membership duration cannot be negative");
+        return 0;
+    }
+    
+    if is_active {
+        if membership_duration >= 1 {
+            return age * 1.5;  
+        } else {
+            return age * 1.2;  
+        }
+    } else {
+        return age * 0.8;  
+    }
+}
+
+// Basic variable declarations with validation
+age: int = 25;
+is_active = true;
+membership_duration: int = 2;  // In years
+
+// Process user data with validation
+processed_value: float = process_user_data(age, is_active, membership_duration);
+say("Processed value based on user data:", processed_value);
+
+// Define user data structure
+user: hash = {
+    "name": "John Smith",
+    "age": 25,
+    "address": {
+        "city": "New York",
+        "zip": "10001"
+    },
+    "scores": {
+        "math": 85,
+        "science": 92, 
+        "history": 88
+    }
+};
+
+say(user["name"]);
+// say("Average score: ${(user["scores"]["math"] + user["scores"]["science"] + user["scores"]["history"]) / 3}");
+

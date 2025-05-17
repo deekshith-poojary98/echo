@@ -1,0 +1,38 @@
+{
+  "name": "echo-syntax-highlighter",
+  "displayName": "Echo Syntax Highlighter",
+  "description": "A syntax highlighting extension for the Echo programming language. This extension provides color coding and syntax highlighting to enhance the development experience for Echo developers in Visual Studio Code.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "echo",
+        "aliases": [
+          "Echo",
+          "echo"
+        ],
+        "extensions": [
+          ".echo"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./images/echo-icon.png",
+          "dark": "./images/echo-icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "echo",
+        "scopeName": "source.echo",
+        "path": "./syntaxes/echo.tmLanguage.json"
+      }
+    ]
+  }
+}

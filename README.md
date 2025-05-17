@@ -1,25 +1,26 @@
-# Neura
+# Echo
 
-Neura is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming needs.
+Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming.
 
 ## Features
 
 - **Strong Type System**
-  - Explicit type declarations
+  - Explicit type declarations with mandatory type annotations
   - Type validation at runtime
   - Support for basic types: `int`, `float`, `str`, `bool`, `list`, `hash`
   - Dynamic type with `dynamic` keyword
-  - Required type annotations for function parameters
+  - Required type annotations for function parameters and return types
 
 - **Modern Syntax**
   - Clean and readable syntax
   - String interpolation with `${variable}` syntax
   - Method chaining support
   - Both inline (`=>`) and block-style function definitions
-  - Type-safe function parameters
+  - Type-safe function parameters and return types
+  - Logical operators with proper precedence (`&&`, `||`, `!`)
 
 - **Control Structures**
-  - `for` loops with step control
+  - `for` loops with step control (`by` keyword)
   - `foreach` loops for iteration
   - `while` loops
   - `if/else` conditionals
@@ -29,20 +30,43 @@ Neura is a modern, statically-typed programming language designed for simplicity
   - I/O: `say()`, `ask()`, `wait()`
   - Type Conversion: `asInt()`, `asFloat()`, `asBool()`, `asString()`
   - String Manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`
+  - Type Checking: `type()`
 
 - **Advanced Features**
-  - String Interpolation
+  - Function closures
+  - Context-based scoping
   - Method chaining
+  - Short-circuit evaluation for logical operators
+
+## Project Structure
+
+- `src/` - Core language implementation
+  - `echo_lexer.py` - Token generation and lexical analysis
+  - `echo_parser.py` - Abstract Syntax Tree (AST) construction
+  - `echo_interpreter.py` - Code execution and runtime
+  - `main.py` - Entry point for the interpreter
+- `echo-syntax-highlighter/` - Syntax highlighting support
+- `*.echo` - Example Echo source files
+  - `source.echo` - Main example file
+  - `test.echo` - Test cases
+  - `mut.echo` - Mutation testing examples
+- `index.html` - Web interface and documentation
+- `echo_documentation.md` - Comprehensive language documentation
+- `Echo Design Plan.docx` - Detailed design specifications
+
+## Documentation
+
+The project includes extensive documentation:
+
+- `echo_documentation.md` - Complete language reference and guide
+- `Echo Design Plan.docx` - Detailed design specifications
+- `index.html` - Web-based documentation and examples
 
 ## Getting Started
 
-### Installation
-
-[Installation instructions to be added]
-
 ### Basic Syntax Examples
 
-```c
+```echo
 // Variable Declaration with Types
 x: int = 10;
 name: str = "John";
@@ -52,48 +76,27 @@ config: hash = {"debug": true, "port": 8080};
 // String Interpolation
 say("Hello, ${name}! Your score is ${scores[0]}");
 
-// Function Definition (Block Style) with Type Annotations
+// Function Definition with Return Type
 fn greet(name: str) -> void {
     say("Hello,", name);
 }
 
-// Function Definition (Inline) with Type Annotations
+// Function Definition (Inline) with Return Type
 fn square(x: int) -> int => x * x;
 
 // Method Chaining
-result: str = ask("Enter a number:").asInt().toString().length();
+result = ask("Enter a number:").asInt().toString().length();
 
-// Loops
+// Loops with Step Control
 for i in 0..10 by 2 {
     say("Count:", i);
 }
 
-foreach item in items {
-    say("Processing:", item);
-}
-
-// Conditional
-if score >= 90 {
-    say("Excellent!");
-} else {
-    say("Good job!");
+// Logical Operations
+if age >= 18 && has_id && !is_banned {
+    say("Access granted");
 }
 ```
-
-## Project Structure
-
-- `src/` - Core language implementation
-  - `neura_lexer.py` - Token generation
-  - `neura_parser.py` - Abstract Syntax Tree (AST) construction
-  - `neura_interpreter.py` - Code execution
-- `neura-syntax-highlighter/` - Syntax highlighting support
-- `source.neu` - Example Neura source file
-- `index.html` - Web documentation
-
-## Documentation
-
-For more detailed documentation, please refer to:
-- `neura_documentation.md` - Basic language documentation
 
 ## Contributing
 

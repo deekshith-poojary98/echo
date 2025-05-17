@@ -1,16 +1,14 @@
-from neura_lexer import Lexer
-from neura_parser import Parser
-from neura_interpreter import Interpreter
+from echo_lexer import Lexer
+from echo_parser import Parser
+from echo_interpreter import Interpreter
 
-# BUG: need to fix default()
+
 # TODO: need to fix comments highlighting
-# BUG: need to check notify() issue
-# TODO: need to add type check/hint in func definition
 # TODO: cmd line tool to run the src code
 
 if __name__ == "__main__":
     lex_obj = Lexer()
-    tokens = lex_obj.read_source(r".\mut.neu")
+    tokens = lex_obj.read_source(r".\syntaxes\source.echo")
     # print("Tokens from lexer:", tokens)
 
     parser_obj = Parser(tokens)
