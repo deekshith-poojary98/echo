@@ -8,6 +8,7 @@
     <title>Echo Programming Language Documentation</title>
     <link rel="shortcut icon" href="echo_logo.jpg" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -981,7 +982,22 @@
 
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            let newTheme;
+            
+            // Cycle through themes: light -> dark -> retro -> light
+            switch(currentTheme) {
+                case 'light':
+                    newTheme = 'dark';
+                    break;
+                case 'dark':
+                    newTheme = 'retro';
+                    break;
+                case 'retro':
+                    newTheme = 'light';
+                    break;
+                default:
+                    newTheme = 'light';
+            }
 
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
@@ -989,7 +1005,17 @@
         });
 
         function updateThemeIcon(theme) {
-            themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            switch(theme) {
+                case 'light':
+                    themeIcon.className = 'fas fa-moon';
+                    break;
+                case 'dark':
+                    themeIcon.className = 'fas fa-terminal';
+                    break;
+                case 'retro':
+                    themeIcon.className = 'fas fa-sun';
+                    break;
+            }
         }
 
         // Add copy button to code blocks

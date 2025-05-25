@@ -22,6 +22,176 @@
     --h3-color: var(--dark);
 }
 
+/* Retro Theme */
+[data-theme="retro"] {
+    --primary: #ffb000;
+    --secondary: #000000;
+    --dark: #000000;
+    --light: #ffb000;
+    --code-bg: #000000;
+    --code-text: #ffb000;
+    --gray-100: #110800;
+    --gray-200: #221100;
+    --gray-800: #ffb000;
+    --bg-color: #000000;
+    --text-color: #ffb000;
+    --card-bg: #110800;
+    --nav-bg: #000000;
+    --footer-bg: #000000;
+    --footer-text: #ffb000;
+    --nav-link-color: #ffb000;
+    --toc-link-color: #ffb000;
+    --heading-color: #ffb000;
+    --sidebar-title-color: #ffb000;
+    --feature-description-color: #ffb000;
+    --h3-color: #ffb000;
+}
+
+[data-theme="retro"] body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'VT323', monospace;
+    position: relative;
+}
+
+[data-theme="retro"] body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 176, 0, 0.05),
+        rgba(255, 176, 0, 0.05) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
+[data-theme="retro"] body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        circle at center,
+        transparent 0%,
+        rgba(0, 0, 0, 0.3) 100%
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+
+[data-theme="retro"] .futuristic-header {
+    background: #000000;
+    border: 2px solid #ffb000;
+    box-shadow: 0 0 10px #ffb000;
+}
+
+[data-theme="retro"] .futuristic-title {
+    color: #ffffff;
+    text-shadow: 0 0 10px #ffb000;
+    font-family: 'VT323', monospace;
+    letter-spacing: 2px;
+}
+
+[data-theme="retro"] .futuristic-subtitle {
+    color: #ffb000;
+    text-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] .feature-card {
+    border: 1px solid #ffb000;
+    box-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] .nav-link {
+    color: #ffb000;
+    text-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] .nav-link:hover {
+    background-color: #110800;
+}
+
+[data-theme="retro"] pre {
+    border: 1px solid #ffb000;
+    box-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] code {
+    color: #ffb000;
+    text-shadow: 0 0 2px #ffb000;
+}
+
+[data-theme="retro"] .beta-badge {
+    background: #000000;
+    border: 1px solid #ffb000;
+    color: #ffb000;
+    text-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] .scroll-arrow {
+    color: #ffb000;
+    text-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] .scroll-arrow:hover {
+    background: #110800;
+    border-color: #ffb000;
+}
+
+[data-theme="retro"] .energy-ring {
+    border-color: #ffb000;
+}
+
+[data-theme="retro"] .particle {
+    background: #ffb000;
+    box-shadow: 0 0 5px #ffb000;
+}
+
+[data-theme="retro"] .grid-overlay {
+    background-image: 
+        linear-gradient(rgba(255, 176, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 176, 0, 0.1) 1px, transparent 1px);
+}
+
+[data-theme="retro"] .glow-effect {
+    background: radial-gradient(circle at center, rgba(255, 176, 0, 0.2) 0%, transparent 70%);
+}
+
+[data-theme="retro"] .line {
+    background: linear-gradient(90deg, transparent, #ffb000, transparent);
+}
+
+[data-theme="retro"] .circle {
+    background: #ffb000;
+    box-shadow: 0 0 10px #ffb000;
+}
+
+[data-theme="retro"] .glitch-text {
+    color: #ffb000;
+}
+
+[data-theme="retro"] .glitch-text::before {
+    color: #ffb000;
+}
+
+[data-theme="retro"] .glitch-text::after {
+    color: #ffb000;
+}
+
+[data-theme="retro"] .pulse-dot {
+    background: #ffb000;
+    box-shadow: 0 0 10px #ffb000;
+}
+
 [data-theme="dark"] {
     --bg-color: var(--dark);
     --text-color: var(--light);
@@ -135,7 +305,7 @@ nav {
     width: 24px;
     height: 24px;
     object-fit: contain;
-    filter: brightness(0);
+    filter: brightness(0) invert(1);
 }
 
 [data-theme="dark"] .nav-logo {
@@ -1282,5 +1452,43 @@ footer {
 
     .line {
         width: 60px;
+    }
+
+    .futuristic-title,
+    .energy-ring,
+    .particle,
+    .scroll-arrow,
+    .beta-badge,
+    .glitch-text,
+    .pulse-dot,
+    .futuristic-subtitle {
+        animation: none !important;
+    }
+
+    .energy-ring::before,
+    .energy-ring::after,
+    .glitch-text::before,
+    .glitch-text::after {
+        animation: none !important;
+    }
+
+    .scroll-arrow:hover {
+        transform: translateX(-50%);
+    }
+
+    .particle {
+        display: none;
+    }
+
+    .energy-ring {
+        display: none;
+    }
+
+    .glow-effect {
+        display: none;
+    }
+
+    .grid-overlay {
+        opacity: 0.1;
     }
 }
