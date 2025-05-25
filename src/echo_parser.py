@@ -424,6 +424,8 @@ class Parser:
     def parse_for_loop(self):
         self.expect("KEYWORD", "for")
         var = self.expect("IDENTIFIER").value
+        self.expect("PUNCTUATION", ":")
+        var_type = self.expect("DATATYPE").value
         self.expect("KEYWORD", "in")
         
         # Parse start value (can be a number, float, or identifier)
@@ -483,12 +485,14 @@ class Parser:
         while self.peek() and not (self.peek().type == "PUNCTUATION" and self.peek().value == "}"):
             body.append(self.parse_statement())
         self.expect("PUNCTUATION", "}")
-        return {"type": "for", "var": var, "start": start, "end": end, "by": by, "inclusive": is_inclusive, "body": body}
+        return {"type": "for", "var": var, "var_type": var_type, "start": start, "end": end, "by": by, "inclusive": is_inclusive, "body": body}
 
     def parse_foreach(self):
         # print("Starting to parse foreach loop")
         self.expect("KEYWORD", "foreach")
         var = self.expect("IDENTIFIER").value
+        self.expect("PUNCTUATION", ":")
+        var_type = self.expect("DATATYPE").value
         # print(f"Foreach loop variable: {var}")
         self.expect("KEYWORD", "in")
         iterable = self.parse_expression()  # Allow expressions for iterables, not just identifiers
@@ -502,7 +506,7 @@ class Parser:
                 # print(f"Added statement to foreach body: {stmt}")
         self.expect("PUNCTUATION", "}")
         # print("Finished parsing foreach loop")
-        return {"type": "foreach", "var": var, "iterable": iterable, "body": body}
+        return {"type": "foreach", "var": var, "var_type": var_type, "iterable": iterable, "body": body}
 
     def parse_method_call(self):
         method = self.advance().value

@@ -81,12 +81,17 @@ if x > 5 && is_active {
 }
 
 // For loop with step
-for i in 0..10 by 2 {
+for i: int in 0..10 by 2 {
     say("Count:", i);
 }
 
+// Reverse for loop (inclusive range)
+for i: int in 10..0 by -1 {
+    say("Countdown:", i);  // Prints 10 down to 0
+}
+
 // Foreach loop
-foreach num in numbers {
+foreach num: dynamic in numbers {
     say("Processing number:", num);
 }
 

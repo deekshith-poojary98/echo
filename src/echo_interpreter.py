@@ -578,9 +578,19 @@ class Interpreter:
             by = int(by)
             is_inclusive = node.get("inclusive", True)  # Default to inclusive if not specified
             
+            # Get the expected type for the loop variable
+            var_type = node["var_type"]
+            
+            # For loops must use int type for the loop variable
+            if var_type != "int":
+                raise TypeError(f"For loop variable must be of type int, got {var_type}")
+            
             try:
                 if by > 0:
                     while i < end or (is_inclusive and i == end):
+                        # Check if the value matches the declared type
+                        if var_type == "int" and not isinstance(i, int):
+                            raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
                         loop_context.set(node["var"], i)
                         try:
                             self.execute_block(node["body"], loop_context)
@@ -590,6 +600,9 @@ class Interpreter:
                         i += by
                 else:  # by < 0
                     while i > end or (is_inclusive and i == end):
+                        # Check if the value matches the declared type
+                        if var_type == "int" and not isinstance(i, int):
+                            raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
                         loop_context.set(node["var"], i)
                         try:
                             self.execute_block(node["body"], loop_context)
@@ -607,8 +620,24 @@ class Interpreter:
             loop_context.in_loop = True
             
             items = self.evaluate(node["iterable"], context)
+            var_type = node["var_type"]
+            
             try:
                 for item in items:
+                    # Check if the value matches the declared type
+                    if var_type == "int" and not isinstance(item, int):
+                        raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
+                    elif var_type == "float" and not isinstance(item, float):
+                        raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
+                    elif var_type == "str" and not isinstance(item, str):
+                        raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
+                    elif var_type == "bool" and not isinstance(item, bool):
+                        raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
+                    elif var_type == "list" and not isinstance(item, list):
+                        raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
+                    elif var_type == "hash" and not isinstance(item, dict):
+                        raise TypeError(f"Loop variable {node['var']} must be of type {var_type}")
+                    
                     loop_context.set(node["var"], item)
                     try:
                         self.execute_block(node["body"], loop_context)

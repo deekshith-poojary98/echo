@@ -428,26 +428,26 @@
                 <p>The <code>for</code> loop iterates through a range of values with optional step increment using the
                     <code>by</code> keyword. Use <code>..</code> for inclusive ranges (includes end value) and
                     <code>...</code> for exclusive ranges (excludes end value). The <code>break</code> statement exits
-                    the loop early, while <code>continue</code> skips to the next iteration.
+                    the loop early, while <code>continue</code> skips to the next iteration. Loop variables must be explicitly typed.
                 </p>
                 <pre>
 <span class="comment">// Basic for loop (exclusive range)</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">...</span><span class="value">10</span> {
+<span class="keyword">for</span> <span class="variable">i</span>: <span class="type">int</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">...</span><span class="value">10</span> {
     <span class="function">say</span>(<span class="string">"Iteration:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 0 to 9</span>
 }
 
 <span class="comment">// For loop with step (inclusive range)</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> <span class="keyword">by</span> <span class="value">2</span> {
+<span class="keyword">for</span> <span class="variable">i</span>: <span class="type">int</span> <span class="keyword">in</span> <span class="value">0</span><span class="operator">..</span><span class="value">10</span> <span class="keyword">by</span> <span class="value">2</span> {
     <span class="function">say</span>(<span class="string">"Even iteration:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 0,2,4,6,8,10</span>
 }
 
 <span class="comment">// Reverse for loop (inclusive range)</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">10</span><span class="operator">..</span><span class="value">0</span> <span class="keyword">by</span> <span class="operator">-</span><span class="value">1</span> {
+<span class="keyword">for</span> <span class="variable">i</span>: <span class="type">int</span> <span class="keyword">in</span> <span class="value">10</span><span class="operator">..</span><span class="value">0</span> <span class="keyword">by</span> <span class="operator">-</span><span class="value">1</span> {
     <span class="function">say</span>(<span class="string">"Countdown:"</span>, <span class="variable">i</span>);  <span class="comment">// Prints 10 down to 0</span>
 }
 
 <span class="comment">// Loop with break statement</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">1</span><span class="operator">...</span><span class="value">100</span> {
+<span class="keyword">for</span> <span class="variable">i</span>: <span class="type">int</span> <span class="keyword">in</span> <span class="value">1</span><span class="operator">...</span><span class="value">100</span> {
     <span class="keyword">if</span> <span class="variable">i</span> <span class="operator">></span> <span class="value">5</span> {
         <span class="keyword">break</span>;  <span class="comment">// Exit loop when i > 5</span>
     }
@@ -455,7 +455,7 @@
 }
 
 <span class="comment">// Loop with continue statement</span>
-<span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="value">1</span><span class="operator">...</span><span class="value">5</span> {
+<span class="keyword">for</span> <span class="variable">i</span>: <span class="type">int</span> <span class="keyword">in</span> <span class="value">1</span><span class="operator">...</span><span class="value">5</span> {
     <span class="keyword">if</span> <span class="variable">i</span> <span class="operator">%</span> <span class="value">2</span> <span class="operator">==</span> <span class="value">0</span> {
         <span class="keyword">continue</span>;  <span class="comment">// Skip even numbers</span>
     }
@@ -463,18 +463,18 @@
 }</pre>
 
                 <h3>Foreach Loop</h3>
-                <p>The <code>foreach</code> loop iterates through all elements in a collection such as a list or hash.
+                <p>The <code>foreach</code> loop iterates through all elements in a collection such as a list or hash. Loop variables must be explicitly typed.
                 </p>
                 <pre>
 <span class="comment">// Foreach with list</span>
 <span class="variable">fruits</span>: <span class="type">list</span> = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"cherry"</span>];
-<span class="keyword">foreach</span> <span class="variable">fruit</span> <span class="keyword">in</span> <span class="variable">fruits</span> {
+<span class="keyword">foreach</span> <span class="variable">fruit</span>: <span class="type">str</span> <span class="keyword">in</span> <span class="variable">fruits</span> {
     <span class="function">say</span>(<span class="string">"Fruit:"</span>, <span class="variable">fruit</span>);
 }
 
 <span class="comment">// Foreach with string</span>
 <span class="variable">text</span>: <span class="type">str</span> = <span class="string">"Hello, World!"</span>;
-<span class="keyword">foreach</span> <span class="variable">char</span> <span class="keyword">in</span> <span class="variable">text</span> {
+<span class="keyword">foreach</span> <span class="variable">char</span>: <span class="type">str</span> <span class="keyword">in</span> <span class="variable">text</span> {
     <span class="function">say</span>(<span class="string">"Character:"</span>, <span class="variable">char</span>);
 }
 
@@ -484,7 +484,7 @@
     <span class="string">"age"</span>: <span class="value">25</span>,
     <span class="string">"city"</span>: <span class="string">"New York"</span>
 };
-<span class="keyword">foreach</span> <span class="variable">key</span> <span class="keyword">in</span> <span class="variable">user</span> {
+<span class="keyword">foreach</span> <span class="variable">key</span>: <span class="type">str</span> <span class="keyword">in</span> <span class="variable">user</span> {
     <span class="function">say</span>(<span class="variable">key</span>, <span class="string">":"</span>, <span class="variable">user[</span><span class="variable">key</span><span class="string"></span>]</span>);
 }</pre>
 

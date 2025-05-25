@@ -11,13 +11,14 @@
    - [Collection Methods](#5-collection-methods)
    - [String Interpolation](#6-string-interpolation)
    - [Method Chaining](#7-method-chaining)
+   - [Variable Watching](#8-variable-watching)
 4. [Built-in Methods](#built-in-methods)
 5. [Advanced Features](#advanced-features)
 6. [Best Practices and Edge Cases](#best-practices-and-edge-cases)
 7. [Syntax Requirements](#syntax-requirements)
-8. [Known Issues and Limitations](#known-issues-and-limitations)
-9. [Future Improvements](#future-improvements)
-10. [Variable Scoping and Mutability](#variable-scoping-and-mutability)
+8. [Variable Scoping and Mutability](#variable-scoping-and-mutability)
+9. [Known Issues and Limitations](#known-issues-and-limitations)
+10. [Future Improvements](#future-improvements)
 
 ## Language Overview
 
@@ -135,18 +136,20 @@ if condition {
 
 ```rust
 // For loop with step
-for i in 0..10 by 2 {
+for i: int in 0..10 by 2 {
     say("Count:", i);
 }
 
 // Foreach loop
-foreach item in items {
+item: list = ["apple", "banana", "manago"];
+foreach item: str in items {
     say("Processing:", item);
 }
 
 // While loop
-while condition {
-    // code
+while x > 0 {
+    x = x - 1;
+    say("x is now:", x);
 }
 ```
 
@@ -343,6 +346,60 @@ say("Hello, ${name}! You are ${age} years old.");
 ```rust
 result = ask("Enter a number:").asInt().toString().length();
 ```
+
+### 8. Variable Watching
+
+The watch statement allows you to monitor variable changes during program execution. This is particularly useful for debugging and understanding program flow.
+
+```rust
+// Watch a single variable
+watch counter;
+
+// Watch multiple variables
+watch x, y, z;
+
+// Example with variable watching
+counter: int = 10;
+watch counter;
+counter = 20;  // Output: WATCH: counter changed to 20 (in global)
+counter = 30;  // Output: WATCH: counter changed to 30 (in global)
+
+// Watching in function scope
+fn process_data() -> void {
+    local_var: int = 5;
+    watch local_var;
+    local_var = 10;  // Output: WATCH: local_var changed to 10 (in process_data)
+}
+
+// Watching multiple variables in different scopes
+global_var: int = 100;
+watch global_var;
+
+fn nested_function() -> void {
+    local_var: int = 200;
+    watch local_var, global_var;
+    local_var = 300;   // Output: WATCH: local_var changed to 300 (in nested_function)
+    global_var = 400;  // Output: WATCH: global_var changed to 400 (in nested_function)
+}
+```
+
+#### Watch Features
+- Monitor single or multiple variables in one statement
+- Track changes in both global and local scopes
+- Automatic unwatching when variables go out of scope
+- Monitor modifications through assignments and method calls
+
+#### Best Practices
+1. Use watch statements strategically for debugging
+2. Avoid watching too many variables simultaneously
+3. Consider scope when watching variables
+4. Use watch in combination with other debugging tools
+
+#### Limitations
+1. Cannot watch variables that don't exist
+2. Cannot watch constants
+3. Performance impact when watching many variables
+4. No watch history beyond the current execution
 
 ## Built-in Methods
 
@@ -624,34 +681,6 @@ fn greet(name) -> void {
 age = 25;
 ```
 
-## Known Issues and Limitations
-
-1. **Error Handling**: The language does not yet support try-catch blocks for exception handling.
-
-2. **Null/Undefined Values**: The language does not have a dedicated null or undefined type. Empty strings, lists, and hashes can be used as alternatives.
-
-3. **Type Validation**: There is limited validation for list element types and hash key/value types.
-
-4. **Integer Overflow**: The language does not handle integer overflow gracefully.
-
-## Future Improvements
-
-1. **Error Handling**: Implement try-catch blocks for exception handling.
-
-2. **Null/Undefined Values**: Add support for null and undefined values.
-
-3. **Type Validation**: Enhance validation for list element types and hash key/value types.
-
-4. **Integer Overflow**: Implement graceful handling for integer overflow.
-
-5. **Default Values**: Add support for default values for optional parameters.
-
-6. **Performance Optimization**: Optimize performance for large data structures and deeply nested function calls.
-
-7. **Method Implementation**: Consolidate method implementations to avoid duplication between `execute_node` and `evaluate` methods.
-
-8. **Syntax Error Handling**: Improve error messages for syntax errors to provide more helpful information.
-
 ## Variable Scoping and Mutability
 
 Echo provides explicit control over variable scoping and mutability through the `use` and `use mut` statements. This feature ensures clear and safe access to global variables within functions.
@@ -817,3 +846,31 @@ fn outer() -> void {
     inner();
 }
 ``` 
+
+## Known Issues and Limitations
+
+1. **Error Handling**: The language does not yet support try-catch blocks for exception handling.
+
+2. **Null/Undefined Values**: The language does not have a dedicated null or undefined type. Empty strings, lists, and hashes can be used as alternatives.
+
+3. **Type Validation**: There is limited validation for list element types and hash key/value types.
+
+4. **Integer Overflow**: The language does not handle integer overflow gracefully.
+
+## Future Improvements
+
+1. **Error Handling**: Implement try-catch blocks for exception handling.
+
+2. **Null/Undefined Values**: Add support for null and undefined values.
+
+3. **Type Validation**: Enhance validation for list element types and hash key/value types.
+
+4. **Integer Overflow**: Implement graceful handling for integer overflow.
+
+5. **Default Values**: Add support for default values for optional parameters.
+
+6. **Performance Optimization**: Optimize performance for large data structures and deeply nested function calls.
+
+7. **Method Implementation**: Consolidate method implementations to avoid duplication between `execute_node` and `evaluate` methods.
+
+8. **Syntax Error Handling**: Improve error messages for syntax errors to provide more helpful information.
