@@ -51,7 +51,7 @@ Checkout documentation [here](https://deekshith-poojary98.github.io/echo/).
   - `source.echo` - Main example file
   - `test.echo` - Test cases
   - `mut.echo` - Mutation testing examples
-- `index.html` - Web interface and documentation
+- `docs/index.html` - Web interface and documentation
 - `echo_documentation.md` - Comprehensive language documentation
 - `Echo Design Plan.docx` - Detailed design specifications
 
@@ -61,7 +61,7 @@ The project includes extensive documentation:
 
 - `echo_documentation.md` - Complete language reference and guide
 - `Echo Design Plan.docx` - Detailed design specifications
-- `index.html` - Web-based documentation and examples
+- `docs/index.html` - Web-based documentation and examples
 
 ## Getting Started
 
@@ -89,7 +89,7 @@ fn square(x: int) -> int => x * x;
 result = ask("Enter a number:").asInt().toString().length();
 
 // Loops with Step Control
-for i in 0..10 by 2 {
+for i: int in 0..10 by 2 {
     say("Count:", i);
 }
 
