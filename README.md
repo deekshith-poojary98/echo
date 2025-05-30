@@ -47,7 +47,7 @@ Echo is designed to be both beginner-friendly and powerful, offering:
 
 ## Quick Example
 
-```echo
+```c
 // Basic syntax example
 name: str = "Echo";
 age: int = 25;
