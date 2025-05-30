@@ -8,7 +8,7 @@ from echo_interpreter import Interpreter
 
 if __name__ == "__main__":
     lex_obj = Lexer()
-    tokens = lex_obj.read_source(r".\syntaxes\source.echo")
+    tokens = lex_obj.read_source(r".\syntaxes\syntax.echo")
     # print("Tokens from lexer:", tokens)
 
     parser_obj = Parser(tokens)

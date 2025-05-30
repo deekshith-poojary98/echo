@@ -333,6 +333,92 @@ lower: str = text.lowerCase();  // "hello world"
 reversed: str = text.reverse();  // "dlroW olleH"
 ```
 
+## Hash Methods
+
+Hash methods for manipulating key-value pairs:
+
+### keys()
+Returns list of hash keys
+
+```echo
+user: hash = {"name": "Alice", "age": 25, "city": "New York"};
+keys: list = user.keys();  // ["name", "age", "city"]
+```
+
+### values()
+Returns list of hash values
+
+```echo
+user: hash = {"name": "Alice", "age": 25, "city": "New York"};
+values: list = user.values();  // ["Alice", 25, "New York"]
+```
+
+### wipe()
+Removes all key-value pairs from the hash.
+
+```echo
+d: hash = {"a": 1, "b": 2};
+d.wipe();  // d is now {}
+```
+
+### clone()
+Creates a shallow copy of the hash.
+
+```echo
+d1: hash = {"x": 10};
+d2: hash = d1.clone();  // d2 is {"x": 10}
+```
+
+### pairs()
+Returns a list of [key, value] pairs.
+
+```echo
+d: hash = {"a": 1, "b": 2};
+items: dynamic = d.pairs();  // [["a", 1], ["b", 2]]
+```
+
+### take(key)
+Removes and returns the [key, value] pair for the given key.
+
+```echo
+d: hash = {"a": 100, "b": 200};
+pair: list = d.take("a");  // pair is ["a", 100], d is {"b": 200}
+```
+
+### take_last()
+Removes and returns the last [key, value] pair.
+
+```echo
+d: hash = {"one": 1, "two": 2};
+last: list = d.take_last();  // last is ["two", 2], d is {"one": 1}
+```
+
+### ensure(key, default)
+Ensures a key exists with the given default value if not present.
+
+```echo
+d: hash = {};
+val: int = d.ensure("count", 0);  // val is 0, d is {"count": 0}
+```
+
+### merge(other)
+Merges another hash into this one, overwriting existing keys.
+
+```echo
+d1: hash = {"a": 1};
+d2: hash = {"b": 2};
+d1.merge(d2);  // d1 is {"a": 1, "b": 2}
+```
+
+## Best Practices
+
+- Use `wipe()` to clear a hash completely
+- Use `clone()` when you need a copy to avoid modifying the original
+- Use `take()` when you need to remove and use a specific key-value pair
+- Use `take_last()` when you need to remove and use the last key-value pair
+- Use `ensure()` to safely get or set a default value for a key
+- Use `merge()` to combine hashes, being aware that it overwrites existing keys
+
 ### 6. String Interpolation
 
 ```rust
@@ -423,8 +509,6 @@ fn nested_function() -> void {
 
 ### Collection Methods
 - `length()`: Returns length of string, list, or hash
-- `keys()`: Returns list of hash keys
-- `values()`: Returns list of hash values
 - `reverse()`: Reverses the elements of a list or string
 
 ### List Methods

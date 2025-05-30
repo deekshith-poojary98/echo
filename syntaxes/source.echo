@@ -230,3 +230,4 @@ user: hash = {
 say(user["name"]);
 // say("Average score: ${(user["scores"]["math"] + user["scores"]["science"] + user["scores"]["history"]) / 3}");
 
+

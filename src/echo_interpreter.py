@@ -284,6 +284,7 @@ class Interpreter:
                 context.set(node["target"], value)
 
         elif node_type == "method_call":
+            # # print(f"DEBUG: Method call in execute_node: {node['method']}")
             # List of methods that modify their target
             modifying_methods = {
                 "push", "empty", "merge", "insertAt", "pull", "removeValue", "order"
@@ -327,16 +328,24 @@ class Interpreter:
                         return target
                     elif node["method"] == "merge":
                         target = self.evaluate(node["target"], context)
-                        if not isinstance(target, list):
-                            raise TypeError("merge() can only be called on lists")
                         if len(node["args"]) != 1:
                             raise TypeError("merge() requires exactly one argument")
                         other = self.evaluate(node["args"][0], context)
-                        if not isinstance(other, (list, str)):
-                            raise TypeError("merge() argument must be a list or string")
-                        target.extend(other)
-                        print(f"WATCH: {var_name} modified by merge() to {target} (in {function_name})")
-                        return target
+                        
+                        if isinstance(target, list):
+                            if not isinstance(other, (list, str)):
+                                raise TypeError("merge() argument must be a list or string when merging lists")
+                            target.extend(other)
+                            print(f"WATCH: {var_name} modified by merge() to {target} (in {function_name})")
+                            return target
+                        elif isinstance(target, dict):
+                            if not isinstance(other, dict):
+                                raise TypeError("merge() argument must be a hash when merging hashes")
+                            target.update(other)
+                            print(f"WATCH: {var_name} modified by merge() to {target} (in {function_name})")
+                            return target
+                        else:
+                            raise TypeError("merge() can only be called on lists or hashes")
                     elif node["method"] == "insertAt":
                         target = self.evaluate(node["target"], context)
                         if not isinstance(target, list):
@@ -478,9 +487,12 @@ class Interpreter:
                 return target
             elif node["method"] == "clone":
                 target = self.evaluate(node["target"], context)
-                if not isinstance(target, list):
-                    raise TypeError("clone() can only be called on lists")
-                return target.copy()
+                if isinstance(target, list):
+                    return target.copy()
+                elif isinstance(target, dict):
+                    return target.copy()
+                else:
+                    raise TypeError("clone() can only be called on lists or hashes")
             elif node["method"] == "countOf":
                 target = self.evaluate(node["args"][0], context)
                 if not isinstance(target, list):
@@ -489,18 +501,6 @@ class Interpreter:
                     raise TypeError("countOf() requires exactly one argument")
                 value = self.evaluate(node["args"][0], context)
                 return target.count(value)
-            elif node["method"] == "merge":
-                target = self.evaluate(node["target"], context)
-                if not isinstance(target, list):
-                    raise TypeError("merge() can only be called on lists")
-                if len(node["args"]) != 1:
-                    raise TypeError("merge() requires exactly one argument")
-                other = self.evaluate(node["args"][0], context)
-                if not isinstance(other, (list, str)):
-                    raise TypeError("merge() argument must be a list or string")
-                # Modify the target list in place by extending it
-                target.extend(other)
-                return target
             elif node["method"] == "find":
                 target = self.evaluate(node["target"], context)
                 if not isinstance(target, list):
@@ -561,6 +561,88 @@ class Interpreter:
                     raise TypeError("order() can only be called on lists")
                 target.sort()
                 return target
+            # Hash methods
+            elif node["method"] == "wipe":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, dict):
+                    raise TypeError("wipe() can only be called on hashes")
+                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
+                    var_name = node["target"]["name"]
+                    if context.is_watched(var_name):
+                        watch_context = context.get_watch_context(var_name)
+                        old_value = watch_context.get(var_name)
+                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                        print(f"WATCH: {var_name} modified by wipe() to {target} (in {function_name})")
+                target.clear()
+                return target
+            elif node["method"] == "take":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, dict):
+                    raise TypeError("take() can only be called on hashes")
+                if len(node["args"]) != 1:
+                    raise TypeError("take() requires exactly one argument (key)")
+                key = self.evaluate(node["args"][0], context)
+                if not isinstance(key, str):
+                    raise TypeError("take() key must be a string")
+                if key not in target:
+                    raise KeyError(f"Key '{key}' not found in hash")
+                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
+                    var_name = node["target"]["name"]
+                    if context.is_watched(var_name):
+                        watch_context = context.get_watch_context(var_name)
+                        old_value = watch_context.get(var_name)
+                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                        new_target = target.copy()
+                        new_target.pop(key)
+                        print(f"WATCH: {var_name} modified by take() to {new_target} (in {function_name})")
+                value = target.pop(key)
+                result = [key, value]
+                return result
+            elif node["method"] == "take_last":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, dict):
+                    raise TypeError("take_last() can only be called on hashes")
+                if not target:
+                    raise KeyError("Cannot take_last() from empty hash")
+                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
+                    var_name = node["target"]["name"]
+                    if context.is_watched(var_name):
+                        watch_context = context.get_watch_context(var_name)
+                        old_value = watch_context.get(var_name)
+                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                        # Create a copy of the target and remove the last key to show the new state
+                        new_target = target.copy()
+                        last_key = list(new_target.keys())[-1]
+                        new_target.pop(last_key)
+                        print(f"WATCH: {var_name} modified by take_last() to {new_target} (in {function_name})")
+                key = list(target.keys())[-1]
+                value = target.pop(key)
+                result = [key, value]
+                return result
+            elif node["method"] == "ensure":
+                target = self.evaluate(node["target"], context)
+                if not isinstance(target, dict):
+                    raise TypeError("ensure() can only be called on hashes")
+                if len(node["args"]) != 2:
+                    raise TypeError("ensure() requires exactly two arguments (key and default value)")
+                key = self.evaluate(node["args"][0], context)
+                if not isinstance(key, str):
+                    raise TypeError("ensure() key must be a string")
+                default_value = self.evaluate(node["args"][1], context)
+                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
+                    var_name = node["target"]["name"]
+                    if context.is_watched(var_name):
+                        watch_context = context.get_watch_context(var_name)
+                        old_value = watch_context.get(var_name)
+                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                        # Create a copy of the target and add the key to show the new state
+                        new_target = target.copy()
+                        if key not in new_target:
+                            new_target[key] = default_value
+                        print(f"WATCH: {var_name} modified by ensure() to {new_target} (in {function_name})")
+                if key not in target:
+                    target[key] = default_value
+                return target[key]
 
         elif node_type == "for":
             # Create a new context for the loop
@@ -765,6 +847,7 @@ class Interpreter:
             op = expr["operator"]
             return self._unary_op(op, operand)
         elif expr_type == "function_call":
+            # # print(f"DEBUG: Method call in evaluate: {expr['method']}")
             return context.call_function(expr["name"], expr["args"], self)
         elif expr_type == "index":
             target = self.evaluate(expr["target"], context)
@@ -791,12 +874,51 @@ class Interpreter:
             else:
                 raise TypeError(f"Cannot index type {type(target).__name__}")
         elif expr_type == "method_call":
+            # # print(f"DEBUG: Method call in evaluate: {expr['method']}")
             # Handle method calls on targets if they exist
             target_value = None
             if "target" in expr:
                 target_value = self.evaluate(expr["target"], context)
             
-            if expr["method"] == "ask":
+            # Handle hash methods
+            if expr["method"] == "pairs":
+                if not isinstance(target_value, dict):
+                    raise TypeError("pairs() can only be called on hashes")
+                result = [[k, v] for k, v in target_value.items()]
+                # # print(f"DEBUG evaluate: pairs() called on {target_value}, returning {result}")
+                return result
+            elif expr["method"] == "take":
+                # print(f"DEBUG evaluate: take() called")
+                target = self.evaluate(expr["target"], context)
+                # print(f"DEBUG evaluate: take() target: {target}")
+                if not isinstance(target, dict):
+                    raise TypeError("take() can only be called on hashes")
+                if len(expr["args"]) != 1:
+                    raise TypeError("take() requires exactly one argument (key)")
+                key = self.evaluate(expr["args"][0], context)
+                # print(f"DEBUG evaluate: take() key: {key}")
+                if not isinstance(key, str):
+                    raise TypeError("take() key must be a string")
+                if key not in target:
+                    raise KeyError(f"Key '{key}' not found in hash")
+                if "target" in expr and isinstance(expr["target"], dict) and expr["target"]["type"] == "identifier":
+                    var_name = expr["target"]["name"]
+                    # print(f"DEBUG evaluate: take() var_name: {var_name}")
+                    # print(f"DEBUG evaluate: take() is_watched: {context.is_watched(var_name)}")
+                    if context.is_watched(var_name):
+                        watch_context = context.get_watch_context(var_name)
+                        old_value = watch_context.get(var_name)
+                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                        # print(f"DEBUG evaluate: take() function_name: {function_name}")
+                        # Create a copy of the target and remove the key to show the new state
+                        new_target = target.copy()
+                        new_target.pop(key)
+                        # print(f"DEBUG evaluate: take() new_target: {new_target}")
+                        print(f"WATCH: {var_name} modified by take() to {new_target} (in {function_name})")
+                value = target.pop(key)
+                result = [key, value]
+                return result
+            elif expr["method"] == "ask":
                 return input(self.evaluate(expr["args"][0], context))
             elif expr["method"] == "asInt":
                 value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
@@ -887,9 +1009,12 @@ class Interpreter:
                 return target
             elif expr["method"] == "clone":
                 target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if not isinstance(target, list):
-                    raise TypeError("clone() can only be called on lists")
-                return target.copy()
+                if isinstance(target, list):
+                    return target.copy()
+                elif isinstance(target, dict):
+                    return target.copy()
+                else:
+                    raise TypeError("clone() can only be called on lists or hashes")
             elif expr["method"] == "countOf":
                 target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
                 if not isinstance(target, list):
@@ -899,17 +1024,36 @@ class Interpreter:
                 value = self.evaluate(expr["args"][0], context)
                 return target.count(value)
             elif expr["method"] == "merge":
-                target = self.evaluate(expr["target"], context)
-                if not isinstance(target, list):
-                    raise TypeError("merge() can only be called on lists")
                 if len(expr["args"]) != 1:
                     raise TypeError("merge() requires exactly one argument")
                 other = self.evaluate(expr["args"][0], context)
-                if not isinstance(other, (list, str)):
-                    raise TypeError("merge() argument must be a list or string")
-                # Modify the target list in place by extending it
-                target.extend(other)
-                return target
+                
+                if isinstance(target_value, list):
+                    if not isinstance(other, (list, str)):
+                        raise TypeError("merge() argument must be a list or string when merging lists")
+                    if "target" in expr and isinstance(expr["target"], dict) and expr["target"]["type"] == "identifier":
+                        var_name = expr["target"]["name"]
+                        if context.is_watched(var_name):
+                            watch_context = context.get_watch_context(var_name)
+                            old_value = watch_context.get(var_name)
+                            function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                            print(f"WATCH: {var_name} modified by merge() to {target_value} (in {function_name})")
+                    target_value.extend(other)
+                    return target_value
+                elif isinstance(target_value, dict):
+                    if not isinstance(other, dict):
+                        raise TypeError("merge() argument must be a hash when merging hashes")
+                    if "target" in expr and isinstance(expr["target"], dict) and expr["target"]["type"] == "identifier":
+                        var_name = expr["target"]["name"]
+                        if context.is_watched(var_name):
+                            watch_context = context.get_watch_context(var_name)
+                            old_value = watch_context.get(var_name)
+                            function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
+                            print(f"WATCH: {var_name} modified by merge() to {target_value} (in {function_name})")
+                    target_value.update(other)
+                    return target_value
+                else:
+                    raise TypeError("merge() can only be called on lists or hashes")
             elif expr["method"] == "find":
                 target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
                 if not isinstance(target, list):
@@ -970,6 +1114,12 @@ class Interpreter:
                     raise TypeError("order() can only be called on lists")
                 target.sort()
                 return target
+            elif expr["method"] == "take_last":
+                # Delegate to execute_node for watch tracking
+                return self.execute_node({"type": "method_call", "method": "take_last", "target": expr["target"]}, context)
+            elif expr["method"] == "ensure":
+                # Delegate to execute_node for watch tracking
+                return self.execute_node({"type": "method_call", "method": "ensure", "target": expr["target"], "args": expr["args"]}, context)
         elif expr_type == "string_interpolation":
             return "".join(
                 str(self.evaluate(part, context))

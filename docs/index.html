@@ -715,18 +715,46 @@
                     <li><code class="func">keys() -> list</code>: Returns a list of keys from a hash.</li>
                     <li><code class="func">values() -> list</code>: Returns a list of values from a hash.</li>
                     <li><code class="func">length() -> int</code>: Returns the number of key-value pairs in a hash.</li>
+                    <li><code class="func">wipe()</code> to clear a hash completely</li>
+                    <li><code class="func">clone()</code> when you need a copy to avoid modifying the original</li>
+                    <li><code class="func">take()</code> when you need to remove and use a specific key-value pair</li>
+                    <li><code class="func">take_last()</code> when you need to remove and use the last key-value pair</li>
+                    <li><code class="func">ensure()</code> to safely get or set a default value for a key</li>
+                    <li><code class="func">merge()</code> to combine hashes, being aware that it overwrites existing keys</li>
                 </ul>
 
                 <pre>
-<span class="comment">// List operations</span>
+<span class="comment">// List method examples</span>
 <span class="variable">numbers</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="value">2</span>, <span class="value">3</span>];
-<span class="variable">numbers</span>.<span class="function">push</span>(<span class="value">4</span>);
-<span class="variable">numbers</span>.<span class="function">order</span>();
+<span class="variable">numbers</span>.<span class="function">push</span>(<span class="value">4</span>);  <span class="comment">// [1, 2, 3, 4]</span>
+<span class="variable">numbers</span>.<span class="function">order</span>();  <span class="comment">// [1, 2, 3, 4]</span>
+<span class="variable">numbers</span>.<span class="function">insertAt</span>(<span class="value">1</span>, <span class="value">5</span>);  <span class="comment">// [1, 5, 2, 3, 4]</span>
+<span class="variable">numbers</span>.<span class="function">removeValue</span>(<span class="value">2</span>);  <span class="comment">// [1, 5, 3, 4]</span>
+<span class="variable">numbers</span>.<span class="function">pull</span>();  <span class="comment">// Returns 4, numbers is [1, 5, 3]</span>
+<span class="variable">numbers</span>.<span class="function">empty</span>();  <span class="comment">// []</span>
 
-<span class="comment">// Hash operations</span>
+<span class="variable">list1</span>: <span class="type">list</span> = [<span class="value">1</span>, <span class="value">2</span>];
+<span class="variable">list2</span>: <span class="type">list</span> = [<span class="value">3</span>, <span class="value">4</span>];
+<span class="variable">list1</span>.<span class="function">merge</span>(<span class="variable">list2</span>);  <span class="comment">// [1, 2, 3, 4]</span>
+
+<span class="comment">// Hash method examples</span>
 <span class="variable">user</span>: <span class="type">hash</span> = {<span class="string">"name"</span>: <span class="string">"Alice"</span>, <span class="string">"age"</span>: <span class="value">25</span>};
-<span class="variable">keys</span> = <span class="function">keys</span>(<span class="variable">user</span>);
-<span class="variable">values</span> = <span class="function">values</span>(<span class="variable">user</span>);</pre>
+<span class="variable">keys</span> = <span class="variable">user</span>.<span class="function">keys</span>();  <span class="comment">// ["name", "age"]</span>
+<span class="variable">values</span> = <span class="variable">user</span>.<span class="function">values</span>();  <span class="comment">// ["Alice", 25]</span>
+<span class="variable">pairs</span> = <span class="variable">user</span>.<span class="function">pairs</span>();  <span class="comment">// [["name", "Alice"], ["age", 25]]</span>
+
+<span class="variable">user</span>.<span class="function">wipe</span>();  <span class="comment">// {}</span>
+<span class="variable">user</span>.<span class="function">ensure</span>(<span class="string">"score"</span>, <span class="value">0</span>);  <span class="comment">// {"score": 0}</span>
+
+<span class="variable">user1</span>: <span class="type">hash</span> = {<span class="string">"name"</span>: <span class="string">"Bob"</span>};
+<span class="variable">user2</span>: <span class="type">hash</span> = {<span class="string">"age"</span>: <span class="value">30</span>};
+<span class="variable">user1</span>.<span class="function">merge</span>(<span class="variable">user2</span>);  <span class="comment">// {"name": "Bob", "age": 30}</span>
+
+<span class="variable">pair</span> = <span class="variable">user1</span>.<span class="function">take</span>(<span class="string">"name"</span>);  <span class="comment">// ["name", "Bob"], user1 is {"age": 30}</span>
+<span class="variable">last</span> = <span class="variable">user1</span>.<span class="function">take_last</span>();  <span class="comment">// ["age", 30], user1 is {}</span>
+
+<span class="variable">copy</span> = <span class="variable">user2</span>.<span class="function">clone</span>();  <span class="comment">// {"age": 30}</span>
+<span class="variable">count</span> = <span class="variable">user2</span>.<span class="function">length</span>();  <span class="comment">// 1</span></pre>
             </section>
 
             <section id="variable-scoping" class="section">

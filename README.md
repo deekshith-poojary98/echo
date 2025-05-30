@@ -1,43 +1,75 @@
-#  Echo Programming Language
+# Echo Programming Language
 
-Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming.
-Checkout documentation [here](https://deekshith-poojary98.github.io/echo/).
+Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming. Checkout documentation [here](https://deekshith-poojary98.github.io/echo/).
 
-## Features
+## Quick Overview
 
-- **Strong Type System**
-  - Explicit type declarations with mandatory type annotations
-  - Type validation at runtime
-  - Support for basic types: `int`, `float`, `str`, `bool`, `list`, `hash`
-  - Dynamic type with `dynamic` keyword
-  - Required type annotations for function parameters and return types
+Echo is designed to be both beginner-friendly and powerful, offering:
 
-- **Modern Syntax**
-  - Clean and readable syntax
-  - String interpolation with `${variable}` syntax
-  - Method chaining support
-  - Both inline (`=>`) and block-style function definitions
-  - Type-safe function parameters and return types
-  - Logical operators with proper precedence (`&&`, `||`, `!`)
+- **Type Safety**: Strong static typing with mandatory type annotations and runtime type checking
+- **Modern Syntax**: Clean, readable code with intuitive constructs and method chaining
+- **Rich Standard Library**: Comprehensive built-in methods for common operations
+- **Advanced Features**: Support for modern programming patterns and debugging tools
 
-- **Control Structures**
-  - `for` loops with step control (`by` keyword)
-  - `foreach` loops for iteration
-  - `while` loops
-  - `if/else` conditionals
-  - `break` and `continue` statements
+## Key Features
 
-- **Built-in Methods**
-  - I/O: `say()`, `ask()`, `wait()`
-  - Type Conversion: `asInt()`, `asFloat()`, `asBool()`, `asString()`
-  - String Manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`
-  - Type Checking: `type()`
+### Core Language Features
+- Static typing with mandatory type annotations
+- String interpolation with `${variable}` syntax
+- Method chaining for fluent code
+- Function closures and nested functions
+- Context-based scoping with `use` and `use mut` statements
+- Variable watching for debugging
 
-- **Advanced Features**
-  - Function closures
-  - Context-based scoping
-  - Method chaining
-  - Short-circuit evaluation for logical operators
+### Data Types
+- Basic types: `int` (32-bit), `float` (64-bit), `str` (UTF-8), `bool`
+- Collections: `list` (mutable arrays), `hash` (key-value pairs)
+- Dynamic typing with `dynamic` keyword
+- Type conversion methods: `asInt()`, `asFloat()`, `asBool()`, `asString()`
+
+### Control Flow
+- `for` loops with step control (`by` keyword)
+- `foreach` loops for collection iteration
+- `while` loops
+- `if/else` conditionals
+- `break` and `continue` statements
+- Logical operators: `&&`, `||`, `!`
+
+### Built-in Methods
+- I/O: `say()`, `ask()`, `wait()`
+- String manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`, `reverse()`
+- Collection operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`
+- Type checking: `type()`
+
+### Collection Methods
+- List operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`
+- Hash operations: `keys()`, `values()`, `wipe()`, `clone()`, `pairs()`, `take()`, `take_last()`, `ensure()`, `merge()`
+
+## Quick Example
+
+```echo
+// Basic syntax example
+name: str = "Echo";
+age: int = 25;
+scores: list = [95, 85, 75];
+
+// Function with type annotations
+fn greet(name: str) -> void {
+    say("Hello, ${name}!");
+}
+
+// Method chaining
+result: int = ask("Enter a number:").asInt().toString().length();
+
+// Loop with step
+for i: int in 0..10 by 2 {
+    say("Count:", i);
+}
+
+// Variable watching
+watch counter;
+counter = counter + 1;  // Output: WATCH: counter changed to 1
+```
 
 ## Project Structure
 
@@ -46,58 +78,14 @@ Checkout documentation [here](https://deekshith-poojary98.github.io/echo/).
   - `echo_parser.py` - Abstract Syntax Tree (AST) construction
   - `echo_interpreter.py` - Code execution and runtime
   - `main.py` - Entry point for the interpreter
-- `echo-syntax-highlighter/` - Syntax highlighting support
-- `*.echo` - Example Echo source files
-  - `source.echo` - Main example file
-  - `test.echo` - Test cases
-  - `mut.echo` - Mutation testing examples
-- `docs/index.html` - Web interface and documentation
-- `echo_documentation.md` - Comprehensive language documentation
-- `Echo Design Plan.docx` - Detailed design specifications
-
-## Documentation
-
-The project includes extensive documentation:
-
-- `echo_documentation.md` - Complete language reference and guide
-- `Echo Design Plan.docx` - Detailed design specifications
-- `docs/index.html` - Web-based documentation and examples
+- `docs/` - Documentation and examples
+- `*.echo` - Example source files
 
 ## Getting Started
 
-### Basic Syntax Examples
-
-```echo
-// Variable Declaration with Types
-x: int = 10;
-name: str = "John";
-scores: list = [95, 85, 75];
-config: hash = {"debug": true, "port": 8080};
-
-// String Interpolation
-say("Hello, ${name}! Your score is ${scores[0]}");
-
-// Function Definition with Return Type
-fn greet(name: str) -> void {
-    say("Hello,", name);
-}
-
-// Function Definition (Inline) with Return Type
-fn square(x: int) -> int => x * x;
-
-// Method Chaining
-result = ask("Enter a number:").asInt().toString().length();
-
-// Loops with Step Control
-for i: int in 0..10 by 2 {
-    say("Count:", i);
-}
-
-// Logical Operations
-if age >= 18 && has_id && !is_banned {
-    say("Access granted");
-}
-```
+1. Clone the repository
+2. Check out the [documentation](https://deekshith-poojary98.github.io/echo/)
+3. Try the example files in the repository
 
 ## Contributing
 
