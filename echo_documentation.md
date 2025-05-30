@@ -38,7 +38,7 @@ Echo is a statically-typed programming language with dynamic capabilities. It su
 
 ### 1. Variable Declarations and Type Annotations
 
-```rust
+```c
 // Basic type declarations
 age: int = 25;
 name: str = "John";
@@ -55,7 +55,7 @@ say("Type of name:", name.type());
 
 ### 2. Functions
 
-```rust
+```c
 // Standard function with block body and return type
 fn process_data(age: int, is_active: bool) -> int {
     if is_active {
@@ -100,7 +100,7 @@ Every function must specify a return type using the `->` operator. Echo supports
 - Dynamic return types should be used sparingly and only when necessary
 
 #### Common Type Errors
-```rust
+```c
 // Error: Function declares int return type but returns float
 fn calculate_average(a: int, b: int) -> int {
     return (a + b) / 2.0;  // TypeError: Expected int, got float
@@ -122,7 +122,7 @@ fn add_numbers(a: int, b: int) {  // SyntaxError: Return type annotation require
 
 #### If-Else Statements
 
-```rust
+```c
 if condition {
     // code
 } else if another_condition {
@@ -134,7 +134,7 @@ if condition {
 
 #### Loops
 
-```rust
+```c
 // For loop with step
 for i: int in 0..10 by 2 {
     say("Count:", i);
@@ -162,7 +162,7 @@ Echo supports three logical operators for boolean operations:
 - Returns `false` if either operand is `false`
 - Short-circuits: if the first operand is `false`, the second operand is not evaluated
 
-```rust
+```c
 // Basic AND operation
 is_valid: bool = true;
 has_permission: bool = true;
@@ -182,7 +182,7 @@ if false && some_expensive_operation() {
 - Returns `false` if both operands are `false`
 - Short-circuits: if the first operand is `true`, the second operand is not evaluated
 
-```rust
+```c
 // Basic OR operation
 is_admin: bool = false;
 has_privileges: bool = true;
@@ -202,7 +202,7 @@ if true || some_expensive_operation() {
 - Returns `false` if the operand is `true`
 - Can be used to invert any boolean expression
 
-```rust
+```c
 // Basic NOT operation
 is_disabled: bool = false;
 if !is_disabled {
@@ -220,7 +220,7 @@ if !(x > 5 && y < 10) {
 2. `&&`
 3. `||` (lowest precedence)
 
-```rust
+```c
 // Parentheses can be used to override precedence
 if (x > 5 || y < 10) && !is_disabled {
     say("Complex condition met");
@@ -232,7 +232,7 @@ if (x > 5 || y < 10) && !is_disabled {
 - Non-boolean values will raise a TypeError
 - Use `asBool()` for type conversion when needed
 
-```rust
+```c
 // Type-safe usage
 value: int = 42;
 if value.asBool() && is_valid {
@@ -246,7 +246,7 @@ if 42 && true {  // TypeError: Expected bool, got int
 ```
 
 #### Common Patterns
-```rust
+```c
 // Checking multiple conditions
 if age >= 18 && has_id && !is_banned {
     say("User is eligible");
@@ -266,7 +266,7 @@ if (!is_logged_in || !has_permission) && !is_guest {
 
 ### 5. Collection Methods
 
-```rust
+```c
 // Length method
 str = "hello";
 list = [1, 2, 3];
@@ -340,7 +340,7 @@ Hash methods for manipulating key-value pairs:
 ### keys()
 Returns list of hash keys
 
-```rust
+```c
 user: hash = {"name": "Alice", "age": 25, "city": "New York"};
 keys: list = user.keys();  // ["name", "age", "city"]
 ```
@@ -348,7 +348,7 @@ keys: list = user.keys();  // ["name", "age", "city"]
 ### values()
 Returns list of hash values
 
-```rust
+```c
 user: hash = {"name": "Alice", "age": 25, "city": "New York"};
 values: list = user.values();  // ["Alice", 25, "New York"]
 ```
@@ -356,7 +356,7 @@ values: list = user.values();  // ["Alice", 25, "New York"]
 ### wipe()
 Removes all key-value pairs from the hash.
 
-```rust
+```c
 d: hash = {"a": 1, "b": 2};
 d.wipe();  // d is now {}
 ```
@@ -364,7 +364,7 @@ d.wipe();  // d is now {}
 ### clone()
 Creates a shallow copy of the hash.
 
-```rust
+```c
 d1: hash = {"x": 10};
 d2: hash = d1.clone();  // d2 is {"x": 10}
 ```
@@ -372,7 +372,7 @@ d2: hash = d1.clone();  // d2 is {"x": 10}
 ### pairs()
 Returns a list of [key, value] pairs.
 
-```rust
+```c
 d: hash = {"a": 1, "b": 2};
 items: dynamic = d.pairs();  // [["a", 1], ["b", 2]]
 ```
@@ -380,7 +380,7 @@ items: dynamic = d.pairs();  // [["a", 1], ["b", 2]]
 ### take(key)
 Removes and returns the [key, value] pair for the given key.
 
-```rust
+```c
 d: hash = {"a": 100, "b": 200};
 pair: list = d.take("a");  // pair is ["a", 100], d is {"b": 200}
 ```
@@ -388,7 +388,7 @@ pair: list = d.take("a");  // pair is ["a", 100], d is {"b": 200}
 ### take_last()
 Removes and returns the last [key, value] pair.
 
-```rust
+```c
 d: hash = {"one": 1, "two": 2};
 last: list = d.take_last();  // last is ["two", 2], d is {"one": 1}
 ```
@@ -396,7 +396,7 @@ last: list = d.take_last();  // last is ["two", 2], d is {"one": 1}
 ### ensure(key, default)
 Ensures a key exists with the given default value if not present.
 
-```rust
+```c
 d: hash = {};
 val: int = d.ensure("count", 0);  // val is 0, d is {"count": 0}
 ```
@@ -404,7 +404,7 @@ val: int = d.ensure("count", 0);  // val is 0, d is {"count": 0}
 ### merge(other)
 Merges another hash into this one, overwriting existing keys.
 
-```rust
+```c
 d1: hash = {"a": 1};
 d2: hash = {"b": 2};
 d1.merge(d2);  // d1 is {"a": 1, "b": 2}
@@ -421,7 +421,7 @@ d1.merge(d2);  // d1 is {"a": 1, "b": 2}
 
 ### 6. String Interpolation
 
-```rust
+```c
 name = "John";
 age = 25;
 say("Hello, ${name}! You are ${age} years old.");
@@ -429,7 +429,7 @@ say("Hello, ${name}! You are ${age} years old.");
 
 ### 7. Method Chaining
 
-```rust
+```c
 result = ask("Enter a number:").asInt().toString().length();
 ```
 
@@ -437,7 +437,7 @@ result = ask("Enter a number:").asInt().toString().length();
 
 The watch statement allows you to monitor variable changes during program execution. This is particularly useful for debugging and understanding program flow.
 
-```rust
+```c
 // Watch a single variable
 watch counter;
 
@@ -538,7 +538,7 @@ Supports embedding expressions in strings using ${expression} syntax.
 
 Always validate user input to ensure it meets the expected format and constraints:
 
-```rust
+```c
 // Age input with validation
 age_input: str = ask("Please enter your age: ");
 user_age: int = 0;
@@ -558,7 +558,7 @@ if age_input.length() > 0 {
 
 Implement error handling for potential issues:
 
-```rust
+```c
 // Division by zero handling
 divisor: int = 0;
 if divisor == 0 {
@@ -573,7 +573,7 @@ if divisor == 0 {
 
 Handle empty values appropriately:
 
-```rust
+```c
 // Empty string handling
 empty_str: str = "";
 say("Empty string length:", empty_str.length());
@@ -594,7 +594,7 @@ say("Empty hash length:", empty_hash.length());
 
 Validate type conversions to prevent errors:
 
-```rust
+```c
 str_num: str = "123";
 num: int = 0;
 if str_num.length() > 0 {
@@ -616,7 +616,7 @@ if invalid_int.length() > 0 {
 
 Validate method chaining to prevent errors:
 
-```rust
+```c
 input_str: str = ask("Enter a number: ");
 if input_str.length() > 0 {
     trimmed_input: str = input_str.trim();
@@ -635,7 +635,7 @@ if input_str.length() > 0 {
 
 Always return a value from functions:
 
-```rust
+```c
 fn process_list(items: list) -> bool {
     if items.length() == 0 {
         say("List is empty");
@@ -653,7 +653,7 @@ fn process_list(items: list) -> bool {
 
 Test boundary conditions to ensure robustness:
 
-```rust
+```c
 // Age classification with boundary testing
 if user_age > 18 {
     say("User is an adult.");
@@ -673,7 +673,7 @@ say("Maximum integer + 1:", max_int + 1);
 
 Handle null/undefined values appropriately:
 
-```rust
+```c
 // Null/undefined handling
 say("Empty string is falsy:", empty_str.asBool() == false);
 say("Empty list is falsy:", empty_list.asBool() == false);
@@ -686,7 +686,7 @@ say("Non-zero is truthy:", 1.asBool() == true);
 
 Handle dynamic type changes safely:
 
-```rust
+```c
 dynamic_var: dynamic = 42;
 say("Dynamic variable:", dynamic_var);
 say("Type of dynamic_var:", dynamic_var.type());
@@ -702,7 +702,7 @@ say("Type of dynamic_var:", dynamic_var.type());
 
 Every statement must end with a semicolon:
 
-```rust
+```c
 // Correct
 x: int = 10;
 say("Hello");
@@ -716,7 +716,7 @@ say("Hello")
 
 Functions must return a value. Empty returns are not allowed:
 
-```rust
+```c
 // Correct
 fn process_list(items: list) -> bool {
     if items.length() == 0 {
@@ -737,7 +737,7 @@ fn process_list(items: list) -> bool {
 
 Method calls must be followed by parentheses, even if there are no arguments:
 
-```rust
+```c
 // Correct
 text.trim();
 empty_list.length();
@@ -751,7 +751,7 @@ empty_list.length;
 
 Type annotations are required for function parameters and variable declarations:
 
-```rust
+```c
 // Correct
 fn greet(name: str) -> void {
     say("Hello, ${name}!");
@@ -771,7 +771,7 @@ Echo provides explicit control over variable scoping and mutability through the 
 
 ### Basic Usage
 
-```rust
+```c
 // Global variables
 counter: int = 0;
 name: str = "Global";
@@ -852,7 +852,7 @@ fn multipleImports() -> void {
 
 ### Error Cases
 
-```rust
+```c
 fn errorExamples() -> void {
     // Error: Using global without import
     counter = 1;  // Will raise error
@@ -883,7 +883,7 @@ fn errorExamples() -> void {
 ### Examples
 
 1. **Basic Counter**
-```rust
+```c
 counter: int = 0;
 
 fn increment() -> void {
@@ -898,7 +898,7 @@ fn display() -> void {
 ```
 
 2. **Configuration Management**
-```rust
+```c
 config: hash = {
     "debug": true,
     "max_retries": 3
@@ -916,7 +916,7 @@ fn readConfig() -> void {
 ```
 
 3. **Nested Function Example**
-```rust
+```c
 name: str = "Global";
 
 fn outer() -> void {
