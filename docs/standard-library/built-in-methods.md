@@ -183,7 +183,7 @@ say(nums);                    // [3, 2, 1]
 ---
 
 ### `format(...)`
-Performs template string substitution. Use `{}` for sequential placeholders or `{0}`, `{1}`, ... for positional ones. Escape literal braces with `{{` and `}}`.
+Performs template string substitution. Use `{}` for sequential placeholders or `{0}`, `{1}`, ... for positional ones. To include literal braces, use doubled braces in the format template.
 
 ```echo
 say("Hello, {}!".format("Echo"));           // Hello, Echo!
