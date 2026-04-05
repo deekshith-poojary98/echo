@@ -10,6 +10,36 @@ TYPE_MAP = {
     "hash": dict,
 }
 
+# Parameter name lists for built-in methods, used to support keyword arguments.
+# Keys are method names; values are ordered param names for args *after* the implicit target
+# (i.e., what the caller passes inside the parentheses when using method-call syntax).
+BUILTIN_PARAMS = {
+    "ask":         ["prompt"],
+    "wait":        ["seconds"],
+    "default":     ["fallback"],
+    "asInt":       ["value"],
+    "asFloat":     ["value"],
+    "asBool":      ["value"],
+    "asString":    ["value"],
+    "type":        ["value"],
+    "push":        ["value"],
+    "insertAt":    ["index", "value"],
+    "pull":        ["index"],
+    "removeValue": ["value"],
+    "find":        ["value"],
+    "countOf":     ["value"],
+    "order":       ["comparator"],
+    "merge":       ["other"],
+    "ensure":      ["key", "default"],
+    "take":        ["key"],
+}
+
+# For built-ins that can also be called standalone (no target), the first arg is the target value.
+_BUILTIN_STANDALONE_PARAMS = {
+    "find":    ["list", "value"],
+    "countOf": ["list", "value"],
+}
+
 try:
     from rich.console import Console
     from rich.panel import Panel
@@ -414,11 +444,70 @@ class Interpreter:
                 f"Cannot assign {type(value).__name__} to {self._format_type(expected_type)} variable '{name}'"
             )
 
-    def _ensure_positional_args(self, args, call_name):
+    def _resolve_builtin_args(self, args, method_name, has_target):
+        """Resolve keyword arguments for a built-in method call into positional order.
+
+        If no keyword arguments are present the original list is returned unchanged.
+        Raises TypeError for unknown keyword names, duplicates, or too many positional args.
+        """
+        has_keyword = any(
+            isinstance(arg, dict) and arg.get("type") == "keyword_arg"
+            for arg in args
+        )
+        if not has_keyword:
+            return args
+
+        # Variadic built-ins (say, format) do not have a fixed param list.
+        if method_name in ("say", "format"):
+            raise TypeError(f"{method_name}() does not support keyword arguments")
+
+        # Pick the right param list depending on whether there is an implicit target.
+        if not has_target and method_name in _BUILTIN_STANDALONE_PARAMS:
+            params = _BUILTIN_STANDALONE_PARAMS[method_name]
+        else:
+            params = BUILTIN_PARAMS.get(method_name)
+
+        if params is None:
+            raise TypeError(f"{method_name}() does not support keyword arguments")
+
+        positional = []
+        keyword = {}
         for arg in args:
             if isinstance(arg, dict) and arg.get("type") == "keyword_arg":
-                raise TypeError(f"{call_name} does not support keyword arguments")
-        return args
+                name = arg["name"]
+                if name in keyword:
+                    raise TypeError(f"{method_name}() got multiple values for argument '{name}'")
+                if name not in params:
+                    raise TypeError(f"{method_name}() got an unexpected keyword argument '{name}'")
+                keyword[name] = arg["value"]
+            else:
+                positional.append(arg)
+
+        slots = [None] * len(params)
+
+        if len(positional) > len(params):
+            raise TypeError(
+                f"{method_name}() expected at most {len(params)} argument(s), got {len(positional)}"
+            )
+        for i, arg in enumerate(positional):
+            slots[i] = arg
+
+        for name, value_node in keyword.items():
+            idx = params.index(name)
+            if slots[idx] is not None:
+                raise TypeError(f"{method_name}() got multiple values for argument '{name}'")
+            slots[idx] = value_node
+
+        # Strip trailing None slots (optional params that were not supplied).
+        while slots and slots[-1] is None:
+            slots = slots[:-1]
+
+        # A None that is not at the tail means a required positional was skipped.
+        for i, slot in enumerate(slots):
+            if slot is None:
+                raise TypeError(f"{method_name}() missing argument '{params[i]}'")
+
+        return slots
 
     def _current_function_name(self, context):
         if not context.in_function:
@@ -490,9 +579,10 @@ class Interpreter:
         return self.evaluate(args[0], context)
 
     def _evaluate_method_call(self, call, context):
-        call = {**call, "args": self._ensure_positional_args(call["args"], f"{call['method']}()")}
+        has_target = "target" in call
+        call = {**call, "args": self._resolve_builtin_args(call["args"], call["method"], has_target)}
         target_value = None
-        if "target" in call:
+        if has_target:
             target_value = self.evaluate(call["target"], context)
 
         watched_var = self._mutating_method_target_name(call, context)
