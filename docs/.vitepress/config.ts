@@ -65,7 +65,8 @@ export default defineConfig({
           { text: 'Lists in Practice', link: '/examples/lists-in-practice' },
           { text: 'Hash Usage', link: '/examples/hash-usage' },
           { text: 'Functions in Practice', link: '/examples/functions-in-practice' },
-          { text: 'Mini Programs', link: '/examples/mini-programs' }
+          { text: 'Mini Programs', link: '/examples/mini-programs' },
+          { text: 'Algorithm Examples', link: '/examples/algorithms' }
         ]
       },
       {
