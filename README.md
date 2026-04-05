@@ -1,6 +1,6 @@
 # Echo Programming Language
 
-Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming. Checkout documentation [here](https://deekshith-poojary98.github.io/echo/).
+Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming. Checkout documentation [here](https://deekshith-poojary98.github.io/echo/index.html).
 
 ## Quick Overview
 
@@ -128,7 +128,7 @@ describe(age: 21, name: "Alice");  // Output: Alice is 21
 ## Getting Started
 
 1. Clone the repository
-2. Check out the [documentation](https://deekshith-poojary98.github.io/echo/)
+2. Check out the [documentation](https://deekshith-poojary98.github.io/echo/index.html)
 3. Try the example files in the repository
 
 ## Contributing
