@@ -23,6 +23,9 @@ classifiers = [
 Homepage = "https://deekshith-poojary98.github.io/echo/index.html"
 Repository = "https://github.com/deekshith-poojary98/echo"
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
 [project.scripts]
 echo = "echo_cli:main"
 echolang = "echo_cli:main"

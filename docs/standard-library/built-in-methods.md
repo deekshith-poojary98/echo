@@ -263,6 +263,13 @@ say(nums.find(20));    // 1
 say(nums.find(99));    // -1
 ```
 
+Standalone keyword form:
+
+```echo
+nums: list = [10, 20, 30];
+say(find(items: nums, value: 20));    // 1
+```
+
 ---
 
 ### `countOf(value)`
@@ -271,6 +278,13 @@ Returns the number of times `value` appears in the list.
 ```echo
 items: list = [1, 2, 1, 3, 1];
 say(items.countOf(1));    // 3
+```
+
+Standalone keyword form:
+
+```echo
+items: list = [1, 2, 1, 3, 1];
+say(countOf(items: items, value: 1));    // 3
 ```
 
 ---
@@ -427,6 +441,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say` and `format` support keyword arguments by parameter name — the same way user-defined functions do.
+- For standalone `find(...)` and `countOf(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asFloat`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.

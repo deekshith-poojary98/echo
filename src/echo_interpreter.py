@@ -36,8 +36,8 @@ BUILTIN_PARAMS = {
 
 # For built-ins that can also be called standalone (no target), the first arg is the target value.
 _BUILTIN_STANDALONE_PARAMS = {
-    "find":    ["list", "value"],
-    "countOf": ["list", "value"],
+    "find":    ["items", "value"],
+    "countOf": ["items", "value"],
 }
 
 try:
