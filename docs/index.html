@@ -16,7 +16,7 @@
     <header class="futuristic-header">
         <div class="header-content">
             <div class="beta-badge">
-                <i class="fas fa-exclamation-triangle" style="color: #ff6f00;"></i> 
+                <i class="fas fa-exclamation-triangle" style="color: #ff6f00;"></i>
                 <span class="glitch-text">BETA VERSION</span>
                 <span class="pulse-dot"></span>
             </div>
@@ -34,7 +34,8 @@
                 <div class="energy-ring energy-ring-3"></div>
                 <h1 class="futuristic-title">Echo</h1>
             </div>
-            <p class="futuristic-subtitle">Where simplicity meets power. A modern programming language that makes development intuitive and enjoyable.</p>
+            <p class="futuristic-subtitle">Where simplicity meets power. A modern programming language that makes
+                development intuitive and enjoyable.</p>
             <div class="header-decoration">
                 <div class="line"></div>
                 <div class="circle"></div>
@@ -340,6 +341,27 @@
                     </div>
                 </div>
 
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-star"></i></div>
+                    <div class="feature-title">Type Features</div>
+                    <div class="feature-description">
+                        <ul>
+                            <li><code>null</code> values are fully supported</li>
+                            <li>Type aliases are supported with <code>type Alias = BaseType;</code></li>
+                        </ul>
+                        <pre>
+<span class="comment">// null support</span>
+<span class="variable">x</span>: <span class="type">dynamic</span> = <span class="value">null</span>;
+<span class="function">say</span>(<span class="variable">x</span>);  <span class="comment">// Output: None</span>
+
+<span class="comment">// type alias support</span>
+<span class="keyword">type</span> <span class="type">Age</span> = <span class="type">int</span>;
+<span class="variable">age</span>: <span class="type">Age</span> = <span class="value">5</span>;
+<span class="function">say</span>(<span class="variable">age</span>);  <span class="comment">// Output: 5</span>
+                        </pre>
+                    </div>
+                </div>
+
             </section>
 
             <section id="type-conversion" class="section">
@@ -427,7 +449,8 @@
                 <p>The <code>for</code> loop iterates through a range of values with optional step increment using the
                     <code>by</code> keyword. Use <code>..</code> for inclusive ranges (includes end value) and
                     <code>...</code> for exclusive ranges (excludes end value). The <code>break</code> statement exits
-                    the loop early, while <code>continue</code> skips to the next iteration. Loop variables must be explicitly typed.
+                    the loop early, while <code>continue</code> skips to the next iteration. Loop variables must be
+                    explicitly typed.
                 </p>
                 <pre>
 <span class="comment">// Basic for loop (exclusive range)</span>
@@ -462,7 +485,8 @@
 }</pre>
 
                 <h3>Foreach Loop</h3>
-                <p>The <code>foreach</code> loop iterates through all elements in a collection such as a list or hash. Loop variables must be explicitly typed.
+                <p>The <code>foreach</code> loop iterates through all elements in a collection such as a list or hash.
+                    Loop variables must be explicitly typed.
                 </p>
                 <pre>
 <span class="comment">// Foreach with list</span>
@@ -616,7 +640,7 @@
                                 type-specific functions</li>
                         </ul>
                     </div>
-                </div>                
+                </div>
 
                 <div class="feature-card">
                     <div class="feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
@@ -717,9 +741,11 @@
                     <li><code class="func">wipe()</code> to clear a hash completely</li>
                     <li><code class="func">clone()</code> when you need a copy to avoid modifying the original</li>
                     <li><code class="func">take()</code> when you need to remove and use a specific key-value pair</li>
-                    <li><code class="func">take_last()</code> when you need to remove and use the last key-value pair</li>
+                    <li><code class="func">take_last()</code> when you need to remove and use the last key-value pair
+                    </li>
                     <li><code class="func">ensure()</code> to safely get or set a default value for a key</li>
-                    <li><code class="func">merge()</code> to combine hashes, being aware that it overwrites existing keys</li>
+                    <li><code class="func">merge()</code> to combine hashes, being aware that it overwrites existing
+                        keys</li>
                 </ul>
 
                 <pre>
@@ -759,8 +785,9 @@
             <section id="variable-scoping" class="section">
                 <h2>Variable Scoping</h2>
                 <p>Echo provides explicit control over variable scoping and mutability through the <code>use</code> and
-                    <code>use mut</code> statements.</p>
-                
+                    <code>use mut</code> statements.
+                </p>
+
                 <div class="code-example">
                     <pre>
 <span class="comment">// Use a single variable</span>
@@ -809,7 +836,7 @@
             <section id="variable-watching" class="section">
                 <h2>Variable Watching</h2>
                 <p>Track variable changes during program execution with the <code>watch</code> statement.</p>
-                
+
                 <div class="code-example">
                     <pre>
 <span class="comment">// Watch a single variable</span>
@@ -843,68 +870,14 @@
                 <h2>Known Issues</h2>
                 <div class="issue-list">
                     <div class="issue">
-                        <h3>Method Name Conflicts</h3>
-                        <p>Currently, variables cannot be named the same as built-in methods. For example:</p>
-                        <pre>
-<span class="comment">// These will cause syntax errors:</span>
-<span class="variable">keys</span>: <span class="type">list</span> = user.keys();
-<span class="variable">values</span>: <span class="type">list</span> = user.values();
-<span class="variable">upperCase</span>: <span class="type">int</span> = <span class="number">10</span>;
-</pre>
-                        <p>This is a temporary limitation that will be fixed in a future update. Most programming
-                            languages allow using method names as variable names, and Echo will follow this standard
-                            behavior.</p>
-                    </div>
-
-                    <div class="issue">
-                        <h3>Error Messages</h3>
-                        <p>Current error messages are basic and may not provide enough context for debugging. We are
-                            working on:</p>
-                        <ul>
-                            <li>More descriptive error messages</li>
-                            <li>Better line and column information</li>
-                            <li>Custom error types for different categories of errors</li>
-                            <li>Improved error handling system</li>
-                        </ul>
-                    </div>
-
-                    <div class="issue">
                         <h3>Type System Limitations</h3>
                         <p>Some type system features are still under development:</p>
                         <ul>
-                            <li>No support for null values yet</li>
                             <li>Limited type inference</li>
                             <li>No generic types</li>
-                            <li>No type aliases</li>
                         </ul>
                     </div>
 
-                    <div class="issue">
-                        <h3>String Quote Inconsistency</h3>
-                        <p>Currently, there's an inconsistency in how string quotes are handled:</p>
-                        <pre>
-<span class="comment">// Double quotes work as expected</span>
-<span class="function">say</span>(<span class="string">"hello"</span>);  <span class="comment">// Output: hello</span>
-
-<span class="comment">// Single quotes print the quotes themselves</span>
-<span class="function">say</span>(<span class="string">'hello'</span>);  <span class="comment">// Output: 'hello'</span></pre>
-                        <p>This is a temporary limitation. In a future update, both single and double quotes will be supported for string literals.</p>
-                    </div>
-
-                    <div class="issue">
-                        <h3>Hash Access Quote Requirements</h3>
-                        <p>Hash keys currently only support double quotes, not single quotes:</p>
-                        <pre>
-<span class="comment">// This works correctly</span>
-<span class="function">say</span>(<span class="variable">user</span>[<span class="string">"name"</span>]);  <span class="comment">// Output: John</span>
-
-<span class="comment">// This causes a syntax error</span>
-<span class="function">say</span>(<span class="variable">user</span>[<span class="string">'name'</span>]);  <span class="comment">// Syntax Error</span>
-<span class="function">say</span>(<span class="string">"User ${user["name"]} (age ${user["age"]})"</span>);  <span class="comment">// Syntax Error</span>
-<span class="function">say</span>(<span class="string">"Average score: ${user["scores"]["math"]}"</span>);  <span class="comment">// Syntax Error</span>
-</pre>
-                        <p>This limitation will be addressed in a future update to support both single and double quotes for hash key access.</p>
-                    </div>
                 </div>
             </section>
         </main>
@@ -1010,9 +983,9 @@
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             let newTheme;
-            
+
             // Cycle through themes: light -> dark -> retro -> light
-            switch(currentTheme) {
+            switch (currentTheme) {
                 case 'light':
                     newTheme = 'dark';
                     break;
@@ -1032,7 +1005,7 @@
         });
 
         function updateThemeIcon(theme) {
-            switch(theme) {
+            switch (theme) {
                 case 'light':
                     themeIcon.className = 'fas fa-moon';
                     break;
@@ -1091,7 +1064,7 @@
             const mainContent = document.querySelector('.main-content');
             const navHeight = document.querySelector('nav').offsetHeight;
             const targetPosition = mainContent.offsetTop - navHeight;
-            
+
             window.scrollTo({
                 top: targetPosition,
                 behavior: 'smooth'

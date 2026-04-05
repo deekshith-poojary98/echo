@@ -25,7 +25,15 @@ Echo is designed to be both beginner-friendly and powerful, offering:
 - Basic types: `int` (32-bit), `float` (64-bit), `str` (UTF-8), `bool`
 - Collections: `list` (mutable arrays), `hash` (key-value pairs)
 - Dynamic typing with `dynamic` keyword
+- `null` literal support
 - Type conversion methods: `asInt()`, `asFloat()`, `asBool()`, `asString()`
+
+### Type System Updates
+- Type aliases are supported via `type Alias = BaseType;`
+- Object type aliases are supported, e.g. `type User = { id: int, username: str, email: str, isAdmin: bool };`
+- Function calls support keyword arguments, e.g. `greet(name: "Alice", age: 21);`
+- Type inference is still limited (explicit declarations are required)
+- Generic types are not yet supported
 
 ### Control Flow
 - `for` loops with step control (`by` keyword)
@@ -69,6 +77,42 @@ for i: int in 0..10 by 2 {
 // Variable watching
 watch counter;
 counter = counter + 1;  // Output: WATCH: counter changed to 1
+```
+
+## Verified Examples
+
+```c
+// null literal
+x: dynamic = null;
+say(x);  // Output: None
+
+// primitive alias
+type Age = int;
+age: Age = 5;
+say(age);  // Output: 5
+
+// object alias + typed function parameter
+type User = { id: int, username: str, email: str, isAdmin: bool };
+
+fn greet(user: User) -> void {
+  say("Hello, ${user['username']}!");
+}
+
+user: User = {
+  "id": 1,
+  "username": "alice",
+  "email": "alice@example.com",
+  "isAdmin": false
+};
+
+greet(user);  // Output: Hello, alice!
+
+// keyword arguments
+fn describe(name: str, age: int) -> void {
+  say(name, "is", age);
+}
+
+describe(age: 21, name: "Alice");  // Output: Alice is 21
 ```
 
 ## Project Structure
