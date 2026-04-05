@@ -5,6 +5,10 @@ export default defineConfig({
   title: 'Echo',
   description: 'Official documentation for the Echo scripting language',
   base: '/echo/',
+  head: [
+    ['link', { rel: 'icon', type: 'image/jpeg', href: '/echo_logo.jpg' }],
+    ['link', { rel: 'shortcut icon', type: 'image/jpeg', href: '/echo_logo.jpg' }]
+  ],
   cleanUrls: true,
   lastUpdated: true,
   markdown: {
