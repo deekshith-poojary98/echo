@@ -2,7 +2,7 @@ fn log_line(message: str) {
     say(message);
 }
 
-fn descending(a: int, b: int) {
+fn descending(a: int, b: int) -> int {
     return b - a;
 }
 

@@ -45,7 +45,7 @@ Total: 3
 - Echo is interpreted, not compiled.
 - Variable declarations require a type.
 - Function parameter types are required.
-- Function return type annotations are optional.
+- Function return type annotations are required when a function uses `return`.
 - Comments:
 
 ```echo

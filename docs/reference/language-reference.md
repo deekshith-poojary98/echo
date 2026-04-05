@@ -53,6 +53,8 @@ fn square(x: int) => x * x;
 fn square(x: int) -> int => x * x;
 ```
 
+If a function contains `return`, it must declare a return type.
+
 ## Notes
 Use this page for quick lookup. For explanations and examples, go back to the guide pages.
 

@@ -314,9 +314,35 @@ class Parser:
                     body.append(stmt)
                     # print(f"Added statement to function body: {stmt}")
             self.expect("PUNCTUATION", "}")
+
+            if return_type is None and self._contains_return_statement(body):
+                raise SyntaxError(
+                    f"Return type annotation required for function '{name}' because it contains a return statement"
+                )
+
             # print("Parsed closing brace")
             # print("Finished parsing function block")
             return {"type": "func_def", "name": name, "params": params, "param_types": param_types, "return_type": return_type, "body": body, "inline": False}
+
+    def _contains_return_statement(self, statements):
+        for stmt in statements:
+            if not isinstance(stmt, dict):
+                continue
+
+            stmt_type = stmt.get("type")
+            if stmt_type == "return":
+                return True
+
+            # Nested function returns should not force a return type on the outer function.
+            if stmt_type == "func_def":
+                continue
+
+            for key in ("body", "else_body"):
+                branch = stmt.get(key)
+                if isinstance(branch, list) and self._contains_return_statement(branch):
+                    return True
+
+        return False
 
     def parse_assignment_or_expr(self):
         # Get the target identifier

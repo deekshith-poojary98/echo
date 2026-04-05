@@ -35,11 +35,17 @@ Alice is 21
 Every parameter needs a type annotation.
 
 ### Return types
-Return type annotations are optional.
+Return type annotations are optional only when the function has no `return` statements.
+
+If a function contains `return`, a return type annotation is required.
 
 ```echo
 fn log(msg: str) {
     say(msg);
+}
+
+fn add(a: int, b: int) -> int {
+    return a + b;
 }
 ```
 
