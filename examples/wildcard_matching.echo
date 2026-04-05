@@ -1,0 +1,36 @@
+// LeetCode 44: Wildcard Matching
+// DP with memoization: '?' matches any single char, '*' matches any sequence.
+
+fn dp(i: int, j: int, s: str, p: str, memo: hash) -> bool {
+    key: str = i.asString() + "," + j.asString();
+    cached: dynamic = memo.ensure(key, null);
+    if cached != null {
+        return cached;
+    }
+
+    ans: bool = false;
+
+    if j == p.length() {
+        ans = i == s.length();
+    } else if p[j] == "*" {
+        // '*' matches empty (skip it) or matches one more char of s
+        ans = dp(i, j + 1, s, p, memo) || (i < s.length() && dp(i + 1, j, s, p, memo));
+    } else {
+        matches: bool = i < s.length() && (p[j] == "?" || p[j] == s[i]);
+        ans = matches && dp(i + 1, j + 1, s, p, memo);
+    }
+
+    memo[key] = ans;
+    return ans;
+}
+
+fn is_match(s: str, p: str) -> bool {
+    memo: hash = {};
+    return dp(0, 0, s, p, memo);
+}
+
+say(is_match("aa", "a"));
+say(is_match("aa", "*"));
+say(is_match("cb", "?a"));
+say(is_match("adceb", "*a*b"));
+say(is_match("acdcb", "a*c?b"));

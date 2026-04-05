@@ -1,0 +1,33 @@
+// LeetCode 3: Longest Substring Without Repeating Characters
+// Sliding window with last-seen positions stored in a hash.
+
+fn length_of_longest_substring(s: str) -> int {
+    last_seen: hash = {};
+    left: int = 0;
+    best: int = 0;
+    right: int = 0;
+
+    while right < s.length() {
+        ch: str = s[right];
+        prev_index: dynamic = last_seen.ensure(ch, -1);
+
+        if prev_index >= left {
+            left = prev_index + 1;
+        }
+
+        current_length: int = right - left + 1;
+        if current_length > best {
+            best = current_length;
+        }
+
+        last_seen[ch] = right;
+        right = right + 1;
+    }
+
+    return best;
+}
+
+say(length_of_longest_substring("abcabcbb"));
+say(length_of_longest_substring("bbbbb"));
+say(length_of_longest_substring("pwwkew"));
+say(length_of_longest_substring(""));

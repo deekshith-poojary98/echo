@@ -1,3 +1,6 @@
+from functools import cmp_to_key
+
+
 TYPE_MAP = {
     "int": int,
     "float": float,
@@ -186,6 +189,15 @@ class Context:
             "return_type": return_type  # Store return type
         }
 
+    def resolve_function(self, name):
+        current = self
+        while current:
+            func = current.functions.get(name)
+            if func is not None:
+                return func
+            current = current.parent
+        return None
+
     def _bind_function_arguments(self, func_name, func, raw_args, interpreter):
         positional_args = []
         keyword_args = {}
@@ -224,12 +236,7 @@ class Context:
         return bound_arguments
 
     def call_function(self, name, args, interpreter):
-        current = self
-        func = None
-        while current and func is None:
-            func = current.functions.get(name)
-            current = current.parent
-
+        func = self.resolve_function(name)
         if not func:
             raise Exception(f"Function '{name}' not defined")
 
@@ -274,6 +281,51 @@ class Context:
                         f"Function '{name}' must return type {interpreter._format_type(func['return_type'])}, "
                         f"got {type(result).__name__}"
                     )
+
+        return result
+
+    def call_function_with_values(self, name, arg_values, interpreter):
+        func = self.resolve_function(name)
+        if not func:
+            raise Exception(f"Function '{name}' not defined")
+
+        if len(arg_values) != len(func["params"]):
+            raise TypeError(
+                f"Function '{name}' expected {len(func['params'])} arguments, got {len(arg_values)}"
+            )
+
+        new_context = Context(parent=self)
+        new_context.in_function = True
+        new_context.functions["__current_function"] = name
+
+        for index, param in enumerate(func["params"]):
+            value = arg_values[index]
+            param_type = func["param_types"].get(param)
+            if param_type and not interpreter._matches_type(value, param_type):
+                raise TypeError(
+                    f"Argument '{param}' in function '{name}' must be of type "
+                    f"{interpreter._format_type(param_type)}, got {type(value).__name__}"
+                )
+            new_context.set(param, value, param_type)
+
+        if func["inline"]:
+            result = interpreter.evaluate(func["body"], new_context)
+        else:
+            try:
+                interpreter.execute_block(func["body"], new_context)
+                result = None
+            except ReturnValue as r:
+                result = r.value
+
+        if func["return_type"]:
+            if func["return_type"] == "void":
+                if result is not None:
+                    raise TypeError(f"Function '{name}' is declared as void but returns a value")
+            elif not interpreter._matches_type(result, func["return_type"]):
+                raise TypeError(
+                    f"Function '{name}' must return type {interpreter._format_type(func['return_type'])}, "
+                    f"got {type(result).__name__}"
+                )
 
         return result
 
@@ -383,6 +435,306 @@ class Interpreter:
     def _watch_change(self, var_name, new_value, context, action="changed to"):
         print(f"WATCH: {var_name} {action} {new_value} (in {self._current_function_name(context)})")
 
+    def _echo_type_name(self, value):
+        if isinstance(value, bool):
+            return "bool"
+        if isinstance(value, int):
+            return "int"
+        if isinstance(value, float):
+            return "float"
+        if isinstance(value, str):
+            return "str"
+        if isinstance(value, list):
+            return "list"
+        if isinstance(value, dict):
+            return "hash"
+        return "dynamic"
+
+    def _mutating_method_target_name(self, call, context):
+        modifying_methods = {
+            "push", "empty", "merge", "insertAt", "pull", "removeValue", "order", "wipe", "take", "take_last", "ensure"
+        }
+
+        if call["method"] not in modifying_methods:
+            return None
+
+        target_expr = call.get("target")
+        if not isinstance(target_expr, dict) or target_expr.get("type") != "identifier":
+            return None
+
+        var_name = target_expr["name"]
+
+        if context.in_function:
+            if var_name in context.imported_vars:
+                if not context.imported_vars[var_name]:
+                    raise NameError(f"Cannot modify immutable import '{var_name}', use 'use mut' to make it mutable")
+            else:
+                current = context
+                found_local = False
+                while current and current.in_function:
+                    if var_name in current.variables:
+                        found_local = True
+                        break
+                    current = current.parent
+
+                if not found_local:
+                    raise NameError(f"Cannot modify global variable '{var_name}' without 'use mut'")
+
+        return var_name
+
+    def _target_or_first_arg(self, target_value, args, context, method_name):
+        if target_value is not None:
+            return target_value
+        if not args:
+            raise TypeError(f"{method_name}() requires a target or at least one argument")
+        return self.evaluate(args[0], context)
+
+    def _evaluate_method_call(self, call, context):
+        call = {**call, "args": self._ensure_positional_args(call["args"], f"{call['method']}()")}
+        target_value = None
+        if "target" in call:
+            target_value = self.evaluate(call["target"], context)
+
+        watched_var = self._mutating_method_target_name(call, context)
+        is_watched = watched_var is not None and context.is_watched(watched_var)
+        method = call["method"]
+
+        if method == "say":
+            values = [self.evaluate(arg, context) for arg in call["args"]]
+            for i, value in enumerate(values):
+                if i > 0:
+                    print(" ", end="")
+                print(self._stringify_value(value), end="")
+            print()
+            return None
+
+        if method == "wait":
+            duration = self.evaluate(call["args"][0], context)
+            import time
+            time.sleep(duration)
+            return None
+
+        if method == "ask":
+            prompt = self._target_or_first_arg(target_value, call["args"], context, method)
+            return input(prompt)
+
+        if method == "asInt":
+            return int(self._target_or_first_arg(target_value, call["args"], context, method))
+
+        if method == "asFloat":
+            return float(self._target_or_first_arg(target_value, call["args"], context, method))
+
+        if method == "asBool":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if isinstance(value, (str, list, dict)):
+                return bool(len(value))
+            if isinstance(value, (int, float)):
+                return bool(value)
+            return bool(value)
+
+        if method == "asString":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            return self._stringify_value(value)
+
+        if method == "type":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            return self._echo_type_name(value)
+
+        if method == "default":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            fallback_arg = call["args"][0] if target_value is not None else call["args"][1]
+            return value if value else self.evaluate(fallback_arg, context)
+
+        if method == "trim":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if not isinstance(value, str):
+                raise TypeError("trim() can only be called on strings")
+            return value.strip()
+
+        if method == "upperCase":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if not isinstance(value, str):
+                raise TypeError("upperCase() can only be called on strings")
+            return value.upper()
+
+        if method == "lowerCase":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if not isinstance(value, str):
+                raise TypeError("lowerCase() can only be called on strings")
+            return value.lower()
+
+        if method == "length":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if isinstance(value, (str, list, dict)):
+                return len(value)
+            raise TypeError("length() can only be used on strings, lists, or hashes")
+
+        if method == "keys":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if isinstance(value, dict):
+                return list(value.keys())
+            raise TypeError("keys() can only be called on hashes")
+
+        if method == "values":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if isinstance(value, dict):
+                return list(value.values())
+            raise TypeError("values() can only be called on hashes")
+
+        if method == "pairs":
+            if not isinstance(target_value, dict):
+                raise TypeError("pairs() can only be called on hashes")
+            return [[k, v] for k, v in target_value.items()]
+
+        if method == "reverse":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if isinstance(value, str):
+                return value[::-1]
+            if isinstance(value, list):
+                return value[::-1]
+            raise TypeError("reverse() can only be called on strings or lists")
+
+        if method == "format":
+            value = self._target_or_first_arg(target_value, call["args"], context, method)
+            if not isinstance(value, str):
+                raise TypeError("format() can only be called on strings")
+            return self._apply_string_format(value, call["args"], context)
+
+        if method == "clone":
+            target = self._target_or_first_arg(target_value, call["args"], context, method)
+            if isinstance(target, list):
+                return target.copy()
+            if isinstance(target, dict):
+                return target.copy()
+            raise TypeError("clone() can only be called on lists or hashes")
+
+        if method == "countOf":
+            if target_value is not None:
+                return self._count_of(target_value, call["args"], context)
+            if len(call["args"]) != 2:
+                raise TypeError("countOf(list, value) requires exactly two arguments when called without a target")
+            target = self.evaluate(call["args"][0], context)
+            return self._count_of(target, [call["args"][1]], context)
+
+        if method == "find":
+            target = self._target_or_first_arg(target_value, call["args"], context, method)
+            if not isinstance(target, list):
+                raise TypeError("find() can only be called on lists")
+            value_arg = call["args"][0] if target_value is not None else call["args"][1]
+            if target_value is None and len(call["args"]) != 2:
+                raise TypeError("find(list, value) requires exactly two arguments when called without a target")
+            if target_value is not None and len(call["args"]) != 1:
+                raise TypeError("find() requires exactly one argument")
+            value = self.evaluate(value_arg, context)
+            try:
+                return target.index(value)
+            except ValueError:
+                raise ValueError(f"Element {value} not found in list")
+
+        if method in {"push", "empty", "insertAt", "pull", "removeValue", "order"}:
+            if target_value is None:
+                raise TypeError(f"{method}() must be called on a list target")
+            result = self._apply_list_method(method, target_value, call["args"], context)
+            if is_watched:
+                self._watch_change(watched_var, target_value, context, f"modified by {method}() to")
+            return result
+
+        if method == "merge":
+            if len(call["args"]) != 1:
+                raise TypeError("merge() requires exactly one argument")
+            other = self.evaluate(call["args"][0], context)
+            result = self._apply_merge_method(target_value, other)
+            if is_watched:
+                self._watch_change(watched_var, target_value, context, "modified by merge() to")
+            return result
+
+        if method in {"wipe", "take", "take_last", "ensure"}:
+            if target_value is None:
+                raise TypeError(f"{method}() must be called on a hash target")
+            evaluated_args = None
+            if method == "take":
+                key = self.evaluate(call["args"][0], context)
+                evaluated_args = [key]
+            elif method == "ensure":
+                key = self.evaluate(call["args"][0], context)
+                default_value = self.evaluate(call["args"][1], context)
+                evaluated_args = [key, default_value]
+            result = self._apply_hash_method(method, target_value, call["args"], context, evaluated_args=evaluated_args)
+            if is_watched:
+                self._watch_change(watched_var, target_value, context, f"modified by {method}() to")
+            return result
+
+        raise Exception(f"Unknown method: {method}")
+
+    def _quote_string(self, value):
+        escaped = value.replace("\\", "\\\\")
+        escaped = escaped.replace('"', '\\"')
+        escaped = escaped.replace("\n", "\\n")
+        escaped = escaped.replace("\t", "\\t")
+        escaped = escaped.replace("\r", "\\r")
+        return f'"{escaped}"'
+
+    def _stringify_value(self, value, nested=False):
+        if value is None:
+            return "null"
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, str):
+            return self._quote_string(value) if nested else value
+        if isinstance(value, list):
+            return "[" + ", ".join(self._stringify_value(item, True) for item in value) + "]"
+        if isinstance(value, dict):
+            parts = []
+            for key, item in value.items():
+                parts.append(f"{self._stringify_value(key, True)}: {self._stringify_value(item, True)}")
+            return "{" + ", ".join(parts) + "}"
+        return str(value)
+
+    def _apply_string_format(self, template, args, context):
+        evaluated_args = [self.evaluate(arg, context) for arg in args]
+        result = ""
+        auto_index = 0
+        i = 0
+
+        while i < len(template):
+            if template[i] == "{":
+                if i + 1 < len(template) and template[i + 1] == "{":
+                    result += "{"
+                    i += 2
+                    continue
+
+                end = template.find("}", i + 1)
+                if end == -1:
+                    raise ValueError("format() string is missing a closing '}'")
+
+                placeholder = template[i + 1:end].strip()
+                if placeholder == "":
+                    arg_index = auto_index
+                    auto_index += 1
+                else:
+                    if not placeholder.isdigit():
+                        raise ValueError("format() placeholders must be '{}' or numeric indexes like '{0}'")
+                    arg_index = int(placeholder)
+
+                if arg_index >= len(evaluated_args):
+                    raise IndexError(f"format() placeholder index {arg_index} out of range")
+
+                result += self._stringify_value(evaluated_args[arg_index])
+                i = end + 1
+                continue
+
+            if template[i] == "}":
+                if i + 1 < len(template) and template[i + 1] == "}":
+                    result += "}"
+                    i += 2
+                    continue
+                raise ValueError("format() encountered an unmatched '}'")
+
+            result += template[i]
+            i += 1
+
+        return result
+
     def _apply_list_method(self, method, target, args, context):
         if not isinstance(target, list):
             raise TypeError(f"{method}() can only be called on lists")
@@ -435,7 +787,37 @@ class Interpreter:
                 raise ValueError(f"Value {value} not found in list")
 
         if method == "order":
-            target.sort()
+            if len(args) == 0:
+                target.sort()
+                return target
+
+            if len(args) != 1:
+                raise TypeError("order() accepts either no arguments or a single comparator function")
+
+            comparator_name = None
+            arg = args[0]
+            if isinstance(arg, dict) and arg.get("type") == "identifier":
+                if context.resolve_function(arg["name"]) is not None:
+                    comparator_name = arg["name"]
+
+            if comparator_name is None:
+                comparator_name = self.evaluate(arg, context)
+                if not isinstance(comparator_name, str):
+                    raise TypeError("order() comparator must be a function name or string")
+
+            comparator = context.resolve_function(comparator_name)
+            if comparator is None:
+                raise NameError(f"Comparator function '{comparator_name}' is not defined")
+            if len(comparator["params"]) != 2:
+                raise TypeError(f"Comparator function '{comparator_name}' must take exactly two arguments")
+
+            def compare(left, right):
+                result = context.call_function_with_values(comparator_name, [left, right], self)
+                if not isinstance(result, int):
+                    raise TypeError(f"Comparator function '{comparator_name}' must return int")
+                return result
+
+            target.sort(key=cmp_to_key(compare))
             return target
 
         raise Exception(f"Unsupported list method in helper: {method}")
@@ -555,233 +937,7 @@ class Interpreter:
                 context.set(node["target"], value)
 
         elif node_type == "method_call":
-            node = {**node, "args": self._ensure_positional_args(node["args"], f"{node['method']}()")}
-            # # print(f"DEBUG: Method call in execute_node: {node['method']}")
-            # List of methods that modify their target
-            modifying_methods = {
-                "push", "empty", "merge", "insertAt", "pull", "removeValue", "order", "wipe", "take", "take_last", "ensure"
-            }
-            
-            # Handle method calls with watch tracking
-            if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
-                var_name = node["target"]["name"]
-                # Check if we're in a function and the method modifies the target
-                if context.in_function and node["method"] in modifying_methods:
-                    # Check if variable is imported
-                    if var_name in context.imported_vars:
-                        if not context.imported_vars[var_name]:
-                            raise NameError(f"Cannot modify immutable import '{var_name}', use 'use mut' to make it mutable")
-                    else:
-                        current = context
-                        found_local = False
-                        while current and current.in_function:
-                            if var_name in current.variables:
-                                found_local = True
-                                break
-                            current = current.parent
-
-                        if not found_local:
-                            raise NameError(f"Cannot modify global variable '{var_name}' without 'use mut'")
-
-                if context.is_watched(var_name):
-                    # Get the new value after the method call
-                    if node["method"] == "push":
-                        target = self.evaluate(node["target"], context)
-                        result = self._apply_list_method("push", target, node["args"], context)
-                        self._watch_change(var_name, target, context, "modified by push() to")
-                        return result
-                    elif node["method"] == "empty":
-                        target = self.evaluate(node["target"], context)
-                        result = self._apply_list_method("empty", target, node["args"], context)
-                        self._watch_change(var_name, target, context, "modified by empty() to")
-                        return result
-                    elif node["method"] == "merge":
-                        target = self.evaluate(node["target"], context)
-                        if len(node["args"]) != 1:
-                            raise TypeError("merge() requires exactly one argument")
-                        other = self.evaluate(node["args"][0], context)
-                        result = self._apply_merge_method(target, other)
-                        self._watch_change(var_name, target, context, "modified by merge() to")
-                        return result
-                    elif node["method"] == "insertAt":
-                        target = self.evaluate(node["target"], context)
-                        result = self._apply_list_method("insertAt", target, node["args"], context)
-                        self._watch_change(var_name, target, context, "modified by insertAt() to")
-                        return result
-                    elif node["method"] == "pull":
-                        target = self.evaluate(node["target"], context)
-                        result = self._apply_list_method("pull", target, node["args"], context)
-                        self._watch_change(var_name, target, context, "modified by pull() to")
-                        return result
-                    elif node["method"] == "removeValue":
-                        target = self.evaluate(node["target"], context)
-                        result = self._apply_list_method("removeValue", target, node["args"], context)
-                        self._watch_change(var_name, target, context, "modified by removeValue() to")
-                        return result
-                    elif node["method"] == "order":
-                        target = self.evaluate(node["target"], context)
-                        result = self._apply_list_method("order", target, node["args"], context)
-                        self._watch_change(var_name, target, context, "modified by order() to")
-                        return result
-
-            # Continue with normal method call handling if not watched or not a modifying method
-            if node["method"] == "say":
-                values = [self.evaluate(arg, context) for arg in node["args"]]
-                # Print each value with proper formatting
-                for i, value in enumerate(values):
-                    if i > 0:
-                        print(" ", end="")
-                    print(value, end="")
-                print()  # Add a newline at the end
-            elif node["method"] == "wait":
-                    # Get the duration in seconds
-                    duration = self.evaluate(node["args"][0], context)
-                    import time
-                    time.sleep(duration)
-            elif node["method"] == "ask":
-                prompt = self.evaluate(node["args"][0], context)
-                return input(prompt)
-            elif node["method"] == "asInt":
-                value = self.evaluate(node["args"][0], context)
-                return int(value)
-            elif node["method"] == "asFloat":
-                value = self.evaluate(node["args"][0], context)
-                return float(value)
-            elif node["method"] == "asBool":
-                value = self.evaluate(node["args"][0], context)
-                if isinstance(value, (str, list, dict)):
-                    return bool(len(value))  # Empty collections should be falsy
-                elif isinstance(value, (int, float)):
-                    return bool(value)  # Zero should be falsy, non-zero truthy
-                return bool(value)  # Default case
-            elif node["method"] == "asString":
-                value = self.evaluate(node["args"][0], context)
-                return str(value)
-            elif node["method"] == "type":
-                value = self.evaluate(node["args"][0], context)
-                return type(value).__name__
-            elif node["method"] == "trim":
-                value = self.evaluate(node["args"][0], context)
-                return value.strip()
-            elif node["method"] == "upperCase":
-                value = self.evaluate(node["args"][0], context)
-                return value.upper()
-            elif node["method"] == "lowerCase":
-                value = self.evaluate(node["args"][0], context)
-                return value.lower()
-            elif node["method"] == "length":
-                value = self.evaluate(node["args"][0], context)
-                if isinstance(value, (str, list, dict)):
-                    return len(value)
-                raise TypeError("length() can only be used on strings, lists, or hashes")
-            elif node["method"] == "keys":
-                value = self.evaluate(node["args"][0], context)
-                if isinstance(value, dict):
-                    return list(value.keys())
-                raise TypeError("keys() can only be called on hashes")
-            elif node["method"] == "values":
-                value = self.evaluate(node["args"][0], context)
-                if isinstance(value, dict):
-                    return list(value.values())
-                raise TypeError("values() can only be called on hashes")
-            elif node["method"] == "reverse":
-                value = self.evaluate(node["args"][0], context)
-                if isinstance(value, str):
-                    return value[::-1]  # Reverse string using slice
-                elif isinstance(value, list):
-                    return value[::-1]  # Reverse list using slice
-                raise TypeError("reverse() can only be called on strings or lists")
-            elif node["method"] == "push":
-                target = self.evaluate(node["target"], context)
-                return self._apply_list_method("push", target, node["args"], context)
-            elif node["method"] == "empty":
-                target = self.evaluate(node["target"], context)
-                return self._apply_list_method("empty", target, node["args"], context)
-            elif node["method"] == "clone":
-                target = self.evaluate(node["target"], context)
-                if isinstance(target, list):
-                    return target.copy()
-                elif isinstance(target, dict):
-                    return target.copy()
-                else:
-                    raise TypeError("clone() can only be called on lists or hashes")
-            elif node["method"] == "countOf":
-                if "target" in node:
-                    target = self.evaluate(node["target"], context)
-                    return self._count_of(target, node["args"], context)
-                if len(node["args"]) != 2:
-                    raise TypeError("countOf(list, value) requires exactly two arguments when called without a target")
-                target = self.evaluate(node["args"][0], context)
-                return self._count_of(target, [node["args"][1]], context)
-            elif node["method"] == "find":
-                target = self.evaluate(node["target"], context)
-                if not isinstance(target, list):
-                    raise TypeError("find() can only be called on lists")
-                if len(node["args"]) != 1:
-                    raise TypeError("find() requires exactly one argument")
-                value = self.evaluate(node["args"][0], context)
-                try:
-                    return target.index(value)
-                except ValueError:
-                    raise ValueError(f"Element {value} not found in list")
-            elif node["method"] == "insertAt":
-                target = self.evaluate(node["target"], context)
-                return self._apply_list_method("insertAt", target, node["args"], context)
-            elif node["method"] == "pull":
-                target = self.evaluate(node["target"], context)
-                return self._apply_list_method("pull", target, node["args"], context)
-            elif node["method"] == "removeValue":
-                target = self.evaluate(node["target"], context)
-                return self._apply_list_method("removeValue", target, node["args"], context)
-            elif node["method"] == "order":
-                target = self.evaluate(node["target"], context)
-                return self._apply_list_method("order", target, node["args"], context)
-            # Hash methods
-            elif node["method"] == "wipe":
-                target = self.evaluate(node["target"], context)
-                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
-                    var_name = node["target"]["name"]
-                    if context.is_watched(var_name):
-                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
-                        print(f"WATCH: {var_name} modified by wipe() to {target} (in {function_name})")
-                return self._apply_hash_method("wipe", target, node["args"], context)
-            elif node["method"] == "take":
-                target = self.evaluate(node["target"], context)
-                key = self.evaluate(node["args"][0], context)
-                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
-                    var_name = node["target"]["name"]
-                    if context.is_watched(var_name):
-                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
-                        new_target = target.copy()
-                        new_target.pop(key)
-                        print(f"WATCH: {var_name} modified by take() to {new_target} (in {function_name})")
-                return self._apply_hash_method("take", target, node["args"], context, evaluated_args=[key])
-            elif node["method"] == "take_last":
-                target = self.evaluate(node["target"], context)
-                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
-                    var_name = node["target"]["name"]
-                    if context.is_watched(var_name):
-                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
-                        # Create a copy of the target and remove the last key to show the new state
-                        new_target = target.copy()
-                        last_key = list(new_target.keys())[-1]
-                        new_target.pop(last_key)
-                        print(f"WATCH: {var_name} modified by take_last() to {new_target} (in {function_name})")
-                return self._apply_hash_method("take_last", target, node["args"], context)
-            elif node["method"] == "ensure":
-                target = self.evaluate(node["target"], context)
-                key = self.evaluate(node["args"][0], context)
-                default_value = self.evaluate(node["args"][1], context)
-                if "target" in node and isinstance(node["target"], dict) and node["target"]["type"] == "identifier":
-                    var_name = node["target"]["name"]
-                    if context.is_watched(var_name):
-                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
-                        # Create a copy of the target and add the key to show the new state
-                        new_target = target.copy()
-                        if key not in new_target:
-                            new_target[key] = default_value
-                        print(f"WATCH: {var_name} modified by ensure() to {new_target} (in {function_name})")
-                return self._apply_hash_method("ensure", target, node["args"], context, evaluated_args=[key, default_value])
+            return self._evaluate_method_call(node, context)
 
         elif node_type == "for":
             # Create a new context for the loop
@@ -1043,184 +1199,10 @@ class Interpreter:
             else:
                 raise TypeError(f"Cannot index type {type(target).__name__}")
         elif expr_type == "method_call":
-            expr = {**expr, "args": self._ensure_positional_args(expr["args"], f"{expr['method']}()")}
-            # # print(f"DEBUG: Method call in evaluate: {expr['method']}")
-            # Handle method calls on targets if they exist
-            target_value = None
-            if "target" in expr:
-                target_value = self.evaluate(expr["target"], context)
-            
-            # Handle hash methods
-            if expr["method"] == "pairs":
-                if not isinstance(target_value, dict):
-                    raise TypeError("pairs() can only be called on hashes")
-                result = [[k, v] for k, v in target_value.items()]
-                # # print(f"DEBUG evaluate: pairs() called on {target_value}, returning {result}")
-                return result
-            elif expr["method"] == "take":
-                # print(f"DEBUG evaluate: take() called")
-                target = self.evaluate(expr["target"], context)
-                # print(f"DEBUG evaluate: take() target: {target}")
-                if not isinstance(target, dict):
-                    raise TypeError("take() can only be called on hashes")
-                if len(expr["args"]) != 1:
-                    raise TypeError("take() requires exactly one argument (key)")
-                key = self.evaluate(expr["args"][0], context)
-                # print(f"DEBUG evaluate: take() key: {key}")
-                if not isinstance(key, str):
-                    raise TypeError("take() key must be a string")
-                if key not in target:
-                    raise KeyError(f"Key '{key}' not found in hash")
-                if "target" in expr and isinstance(expr["target"], dict) and expr["target"]["type"] == "identifier":
-                    var_name = expr["target"]["name"]
-                    # print(f"DEBUG evaluate: take() var_name: {var_name}")
-                    # print(f"DEBUG evaluate: take() is_watched: {context.is_watched(var_name)}")
-                    if context.is_watched(var_name):
-                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
-                        # print(f"DEBUG evaluate: take() function_name: {function_name}")
-                        # Create a copy of the target and remove the key to show the new state
-                        new_target = target.copy()
-                        new_target.pop(key)
-                        # print(f"DEBUG evaluate: take() new_target: {new_target}")
-                        print(f"WATCH: {var_name} modified by take() to {new_target} (in {function_name})")
-                return self._apply_hash_method("take", target, expr["args"], context, evaluated_args=[key])
-            elif expr["method"] == "ask":
-                return input(self.evaluate(expr["args"][0], context))
-            elif expr["method"] == "asInt":
-                value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return int(value)
-            elif expr["method"] == "asFloat":
-                value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return float(value)
-            elif expr["method"] == "asBool":
-                value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(value, (str, list, dict)):
-                    return bool(len(value))  # Empty collections should be falsy
-                elif isinstance(value, (int, float)):
-                    return bool(value)  # Zero should be falsy, non-zero truthy
-                return bool(value)  # Default case
-            elif expr["method"] == "asString":
-                value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return str(value)
-            elif expr["method"] == "type":
-                value = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(value, bool):
-                    return "bool"
-                elif isinstance(value, int):
-                    return "int"
-                elif isinstance(value, float):
-                    return "float"
-                elif isinstance(value, str):
-                    return "str"
-                elif isinstance(value, list):
-                    return "list"
-                elif isinstance(value, dict):
-                    return "hash"
-                else:
-                    return "dynamic"
-            elif expr["method"] == "default":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return val if val else self.evaluate(expr["args"][1], context)
-            elif expr["method"] == "trim":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if not isinstance(val, str):
-                    raise TypeError("trim() can only be called on strings")
-                return val.strip()
-            elif expr["method"] == "upperCase":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if not isinstance(val, str):
-                    raise TypeError("upperCase() can only be called on strings")
-                return val.upper()
-            elif expr["method"] == "lowerCase":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if not isinstance(val, str):
-                    raise TypeError("lowerCase() can only be called on strings")
-                return val.lower()
-            elif expr["method"] == "length":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(val, (str, list, dict)):
-                    return len(val)
-                raise TypeError("length() can only be used on strings, lists, or hashes")  
-            elif expr["method"] == "keys":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(val, dict):
-                    return list(val.keys())
-                raise TypeError("keys() can only be called on hashes")
-            elif expr["method"] == "values":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(val, dict):
-                    return list(val.values())
-                raise TypeError("values() can only be called on hashes")
-            elif expr["method"] == "reverse":
-                val = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(val, str):
-                    return val[::-1]  # Reverse string using slice
-                elif isinstance(val, list):
-                    return val[::-1]  # Reverse list using slice
-                raise TypeError("reverse() can only be called on strings or lists")
-            elif expr["method"] == "push":
-                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return self._apply_list_method("push", target, expr["args"], context)
-            elif expr["method"] == "empty":
-                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                return self._apply_list_method("empty", target, expr["args"], context)
-            elif expr["method"] == "clone":
-                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if isinstance(target, list):
-                    return target.copy()
-                elif isinstance(target, dict):
-                    return target.copy()
-                else:
-                    raise TypeError("clone() can only be called on lists or hashes")
-            elif expr["method"] == "countOf":
-                if target_value is not None:
-                    return self._count_of(target_value, expr["args"], context)
-                if len(expr["args"]) != 2:
-                    raise TypeError("countOf(list, value) requires exactly two arguments when called without a target")
-                target = self.evaluate(expr["args"][0], context)
-                return self._count_of(target, [expr["args"][1]], context)
-            elif expr["method"] == "merge":
-                if len(expr["args"]) != 1:
-                    raise TypeError("merge() requires exactly one argument")
-                other = self.evaluate(expr["args"][0], context)
-                if "target" in expr and isinstance(expr["target"], dict) and expr["target"]["type"] == "identifier":
-                    var_name = expr["target"]["name"]
-                    if context.is_watched(var_name):
-                        function_name = "global" if not context.in_function else context.functions.get("__current_function", "unknown")
-                        print(f"WATCH: {var_name} modified by merge() to {target_value} (in {function_name})")
-                return self._apply_merge_method(target_value, other)
-            elif expr["method"] == "find":
-                target = target_value if target_value is not None else self.evaluate(expr["args"][0], context)
-                if not isinstance(target, list):
-                    raise TypeError("find() can only be called on lists")
-                if len(expr["args"]) != 1:
-                    raise TypeError("find() requires exactly one argument")
-                value = self.evaluate(expr["args"][0], context)
-                try:
-                    return target.index(value)
-                except ValueError:
-                    raise ValueError(f"Element {value} not found in list")
-            elif expr["method"] == "insertAt":
-                target = self.evaluate(expr["target"], context)
-                return self._apply_list_method("insertAt", target, expr["args"], context)
-            elif expr["method"] == "pull":
-                target = self.evaluate(expr["target"], context)
-                return self._apply_list_method("pull", target, expr["args"], context)
-            elif expr["method"] == "removeValue":
-                target = self.evaluate(expr["target"], context)
-                return self._apply_list_method("removeValue", target, expr["args"], context)
-            elif expr["method"] == "order":
-                target = self.evaluate(expr["target"], context)
-                return self._apply_list_method("order", target, expr["args"], context)
-            elif expr["method"] == "take_last":
-                # Delegate to execute_node for watch tracking
-                return self.execute_node({"type": "method_call", "method": "take_last", "target": expr["target"]}, context)
-            elif expr["method"] == "ensure":
-                # Delegate to execute_node for watch tracking
-                return self.execute_node({"type": "method_call", "method": "ensure", "target": expr["target"], "args": expr["args"]}, context)
+            return self._evaluate_method_call(expr, context)
         elif expr_type == "string_interpolation":
             return "".join(
-                str(self.evaluate(part, context))
+                self._stringify_value(self.evaluate(part, context))
                 if part["type"] != "string"
                 else part["value"]
                 for part in expr["parts"]

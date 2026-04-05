@@ -1,0 +1,45 @@
+// LeetCode 48: Rotate Image
+// In-place: transpose then reverse each row.
+
+fn rotate(matrix: list) -> dynamic {
+    n: int = matrix.length();
+
+    // Step 1: Transpose (swap matrix[i][j] with matrix[j][i])
+    i: int = 0;
+    while i < n {
+        j: int = i + 1;
+        while j < n {
+            temp: int = matrix[i][j];
+            matrix[i][j] = matrix[j][i];
+            matrix[j][i] = temp;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    // Step 2: Reverse each row
+    i = 0;
+    while i < n {
+        row: list = matrix[i];
+        left: int = 0;
+        right: int = n - 1;
+        while left < right {
+            temp: int = row[left];
+            row[left] = row[right];
+            row[right] = temp;
+            left = left + 1;
+            right = right - 1;
+        }
+        i = i + 1;
+    }
+
+    return null;
+}
+
+m1: list = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+rotate(m1);
+say(m1);
+
+m2: list = [[5, 1, 9, 11], [2, 4, 8, 10], [13, 3, 6, 7], [15, 14, 12, 16]];
+rotate(m2);
+say(m2);

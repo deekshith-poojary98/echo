@@ -1,0 +1,75 @@
+// LeetCode 4: Median of Two Sorted Arrays
+// Binary-partition solution in O(log(min(m, n))).
+
+fn find_median_sorted_arrays(nums1: list, nums2: list) -> float {
+    if nums1.length() > nums2.length() {
+        return find_median_sorted_arrays(nums2, nums1);
+    }
+
+    m: int = nums1.length();
+    n: int = nums2.length();
+    total_left: int = ((m + n + 1) / 2).asInt();
+
+    left: int = 0;
+    right: int = m;
+
+    while left <= right {
+        partition1: int = ((left + right) / 2).asInt();
+        partition2: int = total_left - partition1;
+
+        max_left_1: int = -1000000000;
+        min_right_1: int = 1000000000;
+        max_left_2: int = -1000000000;
+        min_right_2: int = 1000000000;
+
+        if partition1 > 0 {
+            max_left_1 = nums1[partition1 - 1];
+        }
+
+        if partition1 < m {
+            min_right_1 = nums1[partition1];
+        }
+
+        if partition2 > 0 {
+            max_left_2 = nums2[partition2 - 1];
+        }
+
+        if partition2 < n {
+            min_right_2 = nums2[partition2];
+        }
+
+        if max_left_1 <= min_right_2 && max_left_2 <= min_right_1 {
+            if ((m + n) % 2) == 1 {
+                if max_left_1 > max_left_2 {
+                    return max_left_1.asFloat();
+                }
+                return max_left_2.asFloat();
+            }
+
+            left_max: int = max_left_1;
+            if max_left_2 > left_max {
+                left_max = max_left_2;
+            }
+
+            right_min: int = min_right_1;
+            if min_right_2 < right_min {
+                right_min = min_right_2;
+            }
+
+            return (left_max + right_min) / 2.0;
+        }
+
+        if max_left_1 > min_right_2 {
+            right = partition1 - 1;
+        } else {
+            left = partition1 + 1;
+        }
+    }
+
+    return 0.0;
+}
+
+say(find_median_sorted_arrays([1, 3], [2]));
+say(find_median_sorted_arrays([1, 2], [3, 4]));
+say(find_median_sorted_arrays([0, 0], [0, 0]));
+say(find_median_sorted_arrays([], [1]));

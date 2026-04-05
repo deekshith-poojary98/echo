@@ -1,0 +1,49 @@
+// LeetCode 23: Merge k Sorted Lists
+// Echo representation: linked lists are modeled as plain sorted lists.
+
+fn merge_two(a: list, b: list) -> list {
+    i: int = 0;
+    j: int = 0;
+    merged: list = [];
+
+    while i < a.length() && j < b.length() {
+        if a[i] <= b[j] {
+            merged.push(a[i]);
+            i = i + 1;
+        } else {
+            merged.push(b[j]);
+            j = j + 1;
+        }
+    }
+
+    while i < a.length() {
+        merged.push(a[i]);
+        i = i + 1;
+    }
+
+    while j < b.length() {
+        merged.push(b[j]);
+        j = j + 1;
+    }
+
+    return merged;
+}
+
+fn merge_k_lists(lists: list) -> list {
+    if lists.length() == 0 {
+        return [];
+    }
+
+    merged: list = [];
+    i: int = 0;
+    while i < lists.length() {
+        merged = merge_two(merged, lists[i]);
+        i = i + 1;
+    }
+
+    return merged;
+}
+
+say(merge_k_lists([[1, 4, 5], [1, 3, 4], [2, 6]]));
+say(merge_k_lists([]));
+say(merge_k_lists([[]]));

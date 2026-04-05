@@ -1,0 +1,57 @@
+// Simple Echo language example
+
+name: str = "Echo Learner";
+age: int = 21;
+scores: list = [78, 85, 92];
+
+fn greet(user_name: str) -> void {
+    say("Hello, ${user_name}!");
+}
+
+fn describe_score(student_name: str, student_avg: float) -> void {
+    say(student_name, "has an average score of", student_avg);
+}
+
+fn average(a: int, b: int, c: int) -> float {
+    return (a + b + c) / 3.0;
+}
+
+greet(user_name: name);
+
+avg: float = average(scores[0], scores[1], scores[2]);
+describe_score(student_avg: avg, student_name: name);
+say("Average score:", avg);
+
+if avg >= 85 {
+    say("Great job!");
+} else {
+    say("Keep practicing!");
+}
+
+say("Counting by 2:");
+for i: int in 0..10 by 2 {
+    say(i);
+}
+
+say("List values:");
+foreach score: int in scores {
+    say(score);
+}
+
+numbers: list = [1, 2, 2, 3, 2];
+say("Count of 2:", numbers.countOf(2));
+
+type User = { id: int, username: str, email: str, isAdmin: bool };
+
+fn greet_user(user: User) -> void {
+    say("Hello, ${user['username']}!");
+}
+
+user: User = {
+    "id": 1,
+    "username": "alice",
+    "email": "alice@example.com",
+    "isAdmin": false
+};
+
+greet_user(user);

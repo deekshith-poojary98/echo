@@ -1,0 +1,29 @@
+// LeetCode 45: Jump Game II
+// Greedy: track current window end and farthest reachable. O(n) time, O(1) space.
+
+fn jump(nums: list) -> int {
+    n: int = nums.length();
+    jumps: int = 0;
+    cur_end: int = 0;
+    farthest: int = 0;
+    i: int = 0;
+
+    while i < n - 1 {
+        reach: int = i + nums[i];
+        if reach > farthest {
+            farthest = reach;
+        }
+
+        if i == cur_end {
+            jumps = jumps + 1;
+            cur_end = farthest;
+        }
+
+        i = i + 1;
+    }
+
+    return jumps;
+}
+
+say(jump([2, 3, 1, 1, 4]));
+say(jump([2, 3, 0, 1, 4]));

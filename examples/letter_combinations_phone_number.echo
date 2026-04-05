@@ -1,0 +1,48 @@
+// LeetCode 17: Letter Combinations of a Phone Number
+
+fn letters_for_digit(d: str) -> str {
+    if d == "2" {
+        return "abc";
+    } else if d == "3" {
+        return "def";
+    } else if d == "4" {
+        return "ghi";
+    } else if d == "5" {
+        return "jkl";
+    } else if d == "6" {
+        return "mno";
+    } else if d == "7" {
+        return "pqrs";
+    } else if d == "8" {
+        return "tuv";
+    }
+    return "wxyz";
+}
+
+fn backtrack(digits: str, index: int, current: str, result: list) -> void {
+    if index == digits.length() {
+        result.push(current);
+        return;
+    }
+
+    letters: str = letters_for_digit(digits[index]);
+    i: int = 0;
+    while i < letters.length() {
+        backtrack(digits, index + 1, current + letters[i], result);
+        i = i + 1;
+    }
+}
+
+fn letter_combinations(digits: str) -> list {
+    result: list = [];
+
+    if digits.length() == 0 {
+        return result;
+    }
+
+    backtrack(digits, 0, "", result);
+    return result;
+}
+
+say(letter_combinations("23"));
+say(letter_combinations("2"));

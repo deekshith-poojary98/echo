@@ -1,0 +1,76 @@
+// LeetCode 43: Multiply Strings
+// Grade-school O(m*n) digit multiplication without integer conversion.
+
+fn digit_val(ch: str) -> int {
+    if ch == "0" { return 0; }
+    if ch == "1" { return 1; }
+    if ch == "2" { return 2; }
+    if ch == "3" { return 3; }
+    if ch == "4" { return 4; }
+    if ch == "5" { return 5; }
+    if ch == "6" { return 6; }
+    if ch == "7" { return 7; }
+    if ch == "8" { return 8; }
+    return 9;
+}
+
+fn digit_char(n: int) -> str {
+    if n == 0 { return "0"; }
+    if n == 1 { return "1"; }
+    if n == 2 { return "2"; }
+    if n == 3 { return "3"; }
+    if n == 4 { return "4"; }
+    if n == 5 { return "5"; }
+    if n == 6 { return "6"; }
+    if n == 7 { return "7"; }
+    if n == 8 { return "8"; }
+    return "9";
+}
+
+fn multiply(num1: str, num2: str) -> str {
+    m: int = num1.length();
+    n: int = num2.length();
+    pos: list = [];
+
+    i: int = 0;
+    while i < m + n {
+        pos.push(0);
+        i = i + 1;
+    }
+
+    i = m - 1;
+    while i >= 0 {
+        j: int = n - 1;
+        while j >= 0 {
+            mul: int = digit_val(num1[i]) * digit_val(num2[j]);
+            p1: int = i + j;
+            p2: int = i + j + 1;
+            total: int = mul + pos[p2];
+
+            pos[p2] = total % 10;
+            pos[p1] = pos[p1] + (total / 10);
+
+            j = j - 1;
+        }
+        i = i - 1;
+    }
+
+    result: str = "";
+    i = 0;
+    while i < pos.length() {
+        if !(result == "" && pos[i] == 0) {
+            result = result + digit_char(pos[i]);
+        }
+        i = i + 1;
+    }
+
+    if result == "" {
+        return "0";
+    }
+
+    return result;
+}
+
+say(multiply("2", "3"));
+say(multiply("123", "456"));
+say(multiply("0", "0"));

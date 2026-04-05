@@ -1,0 +1,47 @@
+// LeetCode 13: Roman to Integer
+
+fn roman_value(symbol: str) -> int {
+    if symbol == "I" {
+        return 1;
+    } else if symbol == "V" {
+        return 5;
+    } else if symbol == "X" {
+        return 10;
+    } else if symbol == "L" {
+        return 50;
+    } else if symbol == "C" {
+        return 100;
+    } else if symbol == "D" {
+        return 500;
+    }
+
+    return 1000;
+}
+
+fn roman_to_int(s: str) -> int {
+    total: int = 0;
+    i: int = 0;
+
+    while i < s.length() {
+        current: int = roman_value(s[i]);
+
+        if (i + 1) < s.length() {
+            next_value: int = roman_value(s[i + 1]);
+
+            if current < next_value {
+                total = total + (next_value - current);
+                i = i + 2;
+                continue;
+            }
+        }
+
+        total = total + current;
+        i = i + 1;
+    }
+
+    return total;
+}
+
+say(roman_to_int("III"));
+say(roman_to_int("LVIII"));
+say(roman_to_int("MCMXCIV"));

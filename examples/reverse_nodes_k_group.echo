@@ -1,0 +1,30 @@
+// LeetCode 25: Reverse Nodes in k-Group
+// Echo representation: linked list is modeled as a plain list.
+
+fn reverse_k_group(head: list, k: int) -> list {
+    result: list = [];
+    i: int = 0;
+
+    while i < head.length() {
+        remaining: int = head.length() - i;
+
+        if remaining >= k {
+            j: int = i + k - 1;
+            while j >= i {
+                result.push(head[j]);
+                j = j - 1;
+            }
+            i = i + k;
+        } else {
+            while i < head.length() {
+                result.push(head[i]);
+                i = i + 1;
+            }
+        }
+    }
+
+    return result;
+}
+
+say(reverse_k_group([1, 2, 3, 4, 5], 2));
+say(reverse_k_group([1, 2, 3, 4, 5], 3));

@@ -1,0 +1,52 @@
+// LeetCode 47: Permutations II (with duplicates)
+// Sort first, then backtrack skipping duplicate branches.
+
+fn backtrack(nums: list, used: list, current: list, result: list) -> dynamic {
+    if current.length() == nums.length() {
+        result.push(current.clone());
+        return null;
+    }
+
+    i: int = 0;
+    while i < nums.length() {
+        if used[i] {
+            i = i + 1;
+            continue;
+        }
+
+        // Skip duplicate: same value as previous, and previous was not used in this branch
+        if i > 0 && nums[i] == nums[i - 1] && !used[i - 1] {
+            i = i + 1;
+            continue;
+        }
+
+        used[i] = true;
+        current.push(nums[i]);
+        backtrack(nums, used, current, result);
+        current.pull();
+        used[i] = false;
+
+        i = i + 1;
+    }
+
+    return null;
+}
+
+fn permute_unique(nums: list) -> list {
+    sorted: list = nums.clone();
+    sorted.order();
+
+    result: list = [];
+    used: list = [];
+    i: int = 0;
+    while i < sorted.length() {
+        used.push(false);
+        i = i + 1;
+    }
+
+    backtrack(sorted, used, [], result);
+    return result;
+}
+
+say(permute_unique([1, 1, 2]));
+say(permute_unique([1, 2, 3]));

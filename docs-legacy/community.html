@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Echo Programming Language Community</title>
+    <link rel="shortcut icon" href="echo_logo.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="futuristic-header">
+        <div class="header-content">
+            <div class="beta-badge">
+                <i class="fas fa-exclamation-triangle" style="color: #ff6f00;"></i> 
+                <span class="glitch-text">BETA VERSION</span>
+                <span class="pulse-dot"></span>
+            </div>
+            <div class="logo-container">
+                <div class="energy-particles">
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                </div>
+                <div class="energy-ring energy-ring-1"></div>
+                <div class="energy-ring energy-ring-2"></div>
+                <div class="energy-ring energy-ring-3"></div>
+                <h1 class="futuristic-title">Echo</h1>
+            </div>
+            <p class="futuristic-subtitle">Where simplicity meets power. A modern programming language that makes development intuitive and enjoyable.</p>
+            <div class="header-decoration">
+                <div class="line"></div>
+                <div class="circle"></div>
+                <div class="line"></div>
+            </div>
+        </div>
+        <div class="scroll-arrow" onclick="scrollToContent()">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="header-background">
+            <div class="grid-overlay"></div>
+            <div class="glow-effect"></div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <img src="echo_logo.jpg" alt="Echo Logo" class="nav-logo">
+                Echo
+            </a>
+            <button class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.html" class="nav-link">Docs</a></li>
+                <li class="nav-item"><a href="api.html" class="nav-link">API</a></li>
+                <li class="nav-item"><a href="examples.html" class="nav-link">Examples</a></li>
+                <li class="nav-item"><a href="#" class="nav-link active">Community</a></li>
+                <li class="nav-item"><a href="blog.html" class="nav-link">Blog</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container page-container">
+        <aside class="sidebar">
+            <div class="sidebar-title">Community Resources</div>
+            <ul class="toc">
+                <li class="toc-item"><a href="#get-involved" class="toc-link">Get Involved</a></li>
+                <li class="toc-item"><a href="#discord" class="toc-link">Discord</a></li>
+                <li class="toc-item"><a href="#github" class="toc-link">GitHub</a></li>
+                <li class="toc-item"><a href="#forum" class="toc-link">Forum</a></li>
+                <li class="toc-item"><a href="#contributing" class="toc-link">Contributing</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <section class="section">
+                <div class="coming-soon">
+                    <h2>Community Hub Coming Soon</h2>
+                    <p>Join our growing community of developers and enthusiasts. We're building a vibrant ecosystem for Echo!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Documentation</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Getting Started</a></li>
+                    <li class="footer-link"><a href="#">Tutorials</a></li>
+                    <li class="footer-link"><a href="#">API Reference</a></li>
+                    <li class="footer-link"><a href="#">Examples</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Community</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Forum</a></li>
+                    <li class="footer-link"><a href="#">Discord</a></li>
+                    <li class="footer-link"><a href="#">GitHub</a></li>
+                    <li class="footer-link"><a href="#">Stack Overflow</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Blog</a></li>
+                    <li class="footer-link"><a href="#">Videos</a></li>
+                    <li class="footer-link"><a href="#">Ecosystem</a></li>
+                    <li class="footer-link"><a href="#">Roadmap</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect</h3>
+                <div class="footer-social">
+                    <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Echo Programming Language. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Color palette for dynamic selection
+        const colorPalette = [
+            '#ed9f3a', '#7C3AED', '#3B82F6', '#10B981', '#EF4444',
+            '#F59E0B', '#EC4899', '#6366F1', '#14B8A6', '#8B5CF6',
+            '#F472B6', '#22D3EE', '#FB923C', '#4ADE80', '#2DD4BF',
+            '#A78BFA', '#64748B', '#94A3B8', '#FB7185', '#38BDF8'
+        ];
+
+        function getRandomColor() {
+            const randomIndex = Math.floor(Math.random() * colorPalette.length);
+            return colorPalette[randomIndex];
+        }
+
+        document.documentElement.style.setProperty('--primary', getRandomColor());
+
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+
+        const themeToggle = document.querySelector('.theme-toggle');
+        const themeIcon = themeToggle.querySelector('i');
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            let newTheme;
+            
+            switch(currentTheme) {
+                case 'light':
+                    newTheme = 'dark';
+                    break;
+                case 'dark':
+                    newTheme = 'retro';
+                    break;
+                case 'retro':
+                    newTheme = 'light';
+                    break;
+                default:
+                    newTheme = 'light';
+            }
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            switch(theme) {
+                case 'light':
+                    themeIcon.className = 'fas fa-moon';
+                    break;
+                case 'dark':
+                    themeIcon.className = 'fas fa-terminal';
+                    break;
+                case 'retro':
+                    themeIcon.className = 'fas fa-sun';
+                    break;
+            }
+        }
+
+        function scrollToContent() {
+            const mainContent = document.querySelector('.main-content');
+            const navHeight = document.querySelector('nav').offsetHeight;
+            const targetPosition = mainContent.offsetTop - navHeight;
+            
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+        }
+
+        document.querySelector('.scroll-arrow').addEventListener('click', scrollToContent);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,25 @@
+// LeetCode 22: Generate Parentheses
+
+fn backtrack_parentheses(current: str, open_count: int, close_count: int, n: int, result: list) -> void {
+    if current.length() == n * 2 {
+        result.push(current);
+        return;
+    }
+
+    if open_count < n {
+        backtrack_parentheses(current + "(", open_count + 1, close_count, n, result);
+    }
+
+    if close_count < open_count {
+        backtrack_parentheses(current + ")", open_count, close_count + 1, n, result);
+    }
+}
+
+fn generate_parentheses(n: int) -> list {
+    result: list = [];
+    backtrack_parentheses("", 0, 0, n, result);
+    return result;
+}
+
+say(generate_parentheses(3));
+say(generate_parentheses(1));

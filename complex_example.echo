@@ -1,0 +1,279 @@
+// ─────────────────────────────────────────
+//  Complex Echo example — student gradebook
+// ─────────────────────────────────────────
+
+// ── Global state ──────────────────────────
+total_students: int = 0;
+pass_count: int = 0;
+fail_count: int = 0;
+
+// ── Helpers ───────────────────────────────
+
+fn letter_grade(score: float) -> str {
+    if score >= 90.0 {
+        return "A";
+    } else if score >= 80.0 {
+        return "B";
+    } else if score >= 70.0 {
+        return "C";
+    } else if score >= 60.0 {
+        return "D";
+    } else {
+        return "F";
+    }
+}
+
+fn average(vals: list) -> float {
+    total: float = 0.0;
+    foreach s: dynamic in vals {
+        total = total + s;
+    }
+    return total / vals.length();
+}
+
+fn passed(score: float) -> bool {
+    return score >= 60.0;
+}
+
+fn curve_scores(scores: list, bonus: int) -> list {
+    curved: list = [];
+    foreach s: dynamic in scores {
+        next: int = s + bonus;
+        if next > 100 {
+            next = 100;
+        }
+        curved = curved.push(next);
+    }
+    return curved;
+}
+
+fn variance(vals: list) -> float {
+    m: float = average(vals);
+    acc: float = 0.0;
+    foreach x: dynamic in vals {
+        d: float = x - m;
+        acc = acc + (d * d);
+    }
+    return acc / vals.length();
+}
+
+fn risk_label(mean_value: float, spread: float, trend: int) -> str {
+    if mean_value < 55.0 || trend < (0 - 10) {
+        return "HIGH";
+    }
+    if spread > 250.0 || mean_value < 65.0 {
+        return "MEDIUM";
+    }
+    return "LOW";
+}
+
+// ── Per-student processing ─────────────────
+
+fn process_student(name: str, scores: list) -> hash {
+    use mut total_students;
+    use mut pass_count;
+    use mut fail_count;
+
+    student_avg: float = average(scores);
+    curved_scores: list = curve_scores(scores, 5);
+    curved_avg: float = average(curved_scores);
+    score_variance: float = variance(scores);
+    score_trend: int = scores[2] - scores[0];
+    grade: str = letter_grade(student_avg);
+    ok: bool = passed(student_avg);
+    risk: str = risk_label(student_avg, score_variance, score_trend);
+
+    total_students = total_students + 1;
+
+    if ok {
+        pass_count = pass_count + 1;
+    } else {
+        fail_count = fail_count + 1;
+    }
+
+    result: hash = {
+        "name": name,
+        "scores": scores,
+        "avg": student_avg,
+        "curved_avg": curved_avg,
+        "volatility": score_variance,
+        "momentum": score_trend,
+        "grade": grade,
+        "passed": ok,
+        "risk": risk
+    };
+    return result;
+}
+
+fn print_report(record: hash) -> void {
+    name: str = record["name"];
+    avg: dynamic = record["avg"];
+    curved_avg: dynamic = record["curved_avg"];
+    grade: dynamic = record["grade"];
+    risk: dynamic = record["risk"];
+    ok: dynamic = record["passed"];
+
+    status: str = "PASS";
+    if !ok {
+        status = "FAIL";
+    }
+
+    say("  ${name} | avg: ${avg} | curved: ${curved_avg} | grade: ${grade} | risk: ${risk} | ${status}");
+}
+
+// ── Main program ───────────────────────────
+
+say("=== Gradebook ===");
+say("");
+
+students: list = [
+    {"name": "Alice", "scores": [92, 88, 95]},
+    {"name": "Bob", "scores": [74, 68, 71]},
+    {"name": "Charlie", "scores": [55, 49, 62]},
+    {"name": "Diana", "scores": [85, 90, 88]},
+    {"name": "Evan", "scores": [40, 55, 50]},
+    {"name": "Farah", "scores": [65, 59, 78]},
+    {"name": "Gabe", "scores": [99, 94, 91]}
+];
+
+records: list = [];
+foreach s: dynamic in students {
+    student_name: dynamic = s["name"];
+    student_scores: dynamic = s["scores"];
+    rec: hash = process_student(student_name, student_scores);
+    records = records.push(rec);
+}
+
+say("Student Results:");
+say("--------------------------------------------------------------");
+foreach r: dynamic in records {
+    print_report(r);
+}
+
+say("");
+say("--------------------------------------------------------------");
+say("Total students : ${total_students}");
+say("Passed         : ${pass_count}");
+say("Failed         : ${fail_count}");
+
+// -- Find top scorer + class stats --
+say("");
+say("Class averages:");
+
+top_name: str   = "";
+top_avg: float  = 0.0;
+all_avgs: list  = [];
+class_avg_sum: float = 0.0;
+class_curve_sum: float = 0.0;
+max_vol: float = 0.0 - 1.0;
+max_vol_name: str = "";
+max_momentum: int = 0 - 10000;
+max_momentum_name: str = "";
+
+foreach r: dynamic in records {
+    a: dynamic = r["avg"];
+    c: dynamic = r["curved_avg"];
+    v: dynamic = r["volatility"];
+    m: dynamic = r["momentum"];
+    n: dynamic = r["name"];
+    all_avgs = all_avgs.push(a);
+    class_avg_sum = class_avg_sum + a;
+    class_curve_sum = class_curve_sum + c;
+    if a > top_avg {
+        top_avg  = a;
+        top_name = n;
+    }
+    if v > max_vol {
+        max_vol = v;
+        max_vol_name = n;
+    }
+    if m > max_momentum {
+        max_momentum = m;
+        max_momentum_name = n;
+    }
+}
+
+class_avg: float = class_avg_sum / total_students;
+class_curve_avg: float = class_curve_sum / total_students;
+
+say("All averages: ${all_avgs}");
+say("Top scorer  : ${top_name} with ${top_avg}");
+say("Class avg   : ${class_avg}");
+say("Curved avg  : ${class_curve_avg}");
+say("Most volatile student : ${max_vol_name} (${max_vol})");
+say("Best momentum student : ${max_momentum_name} (${max_momentum})");
+
+// -- Grade distribution via hash --
+say("");
+say("Grade distribution:");
+
+dist: hash = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0};
+
+foreach r: dynamic in records {
+    g: dynamic = r["grade"];
+    dist[g] = dist[g] + 1;
+}
+
+say("  A :", dist["A"]);
+say("  B :", dist["B"]);
+say("  C :", dist["C"]);
+say("  D :", dist["D"]);
+say("  F :", dist["F"]);
+
+say("");
+say("Risk buckets:");
+
+risk_dist: hash = {"LOW": 0, "MEDIUM": 0, "HIGH": 0};
+honor_roll: list = [];
+intervention: list = [];
+
+foreach r: dynamic in records {
+    rk: dynamic = r["risk"];
+    nm: dynamic = r["name"];
+    risk_dist[rk] = risk_dist[rk] + 1;
+
+    g: dynamic = r["grade"];
+    if g == "A" || g == "B" {
+        honor_roll = honor_roll.push(nm);
+    }
+    if rk == "HIGH" {
+        intervention = intervention.push(nm);
+    }
+}
+
+say("  LOW    :", risk_dist["LOW"]);
+say("  MEDIUM :", risk_dist["MEDIUM"]);
+say("  HIGH   :", risk_dist["HIGH"]);
+say("Honor roll     : ${honor_roll}");
+say("Interventions  : ${intervention}");
+
+say("");
+say("Policy simulator (bonus points):");
+
+bonus: int = 0;
+while bonus <= 10 {
+    pass_sim: int = 0;
+
+    foreach s: dynamic in students {
+        marks: dynamic = s["scores"];
+        curved: list = curve_scores(marks, bonus);
+        a: float = average(curved);
+        if passed(a) {
+            pass_sim = pass_sim + 1;
+        }
+    }
+
+    say("  bonus +${bonus} => passes: ${pass_sim}/${total_students}");
+    bonus = bonus + 2;
+}
+
+// -- Countdown to next exam --
+say("");
+say("Days until next exam:");
+
+days: int = 5;
+while days > 0 {
+    say("  ${days} days left");
+    days = days - 1;
+}
+say("  Exam day!");

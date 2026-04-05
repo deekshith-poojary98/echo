@@ -1,0 +1,22 @@
+// LeetCode 19: Remove Nth Node From End of List
+// Echo representation: linked list is modeled as a plain list of values.
+
+fn remove_nth_from_end(head: list, n: int) -> list {
+    length: int = head.length();
+    remove_index: int = length - n;
+
+    result: list = [];
+    i: int = 0;
+    while i < length {
+        if i != remove_index {
+            result.push(head[i]);
+        }
+        i = i + 1;
+    }
+
+    return result;
+}
+
+say(remove_nth_from_end([1, 2, 3, 4, 5], 2));
+say(remove_nth_from_end([1], 1));
+say(remove_nth_from_end([1, 2], 1));

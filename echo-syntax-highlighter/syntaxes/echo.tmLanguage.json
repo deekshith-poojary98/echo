@@ -18,6 +18,9 @@
 		"include": "#numbers"
 	  },
 	  {
+		"include": "#literals"
+	  },
+	  {
 		"include": "#functions"
 	  },
 	  {
@@ -32,11 +35,11 @@
 		"patterns": [
 		  {
 			"name": "keyword.control.echo",
-			"match": "\\b(if|else|while|for|foreach|return|break|continue|in|by|fn)\\b"
+			"match": "\\b(if|else|while|for|foreach|return|break|continue|in|by|fn|watch|type)\\b"
 		  },
 		  {
 			"name": "keyword.other.echo",
-			"match": "\\b(import|export|from|as)\\b"
+			"match": "\\b(import|export|from|as|use|mut)\\b"
 		  }
 		]
 	  },
@@ -45,6 +48,10 @@
 		  {
 			"name": "keyword.operator.assignment.echo",
 			"match": "=|\\+=|-=|\\*=|/=|%="
+		  },
+		  {
+			"name": "keyword.operator.arrow.echo",
+			"match": "->|=>"
 		  },
 		  {
 			"name": "keyword.operator.arithmetic.echo",
@@ -56,7 +63,15 @@
 		  },
 		  {
 			"name": "keyword.operator.comparison.echo",
-			"match": "==|!=|>|=|<="
+			"match": "==|!=|<=|>=|<|>"
+		  },
+		  {
+			"name": "keyword.operator.range.echo",
+			"match": "\\.\\.\\.|\\.\\."
+		  },
+		  {
+			"name": "punctuation.accessor.echo",
+			"match": "\\."
 		  }
 		]
 	  },
@@ -115,6 +130,18 @@
 		  }
 		]
 	  },
+	  "literals": {
+		"patterns": [
+		  {
+			"name": "constant.language.boolean.echo",
+			"match": "\\b(true|false)\\b"
+		  },
+		  {
+			"name": "constant.language.null.echo",
+			"match": "\\bnull\\b"
+		  }
+		]
+	  },
 	  "functions": {
 		"patterns": [
 		  {
@@ -123,7 +150,7 @@
 		  },
 		  {
 			"name": "support.function.builtin.echo",
-			"match": "\\b(say|ask|wait|notify|asInt|asBool|asString|asFloat|trim|upperCase|lowerCase|length|trim|default)\\b"
+			"match": "\\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values|reverse|push|empty|clone|countOf|merge|find|insertAt|pull|removeValue|order|wipe|take|take_last|ensure|pairs|default|format)\\b"
 		  }
 		]
 	  },
@@ -131,7 +158,7 @@
 		"patterns": [
 		  {
 			"name": "storage.type.echo",
-			"match": "\\b(int|float|str|bool|list|hash|dynamic)\\b"
+			"match": "\\b(int|float|str|bool|list|hash|dynamic|void)\\b"
 		  }
 		]
 	  },

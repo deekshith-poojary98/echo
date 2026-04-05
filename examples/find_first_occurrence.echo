@@ -1,0 +1,63 @@
+// LeetCode 28: Find the Index of the First Occurrence in a String
+// KMP pattern matching in O(n + m).
+
+fn build_lps(p: str) -> list {
+    lps: list = [];
+    i: int = 0;
+    while i < p.length() {
+        lps.push(0);
+        i = i + 1;
+    }
+
+    len: int = 0;
+    i = 1;
+
+    while i < p.length() {
+        if p[i] == p[len] {
+            len = len + 1;
+            lps[i] = len;
+            i = i + 1;
+        } else {
+            if len != 0 {
+                len = lps[len - 1];
+            } else {
+                lps[i] = 0;
+                i = i + 1;
+            }
+        }
+    }
+
+    return lps;
+}
+
+fn str_str(haystack: str, needle: str) -> int {
+    if needle.length() == 0 {
+        return 0;
+    }
+
+    lps: list = build_lps(needle);
+    i: int = 0;
+    j: int = 0;
+
+    while i < haystack.length() {
+        if haystack[i] == needle[j] {
+            i = i + 1;
+            j = j + 1;
+
+            if j == needle.length() {
+                return i - j;
+            }
+        } else {
+            if j != 0 {
+                j = lps[j - 1];
+            } else {
+                i = i + 1;
+            }
+        }
+    }
+
+    return -1;
+}
+
+say(str_str("sadbutsad", "sad"));
+say(str_str("leetcode", "leeto"));

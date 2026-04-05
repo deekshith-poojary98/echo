@@ -1,0 +1,26 @@
+// LeetCode 27: Remove Element
+
+fn remove_element(nums: list, val: int) -> int {
+    write: int = 0;
+    read: int = 0;
+
+    while read < nums.length() {
+        if nums[read] != val {
+            nums[write] = nums[read];
+            write = write + 1;
+        }
+        read = read + 1;
+    }
+
+    return write;
+}
+
+arr1: list = [3, 2, 2, 3];
+k1: int = remove_element(arr1, 3);
+say(k1);
+say(arr1);
+
+arr2: list = [0, 1, 2, 2, 3, 0, 4, 2];
+k2: int = remove_element(arr2, 2);
+say(k2);
+say(arr2);

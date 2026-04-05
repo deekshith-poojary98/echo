@@ -1,0 +1,82 @@
+// LeetCode 30: Substring with Concatenation of All Words
+// Sliding window over each offset modulo word length.
+
+fn piece(s: str, start: int, len: int) -> str {
+    out: str = "";
+    i: int = 0;
+    while i < len {
+        out = out + s[start + i];
+        i = i + 1;
+    }
+    return out;
+}
+
+fn find_substring(s: str, words: list) -> list {
+    result: list = [];
+    if words.length() == 0 {
+        return result;
+    }
+
+    word_len: int = words[0].length();
+    word_count: int = words.length();
+    total_len: int = word_len * word_count;
+
+    if s.length() < total_len {
+        return result;
+    }
+
+    target: hash = {};
+    i: int = 0;
+    while i < word_count {
+        w: str = words[i];
+        target[w] = target.ensure(w, 0) + 1;
+        i = i + 1;
+    }
+
+    offset: int = 0;
+    while offset < word_len {
+        left: int = offset;
+        right: int = offset;
+        used: int = 0;
+        window: hash = {};
+
+        while right + word_len <= s.length() {
+            word: str = piece(s, right, word_len);
+            right = right + word_len;
+            need: int = target.ensure(word, 0);
+
+            if need == 0 {
+                window = {};
+                used = 0;
+                left = right;
+            } else {
+                window[word] = window.ensure(word, 0) + 1;
+                used = used + 1;
+
+                while window[word] > need {
+                    left_word: str = piece(s, left, word_len);
+                    window[left_word] = window[left_word] - 1;
+                    used = used - 1;
+                    left = left + word_len;
+                }
+
+                if used == word_count {
+                    result.push(left);
+
+                    left_word: str = piece(s, left, word_len);
+                    window[left_word] = window[left_word] - 1;
+                    used = used - 1;
+                    left = left + word_len;
+                }
+            }
+        }
+
+        offset = offset + 1;
+    }
+
+    return result;
+}
+
+say(find_substring("barfoothefoobarman", ["foo", "bar"]));
+say(find_substring("wordgoodgoodgoodbestword", ["word", "good", "best", "word"]));
+say(find_substring("barfoofoobarthefoobarman", ["bar", "foo", "the"]));

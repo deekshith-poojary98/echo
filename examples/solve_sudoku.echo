@@ -1,0 +1,93 @@
+// LeetCode 37: Sudoku Solver
+// Backtracking with row/column/box usage tracking.
+
+fn key_row(r: int, d: str) -> str {
+    return "r" + r.asString() + ":" + d;
+}
+
+fn key_col(c: int, d: str) -> str {
+    return "c" + c.asString() + ":" + d;
+}
+
+fn key_box(r: int, c: int, d: str) -> str {
+    box: int = (r / 3) * 3 + (c / 3);
+    return "b" + box.asString() + ":" + d;
+}
+
+fn backtrack(pos: int, board: list, used: hash) -> bool {
+    if pos == 81 {
+        return true;
+    }
+
+    r: int = pos / 9;
+    c: int = pos % 9;
+
+    if board[r][c] != "." {
+        return backtrack(pos + 1, board, used);
+    }
+
+    d: int = 1;
+    while d <= 9 {
+        ch: str = d.asString();
+        rk: str = key_row(r, ch);
+        ck: str = key_col(c, ch);
+        bk: str = key_box(r, c, ch);
+
+        if !used.ensure(rk, false) && !used.ensure(ck, false) && !used.ensure(bk, false) {
+            board[r][c] = ch;
+            used[rk] = true;
+            used[ck] = true;
+            used[bk] = true;
+
+            if backtrack(pos + 1, board, used) {
+                return true;
+            }
+
+            board[r][c] = ".";
+            used[rk] = false;
+            used[ck] = false;
+            used[bk] = false;
+        }
+
+        d = d + 1;
+    }
+
+    return false;
+}
+
+fn solve_sudoku(board: list) -> dynamic {
+    used: hash = {};
+
+    r: int = 0;
+    while r < 9 {
+        c: int = 0;
+        while c < 9 {
+            ch: str = board[r][c];
+            if ch != "." {
+                used[key_row(r, ch)] = true;
+                used[key_col(c, ch)] = true;
+                used[key_box(r, c, ch)] = true;
+            }
+            c = c + 1;
+        }
+        r = r + 1;
+    }
+
+    backtrack(0, board, used);
+    return null;
+}
+
+puzzle: list = [
+    ["5", "3", ".", ".", "7", ".", ".", ".", "."],
+    ["6", ".", ".", "1", "9", "5", ".", ".", "."],
+    [".", "9", "8", ".", ".", ".", ".", "6", "."],
+    ["8", ".", ".", ".", "6", ".", ".", ".", "3"],
+    ["4", ".", ".", "8", ".", "3", ".", ".", "1"],
+    ["7", ".", ".", ".", "2", ".", ".", ".", "6"],
+    [".", "6", ".", ".", ".", ".", "2", "8", "."],
+    [".", ".", ".", "4", "1", "9", ".", ".", "5"],
+    [".", ".", ".", ".", "8", ".", ".", "7", "9"]
+];
+
+solve_sudoku(puzzle);
+say(puzzle);

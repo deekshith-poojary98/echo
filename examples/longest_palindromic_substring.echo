@@ -1,0 +1,67 @@
+// LeetCode 5: Longest Palindromic Substring
+// Expand around each possible center.
+
+fn build_substring(s: str, start: int, length: int) -> str {
+    result: str = "";
+    i: int = start;
+
+    while i < (start + length) {
+        result = result + s[i];
+        i = i + 1;
+    }
+
+    return result;
+}
+
+fn expand_from_center(s: str, left_start: int, right_start: int) -> list {
+    left: int = left_start;
+    right: int = right_start;
+
+    while left >= 0 && right < s.length() && s[left] == s[right] {
+        left = left - 1;
+        right = right + 1;
+    }
+
+    palindrome_start: int = left + 1;
+    palindrome_length: int = right - left - 1;
+    return [palindrome_start, palindrome_length];
+}
+
+fn longest_palindrome(s: str) -> str {
+    if s.length() <= 1 {
+        return s;
+    }
+
+    best_start: int = 0;
+    best_length: int = 1;
+    i: int = 0;
+
+    while i < s.length() {
+        odd_result: list = expand_from_center(s, i, i);
+        odd_start: int = odd_result[0];
+        odd_length: int = odd_result[1];
+
+        if odd_length > best_length {
+            best_start = odd_start;
+            best_length = odd_length;
+        }
+
+        even_result: list = expand_from_center(s, i, i + 1);
+        even_start: int = even_result[0];
+        even_length: int = even_result[1];
+
+        if even_length > best_length {
+            best_start = even_start;
+            best_length = even_length;
+        }
+
+        i = i + 1;
+    }
+
+    return build_substring(s, best_start, best_length);
+}
+
+say(longest_palindrome("babad"));
+say(longest_palindrome("cbbd"));
+say(longest_palindrome("a"));
+say(longest_palindrome("ac"));

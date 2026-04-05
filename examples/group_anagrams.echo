@@ -1,0 +1,53 @@
+// LeetCode 49: Group Anagrams
+// Sort each string's chars as a key, bucket into hash by that key.
+
+fn sorted_key(s: str) -> str {
+    chars: list = [];
+    i: int = 0;
+    while i < s.length() {
+        chars.push(s[i]);
+        i = i + 1;
+    }
+    chars.order();
+    key: str = "";
+    i = 0;
+    while i < chars.length() {
+        key = key + chars[i];
+        i = i + 1;
+    }
+    return key;
+}
+
+fn group_anagrams(strs: list) -> list {
+    groups: hash = {};
+    seen: hash = {};
+    key_list: list = [];
+
+    i: int = 0;
+    while i < strs.length() {
+        k: str = sorted_key(strs[i]);
+
+        if !seen.ensure(k, false) {
+            seen[k] = true;
+            key_list.push(k);
+            groups[k] = [];
+        }
+
+        grp: dynamic = groups[k];
+        grp.push(strs[i]);
+        i = i + 1;
+    }
+
+    result: list = [];
+    i = 0;
+    while i < key_list.length() {
+        result.push(groups[key_list[i]]);
+        i = i + 1;
+    }
+
+    return result;
+}
+
+say(group_anagrams(["eat", "tea", "tan", "ate", "nat", "bat"]));
+say(group_anagrams([""]));
+say(group_anagrams(["a"]));

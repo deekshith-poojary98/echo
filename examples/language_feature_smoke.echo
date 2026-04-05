@@ -1,0 +1,18 @@
+fn log_line(message: str) {
+    say(message);
+}
+
+fn descending(a: int, b: int) {
+    return b - a;
+}
+
+numbers: list = [3, 1, 4, 2];
+numbers.order(descending);
+say(numbers);
+
+say(true, false, null, [true, false, null], {"ok": true, "count": 2});
+say(true.asString());
+say("value ${42} flag ${true} missing ${null}");
+say("Hello, {}. Top score: {1}.".format("Echo", 50));
+
+log_line("no return annotation works");

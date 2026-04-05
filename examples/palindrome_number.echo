@@ -1,0 +1,29 @@
+// LeetCode 9: Palindrome Number
+// Follow-up solution: no string conversion.
+
+fn is_palindrome(x: int) -> bool {
+    if x < 0 {
+        return false;
+    }
+
+    if x != 0 && (x % 10) == 0 {
+        return false;
+    }
+
+    remaining: int = x;
+    reversed_half: int = 0;
+
+    while remaining > reversed_half {
+        digit: int = remaining % 10;
+        reversed_half = (reversed_half * 10) + digit;
+        remaining = (remaining / 10).asInt();
+    }
+
+    return (remaining == reversed_half) || (remaining == (reversed_half / 10).asInt());
+}
+
+say(is_palindrome(121));
+say(is_palindrome(-121));
+say(is_palindrome(10));
+say(is_palindrome(1221));
+say(is_palindrome(0));

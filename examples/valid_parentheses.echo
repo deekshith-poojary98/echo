@@ -1,0 +1,42 @@
+// LeetCode 20: Valid Parentheses
+
+fn is_valid_parentheses(s: str) -> bool {
+    stack: list = [];
+    i: int = 0;
+
+    while i < s.length() {
+        ch: str = s[i];
+
+        if ch == "(" || ch == "[" || ch == "{" {
+            stack.push(ch);
+        } else {
+            if stack.length() == 0 {
+                return false;
+            }
+
+            top: str = stack.pull();
+
+            if ch == ")" && top != "(" {
+                return false;
+            }
+
+            if ch == "]" && top != "[" {
+                return false;
+            }
+
+            if ch == "}" && top != "{" {
+                return false;
+            }
+        }
+
+        i = i + 1;
+    }
+
+    return stack.length() == 0;
+}
+
+say(is_valid_parentheses("()"));
+say(is_valid_parentheses("()[]{}"));
+say(is_valid_parentheses("(]"));
+say(is_valid_parentheses("([])"));
+say(is_valid_parentheses("([)]"));

@@ -1,0 +1,29 @@
+// LeetCode 12: Integer to Roman
+// Greedy conversion using descending value-symbol pairs.
+
+fn int_to_roman(num: int) -> str {
+    values: list = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    symbols: list = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+
+    n: int = num;
+    result: str = "";
+    i: int = 0;
+
+    while i < values.length() {
+        value: int = values[i];
+        symbol: str = symbols[i];
+
+        while n >= value {
+            result = result + symbol;
+            n = n - value;
+        }
+
+        i = i + 1;
+    }
+
+    return result;
+}
+
+say(int_to_roman(3749));
+say(int_to_roman(58));
+say(int_to_roman(1994));

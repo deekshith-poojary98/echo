@@ -1,0 +1,51 @@
+// LeetCode 34: Find First and Last Position of Element in Sorted Array
+// Two binary searches, O(log n).
+
+fn lower_bound(nums: list, target: int) -> int {
+    left: int = 0;
+    right: int = nums.length();
+
+    while left < right {
+        mid: int = left + ((right - left) / 2);
+
+        if nums[mid] < target {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+
+    return left;
+}
+
+fn upper_bound(nums: list, target: int) -> int {
+    left: int = 0;
+    right: int = nums.length();
+
+    while left < right {
+        mid: int = left + ((right - left) / 2);
+
+        if nums[mid] <= target {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+
+    return left;
+}
+
+fn search_range(nums: list, target: int) -> list {
+    first: int = lower_bound(nums, target);
+
+    if first == nums.length() || nums[first] != target {
+        return [-1, -1];
+    }
+
+    last: int = upper_bound(nums, target) - 1;
+    return [first, last];
+}
+
+say(search_range([5, 7, 7, 8, 8, 10], 8));
+say(search_range([5, 7, 7, 8, 8, 10], 6));
+say(search_range([], 0));

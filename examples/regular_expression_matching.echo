@@ -1,0 +1,47 @@
+// LeetCode 10: Regular Expression Matching
+// Supports '.' and '*' with full-string matching.
+
+fn char_matches(sc: str, pc: str) -> bool {
+    return pc == "." || sc == pc;
+}
+
+fn dp(i: int, j: int, s: str, p: str, memo: hash) -> bool {
+    key: str = i.asString() + "," + j.asString();
+    cached: dynamic = memo.ensure(key, null);
+    if cached != null {
+        return cached;
+    }
+
+    ans: bool = false;
+
+    if j == p.length() {
+        ans = i == s.length();
+    } else {
+        first_match: bool = false;
+        if i < s.length() {
+            first_match = char_matches(s[i], p[j]);
+        }
+
+        if (j + 1) < p.length() && p[j + 1] == "*" {
+            ans = dp(i, j + 2, s, p, memo) || (first_match && dp(i + 1, j, s, p, memo));
+        } else {
+            ans = first_match && dp(i + 1, j + 1, s, p, memo);
+        }
+    }
+
+    memo[key] = ans;
+    return ans;
+}
+
+fn is_match(s: str, p: str) -> bool {
+    memo: hash = {};
+    return dp(0, 0, s, p, memo);
+}
+
+say(is_match("aa", "a"));
+say(is_match("aa", "a*"));
+say(is_match("ab", ".*"));
+
+// Extra checks
+say(is_match("mississippi", "mis*is*p*."));
+say(is_match("aab", "c*a*b"));

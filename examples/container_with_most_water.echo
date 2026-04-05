@@ -1,0 +1,35 @@
+// LeetCode 11: Container With Most Water
+// Two-pointer solution in O(n).
+
+fn max_area(height: list) -> int {
+    left: int = 0;
+    right: int = height.length() - 1;
+    best: int = 0;
+
+    while left < right {
+        width: int = right - left;
+        left_height: int = height[left];
+        right_height: int = height[right];
+
+        min_height: int = left_height;
+        if right_height < min_height {
+            min_height = right_height;
+        }
+
+        area: int = width * min_height;
+        if area > best {
+            best = area;
+        }
+
+        if left_height < right_height {
+            left = left + 1;
+        } else {
+            right = right - 1;
+        }
+    }
+
+    return best;
+}
+
+say(max_area([1, 8, 6, 2, 5, 4, 8, 3, 7]));
+say(max_area([1, 1]));

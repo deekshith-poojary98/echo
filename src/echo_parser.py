@@ -291,12 +291,10 @@ class Parser:
         self.expect("PUNCTUATION", ")")
         # print("Parsed closing parenthesis")
         
-        # Require return type annotation
-        if not self._is_token("RETURN_TYPE"):
-            raise SyntaxError(f"Return type annotation required for function '{name}'")
-        
-        self.advance()  # consume the return type arrow
-        return_type = self._parse_type_name()
+        return_type = None
+        if self._is_token("RETURN_TYPE"):
+            self.advance()  # consume the return type arrow
+            return_type = self._parse_type_name()
         
         if self._is_token("OPERATOR", "=>"):
             self.advance()

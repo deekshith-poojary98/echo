@@ -1,0 +1,41 @@
+// LeetCode 2: Add Two Numbers
+// Echo does not have recursive linked-list node types yet,
+// so we represent each linked list as a list of digits in reverse order.
+
+fn add_two_numbers(l1: list, l2: list) -> list {
+    result: list = [];
+    i: int = 0;
+    carry: int = 0;
+
+    while i < l1.length() || i < l2.length() || carry > 0 {
+        digit1: int = 0;
+        digit2: int = 0;
+
+        if i < l1.length() {
+            digit1 = l1[i];
+        }
+
+        if i < l2.length() {
+            digit2 = l2[i];
+        }
+
+        total: int = digit1 + digit2 + carry;
+        result.push(total % 10);
+        carry = (total / 10).asInt();
+        i = i + 1;
+    }
+
+    return result;
+}
+
+l1_a: list = [2, 4, 3];
+l2_a: list = [5, 6, 4];
+say(add_two_numbers(l1_a, l2_a));
+
+l1_b: list = [0];
+l2_b: list = [0];
+say(add_two_numbers(l1_b, l2_b));
+
+l1_c: list = [9, 9, 9, 9, 9, 9, 9];
+l2_c: list = [9, 9, 9, 9];
+say(add_two_numbers(l1_c, l2_c));

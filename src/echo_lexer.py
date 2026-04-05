@@ -16,7 +16,7 @@ class Lexer:
         "KEYWORD": r'\b(fn|for|if|else|foreach|in|by|return|break|continue|while|use|mut|watch|type)\b',
         "RETURN_TYPE": r'->',
         "DATATYPE": r'\b(int|float|str|bool|dynamic|list|hash|void)\b',
-        "METHOD": r'\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values|reverse|push|empty|clone|countOf|merge|find|insertAt|pull|removeValue|order|wipe|take|take_last|ensure|pairs|default)\b',
+        "METHOD": r'\b(wait|ask|say|asInt|asFloat|asBool|asString|type|trim|upperCase|lowerCase|length|keys|values|reverse|push|empty|clone|countOf|merge|find|insertAt|pull|removeValue|order|wipe|take|take_last|ensure|pairs|default|format)\b',
         "BOOLEAN": r'\b(true|false)\b',
         "NULL": r'\bnull\b',
         "FLOAT": r'\b\d+\.\d+\b',

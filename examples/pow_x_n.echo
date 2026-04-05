@@ -1,0 +1,29 @@
+// LeetCode 50: Pow(x, n)
+// Binary (fast) exponentiation. O(log n) time, O(1) space.
+
+fn my_pow(x: float, n: int) -> float {
+    if n == 0 {
+        return 1.0;
+    }
+
+    if n < 0 {
+        x = 1.0 / x;
+        n = -n;
+    }
+
+    result: float = 1.0;
+
+    while n > 0 {
+        if n % 2 == 1 {
+            result = result * x;
+        }
+        x = x * x;
+        n = n / 2;
+    }
+
+    return result;
+}
+
+say(my_pow(2.0, 10));
+say(my_pow(2.1, 3));
+say(my_pow(2.0, -2));

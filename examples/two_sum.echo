@@ -1,0 +1,37 @@
+// LeetCode 1: Two Sum
+// Uses a hash with stringified numbers as keys so lookup stays O(n).
+
+fn two_sum(nums: list, target: int) -> list {
+    seen: hash = {};
+    i: int = 0;
+
+    while i < nums.length() {
+        current: int = nums[i];
+        needed: int = target - current;
+
+        needed_key: str = needed.asString();
+        match_index: dynamic = seen.ensure(needed_key, -1);
+
+        if match_index != -1 {
+            return [match_index, i];
+        }
+
+        current_key: str = current.asString();
+        seen[current_key] = i;
+        i = i + 1;
+    }
+
+    return [];
+}
+
+nums1: list = [2, 7, 11, 15];
+target1: int = 9;
+say(two_sum(nums1, target1));
+
+nums2: list = [3, 2, 4];
+target2: int = 6;
+say(two_sum(nums2, target2));
+
+nums3: list = [3, 3];
+target3: int = 6;
+say(two_sum(nums3, target3));

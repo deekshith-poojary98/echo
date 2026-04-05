@@ -1,0 +1,25 @@
+// LeetCode 24: Swap Nodes in Pairs
+// Echo representation: linked list is modeled as a plain list.
+
+fn swap_pairs(head: list) -> list {
+    result: list = [];
+    i: int = 0;
+
+    while i < head.length() {
+        if i + 1 < head.length() {
+            result.push(head[i + 1]);
+            result.push(head[i]);
+            i = i + 2;
+        } else {
+            result.push(head[i]);
+            i = i + 1;
+        }
+    }
+
+    return result;
+}
+
+say(swap_pairs([1, 2, 3, 4]));
+say(swap_pairs([]));
+say(swap_pairs([1]));
+say(swap_pairs([1, 2, 3]));

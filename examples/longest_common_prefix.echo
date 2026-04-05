@@ -1,0 +1,38 @@
+// LeetCode 14: Longest Common Prefix
+
+fn longest_common_prefix(strs: list) -> str {
+    if strs.length() == 0 {
+        return "";
+    }
+
+    first: str = strs[0];
+    i: int = 0;
+
+    while i < first.length() {
+        ch: str = first[i];
+        j: int = 1;
+
+        while j < strs.length() {
+            current: str = strs[j];
+
+            if i >= current.length() || current[i] != ch {
+                prefix: str = "";
+                k: int = 0;
+                while k < i {
+                    prefix = prefix + first[k];
+                    k = k + 1;
+                }
+                return prefix;
+            }
+
+            j = j + 1;
+        }
+
+        i = i + 1;
+    }
+
+    return first;
+}
+
+say("[", longest_common_prefix(["flower", "flow", "flight"]), "]");
+say("[", longest_common_prefix(["dog", "racecar", "car"]), "]");

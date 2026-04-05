@@ -1,0 +1,33 @@
+// LeetCode 32: Longest Valid Parentheses
+// Stack of indices with a base sentinel for last unmatched ')'.
+
+fn longest_valid_parentheses(s: str) -> int {
+    stack: list = [-1];
+    best: int = 0;
+    i: int = 0;
+
+    while i < s.length() {
+        if s[i] == "(" {
+            stack.push(i);
+        } else {
+            stack.pull();
+
+            if stack.length() == 0 {
+                stack.push(i);
+            } else {
+                current: int = i - stack[stack.length() - 1];
+                if current > best {
+                    best = current;
+                }
+            }
+        }
+
+        i = i + 1;
+    }
+
+    return best;
+}
+
+say(longest_valid_parentheses("(()"));
+say(longest_valid_parentheses(")()())"));
+say(longest_valid_parentheses(""));

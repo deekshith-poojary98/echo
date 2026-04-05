@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+if [ -x "$SCRIPT_DIR/.venv/Scripts/python.exe" ]; then
+  "$SCRIPT_DIR/.venv/Scripts/python.exe" "$SCRIPT_DIR/src/main.py" "$@"
+elif [ -x "$SCRIPT_DIR/.venv/bin/python" ]; then
+  "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/main.py" "$@"
+else
+  python "$SCRIPT_DIR/src/main.py" "$@"
+fi

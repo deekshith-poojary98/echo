@@ -1,0 +1,415 @@
+I’m going to inspect the lexer, parser, and interpreter definitions directly so the specification reflects actual behavior and edge cases, not assumptions.
+
+Read [](file:///c%3A/echo/src/echo_lexer.py)
+
+Read [](file:///c%3A/echo/src/echo_parser.py#1-1), lines 1 to 760
+
+Read [](file:///c%3A/echo/src/echo_interpreter.py)
+
+Read [](file:///c%3A/echo/README.md)
+
+Read [](file:///c%3A/echo/src/echo_parser.py#760-760), lines 760 to 855
+
+Read [](file:///c%3A/echo/src/main.py)
+
+# Echo Language Specification
+
+## 1. Overview
+- Echo is an interpreted, statement-based scripting language implemented in Python.
+- It combines:
+- Explicit variable typing on declaration.
+- Runtime type enforcement (not static compile-time checking).
+- JavaScript-like control structures with semicolon-terminated statements.
+- Python-backed runtime values (`int`, `float`, `str`, `bool`, `list`, `dict`, `None`).
+- Design goals inferred from implementation:
+- Readable syntax with explicitness (typed declarations, explicit semicolons).
+- Convenience built-ins for common scripting tasks (`say`, `ask`, collection methods).
+- Practical debugging (`watch`) and controlled outer-scope mutation inside functions (`use mut`).
+- Target users:
+- Learners and script authors who want explicit typed declarations but dynamic runtime flexibility (`dynamic`, method chaining).
+- Philosophy:
+- "Simple surface syntax + strict runtime checks where declared."
+- Errors are fail-fast with descriptive messages and hints.
+- Undefined design areas still exist (see limitations and undefined behavior sections).
+
+## 2. Syntax Style
+- General style:
+- C/JS-like blocks with `{}`.
+- Semicolon-terminated statements.
+- Method-call chaining with `.`.
+- Statement termination:
+- Required `;` for assignments, expression statements, function calls, `return`, `break`, `continue`, `use`, and `watch`.
+- Not used after block-closing `}` for `if`, `while`, `for`, `foreach`, and block-form `fn`.
+- Block structure:
+- `if cond { ... } else { ... }`
+- `while cond { ... }`
+- `for i: int in 0..10 by 1 { ... }`
+- `foreach item: str in items { ... }`
+- `fn name(params) { ... }` or `fn name(params) => expr;`
+- Whitespace:
+- Ignored outside tokens.
+- Newlines are not statement terminators.
+- Comments:
+- Single-line: `// ...`
+- Multi-line: `/* ... */`
+- Nested multi-line comments are not supported.
+
+## 3. Data Types
+### String
+- Name: `str`
+- Description: Text value.
+- Literal syntax:
+- Double-quoted: `"hello"`
+- Single-quoted: `'hello'`
+- Supports escape processing: `\n`, `\t`, `\r`, `\"`, `\'`, `\\`
+- Supports interpolation tokens `${...}` inside string tokenization.
+- Examples:
+- `name: str = "Echo";`
+- `msg: str = "Hi ${name}";`
+- Limitations:
+- No dedicated char type.
+- Formatting is via `.format(...)` method, not rich format specifiers.
+
+### Number
+- Names: `int`, `float`
+- Description:
+- `int`: Python integer runtime value.
+- `float`: Python float runtime value.
+- Literal syntax:
+- Integer literal: `123`
+- Float literal: `12.34`
+- Negative numbers are unary `-` applied to positive literal/expression.
+- Examples:
+- `a: int = 10;`
+- `b: float = 2.5;`
+- `c: int = -7;`
+- Limitations:
+- Float literal form requires digits on both sides of dot (`.5` not tokenized as float).
+- No exponent literal syntax (`1e3` unsupported as literal).
+- Despite docs wording in repo, runtime uses Python int (not fixed 32-bit).
+
+### Boolean
+- Name: `bool`
+- Description: Logical true/false.
+- Literal syntax: `true`, `false`
+- Examples:
+- `ok: bool = true;`
+- Limitations:
+- Boolean truthiness in conditionals is Python `bool(value)` semantics.
+
+### Null
+- Name: runtime `null` literal (value is Python `None`)
+- Description: Absence of value.
+- Literal syntax: `null`
+- Examples:
+- `x: dynamic = null;`
+- Limitations:
+- No dedicated declared type named `null`; use `dynamic` (or object fields that can hold `null` if type allows via `dynamic`).
+
+### Array
+- Name: `list`
+- Description: Mutable ordered collection.
+- Literal syntax: `[expr1, expr2, ...]`
+- Examples:
+- `nums: list = [1, 2, 3];`
+- Limitations:
+- Homogeneous element typing is not enforced (unless guarded manually through typed flows).
+
+### Hash / Object
+- Name: `hash`
+- Description: Mutable key-value map backed by Python `dict`.
+- Literal syntax: `{ key: value, "key2": value2 }`
+- Hash keys in literals must be string tokens or bare identifiers.
+- Bare identifier keys become string keys.
+- Examples:
+- `user: hash = { id: 1, "name": "A" };`
+- Limitations:
+- Runtime indexing requires string keys (`h["id"]`).
+- No non-string hash key support in indexing API.
+- Object type aliases validate required fields but do not reject extra fields.
+
+## 4. Variables
+- Declaration syntax:
+- `name: Type = expression;`
+- Reassignment syntax:
+- `name = expression;`
+- Mutability:
+- Variables are mutable by default in their owning scope.
+- Inside functions, outer-scope variables require explicit import:
+- Read: `use x;`
+- Write: `use mut x;`
+- Scope rules:
+- Non-function block scopes (`if`, loops) create child contexts.
+- Reassignments can update parent variable if it exists.
+- New typed declaration inside child scope can shadow parent variable.
+- Function scope is strict:
+- Access to outer variables is blocked unless imported via `use`.
+- Attempting to read outer var without `use` raises error.
+- Attempting to write outer var without `use mut` raises error.
+- Examples:
+- `count: int = 0;`
+- `count = count + 1;`
+- Edge cases:
+- Assigning undeclared variable (without `:` declaration) raises `Name Error`.
+- Declaring variable as `void` type is forbidden.
+- Watching undefined variable via `watch` raises `Name Error`.
+
+## 5. Operators
+- Arithmetic:
+- `+`, `-`, `*`, `/`, `%`
+- Integer division semantics:
+- If both operands are `int`, `/` truncates toward zero and returns `int`.
+- Otherwise `/` is float division.
+- Integer modulo semantics:
+- For `int % int`, remainder follows truncation-toward-zero quotient model.
+- Comparison:
+- `==`, `!=`, `<`, `>`, `<=`, `>=`
+- Logical:
+- `&&`, `||`, `!`
+- `&&` and `||` short-circuit.
+- Assignment:
+- `=`
+- Indexed assignment:
+- `arr[i] = v;`
+- Chained indexed assignment:
+- `grid[r][c] = v;`
+- Unary:
+- Unary minus `-expr`
+- Unary not `!expr`
+- Special:
+- Function arrow in declarations: `->`
+- Inline function body arrow: `=>`
+- Range operators in `for`:
+- `..` inclusive
+- `...` exclusive
+
+## 6. Control Flow
+- `if / else`:
+- `if condition { ... }`
+- Optional `else { ... }`
+- `else if` is parsed as `else` containing nested `if`.
+- `while`:
+- `while condition { ... }`
+- `for`:
+- `for i: int in start..end by step { ... }`
+- `for i: int in start...end { ... }` (default step 1)
+- `start`, `end`, `by` may be literals or identifiers/expressions parsed as numbers.
+- Runtime converts `start/end/by` to `int`.
+- `foreach`:
+- `foreach item: Type in iterableExpr { ... }`
+- Iterates runtime iterable with per-item type checks against declared `Type`.
+- `break / continue`:
+- Supported in loops only.
+- Using outside loops raises syntax error.
+- Edge cases:
+- `for` with `by = 0` can cause non-terminating loop (no runtime guard).
+
+## 7. Functions
+- Declaration syntax:
+- Block form:
+- `fn name(p1: T1, p2: T2) -> R { ... }`
+- `fn name(p1: T1) { ... }` (return annotation optional)
+- Inline form:
+- `fn name(p: T) -> R => expression;`
+- `fn name(p: T) => expression;`
+- Parameters:
+- Each parameter must have a type annotation.
+- Keyword arguments supported for user-defined function calls.
+- Positional arguments cannot follow keyword arguments.
+- Built-ins do not support keyword args.
+- Return values:
+- `return expr;`
+- `return;` supported.
+- If return type annotation exists, runtime validates returned value.
+- `-> void` forbids non-null return value.
+- Without return annotation, no return-type enforcement.
+- Scope behavior:
+- Function call creates new function context.
+- Outer variables require `use`/`use mut`.
+- Functions are looked up in current context chain at call time.
+- Examples:
+- `fn add(a: int, b: int) -> int { return a + b; }`
+- `fn ping(msg: str) { say(msg); }`
+- Limitations:
+- No default parameter values.
+- No variadics.
+- No overloads.
+- No first-class lambda syntax beyond named inline function definitions.
+
+## 8. Strings & Interpolation
+- String syntax:
+- Both `'...'` and `"..."`.
+- Interpolation:
+- `${expression}` inside string lexing/parsing.
+- Interpolated expression can be any valid expression tokenized inside braces.
+- Escape sequences:
+- Supported: `\\`, `\"`, `\'`, `\n`, `\t`, `\r`
+- Formatting behavior:
+- Interpolation and `asString()` use Echo stringification:
+- `true`, `false`, `null`
+- Nested strings in list/hash are quoted.
+- Known issues / undefined behavior:
+- Interpolation lexer skips unknown chars inside interpolation expressions rather than hard-failing immediately; this can surface later as parser/runtime errors.
+- Single-quoted strings can contain interpolation tokens by lexer logic; behavior is supported but may be surprising if single quotes were expected as "raw".
+
+## 9. Arrays
+- Creation:
+- `arr: list = [1, 2, 3];`
+- Indexing:
+- Read: `arr[0]`
+- Write: `arr[0] = 10;`
+- Nested write: `matrix[i][j] = v;`
+- Mutability:
+- Mutable in place.
+- Methods:
+- `push`, `empty`, `insertAt`, `pull`, `removeValue`, `order`, `merge`, `find`, `countOf`, `clone`, `reverse`
+- Examples:
+- `nums.push(5);`
+- `x: int = nums.pull();`
+- `nums.order();`
+- `nums.order(descCmp);`
+- Edge cases:
+- Out-of-range indexing raises `IndexError`.
+- `pull()` on empty list raises `IndexError`.
+- `insertAt` allows index `0..len`, rejects out-of-range.
+
+## 10. Hashes (Key-Value Objects)
+- Syntax:
+- `h: hash = { key: 1, "name": "echo" };`
+- Key rules:
+- Literal keys must be identifier or string token.
+- Runtime key access/indexing requires string key.
+- Access patterns:
+- Read: `h["key"]`
+- Write: `h["key"] = value;`
+- Methods:
+- `keys`, `values`, `pairs`, `wipe`, `take`, `take_last`, `ensure`, `merge`, `clone`
+- Nested access:
+- Supported via chained indexing: `h["a"]["b"]`
+- Known limitations:
+- Non-string hash key indexing is rejected.
+- Key order behavior follows Python dict insertion order semantics.
+- `take_last()` depends on insertion order.
+
+## 11. Built-in Functions
+- `say(...)`
+- Purpose: Print values separated by single spaces and newline.
+- Syntax: `say(v1, v2, ...);`
+- Example: `say(true, null, [1, "x"]);`
+- Output: `true null [1, "x"]`
+- `ask(prompt)`
+- Purpose: Read user input from stdin.
+- Syntax: `name: str = ask("Name: ");`
+- Output: string input.
+- `wait(seconds)`
+- Purpose: Sleep execution.
+- Syntax: `wait(1);`
+- `asInt(x)` or `x.asInt()`
+- Purpose: Convert to int via Python int conversion.
+- `asFloat(x)` or `x.asFloat()`
+- Purpose: Convert to float.
+- `asBool(x)` or `x.asBool()`
+- Purpose: Truthiness conversion.
+- `asString(x)` or `x.asString()`
+- Purpose: Echo-style stringification.
+- `type(x)` or `x.type()`
+- Purpose: Return Echo type name (`int|float|str|bool|list|hash|dynamic`).
+- `trim`, `upperCase`, `lowerCase`, `length`, `reverse`
+- Purpose: string/list convenience.
+- `clone()`
+- Purpose: shallow copy of list/hash.
+- `countOf(list, value)` or `list.countOf(value)`
+- Purpose: count occurrences in list.
+- `find(list, value)` or `list.find(value)`
+- Purpose: return index of first value in list.
+- `insertAt(index, value)`, `push(value)`, `pull([index])`, `removeValue(value)`, `empty()`
+- Purpose: list mutation.
+- `order([comparator])`
+- Purpose: list sort.
+- Syntax:
+- `arr.order();` ascending default.
+- `arr.order(cmpFn);` comparator function name or string.
+- Comparator must take 2 args and return `int`.
+- `merge(other)`
+- Purpose:
+- list + list/str: extends list.
+- hash + hash: updates hash.
+- `keys()`, `values()`, `pairs()`
+- Purpose: hash introspection.
+- `wipe()`
+- Purpose: clear hash.
+- `take(key)`
+- Purpose: remove key and return `[key, value]`.
+- `take_last()`
+- Purpose: remove most recently inserted key-value pair and return `[key, value]`.
+- `ensure(key, default)`
+- Purpose: if key absent, set default; return value.
+- `default(value, fallback)` or `value.default(fallback)`
+- Purpose: truthy-coalesce by Python truthiness.
+- `format(...)` (string method/global-style call supported)
+- Purpose: template substitution with `{}` or `{0}` placeholders.
+- Escaping: `{{` and `}}`.
+- Errors:
+- unmatched braces, invalid placeholder text, or out-of-range indexes raise errors.
+
+## 12. Error Handling
+- Error classes surfaced:
+- `Syntax Error`
+- `Name Error`
+- `Type Error`
+- `Execution Error` (ValueError, KeyError, IndexError, RuntimeError, generic Exception)
+- Presentation:
+- Plain text or Rich panel depending on CLI `--plain`.
+- Hints:
+- Runtime generates hints for common mistakes (missing semicolon, missing brace/paren, scope misuse, etc.).
+- Common causes:
+- Missing `;`
+- Using undeclared variable
+- Missing `use/use mut` inside function
+- Type mismatch against declared type
+- Invalid list/hash indexing
+- Invalid built-in argument counts/types
+
+## 13. Known Limitations
+- No module/import system for source files.
+- No user-defined classes/structs; only primitive/list/hash plus type aliases.
+- No pattern matching, exceptions (`try/catch`), or defer/finally.
+- No generics.
+- No default args or variadic user functions.
+- Function scoping model is strict for outer variable access (`use` required), which differs from typical lexical closure ergonomics.
+- `for` loop step `by 0` is not guarded and may loop forever.
+- Object type alias checking:
+- Validates required fields and field types.
+- Does not reject extra fields.
+- Number literal grammar is limited (`.5`, `1e3` not literal-supported).
+- Hash literal keys cannot be numeric/boolean expressions in key position directly.
+- `clone()` is shallow.
+- `format()` supports only positional placeholders, no width/precision/named formatting.
+- Interpolation expression tokenization may skip unknown chars before parser failure (non-ideal diagnostics).
+
+## 14. Execution Model
+- Interpreted pipeline:
+- Source file -> Lexer tokens -> Parser AST -> Interpreter executes AST.
+- Single-file execution via CLI:
+- `python main.py file.echo [--plain]`
+- Runtime behavior:
+- Evaluates statements sequentially.
+- Context chain provides scoped variable/function lookup.
+- Method calls can be standalone or expression-level.
+- Typing model:
+- Type annotations on declaration/params are enforced at runtime.
+- Unannotated reassignment must match previously declared variable type.
+- Function return types enforced only when explicitly annotated.
+- Control-flow contexts:
+- Loop/if bodies run in child contexts with parent linkage.
+- Mutations can propagate to parent variable depending on assignment path and function import rules.
+
+## 15. Future Plans (Optional)
+- Planned/valuable improvements inferred from current state:
+- Guard `for ... by 0`.
+- Tighten interpolation lexer validation (fail on invalid tokens immediately).
+- Option to enforce "exact object types" (reject extra fields).
+- Add module/import system.
+- Add richer formatting and numeric literal grammar.
+- Decide and document closure semantics explicitly (lexical vs current strict import model).
+- Add official language test suite/spec conformance tests to lock behavior.

@@ -1,0 +1,51 @@
+// LeetCode 31: Next Permutation
+// In-place pivot swap + reverse suffix.
+
+fn reverse_suffix(nums: list, start: int) -> dynamic {
+    left: int = start;
+    right: int = nums.length() - 1;
+
+    while left < right {
+        temp: int = nums[left];
+        nums[left] = nums[right];
+        nums[right] = temp;
+        left = left + 1;
+        right = right - 1;
+    }
+    return null;
+}
+
+fn next_permutation(nums: list) -> dynamic {
+    n: int = nums.length();
+    i: int = n - 2;
+
+    while i >= 0 && nums[i] >= nums[i + 1] {
+        i = i - 1;
+    }
+
+    if i >= 0 {
+        j: int = n - 1;
+        while nums[j] <= nums[i] {
+            j = j - 1;
+        }
+
+        temp: int = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+
+    reverse_suffix(nums, i + 1);
+    return null;
+}
+
+a: list = [1, 2, 3];
+next_permutation(a);
+say(a);
+
+b: list = [3, 2, 1];
+next_permutation(b);
+say(b);
+
+c: list = [1, 1, 5];
+next_permutation(c);
+say(c);
