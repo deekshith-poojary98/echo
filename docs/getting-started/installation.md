@@ -30,7 +30,7 @@ pipx install git+https://github.com/deekshith-poojary98/echo.git
 
 Run Echo:
 ```bash
-echo examples/language_feature_smoke.echo
+echolang examples/language_feature_smoke.echo
 ```
 
 ## Option 2: Install from source with pip
@@ -42,7 +42,7 @@ pip install .
 
 Run Echo:
 ```bash
-echo path/to/file.echo
+echolang path/to/file.echo
 ```
 
 ## Option 3: Editable install for development
@@ -51,10 +51,11 @@ pip install -e .
 ```
 
 ## Available Commands
-- `echo path/to/file.echo`
 - `echolang path/to/file.echo`
 
-In Windows PowerShell, prefer `echolang` because `echo` is a built-in alias.
+The package also exposes an `echo` command, but most shells already reserve `echo` as a built-in command, so `echolang` is the reliable command to document and use.
+
+In PowerShell, `echo` maps to `Write-Output`. In POSIX shells, `echo` is also typically a shell built-in.
 
 ## Example
 ```bash
