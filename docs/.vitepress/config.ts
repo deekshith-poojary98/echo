@@ -6,8 +6,9 @@ export default defineConfig({
   description: 'Official documentation for the Echo scripting language',
   base: '/echo/',
   head: [
-    ['link', { rel: 'icon', type: 'image/jpeg', href: '/echo_logo.jpg' }],
-    ['link', { rel: 'shortcut icon', type: 'image/jpeg', href: '/echo_logo.jpg' }]
+    ['link', { rel: 'icon', type: 'image/jpeg', href: '/echo/echo_logo.jpg' }],
+    ['link', { rel: 'shortcut icon', type: 'image/jpeg', href: '/echo/echo_logo.jpg' }],
+    ['link', { rel: 'apple-touch-icon', href: '/echo/echo_logo.jpg' }]
   ],
   cleanUrls: true,
   lastUpdated: true,
