@@ -43,6 +43,7 @@ Hello, Echo!
 
 ## Start Here
 
+- [Installation](/getting-started/installation)
 - [Quick Start](/getting-started/quick-start)
 - [Getting Started](/getting-started/getting-started)
 - [Variables and Types](/getting-started/variables-and-types)

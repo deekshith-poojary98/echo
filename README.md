@@ -122,8 +122,99 @@ describe(age: 21, name: "Alice");  // Output: Alice is 21
   - `echo_parser.py` - Abstract Syntax Tree (AST) construction
   - `echo_interpreter.py` - Code execution and runtime
   - `main.py` - Entry point for the interpreter
-- `docs/` - Documentation and examples
+- `docs/` - VitePress documentation site (source + build config)
+- `docs-legacy/` - Legacy static documentation files
 - `*.echo` - Example source files
+
+## Installation
+
+Echo can be installed as a proper CLI command (`echo` / `echolang`) like other language runtimes.
+
+### Prerequisites
+- Python 3.10+
+
+### Option 1: Global install with pipx (recommended)
+`pipx` installs Echo in an isolated environment and exposes global commands.
+
+1. Install `pipx` (if needed):
+
+```powershell
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
+
+2. Install Echo from GitHub:
+
+```powershell
+pipx install git+https://github.com/deekshith-poojary98/echo.git
+```
+
+3. Run Echo:
+
+```powershell
+echolang examples\language_feature_smoke.echo
+```
+
+### Option 2: Install from source with pip
+If you cloned this repo, install it as a package:
+
+```bash
+pip install .
+```
+
+Then run:
+
+```bash
+echo examples/language_feature_smoke.echo
+```
+
+On PowerShell, use `echolang` because `echo` is a built-in alias.
+
+### Option 3: Developer editable install
+For contributors who want live code updates without reinstall:
+
+```bash
+pip install -e .
+```
+
+### Commands
+After installation, these commands are available:
+
+```bash
+echo path/to/file.echo
+echolang path/to/file.echo
+```
+
+In Windows PowerShell, prefer `echolang path/to/file.echo`.
+
+### Local development launcher (without install)
+You can still run directly from the repository:
+
+#### Windows
+
+```powershell
+.\echolang.bat examples\language_feature_smoke.echo
+```
+
+#### macOS / Linux
+
+```bash
+chmod +x echolang
+./echolang examples/language_feature_smoke.echo
+```
+
+### Direct Python entrypoint (all platforms)
+You can also run Echo directly with Python:
+
+```bash
+python src/main.py examples/language_feature_smoke.echo
+```
+
+Use plain error output (no Rich formatting):
+
+```bash
+python src/main.py examples/language_feature_smoke.echo --plain
+```
 
 ## Getting Started
 
