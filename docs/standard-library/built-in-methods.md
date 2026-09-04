@@ -170,7 +170,7 @@ say([1, 2, 3].length());      // 3
 ---
 
 ### `reverse()`
-Returns a new string with the characters reversed. For lists, reverses the list **in place**.
+On a string, returns a new reversed string. On a list, reverses the list **in place** and returns it.
 
 ```echo
 say("echo".reverse());        // ohce
@@ -255,7 +255,7 @@ say(nums);    // []
 ---
 
 ### `find(value)`
-Returns the index of the first occurrence of `value` in the list. Returns `-1` if not found.
+Returns the index of the first occurrence of `value` in the list, or `-1` if the value is not found.
 
 ```echo
 nums: list = [10, 20, 30];

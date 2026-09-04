@@ -1,25 +1,23 @@
-from __future__ import annotations
-
-from conftest import run_echo_source
+from helpers import run_echo
 
 
-def test_user_defined_keyword_arguments_still_work(tmp_path):
-    source = """
+def test_user_defined_keyword_arguments_still_work():
+    result = run_echo(
+        """
 fn describe(name: str, score: int) {
     say(name, score);
 }
 
 describe(score: 7, name: "Echo");
 """
-
-    exit_code, output = run_echo_source(tmp_path, source)
-
-    assert exit_code == 0
-    assert output.strip() == "Echo 7"
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "Echo 7"
 
 
-def test_function_requires_use_mut_for_global_mutation(tmp_path):
-    source = """
+def test_function_requires_use_mut_for_global_mutation():
+    result = run_echo(
+        """
 count: int = 0;
 
 fn increment() {
@@ -28,15 +26,14 @@ fn increment() {
 
 increment();
 """
-
-    exit_code, output = run_echo_source(tmp_path, source)
-
-    assert exit_code == 1
-    assert "Name Error: Variable 'count' used without 'use' statement in function" in output
+    )
+    assert result.exit_code == 1
+    assert "without 'use mut'" in result.output
 
 
-def test_use_mut_allows_global_mutation_from_function(tmp_path):
-    source = """
+def test_use_mut_allows_global_mutation_from_function():
+    result = run_echo(
+        """
 count: int = 0;
 
 fn increment() {
@@ -47,21 +44,18 @@ fn increment() {
 increment();
 say(count);
 """
-
-    exit_code, output = run_echo_source(tmp_path, source)
-
-    assert exit_code == 0
-    assert output.strip() == "1"
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "1"
 
 
-def test_watch_reports_list_mutation(tmp_path):
-    source = """
+def test_watch_reports_list_mutation():
+    result = run_echo(
+        """
 nums: list = [1, 2];
 watch nums;
 nums.push(3);
 """
-
-    exit_code, output = run_echo_source(tmp_path, source)
-
-    assert exit_code == 0
-    assert "WATCH: nums modified by push() to [1, 2, 3] (in global)" in output
+    )
+    assert result.exit_code == 0
+    assert "WATCH: nums modified by push() to [1, 2, 3] (in global)" in result.output

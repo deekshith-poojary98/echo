@@ -1,4 +1,4 @@
-from main import main as _main
+from echo.cli.main import main as _main
 
 
 def main() -> int:

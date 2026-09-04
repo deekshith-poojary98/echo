@@ -1,31 +1,31 @@
 # Echo Programming Language
 
-Echo is a modern, statically-typed programming language designed for simplicity and readability. It combines strong type safety with a clean, intuitive syntax and powerful features for modern programming. Checkout documentation [here](https://deekshith-poojary98.github.io/echo/index.html).
+Echo is a small interpreted scripting language with explicit type annotations and runtime type checks. It is designed for readable automation and algorithm scripts. Documentation is [here](https://deekshith-poojary98.github.io/echo/index.html).
 
 ## Quick Overview
 
-Echo is designed to be both beginner-friendly and powerful, offering:
+Echo offers:
 
-- **Type Safety**: Strong static typing with mandatory type annotations and runtime type checking
-- **Modern Syntax**: Clean, readable code with intuitive constructs and method chaining
-- **Rich Standard Library**: Comprehensive built-in methods for common operations
-- **Advanced Features**: Support for modern programming patterns and debugging tools
+- **Explicit types**: declarations and parameters are annotated; Echo checks them at runtime
+- **Readable syntax**: C-style blocks, method chaining, and string interpolation
+- **Practical builtins**: I/O, conversions, strings, lists, and hashes
+- **Observability**: `watch` reports variable changes
 
 ## Key Features
 
 ### Core Language Features
-- Static typing with mandatory type annotations
-- String interpolation with `${variable}` syntax
-- Method chaining for fluent code
-- Function closures and nested functions
-- Context-based scoping with `use` and `use mut` statements
+- Runtime type checks with mandatory type annotations on declarations
+- Lexical scoping and closures
+- String interpolation with `${expression}` syntax
+- Method chaining
+- `use mut` for mutating outer variables from functions
 - Variable watching for debugging
 
 ### Data Types
-- Basic types: `int` (32-bit), `float` (64-bit), `str` (UTF-8), `bool`
-- Collections: `list` (mutable arrays), `hash` (key-value pairs)
-- Dynamic typing with `dynamic` keyword
-- `null` literal support
+- Basic types: `int` (arbitrary precision), `float`, `str`, `bool`
+- Collections: `list`, `hash`
+- `dynamic` for values that can change type
+- `null` literal
 - Type conversion methods: `asInt()`, `asFloat()`, `asBool()`, `asString()`
 
 ### Type System Updates
@@ -117,11 +117,12 @@ describe(age: 21, name: "Alice");  // Output: Alice is 21
 
 ## Project Structure
 
-- `src/` - Core language implementation
-  - `echo_lexer.py` - Token generation and lexical analysis
-  - `echo_parser.py` - Abstract Syntax Tree (AST) construction
-  - `echo_interpreter.py` - Code execution and runtime
-  - `main.py` - Entry point for the interpreter
+- `src/echo/` - Language implementation
+  - `frontend/` - lexer, parser, typed AST
+  - `semantics/` - scope, symbols, validation
+  - `runtime/` - interpreter, values, builtins
+  - `cli/` - command-line entry
+- `docs/language-semantics.md` - language contract
 - `docs/` - VitePress documentation site (source + build config)
 - `docs-legacy/` - Legacy static documentation files
 - `*.echo` - Example source files

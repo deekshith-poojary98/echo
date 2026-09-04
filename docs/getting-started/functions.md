@@ -54,11 +54,11 @@ Bare `return;` is allowed.
 
 ### Keyword arguments
 User-defined functions support keyword arguments.
-Built-ins do not.
+Most builtins do too, except variadic ones (`say`, `format`).
 
 ### Scope inside functions
-Outer variables are not automatically visible inside functions.
-Use:
+Functions can read outer variables lexically.
+Reassignment of an outer variable still needs:
 
 ```echo
 use x;

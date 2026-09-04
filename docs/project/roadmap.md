@@ -3,14 +3,15 @@
 ## Overview
 These are the most obvious improvements suggested by the current implementation and documentation.
 
-## Planned Improvements
-- Guard `for ... by 0`
-- Tighten interpolation validation in the lexer
-- Add an option for exact object type validation
-- Add a module/import system
-- Improve numeric literal support
-- Add richer formatting support
-- Keep expanding the test suite and documentation together
+## v0.2 status
+See [Language Semantics](/language-semantics) conceptually in the repo at `docs/language-semantics.md`.
+v0.2 focused on architecture and correctness: typed AST, semantic analysis, lexical scope, and Echo errors.
+
+## Later
+- Module/import system
+- Exact object type validation option
+- Richer numeric literals and formatting
+- REPL and `echo check`
 
 ## Notes
 This page is intentionally short. It is not a promise list. It reflects the most practical next improvements for Echo as it exists today.

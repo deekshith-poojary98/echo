@@ -11,8 +11,7 @@ This page lists the current limits of Echo as implemented today.
 - No default parameter values
 - No variadic functions
 - No overloads
-- Function scope is strict and requires `use` / `use mut` for outer variables
-- `for ... by 0` is not guarded
+- Function scope is lexical; reassignment of outer variables still requires `use mut`
 - Object type aliases accept extra fields
 - Number literal grammar does not support forms like `.5` or `1e3`
 - Hash runtime indexing only supports string keys

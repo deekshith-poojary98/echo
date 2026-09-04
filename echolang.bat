@@ -1,8 +1,9 @@
 @echo off
 setlocal
 set "SCRIPT_DIR=%~dp0"
+set "PYTHONPATH=%SCRIPT_DIR%src;%PYTHONPATH%"
 if exist "%SCRIPT_DIR%.venv\Scripts\python.exe" (
-    "%SCRIPT_DIR%.venv\Scripts\python.exe" "%SCRIPT_DIR%src\main.py" %*
+    "%SCRIPT_DIR%.venv\Scripts\python.exe" -m echo %*
 ) else (
-    python "%SCRIPT_DIR%src\main.py" %*
+    python -m echo %*
 )

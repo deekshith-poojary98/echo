@@ -1,7 +1,8 @@
 # Scope, use, and watch
 
 ## Overview
-Echo has a strict function scope model. Outer variables are not automatically visible inside functions.
+Echo uses lexical scoping. Functions can read outer variables from the scope where they were defined.
+Reassigning those outer variables still requires `use mut`.
 
 ## Syntax
 ```echo
@@ -25,7 +26,7 @@ bump();
 
 ## Output
 ```text
-WATCH: count changed to 1 (in global)
+WATCH: count changed to 1 (in bump)
 ```
 
 ## Notes
