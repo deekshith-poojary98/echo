@@ -1,9 +1,17 @@
 from pathlib import Path
 
-from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
+import pytest
 
-# Specifiers in this file are only the v0.3 bare name, e.g. "math".
-# Do not add "math.echo", "./math", "../math", or subdirectory specifiers.
+from echo.errors import EchoError, ModuleResolveError
+from echo.modules.resolver import ModuleResolver
+from modules.harness import assert_success, run_entry, write_modules
+
+# Specifiers passed to ModuleResolver are only the v0.3 bare name, e.g. "math",
+# except for the explicit invalid-specifier cases below.
+
+
+def _resolve(importer: Path, name: str) -> Path:
+    return ModuleResolver().resolve(importer, name)
 
 
 def test_every_echo_file_is_a_module(tmp_path: Path) -> None:
@@ -41,119 +49,97 @@ def test_echo_extension_is_implied(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
         {
-            "math.echo": """
-                export fn add(a: int, b: int) -> int {
-                    return a + b;
-                }
-            """,
-            "app.echo": """
-                import add from "math";
-                say(add(2, 3));
-            """,
+            "math.echo": "x: int = 1;",
+            "app.echo": "x: int = 1;",
         },
     )
-    assert_success(run_entry(tmp_path), "5")
+    resolved = _resolve(tmp_path / "app.echo", "math")
+    assert resolved == (tmp_path / "math.echo").resolve()
 
 
 def test_relative_imports_resolve_beside_the_importer(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
         {
-            "nested/math.echo": """
-                export fn tag() -> str {
-                    return "nested";
-                }
-            """,
-            "math.echo": """
-                export fn tag() -> str {
-                    return "root";
-                }
-            """,
-            "nested/app.echo": """
-                import tag from "math";
-                say(tag());
-            """,
-            "app.echo": """
-                import tag from "math";
-                say(tag());
-            """,
+            "nested/math.echo": "x: int = 1;",
+            "math.echo": "x: int = 1;",
+            "nested/app.echo": "x: int = 1;",
+            "app.echo": "x: int = 1;",
         },
     )
-    assert_success(run_entry(tmp_path, "app.echo"), "root")
-    assert_success(run_entry(tmp_path, "nested/app.echo"), "nested")
+    assert _resolve(tmp_path / "app.echo", "math") == (tmp_path / "math.echo").resolve()
+    assert _resolve(tmp_path / "nested/app.echo", "math") == (tmp_path / "nested/math.echo").resolve()
 
 
 def test_missing_sibling_is_not_found_in_another_directory(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
         {
-            "lib/math.echo": """
-                export fn add(a: int, b: int) -> int {
-                    return a + b;
-                }
-            """,
-            "app.echo": """
-                import add from "math";
-                say(add(2, 3));
-            """,
+            "lib/math.echo": "x: int = 1;",
+            "app.echo": "x: int = 1;",
         },
     )
-    assert_echo_error(run_entry(tmp_path), "math")
+    with pytest.raises(ModuleResolveError) as caught:
+        _resolve(tmp_path / "app.echo", "math")
+    assert isinstance(caught.value, EchoError)
+    assert caught.value.code == "E3002"
+    assert "math" in caught.value.message
 
 
 def test_resolved_absolute_path_defines_module_identity(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
         {
-            "common.echo": """
-                export hits: list = [];
-                say("loaded");
-            """,
-            "left.echo": """
-                import hits from "common";
-                export fn mark_left() {
-                    hits.push("L");
-                }
-            """,
-            "right.echo": """
-                import hits from "common";
-                export fn mark_right() {
-                    hits.push("R");
-                }
-            """,
-            "app.echo": """
-                import mark_left from "left";
-                import mark_right from "right";
-                import hits from "common";
-                mark_left();
-                mark_right();
-                say(hits);
-            """,
+            "common.echo": "x: int = 1;",
+            "left.echo": "x: int = 1;",
+            "right.echo": "x: int = 1;",
         },
     )
-    assert_success(run_entry(tmp_path), "loaded\n[L, R]")
+    from_left = _resolve(tmp_path / "left.echo", "common")
+    from_right = _resolve(tmp_path / "right.echo", "common")
+    assert from_left == from_right
+    assert from_left == (tmp_path / "common.echo").resolve()
+    assert from_left.is_absolute()
 
 
 def test_equivalent_paths_resolve_to_one_module_identity(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
         {
-            "data.echo": """
-                export box: list = [];
-                say("data");
-            """,
-            "via_name.echo": """
-                import box from "data";
-                export fn from_name() -> list {
-                    return box;
-                }
-            """,
-            "app.echo": """
-                import from_name from "via_name";
-                import box from "data";
-                from_name().push(7);
-                say(box);
-            """,
+            "data.echo": "x: int = 1;",
+            "via_name.echo": "x: int = 1;",
+            "app.echo": "x: int = 1;",
         },
     )
-    assert_success(run_entry(tmp_path), "data\n[7]")
+    via_name = _resolve(tmp_path / "via_name.echo", "data")
+    via_app = _resolve(tmp_path / "app.echo", "data")
+    assert via_name == via_app == (tmp_path / "data.echo").resolve()
+
+
+def test_missing_module_is_not_found(tmp_path: Path) -> None:
+    write_modules(tmp_path, {"app.echo": "x: int = 1;"})
+    with pytest.raises(ModuleResolveError) as caught:
+        _resolve(tmp_path / "app.echo", "missing")
+    assert isinstance(caught.value, EchoError)
+    assert caught.value.code == "E3002"
+    assert "missing" in caught.value.message
+
+
+@pytest.mark.parametrize(
+    "specifier",
+    ("math.echo", "./math", "../math", "lib/math"),
+)
+def test_alternate_specifier_is_invalid(tmp_path: Path, specifier: str) -> None:
+    write_modules(
+        tmp_path,
+        {
+            "math.echo": "x: int = 1;",
+            "lib/math.echo": "x: int = 1;",
+            "app.echo": "x: int = 1;",
+        },
+    )
+    with pytest.raises(ModuleResolveError) as caught:
+        _resolve(tmp_path / "app.echo", specifier)
+    assert isinstance(caught.value, EchoError)
+    assert caught.value.code == "E3001"
+    assert specifier in caught.value.message

@@ -70,6 +70,10 @@ class MutationError(EchoRuntimeError):
     pass
 
 
+class ModuleResolveError(EchoError):
+    pass
+
+
 def format_diagnostic(error: EchoError, source: str | None = None) -> str:
     header = f"Error[{error.code}]: {error.message}" if error.code else f"Error: {error.message}"
     lines = [header]
