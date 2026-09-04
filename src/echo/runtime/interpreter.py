@@ -20,6 +20,7 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    ExportDeclaration,
     Expression,
     ExpressionStatement,
     ForStatement,
@@ -27,6 +28,7 @@ from echo.frontend.ast.nodes import (
     FunctionDeclaration,
     HashLiteral,
     IfStatement,
+    ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     ListLiteral,
@@ -81,6 +83,12 @@ class Interpreter:
 
     def execute_statement(self, statement: Statement, env: Environment) -> None:
         if isinstance(statement, TypeAliasStatement):
+            return
+        if isinstance(statement, ImportDeclaration):
+            return
+        if isinstance(statement, ExportDeclaration):
+            if statement.declaration is not None:
+                self.execute_statement(statement.declaration, env)
             return
         if isinstance(statement, VariableDeclaration):
             value = self.evaluate(statement.initializer, env)

@@ -9,6 +9,7 @@ class Environment:
     def __init__(self, parent: Environment | None = None, *, is_function: bool = False):
         self.parent = parent
         self.values: dict[str, object] = {}
+        self.mutability: dict[str, bool] = {}
         self.types: dict[str, TypeAnnotation | str | None] = {}
         self.functions: dict[str, object] = {}
         self.is_function = is_function
@@ -33,8 +34,16 @@ class Environment:
             current = current.parent
         return False
 
-    def define(self, name: str, value: object, var_type: TypeAnnotation | str | None = None) -> None:
+    def define(
+        self,
+        name: str,
+        value: object,
+        var_type: TypeAnnotation | str | None = None,
+        *,
+        mutable: bool = True,
+    ) -> None:
         self.values[name] = value
+        self.mutability[name] = mutable
         if var_type is not None:
             self.types[name] = var_type
 
@@ -66,6 +75,8 @@ class Environment:
         target = self._find_binding(name)
         if target is None:
             raise EchoNameError(f"Variable '{name}' is not defined", location, code="E2002")
+        if not target.mutability.get(name, True):
+            return
         function = self.enclosing_function()
         if function is not None and not target.is_within(function):
             if name not in function.mutable_imports:
@@ -80,6 +91,12 @@ class Environment:
         target = self._find_binding(name)
         if target is None:
             raise EchoNameError(f"Variable '{name}' is not declared", location, code="E2011")
+        if not target.mutability.get(name, True):
+            raise MutationError(
+                f"Cannot rebind imported name '{name}'",
+                location,
+                code="E2008",
+            )
 
         function = self.enclosing_function()
         if function is not None and not target.is_within(function):

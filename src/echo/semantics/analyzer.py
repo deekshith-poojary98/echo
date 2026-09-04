@@ -71,6 +71,9 @@ class SemanticAnalyzer:
         self._statements(program.statements, scope)
         return program
 
+    def collect_symbols(self, program: Program) -> ModuleSymbols:
+        return self._collect_symbols(program)
+
     def analyze_modules(self, modules: Mapping[str, Program]) -> dict[str, ModuleSymbols]:
         catalog = {name: self._collect_symbols(program) for name, program in modules.items()}
         results: dict[str, ModuleSymbols] = {}

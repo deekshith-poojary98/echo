@@ -17,8 +17,8 @@ class Scope:
             self.type_aliases = dict(parent.type_aliases)
 
     def define(self, symbol: Symbol) -> None:
-        if symbol.name in self.symbols:
-            existing = self.symbols[symbol.name]
+        existing = self.symbols.get(symbol.name)
+        if existing is not None and not existing.builtin:
             kind = "function" if existing.kind == SymbolKind.FUNCTION else "name"
             hint = (
                 "A function with this name is already defined in this scope."

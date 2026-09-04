@@ -225,7 +225,7 @@ def test_shared_dependency_imported_through_two_branches(tmp_path: Path) -> None
             """,
         },
     )
-    assert_success(run_entry(tmp_path), "common\n[L, R]")
+    assert_success(run_entry(tmp_path), 'common\n["L", "R"]')
 
 
 def test_private_module_state_captured_by_an_exported_function(tmp_path: Path) -> None:

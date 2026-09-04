@@ -17,8 +17,10 @@ from echo.errors import (
     SemanticError,
     format_diagnostic,
 )
+from echo.frontend.ast.nodes import ImportDeclaration, Program
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
+from echo.modules.loader import ModuleLoader
 from echo.runtime.interpreter import Interpreter
 from echo.semantics.analyzer import SemanticAnalyzer
 
@@ -48,7 +50,31 @@ def run_file(source_path: str, plain: bool = False) -> int:
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
         return 1
     source = file_path.read_text(encoding="utf-8")
-    return run_source(source, filename=str(file_path), plain=plain)
+    try:
+        tokens = Lexer().tokenize(source, filename=str(file_path))
+        program = Parser(tokens).parse()
+        if _has_imports(program):
+            ModuleLoader().load(file_path)
+        else:
+            SemanticAnalyzer().analyze(program)
+            Interpreter().execute(program)
+        return 0
+    except EchoError as exc:
+        _print_error(exc, _error_source(exc, source), plain)
+        return 1
+
+
+def _has_imports(program: Program) -> bool:
+    return any(isinstance(statement, ImportDeclaration) for statement in program.statements)
+
+
+def _error_source(error: EchoError, fallback: str) -> str:
+    if error.location is None or error.location.filename is None:
+        return fallback
+    origin = Path(error.location.filename)
+    if not origin.is_file():
+        return fallback
+    return origin.read_text(encoding="utf-8")
 
 
 def _category(error: EchoError) -> str:
