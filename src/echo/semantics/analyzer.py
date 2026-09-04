@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from echo.errors import ArgumentError, EchoTypeError, SemanticError
 from echo.frontend.ast.nodes import (
     AssignmentStatement,
@@ -8,6 +10,7 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    ExportDeclaration,
     Expression,
     ExpressionStatement,
     ForStatement,
@@ -15,6 +18,7 @@ from echo.frontend.ast.nodes import (
     FunctionDeclaration,
     HashLiteral,
     IfStatement,
+    ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     ListLiteral,
@@ -38,12 +42,21 @@ from echo.frontend.ast.nodes import (
 )
 from echo.runtime.builtins import builtin_names, builtin_param_count, resolve_builtin_args, standalone_min_args
 from echo.runtime.functions import bind_arguments
+from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
 from echo.semantics.symbols import Symbol, SymbolKind
 
 
 class SemanticAnalyzer:
-    def analyze(self, program: Program) -> Program:
+    def __init__(self) -> None:
+        self.module_symbols = ModuleSymbols()
+        self._dependencies: Mapping[str, ModuleSymbols] = {}
+        self._pending_exports: list[ExportDeclaration] = []
+
+    def analyze(self, program: Program, *, dependencies: Mapping[str, ModuleSymbols] | None = None) -> Program:
+        self.module_symbols = ModuleSymbols()
+        self._dependencies = dependencies or {}
+        self._pending_exports = []
         scope = Scope()
         for name in builtin_names():
             scope.define(
@@ -58,26 +71,44 @@ class SemanticAnalyzer:
         self._statements(program.statements, scope)
         return program
 
+    def analyze_modules(self, modules: Mapping[str, Program]) -> dict[str, ModuleSymbols]:
+        catalog = {name: self._collect_symbols(program) for name, program in modules.items()}
+        results: dict[str, ModuleSymbols] = {}
+        for name, program in modules.items():
+            analyzer = SemanticAnalyzer()
+            analyzer.analyze(program, dependencies=catalog)
+            results[name] = analyzer.module_symbols
+        return results
+
     def _statements(self, statements: list[Statement], scope: Scope) -> None:
         for statement in statements:
-            if isinstance(statement, FunctionDeclaration):
-                if statement.return_type is not None:
-                    statement.return_type = self._resolve_type(statement.return_type, scope)
-                scope.define(
-                    Symbol(
-                        statement.name,
-                        SymbolKind.FUNCTION,
-                        statement.location,
-                        statement.return_type,
-                        param_count=len(statement.parameters),
-                        param_names=[parameter.name for parameter in statement.parameters],
-                    )
-                )
+            function = self._function_declaration(statement)
+            if function is None:
+                continue
+            if isinstance(statement, ExportDeclaration):
+                self._require_module_scope(scope, statement, "export")
+            if function.return_type is not None:
+                function.return_type = self._resolve_type(function.return_type, scope)
+            symbol = self._function_symbol(function)
+            scope.define(symbol)
+            if scope.parent is None:
+                self._record(symbol, exported=isinstance(statement, ExportDeclaration))
         for statement in statements:
-            if isinstance(statement, FunctionDeclaration):
-                self._function_body(statement, scope)
+            if isinstance(statement, ImportDeclaration):
+                self._bind_import(statement, scope)
+        for statement in statements:
+            if isinstance(statement, ImportDeclaration):
+                continue
+            function = self._function_declaration(statement)
+            if function is not None:
+                if isinstance(statement, ExportDeclaration):
+                    self._function_body(function, scope)
+                else:
+                    self._function_body(statement, scope)
             else:
                 self._statement(statement, scope)
+        if scope.parent is None:
+            self._resolve_pending_exports()
 
     def _statement(self, statement: Statement, scope: Scope) -> None:
         if isinstance(statement, TypeAliasStatement):
@@ -85,15 +116,16 @@ class SemanticAnalyzer:
         elif isinstance(statement, VariableDeclaration):
             self._expression(statement.initializer, scope)
             statement.declared_type = self._resolve_type(statement.declared_type, scope)
-            scope.define(
-                Symbol(statement.name, SymbolKind.VARIABLE, statement.location, statement.declared_type)
-            )
+            symbol = Symbol(statement.name, SymbolKind.VARIABLE, statement.location, statement.declared_type)
+            scope.define(symbol)
+            if scope.parent is None:
+                self._record(symbol)
         elif isinstance(statement, AssignmentStatement):
             self._expression(statement.value, scope)
-            self._require_variable(statement.name, statement, scope)
+            self._require_assignable(statement.name, statement, scope)
         elif isinstance(statement, CompoundAssignment):
             self._expression(statement.value, scope)
-            self._require_variable(statement.name, statement, scope)
+            self._require_assignable(statement.name, statement, scope)
         elif isinstance(statement, IndexAssignment):
             self._require_variable(statement.name, statement, scope)
             for index in statement.indices:
@@ -161,8 +193,19 @@ class SemanticAnalyzer:
             if not scope.in_function:
                 raise SemanticError("'use' statements can only be used inside functions", statement.location, code="E1005")
             for name in statement.names:
-                if scope.resolve(name) is None:
+                symbol = scope.resolve(name)
+                if symbol is None:
                     raise SemanticError(f"Cannot import undefined variable '{name}'", statement.location, code="E1006")
+                if statement.mutable and not symbol.mutable:
+                    raise SemanticError(
+                        f"Cannot use mut on '{name}' because it is not a mutable binding",
+                        statement.location,
+                        code="E3107",
+                    )
+        elif isinstance(statement, ExportDeclaration):
+            self._export_statement(statement, scope)
+        elif isinstance(statement, ImportDeclaration):
+            self._bind_import(statement, scope)
         elif isinstance(statement, WatchStatement):
             for name in statement.names:
                 if scope.resolve(name) is None:
@@ -275,6 +318,166 @@ class SemanticAnalyzer:
                 message = f"{symbol.name}() requires a target or at least one argument"
                 code = "E2620"
             raise SemanticError(message, expression.location, code=code)
+
+    def _collect_symbols(self, program: Program) -> ModuleSymbols:
+        symbols = ModuleSymbols()
+        declared: dict[str, Symbol] = {}
+        pending: list[ExportDeclaration] = []
+
+        def add(symbol: Symbol, exported: bool) -> None:
+            if symbol.name in declared:
+                existing = declared[symbol.name]
+                kind = "function" if existing.kind == SymbolKind.FUNCTION else "name"
+                raise SemanticError(
+                    f"{kind.capitalize()} '{symbol.name}' is already declared",
+                    symbol.location,
+                    code="E1001",
+                )
+            declared[symbol.name] = symbol
+            if exported:
+                symbols.exports[symbol.name] = symbol
+            else:
+                symbols.private[symbol.name] = symbol
+
+        for statement in program.statements:
+            if isinstance(statement, ExportDeclaration):
+                if isinstance(statement.declaration, FunctionDeclaration):
+                    add(self._function_symbol(statement.declaration), True)
+                elif isinstance(statement.declaration, VariableDeclaration):
+                    add(self._variable_symbol(statement.declaration), True)
+                else:
+                    pending.append(statement)
+            elif isinstance(statement, FunctionDeclaration):
+                add(self._function_symbol(statement), False)
+            elif isinstance(statement, VariableDeclaration):
+                add(self._variable_symbol(statement), False)
+
+        for statement in pending:
+            existing = declared.get(statement.name)
+            if existing is None:
+                raise SemanticError(
+                    f"Cannot export '{statement.name}' because it is not declared",
+                    statement.location,
+                    code="E3101",
+                )
+            if statement.name in symbols.private:
+                symbols.exports[statement.name] = symbols.private.pop(statement.name)
+        return symbols
+
+    def _function_declaration(self, statement: Statement) -> FunctionDeclaration | None:
+        if isinstance(statement, FunctionDeclaration):
+            return statement
+        if isinstance(statement, ExportDeclaration) and isinstance(statement.declaration, FunctionDeclaration):
+            return statement.declaration
+        return None
+
+    def _function_symbol(self, statement: FunctionDeclaration) -> Symbol:
+        return Symbol(
+            statement.name,
+            SymbolKind.FUNCTION,
+            statement.location,
+            statement.return_type,
+            param_count=len(statement.parameters),
+            param_names=[parameter.name for parameter in statement.parameters],
+        )
+
+    def _variable_symbol(self, statement: VariableDeclaration) -> Symbol:
+        return Symbol(statement.name, SymbolKind.VARIABLE, statement.location, statement.declared_type)
+
+    def _imported_symbol(self, exported: Symbol, statement: ImportDeclaration) -> Symbol:
+        return Symbol(
+            exported.name,
+            exported.kind,
+            statement.location,
+            exported.declared_type,
+            mutable=False,
+            param_count=exported.param_count,
+            param_names=exported.param_names,
+            imported=True,
+        )
+
+    def _record(self, symbol: Symbol, *, exported: bool = False) -> None:
+        if symbol.imported:
+            self.module_symbols.imports[symbol.name] = symbol
+        elif exported:
+            self.module_symbols.exports[symbol.name] = symbol
+        else:
+            self.module_symbols.private[symbol.name] = symbol
+
+    def _require_module_scope(self, scope: Scope, statement: Statement, construct: str) -> None:
+        if scope.parent is not None:
+            raise SemanticError(
+                f"'{construct}' can only appear at module scope",
+                statement.location,
+                code="E3100",
+            )
+
+    def _bind_import(self, statement: ImportDeclaration, scope: Scope) -> None:
+        self._require_module_scope(scope, statement, "import")
+        dependency = self._dependencies.get(statement.module)
+        if dependency is None:
+            raise SemanticError(
+                f"Cannot import '{statement.name}' from '{statement.module}'",
+                statement.location,
+                code="E3104",
+            )
+        exported = dependency.exports.get(statement.name)
+        if exported is None:
+            if statement.name in dependency.private:
+                raise SemanticError(
+                    f"Cannot import '{statement.name}' from '{statement.module}' because it is not exported",
+                    statement.location,
+                    code="E3102",
+                )
+            raise SemanticError(
+                f"Cannot import '{statement.name}' from '{statement.module}' because it does not exist",
+                statement.location,
+                code="E3103",
+            )
+        bound = self._imported_symbol(exported, statement)
+        scope.define(bound)
+        self._record(bound)
+
+    def _export_statement(self, statement: ExportDeclaration, scope: Scope) -> None:
+        self._require_module_scope(scope, statement, "export")
+        if isinstance(statement.declaration, VariableDeclaration):
+            self._statement(statement.declaration, scope)
+            self._mark_exported(statement.name, statement)
+            return
+        self._pending_exports.append(statement)
+
+    def _resolve_pending_exports(self) -> None:
+        for statement in self._pending_exports:
+            self._mark_exported(statement.name, statement)
+        self._pending_exports = []
+
+    def _mark_exported(self, name: str, statement: ExportDeclaration) -> None:
+        if name in self.module_symbols.exports:
+            return
+        if name in self.module_symbols.imports:
+            raise SemanticError(
+                f"Cannot re-export imported name '{name}'",
+                statement.location,
+                code="E3101",
+            )
+        symbol = self.module_symbols.private.pop(name, None)
+        if symbol is None:
+            raise SemanticError(
+                f"Cannot export '{name}' because it is not declared",
+                statement.location,
+                code="E3101",
+            )
+        self.module_symbols.exports[name] = symbol
+
+    def _require_assignable(self, name: str, statement: Statement, scope: Scope) -> None:
+        symbol = scope.resolve(name)
+        if symbol is not None and not symbol.mutable:
+            raise SemanticError(
+                f"Cannot rebind imported name '{name}'",
+                statement.location,
+                code="E3106",
+            )
+        self._require_variable(name, statement, scope)
 
     def _require_variable(self, name: str, statement: Statement, scope: Scope) -> None:
         symbol = scope.resolve(name)

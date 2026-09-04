@@ -23,3 +23,4 @@ class Symbol:
     param_count: int | None = None
     param_names: list[str] | None = None
     builtin: bool = False
+    imported: bool = False

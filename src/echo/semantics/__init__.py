@@ -1,3 +1,4 @@
 from echo.semantics.analyzer import SemanticAnalyzer
+from echo.semantics.modules import ModuleSymbols
 
-__all__ = ["SemanticAnalyzer"]
+__all__ = ["ModuleSymbols", "SemanticAnalyzer"]
