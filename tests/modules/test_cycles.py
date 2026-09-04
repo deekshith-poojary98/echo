@@ -2,8 +2,13 @@ from pathlib import Path
 
 import pytest
 
+from contextlib import redirect_stdout
+from io import StringIO
+
 from echo.errors import EchoError, ModuleGraphError
 from echo.modules.graph import ModuleGraph
+from echo.modules.loader import ModuleLoader
+from echo.modules.records import INITIALIZED, NOT_INITIALIZED
 from modules.harness import write_modules
 
 
@@ -61,12 +66,24 @@ def test_longer_dependency_cycle_is_rejected(tmp_path: Path) -> None:
 
 
 def test_no_partially_initialized_module_is_exposed(tmp_path: Path) -> None:
-    write_modules(tmp_path, {"a.echo": "x: int = 1;", "b.echo": "x: int = 1;"})
-    graph = ModuleGraph()
-    graph.add_dependency(_path(tmp_path, "a.echo"), _path(tmp_path, "b.echo"))
-    graph.add_dependency(_path(tmp_path, "b.echo"), _path(tmp_path, "a.echo"))
-    with pytest.raises(ModuleGraphError):
-        graph.dependency_order(_path(tmp_path, "a.echo"))
+    write_modules(
+        tmp_path,
+        {
+            "a.echo": 'say("A");',
+            "b.echo": 'say("B");',
+        },
+    )
+    loader = ModuleLoader()
+    loader.declare_imports(_path(tmp_path, "a.echo"), ["b"])
+    loader.declare_imports(_path(tmp_path, "b.echo"), ["a"])
+    stdout = StringIO()
+    with redirect_stdout(stdout), pytest.raises(ModuleGraphError):
+        loader.load(_path(tmp_path, "a.echo"))
+    assert stdout.getvalue() == ""
+    assert loader.initialized_paths() == []
+    for module in loader.modules():
+        assert module.state == NOT_INITIALIZED
+        assert module.state != INITIALIZED
 
 
 def test_cycle_error_identifies_the_dependency_problem(tmp_path: Path) -> None:
