@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from echo.errors import EchoError, ModuleResolveError
+from echo.modules.graph import ModuleGraph
 from echo.modules.resolver import ModuleResolver
 from modules.harness import assert_success, run_entry, write_modules
 
@@ -100,6 +101,12 @@ def test_resolved_absolute_path_defines_module_identity(tmp_path: Path) -> None:
     assert from_left == from_right
     assert from_left == (tmp_path / "common.echo").resolve()
     assert from_left.is_absolute()
+
+    graph = ModuleGraph()
+    graph.add_dependency(tmp_path / "left.echo", from_left)
+    graph.add_dependency(tmp_path / "right.echo", from_right)
+    common_nodes = [node for node in graph.modules() if node.name == "common.echo"]
+    assert common_nodes == [from_left]
 
 
 def test_equivalent_paths_resolve_to_one_module_identity(tmp_path: Path) -> None:
