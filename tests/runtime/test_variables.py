@@ -32,3 +32,9 @@ def test_undeclared_assignment():
     result = run_echo("count = 1;\n")
     assert result.exit_code == 1
     assert "not declared" in result.output
+
+
+def test_redeclare_same_name_in_same_scope_is_an_error():
+    result = run_echo("x: int = 1;\nx: int = 2;\n")
+    assert result.exit_code == 1
+    assert "already" in result.output.lower() or "redefin" in result.output.lower() or "declared" in result.output.lower()

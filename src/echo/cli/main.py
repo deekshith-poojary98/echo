@@ -6,10 +6,13 @@ from pathlib import Path
 
 from echo import __version__
 from echo.errors import (
+    ArgumentError,
     EchoError,
+    EchoIndexError,
     EchoNameError,
     EchoTypeError,
     LexError,
+    MutationError,
     ParseError,
     SemanticError,
     format_diagnostic,
@@ -59,6 +62,12 @@ def _category(error: EchoError) -> str:
         return "Name Error"
     if isinstance(error, EchoTypeError):
         return "Type Error"
+    if isinstance(error, ArgumentError):
+        return "Argument Error"
+    if isinstance(error, EchoIndexError):
+        return "Index Error"
+    if isinstance(error, MutationError):
+        return "Mutation Error"
     return "Execution Error"
 
 

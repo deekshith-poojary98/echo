@@ -114,15 +114,12 @@ class Interpreter:
             env.require_mutable(statement.name, statement.location)
             container = env.get(statement.name, statement.location)
             inner = container
-            try:
-                for index_expr in statement.indices[:-1]:
-                    key = self.evaluate(index_expr, env)
-                    inner = inner[key]  # type: ignore[index]
-                final_key = self.evaluate(statement.indices[-1], env)
-                value = self.evaluate(statement.value, env)
-                inner[final_key] = value  # type: ignore[index]
-            except (TypeError, KeyError, IndexError) as exc:
-                raise EchoRuntimeError(str(exc), statement.location, code="E2701") from exc
+            for index_expr in statement.indices[:-1]:
+                key = self.evaluate(index_expr, env)
+                inner = self._index(inner, key, statement.location)
+            final_key = self.evaluate(statement.indices[-1], env)
+            value = self.evaluate(statement.value, env)
+            self._index_assign(inner, final_key, value, statement.location)
             if env.is_watched(statement.name):
                 self._watch(statement.name, container, env, "modified by index assignment to")
             return
@@ -146,12 +143,9 @@ class Interpreter:
                 return
             return
         if isinstance(statement, ForStatement):
-            try:
-                start = int(self.evaluate(statement.start, env))
-                end = int(self.evaluate(statement.end, env))
-                step = int(self.evaluate(statement.step, env))
-            except (TypeError, ValueError) as exc:
-                raise EchoTypeError("for-loop bounds must be convertible to int", statement.location, code="E2702") from exc
+            start = self._loop_bound(statement.start, env, statement.location)
+            end = self._loop_bound(statement.end, env, statement.location)
+            step = self._loop_bound(statement.step, env, statement.location)
             if step == 0:
                 raise EchoRuntimeError("for-loop step 'by 0' is not allowed", statement.location, code="E2702")
             i = start
@@ -169,10 +163,17 @@ class Interpreter:
             return
         if isinstance(statement, ForeachStatement):
             items = self.evaluate(statement.iterable, env)
+            if isinstance(items, dict):
+                iterator = items.keys()
+            elif isinstance(items, list):
+                iterator = items
+            else:
+                raise EchoTypeError(
+                    f"foreach iterable must be a list or hash, got {echo_type_name(items)}",
+                    statement.location,
+                    code="E2703",
+                )
             try:
-                iterator = items.items() if isinstance(items, dict) else items
-                if isinstance(items, dict):
-                    iterator = items.keys()
                 for item in iterator:
                     if not matches_type(item, statement.var_type):
                         raise EchoTypeError(
@@ -442,7 +443,14 @@ class Interpreter:
 
     def _order(self, target: list, args: list[object], env: Environment, location: SourceLocation) -> list:
         if not args:
-            target.sort()
+            try:
+                target.sort()
+            except TypeError as exc:
+                raise EchoTypeError(
+                    "order() cannot compare mixed or incomparable values",
+                    location,
+                    code="E2411",
+                ) from exc
             return target
         if len(args) != 1:
             raise ArgumentError("order() accepts either no arguments or a single comparator function", location, code="E2617")
@@ -471,8 +479,36 @@ class Interpreter:
                 )
             return result
 
-        target.sort(key=cmp_to_key(compare))
+        try:
+            target.sort(key=cmp_to_key(compare))
+        except TypeError as exc:
+            raise EchoTypeError(
+                "order() cannot compare mixed or incomparable values",
+                location,
+                code="E2411",
+            ) from exc
         return target
+
+    def _loop_bound(self, expression: Expression, env: Environment, location: SourceLocation) -> int:
+        value = self.evaluate(expression, env)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise EchoTypeError("for-loop bounds must be convertible to int", location, code="E2702")
+        return int(value)
+
+    def _index_assign(self, target: object, index: object, value: object, location: SourceLocation) -> None:
+        if isinstance(target, dict):
+            if not isinstance(index, str):
+                raise EchoTypeError(f"Hash key must be a string, got {echo_type_name(index)}", location, code="E2710")
+            target[index] = value
+            return
+        if isinstance(target, list):
+            if not isinstance(index, int) or isinstance(index, bool):
+                raise EchoTypeError(f"List index must be an integer, got {echo_type_name(index)}", location, code="E2714")
+            if index < 0 or index >= len(target):
+                raise EchoIndexError(f"List index {index} out of range", location, code="E2715")
+            target[index] = value
+            return
+        raise EchoTypeError(f"Cannot index type {echo_type_name(target)}", location, code="E2716")
 
     def _index(self, target: object, index: object, location: SourceLocation) -> object:
         try:

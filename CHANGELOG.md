@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1
+
+Semantic cleanup under the frozen v0.2 pipeline.
+
+- User-function keyword arguments are validated by the semantic analyzer
+- Builtin arity checks for required standalone calls
+- `foreach` only accepts lists and hashes
+- `for` bounds reject `bool` and other non-numeric values
+- `order()` of mixed types is an Echo type error
+- Index assignment uses Echo index errors, not Python exceptions
+- Error categories distinguish argument, index, and mutation errors
+
 ## 0.2.0
 
 Architecture and correctness release.

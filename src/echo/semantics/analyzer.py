@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from echo.errors import SemanticError
+from echo.errors import ArgumentError, EchoTypeError, SemanticError
 from echo.frontend.ast.nodes import (
     AssignmentStatement,
     BinaryExpression,
@@ -36,7 +36,8 @@ from echo.frontend.ast.nodes import (
     WatchStatement,
     WhileStatement,
 )
-from echo.runtime.builtins import builtin_names, builtin_param_count
+from echo.runtime.builtins import builtin_names, builtin_param_count, resolve_builtin_args, standalone_min_args
+from echo.runtime.functions import bind_arguments
 from echo.semantics.scope import Scope
 from echo.semantics.symbols import Symbol, SymbolKind
 
@@ -69,6 +70,7 @@ class SemanticAnalyzer:
                         statement.location,
                         statement.return_type,
                         param_count=len(statement.parameters),
+                        param_names=[parameter.name for parameter in statement.parameters],
                     )
                 )
         for statement in statements:
@@ -244,39 +246,35 @@ class SemanticAnalyzer:
             return
 
     def _check_call_arity(self, symbol: Symbol, expression: CallExpression) -> None:
-        if symbol.builtin or symbol.param_count is None:
+        if symbol.builtin:
+            self._check_builtin_call(symbol, expression)
             return
+        if symbol.param_names is None:
+            return
+        try:
+            bind_arguments(symbol.name, symbol.param_names, expression.arguments, expression.location)
+        except ArgumentError as exc:
+            raise SemanticError(exc.message, expression.location, help_text=exc.help_text, code=exc.code) from exc
 
-        bound: set[str] = set()
-        positional = 0
-        for argument in expression.arguments:
-            if argument.name:
-                if argument.name in bound:
-                    raise SemanticError(
-                        f"Function '{symbol.name}' got multiple values for argument '{argument.name}'",
-                        expression.location,
-                        code="E1015",
-                    )
-                bound.add(argument.name)
+    def _check_builtin_call(self, symbol: Symbol, expression: CallExpression) -> None:
+        try:
+            resolve_builtin_args(symbol.name, expression.arguments, False, expression.location)
+        except (ArgumentError, EchoTypeError) as exc:
+            raise SemanticError(exc.message, expression.location, help_text=exc.help_text, code=exc.code) from exc
+        if any(argument.name for argument in expression.arguments):
+            return
+        required = standalone_min_args(symbol.name)
+        if required is not None and len(expression.arguments) < required:
+            if symbol.name == "wait":
+                message = "wait() requires a seconds argument"
+                code = "E2608"
+            elif symbol.name == "format":
+                message = "format() requires a template string"
+                code = "E2615"
             else:
-                positional += 1
-
-        if positional > symbol.param_count:
-            raise SemanticError(
-                f"Function '{symbol.name}' expected at most {symbol.param_count} arguments, got {positional}",
-                expression.location,
-                code="E1016",
-            )
-
-        # User functions have required parameters only. We cannot name positional
-        # slots here, but too-few positional args without keywords is always wrong.
-        keyword_only_fill = len(bound)
-        if positional + keyword_only_fill < symbol.param_count and not bound:
-            raise SemanticError(
-                f"Function '{symbol.name}' expected {symbol.param_count} arguments, got {positional}",
-                expression.location,
-                code="E1016",
-            )
+                message = f"{symbol.name}() requires a target or at least one argument"
+                code = "E2620"
+            raise SemanticError(message, expression.location, code=code)
 
     def _require_variable(self, name: str, statement: Statement, scope: Scope) -> None:
         symbol = scope.resolve(name)

@@ -100,6 +100,33 @@ def builtin_param_count(name: str) -> int | None:
     return len(params) if params is not None else None
 
 
+STANDALONE_MIN_ARGS = {
+    "wait": 1,
+    "asInt": 1,
+    "asFloat": 1,
+    "asBool": 1,
+    "asString": 1,
+    "type": 1,
+    "trim": 1,
+    "upperCase": 1,
+    "lowerCase": 1,
+    "length": 1,
+    "keys": 1,
+    "values": 1,
+    "pairs": 1,
+    "reverse": 1,
+    "clone": 1,
+    "format": 1,
+    "default": 2,
+    "find": 2,
+    "countOf": 2,
+}
+
+
+def standalone_min_args(name: str) -> int | None:
+    return STANDALONE_MIN_ARGS.get(name)
+
+
 def resolve_builtin_args(method: str, args: list, has_target: bool, location: SourceLocation | None = None) -> list:
     has_keyword = any(getattr(arg, "name", None) for arg in args)
     if not has_keyword:

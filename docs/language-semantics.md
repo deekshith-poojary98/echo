@@ -216,6 +216,7 @@ fn square(x: int) -> int => x * x;
 - `-> void` forbids a non-null return.
 - Calls support positional and keyword arguments.
 - Positional arguments cannot follow keyword arguments.
+- Missing, extra, unexpected, and duplicate arguments are semantic errors.
 - No default arguments, variadics, or overloads.
 
 `return` outside a function is a semantic error.
@@ -239,9 +240,11 @@ Functions are not first-class values in source syntax yet, except that
 - `if cond { } else { }` and `else if`
 - `while cond { }`
 - `for i: int in start..end by step { }` — `..` inclusive, `...` exclusive
-- start, end, and step are expressions converted to `int`
+- start, end, and step are numeric expressions converted to `int`
+- `bool`, `null`, and non-numeric values are not convertible loop bounds
 - `by 0` is a runtime error
-- `foreach item: T in iterable { }`
+- `foreach item: T in iterable { }` — iterable must be a `list` or `hash`
+- hashes iterate their keys as `str`
 - `break` and `continue` are only valid inside loops (semantic error otherwise)
 
 Conditions use truthiness.

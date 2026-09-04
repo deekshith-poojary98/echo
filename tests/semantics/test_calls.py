@@ -22,7 +22,7 @@ say(add(1));
     )
     assert result.exit_code == 1
     assert "Semantic Error" in result.output
-    assert "expected 2 arguments" in result.output
+    assert "parameter 'b'" in result.output
 
 
 def test_extra_user_function_argument_is_semantic():
@@ -34,7 +34,7 @@ say(identity(1, 2));
     )
     assert result.exit_code == 1
     assert "Semantic Error" in result.output
-    assert "expected at most 1 arguments" in result.output
+    assert "expected at most 1 argument" in result.output
 
 
 def test_semantic_errors_have_no_runtime_side_effects():

@@ -49,8 +49,10 @@ def bind_arguments(
             positional.append(argument.value)
 
     if len(positional) > len(parameters):
+        expected = len(parameters)
+        noun = "argument" if expected == 1 else "arguments"
         raise ArgumentError(
-            f"Function '{function_name}' expected at most {len(parameters)} arguments, got {len(positional)}",
+            f"Function '{function_name}' expected at most {expected} {noun}, got {len(positional)}",
             location,
             code="E2202",
         )
