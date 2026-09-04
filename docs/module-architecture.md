@@ -1,8 +1,8 @@
 # Echo v0.3 Module Architecture
 
 > **Status:** Architecture
-> **Version:** v0.3 design
-> **Implementation status:** Not implemented
+> **Version:** v0.3
+> **Implementation status:** Implemented
 >
 > This document defines component boundaries for the v0.3 module system.
 > It does not change language semantics. The language contract remains

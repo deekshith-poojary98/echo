@@ -19,6 +19,7 @@ Echo offers:
 - String interpolation with `${expression}` syntax
 - Method chaining
 - `use mut` for mutating outer variables from functions
+- File-based modules: `export` and `import name from "module"`
 - Variable watching for debugging
 
 ### Data Types
@@ -120,9 +121,11 @@ describe(age: 21, name: "Alice");  // Output: Alice is 21
 - `src/echo/` - Language implementation
   - `frontend/` - lexer, parser, typed AST
   - `semantics/` - scope, symbols, validation
+  - `modules/` - resolver, graph, loader
   - `runtime/` - interpreter, values, builtins
   - `cli/` - command-line entry
-- `docs/language-semantics.md` - language contract
+- `docs/language-semantics.md` - v0.2 language contract
+- `docs/module-semantics.md` - v0.3 module contract
 - `docs/` - VitePress documentation site (source + build config)
 - `docs-legacy/` - Legacy static documentation files
 - `*.echo` - Example source files

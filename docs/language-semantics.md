@@ -338,3 +338,7 @@ Source → Lexer → Tokens → Parser → Typed AST → Semantic analyzer → I
 
 There is no bytecode VM in v0.2.
 One source file is one program. There is no module system in v0.2.
+
+v0.3 adds a file-based module system on top of this pipeline. A program
+that contains no `import` keeps the v0.2 execution model unchanged.
+See `docs/module-semantics.md`.

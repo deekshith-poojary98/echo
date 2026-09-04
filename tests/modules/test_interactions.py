@@ -1,7 +1,14 @@
 from pathlib import Path
 
+import pytest
+
 from helpers import run_echo
 from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
+
+_MODEL_B_WITHOUT_USE_MUT = (
+    "Model B interaction case: defining-module collection mutation without "
+    "`use mut`. v0.3 is frozen on Model A. See docs/module-semantics.md §8.1."
+)
 
 
 def test_imported_function_plus_closure(tmp_path: Path) -> None:
@@ -93,6 +100,7 @@ def test_imported_function_plus_use_mut(tmp_path: Path) -> None:
     assert_success(run_entry(tmp_path), "2")
 
 
+@pytest.mark.xfail(strict=True, reason=_MODEL_B_WITHOUT_USE_MUT)
 def test_imported_mutable_list_plus_function_mutation(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
@@ -115,6 +123,7 @@ def test_imported_mutable_list_plus_function_mutation(tmp_path: Path) -> None:
     assert_success(run_entry(tmp_path), "[1, 2]")
 
 
+@pytest.mark.xfail(strict=True, reason=_MODEL_B_WITHOUT_USE_MUT)
 def test_imported_mutable_hash_plus_function_mutation(tmp_path: Path) -> None:
     write_modules(
         tmp_path,

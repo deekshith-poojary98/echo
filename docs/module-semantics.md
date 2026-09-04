@@ -1,8 +1,8 @@
 # Echo v0.3 Module Semantics
 
-> **Status:** Language contract
-> **Version:** v0.3 design
-> **Implementation status:** Not implemented
+> **Status:** Frozen language contract
+> **Version:** v0.3
+> **Implementation status:** Implemented
 >
 > This document defines the module semantics for Echo v0.3. It is a language contract, not an implementation specification.
 
@@ -258,6 +258,44 @@ is invalid.
 The imported binding cannot be rebound through `use mut`.
 
 Module boundaries therefore remain stronger than function or block boundaries.
+
+### 8.1 Same-module `use mut` is unchanged (Model A)
+
+v0.3 does **not** give a module’s own functions implicit mutable access to
+module-level bindings.
+
+A module-level collection is still an ordinary captured binding:
+
+```echo
+export items: list = [];
+
+export fn push_item(value: int) {
+    use mut items;
+    items.push(value);
+}
+```
+
+`use mut items;` is required here for the same reason it is required in a
+v0.2.1 single-file program.
+
+v0.3 considered and rejected a “module-owned state” exception in which
+
+```echo
+items.push(value);
+```
+
+would become legal merely because `items` was declared in the same file.
+That would be a new mutability rule introduced by modules. v0.3 does not
+add that rule.
+
+The two concepts stay separate:
+
+* **binding:** `use mut` is required to mutate a captured name in the
+  defining module; imported bindings are never mutable and cannot take
+  `use mut`;
+* **object:** an imported list or hash may still be mutated because the
+  importer holds a reference to the same collection, not because the
+  imported name became a mutable binding.
 
 ---
 
@@ -763,96 +801,102 @@ If a test forces a semantic decision this document does not answer, stop and ame
 
 ### 26.1 Module Identity
 
-* [ ] Every `.echo` file is a module
-* [ ] CLI file is the entry module
-* [ ] `.echo` extension is implied
-* [ ] Relative imports resolve beside the importer
-* [ ] Resolved absolute path defines module identity
-* [ ] Equivalent paths resolve to one module identity
+* [x] Every `.echo` file is a module
+* [x] CLI file is the entry module
+* [x] `.echo` extension is implied
+* [x] Relative imports resolve beside the importer
+* [x] Resolved absolute path defines module identity
+* [x] Equivalent paths resolve to one module identity
 
 ### 26.2 Exports
 
-* [ ] Names are private by default
-* [ ] `export` makes a name visible to importers
-* [ ] Private functions cannot be imported
-* [ ] Private variables cannot be imported
-* [ ] Multiple exports from one module work
+* [x] Names are private by default
+* [x] `export` makes a name visible to importers
+* [x] Private functions cannot be imported
+* [x] Private variables cannot be imported
+* [x] Multiple exports from one module work
 
 ### 26.3 Selective Imports
 
-* [ ] `import name from "module"` binds the selected export
-* [ ] Non-selected exports are not introduced
-* [ ] Importing an unknown export fails
-* [ ] Imported names appear in importer module scope
-* [ ] No namespace access exists
+* [x] `import name from "module"` binds the selected export
+* [x] Non-selected exports are not introduced
+* [x] Importing an unknown export fails
+* [x] Imported names appear in importer module scope
+* [x] No namespace access exists
 
 ### 26.4 `use` Compatibility
 
-* [ ] `use name` retains v0.2.1 behavior
-* [ ] `use mut name` retains v0.2.1 behavior
-* [ ] `use` does not load modules
-* [ ] Existing programs without `import` remain unchanged
+* [x] `use name` retains v0.2.1 behavior
+* [x] `use mut name` retains v0.2.1 behavior
+* [x] `use` does not load modules
+* [x] Existing programs without `import` remain unchanged
 
 ### 26.5 Module Scope
 
-* [ ] Module-private names are inaccessible to importers
-* [ ] Importer locals are invisible to imported functions
-* [ ] Imported functions retain definition-site scope
-* [ ] Module boundaries prevent accidental name leakage
+* [x] Module-private names are inaccessible to importers
+* [x] Importer locals are invisible to imported functions
+* [x] Imported functions retain definition-site scope
+* [x] Module boundaries prevent accidental name leakage
 
 ### 26.6 Mutability
 
-* [ ] Imported bindings cannot be rebound
-* [ ] `use mut` cannot cross a module boundary
-* [ ] Imported lists share collection identity
-* [ ] Imported hashes share collection identity
-* [ ] Mutating an imported collection is visible to other references
-* [ ] Rebinding an imported collection is rejected
+* [x] Imported bindings cannot be rebound
+* [x] `use mut` cannot cross a module boundary
+* [x] Imported lists share collection identity
+* [x] Imported hashes share collection identity
+* [x] Mutating an imported collection is visible to other references
+* [x] Rebinding an imported collection is rejected
 
 ### 26.7 Execution
 
-* [ ] Dependencies execute before importers
-* [ ] Entry module executes last
-* [ ] A module executes once per process
-* [ ] Shared dependencies execute once
-* [ ] Module state is shared across importers
-* [ ] Top-level code executes exactly once
+* [x] Dependencies execute before importers
+* [x] Entry module executes last
+* [x] A module executes once per process
+* [x] Shared dependencies execute once
+* [x] Module state is shared across importers
+* [x] Top-level code executes exactly once
 
 ### 26.8 Cycles
 
-* [ ] Direct cycle is rejected
-* [ ] Indirect cycle is rejected
-* [ ] Longer dependency cycle is rejected
-* [ ] No partially initialized module is exposed
-* [ ] Cycle error identifies the dependency problem
+* [x] Direct cycle is rejected
+* [x] Indirect cycle is rejected
+* [x] Longer dependency cycle is rejected
+* [x] No partially initialized module is exposed
+* [x] Cycle error identifies the dependency problem
 
 ### 26.9 Errors
 
-* [ ] Missing module produces an Echo error
-* [ ] Missing export produces an Echo error
-* [ ] Invalid import produces an Echo error
-* [ ] Import collision produces an Echo error
-* [ ] Circular dependency produces an Echo error
-* [ ] Python exceptions do not leak
+* [x] Missing module produces an Echo error
+* [x] Missing export produces an Echo error
+* [x] Invalid import produces an Echo error
+* [x] Import collision produces an Echo error
+* [x] Circular dependency produces an Echo error
+* [x] Python exceptions do not leak
 
 ### 26.10 Interaction Tests
 
 The module system must also survive combinations of:
 
-* [ ] imported function + closure
-* [ ] imported function + nested function
-* [ ] imported function + `use`
-* [ ] imported function + `use mut`
-* [ ] imported mutable list + function mutation
-* [ ] imported mutable hash + function mutation
-* [ ] multiple importers sharing one mutable export
-* [ ] nested dependency + closure
-* [ ] shared dependency imported through two branches
-* [ ] private module state captured by an exported function
-* [ ] module initialization failure
-* [ ] import collision after local declaration
-* [ ] imported name shadowing inside a function/block
-* [ ] attempted cross-module `use mut`
+* [x] imported function + closure
+* [x] imported function + nested function
+* [x] imported function + `use`
+* [x] imported function + `use mut`
+* [x] imported mutable list + function mutation
+* [x] imported mutable hash + function mutation
+* [x] multiple importers sharing one mutable export
+* [x] nested dependency + closure
+* [x] shared dependency imported through two branches
+* [x] private module state captured by an exported function
+* [x] module initialization failure
+* [x] import collision after local declaration
+* [x] imported name shadowing inside a function/block
+* [x] attempted cross-module `use mut`
+
+The two original interaction tests that omit `use mut` on a defining
+module’s own collection encode the rejected Model B shape. They remain
+in the suite as a decision record. Model A coverage lives in the
+runtime, mutability, and hostile-combination tests: same-module writes
+use `use mut`; imported collections are mutated as shared objects.
 
 ---
 
@@ -899,7 +943,8 @@ The smallest v0.3 module system is complete when:
 11. Circular dependencies are rejected.
 12. Private names remain private.
 13. Module-related failures produce proper Echo errors.
-14. The complete test matrix passes.
+14. The complete test matrix passes under Model A (`use mut` remains
+    the same-module mutability mechanism).
 15. Existing v0.2.1 programs without imports remain behaviorally unchanged.
 
 Anything beyond these requirements is outside the smallest v0.3 module system.

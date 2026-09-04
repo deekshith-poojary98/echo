@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+File-based modules on top of the frozen v0.2.1 language.
+
+- `import name from "module"` and `export` are the only module syntax
+- Sibling `.echo` files resolve by bare name; `.echo` is implied
+- Exports are explicit; imports are selective and flatten into module scope
+- Imported bindings are immutable; imported collections share identity
+- `use` / `use mut` keep their v0.2.1 meaning and never load modules
+- Same-module writes still require `use mut` (no module-owned-state exception)
+- Circular dependencies are rejected before any module initializes
+- A program with no `import` keeps the single-file pipeline
+
 ## 0.2.1
 
 Semantic cleanup under the frozen v0.2 pipeline.
