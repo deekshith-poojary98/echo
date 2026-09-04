@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import echoGrammar from '../../echo-syntax-highlighter/syntaxes/echo.tmLanguage.json'
+import { echoRuntimePlugin } from './plugins/echo-runtime'
 
 export default defineConfig({
   title: 'Echo',
@@ -25,6 +26,7 @@ export default defineConfig({
     logo: '/echo_logo.jpg',
     nav: [
       { text: 'Docs', link: '/getting-started/quick-start' },
+      { text: 'Playground', link: '/playground' },
       { text: 'Examples', link: '/examples/hello-world' },
       { text: 'Reference', link: '/reference/language-reference' },
       { text: 'Limits', link: '/errors-diagnostics/known-limitations' }
@@ -34,6 +36,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Installation', link: '/getting-started/installation' },
+          { text: 'Playground', link: '/playground' },
           { text: 'Quick Start', link: '/getting-started/quick-start' },
           { text: 'Getting Started', link: '/getting-started/getting-started' },
           { text: 'Syntax Basics', link: '/getting-started/syntax-basics' },
@@ -106,6 +109,17 @@ export default defineConfig({
     docFooter: {
       prev: 'Previous page',
       next: 'Next page'
+    }
+  },
+  vite: {
+    plugins: [echoRuntimePlugin()],
+    worker: {
+      format: 'es'
+    },
+    server: {
+      fs: {
+        allow: ['..']
+      }
     }
   }
 })

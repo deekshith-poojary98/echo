@@ -54,6 +54,7 @@ say("Hello, Echo!");
 Echo does not use indentation to define blocks.
 
 ## Next Steps
+- [Playground](/playground) — run Echo in the browser
 - [Getting Started](/getting-started/getting-started)
 - [Syntax Basics](/getting-started/syntax-basics)
 - [Variables and Types](/getting-started/variables-and-types)

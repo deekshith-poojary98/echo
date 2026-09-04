@@ -1,6 +1,6 @@
 # Echo Programming Language
 
-Echo is a small interpreted scripting language with explicit type annotations and runtime type checks. It is designed for readable automation and algorithm scripts. Documentation is [here](https://deekshith-poojary98.github.io/echo/index.html).
+Echo is a small interpreted scripting language with explicit type annotations and runtime type checks. It is designed for readable automation and algorithm scripts. Documentation is [here](https://deekshith-poojary98.github.io/echo/index.html), including a [browser playground](https://deekshith-poojary98.github.io/echo/playground).
 
 ## Quick Overview
 

@@ -12,6 +12,9 @@ hero:
       text: Start Here
       link: /getting-started/quick-start
     - theme: alt
+      text: Playground
+      link: /playground
+    - theme: alt
       text: Language Reference
       link: /reference/language-reference
 features:
