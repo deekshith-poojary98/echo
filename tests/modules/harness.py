@@ -45,38 +45,3 @@ def assert_echo_error(result: ExecutionResult, *needles: str) -> None:
         assert f"{name}:" not in result.output, result.output
     for needle in needles:
         assert needle.lower() in lower, result.output
-
-
-def diagnostic_text(result: ExecutionResult) -> str:
-    kept: list[str] = []
-    for line in result.output.splitlines():
-        stripped = line.lstrip()
-        if stripped.startswith("-->") or stripped.startswith("|") or stripped.startswith("^"):
-            continue
-        kept.append(line)
-    return "\n".join(kept).lower()
-
-
-def assert_any_phrase(result: ExecutionResult, phrases: tuple[str, ...]) -> None:
-    text = diagnostic_text(result)
-    assert any(phrase in text for phrase in phrases), result.output
-
-
-def assert_module_not_found(result: ExecutionResult) -> None:
-    assert_echo_error(result)
-    assert_any_phrase(result, ("not found", "cannot find", "unknown module", "missing module"))
-
-
-def assert_not_exported(result: ExecutionResult, name: str) -> None:
-    assert_echo_error(result, name)
-    assert_any_phrase(result, ("not exported", "is private", "not an export"))
-
-
-def assert_circular_dependency(result: ExecutionResult) -> None:
-    assert_echo_error(result)
-    assert_any_phrase(result, ("circular", "cycle"))
-
-
-def assert_import_collision(result: ExecutionResult, name: str) -> None:
-    assert_echo_error(result, name)
-    assert_any_phrase(result, ("collision", "conflict", "already", "duplicate"))

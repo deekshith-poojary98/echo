@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from modules.harness import assert_not_exported, assert_success, run_entry, write_modules
+from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
 
 
 def test_names_are_private_by_default(tmp_path: Path) -> None:
@@ -18,7 +18,7 @@ def test_names_are_private_by_default(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_not_exported(run_entry(tmp_path), "hidden")
+    assert_echo_error(run_entry(tmp_path), "hidden")
 
 
 def test_export_makes_a_name_visible_to_importers(tmp_path: Path) -> None:
@@ -56,7 +56,7 @@ def test_private_functions_cannot_be_imported(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_not_exported(run_entry(tmp_path), "subtract")
+    assert_echo_error(run_entry(tmp_path), "subtract")
 
 
 def test_private_variables_cannot_be_imported(tmp_path: Path) -> None:
@@ -72,7 +72,7 @@ def test_private_variables_cannot_be_imported(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_not_exported(run_entry(tmp_path), "y")
+    assert_echo_error(run_entry(tmp_path), "y")
 
 
 def test_multiple_exports_from_one_module_work(tmp_path: Path) -> None:

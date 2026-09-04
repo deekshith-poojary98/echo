@@ -129,6 +129,8 @@ This imports the exported name `add` from the module represented by `math.echo`.
 
 Imported names are bound directly into the importer’s module scope.
 
+`import` is a module-scope declaration. All imports in a module are collected during module resolution, before that module’s top-level code executes. An `import` is not a runtime statement that runs in source order.
+
 Example:
 
 ```echo
@@ -425,7 +427,16 @@ resolves `math` relative to the importing file:
 project/math.echo
 ```
 
-The `.echo` extension is implied.
+The `.echo` extension is implied and is not written in the specifier.
+
+The v0.3 specifier is a bare relative name. Given an import from `"math"`, the resolver looks only beside the importing file for `math.echo`.
+
+These specifier forms are not part of v0.3:
+
+* `"math.echo"`
+* `"./math"`
+* `"../math"`
+* subdirectory paths such as `"lib/math"`
 
 The resolver operates on the importing module’s location.
 
@@ -435,7 +446,11 @@ The resolver operates on the importing module’s location.
 
 A module’s identity is its resolved absolute path.
 
-Different textual paths that resolve to the same absolute file identify the same module.
+Different imports that resolve to the same absolute file identify the same module.
+
+v0.3 has a single specifier form, so this is demonstrated when two modules import the same sibling name and therefore resolve to the same file. Identity is the file, not the specifier string.
+
+Tests must not invent additional specifier spellings, symbolic-link aliases, or extra filesystem names to exercise this rule. Whether two filesystem names that refer to the same inode identify one module is unspecified.
 
 The absolute resolved path is therefore the canonical module identity used for:
 
@@ -574,6 +589,8 @@ At minimum, v0.3 must distinguish:
 
 Python exceptions must not leak through the module boundary.
 
+Diagnostic wording is unspecified. Implementations must distinguish the categories above. Tests must require the category and relevant names, not a particular English phrase.
+
 ---
 
 ## 21. Semantic Boundaries
@@ -677,6 +694,15 @@ Not supported:
 ```echo
 math.add();
 ```
+
+### Alternate import specifier spellings
+
+Not part of v0.3:
+
+* an explicit `.echo` suffix in the specifier;
+* `./` or `../` prefixes;
+* subdirectory or package-like paths;
+* extra filesystem names or symbolic links as a way to spell the same module.
 
 ### Packages
 

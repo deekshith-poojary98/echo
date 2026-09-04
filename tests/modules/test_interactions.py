@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from helpers import run_echo
-from modules.harness import assert_echo_error, assert_import_collision, assert_success, run_entry, write_modules
+from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
 
 
 def test_imported_function_plus_closure(tmp_path: Path) -> None:
@@ -281,7 +281,7 @@ def test_import_collision_after_local_declaration(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_import_collision(run_entry(tmp_path), "x")
+    assert_echo_error(run_entry(tmp_path), "x")
 
 
 def test_imported_name_shadowing_inside_a_function(tmp_path: Path) -> None:

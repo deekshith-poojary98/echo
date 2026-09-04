@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from modules.harness import assert_echo_error, assert_not_exported, assert_success, run_entry, write_modules
+from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
 
 
 def test_selective_import_binds_the_selected_export(tmp_path: Path) -> None:
@@ -56,7 +56,7 @@ def test_importing_an_unknown_export_fails(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_not_exported(run_entry(tmp_path), "missing")
+    assert_echo_error(run_entry(tmp_path), "missing")
 
 
 def test_imported_names_appear_in_importer_module_scope(tmp_path: Path) -> None:

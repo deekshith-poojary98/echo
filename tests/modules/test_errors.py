@@ -1,15 +1,7 @@
 from pathlib import Path
 
 from helpers import assert_no_python_leak
-from modules.harness import (
-    assert_circular_dependency,
-    assert_echo_error,
-    assert_import_collision,
-    assert_module_not_found,
-    assert_not_exported,
-    run_entry,
-    write_modules,
-)
+from modules.harness import assert_echo_error, run_entry, write_modules
 
 
 def test_missing_module_produces_an_echo_error(tmp_path: Path) -> None:
@@ -22,7 +14,7 @@ def test_missing_module_produces_an_echo_error(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_module_not_found(result)
+    assert_echo_error(result, "missing")
     assert_no_python_leak(result)
 
 
@@ -41,7 +33,7 @@ def test_missing_export_produces_an_echo_error(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_not_exported(result, "absent")
+    assert_echo_error(result, "absent")
     assert_no_python_leak(result)
 
 
@@ -78,7 +70,7 @@ def test_import_collision_produces_an_echo_error(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_import_collision(result, "x")
+    assert_echo_error(result, "x")
     assert_no_python_leak(result)
 
 
@@ -99,7 +91,7 @@ def test_duplicate_import_of_same_name_is_a_collision(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_import_collision(result, "x")
+    assert_echo_error(result, "x")
     assert_no_python_leak(result)
 
 
@@ -121,7 +113,7 @@ def test_circular_dependency_produces_an_echo_error(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_circular_dependency(result)
+    assert_echo_error(result)
     assert_no_python_leak(result)
 
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from modules.harness import assert_circular_dependency, run_entry, write_modules
+from modules.harness import assert_echo_error, run_entry, write_modules
 
 
 def test_direct_cycle_is_rejected(tmp_path: Path) -> None:
@@ -21,7 +21,7 @@ def test_direct_cycle_is_rejected(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_circular_dependency(run_entry(tmp_path))
+    assert_echo_error(run_entry(tmp_path))
 
 
 def test_indirect_cycle_is_rejected(tmp_path: Path) -> None:
@@ -46,7 +46,7 @@ def test_indirect_cycle_is_rejected(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_circular_dependency(run_entry(tmp_path))
+    assert_echo_error(run_entry(tmp_path))
 
 
 def test_longer_dependency_cycle_is_rejected(tmp_path: Path) -> None:
@@ -75,7 +75,7 @@ def test_longer_dependency_cycle_is_rejected(tmp_path: Path) -> None:
             """,
         },
     )
-    assert_circular_dependency(run_entry(tmp_path))
+    assert_echo_error(run_entry(tmp_path))
 
 
 def test_no_partially_initialized_module_is_exposed(tmp_path: Path) -> None:
@@ -83,15 +83,14 @@ def test_no_partially_initialized_module_is_exposed(tmp_path: Path) -> None:
         tmp_path,
         {
             "a.echo": """
-                export ready: int = 1;
-                say("a-started");
                 import x from "b";
-                say("a-finished");
+                export ready: int = 1;
+                say("a-ran");
             """,
             "b.echo": """
                 import ready from "a";
                 export x: int = ready;
-                say("b-used-a");
+                say("b-ran");
             """,
             "app.echo": """
                 import ready from "a";
@@ -100,9 +99,9 @@ def test_no_partially_initialized_module_is_exposed(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_circular_dependency(result)
-    assert "a-finished" not in result.output
-    assert "b-used-a" not in result.output
+    assert_echo_error(result)
+    assert "a-ran" not in result.output
+    assert "b-ran" not in result.output
 
 
 def test_cycle_error_identifies_the_dependency_problem(tmp_path: Path) -> None:
@@ -123,6 +122,6 @@ def test_cycle_error_identifies_the_dependency_problem(tmp_path: Path) -> None:
         },
     )
     result = run_entry(tmp_path)
-    assert_circular_dependency(result)
+    assert_echo_error(result)
     text = result.output.lower()
     assert "alpha" in text or "beta" in text

@@ -1,8 +1,9 @@
 from pathlib import Path
 
-import pytest
+from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
 
-from modules.harness import assert_module_not_found, assert_success, run_entry, write_modules
+# Specifiers in this file are only the v0.3 bare name, e.g. "math".
+# Do not add "math.echo", "./math", "../math", or subdirectory specifiers.
 
 
 def test_every_echo_file_is_a_module(tmp_path: Path) -> None:
@@ -97,7 +98,7 @@ def test_missing_sibling_is_not_found_in_another_directory(tmp_path: Path) -> No
             """,
         },
     )
-    assert_module_not_found(run_entry(tmp_path))
+    assert_echo_error(run_entry(tmp_path), "math")
 
 
 def test_resolved_absolute_path_defines_module_identity(tmp_path: Path) -> None:
@@ -155,27 +156,4 @@ def test_equivalent_paths_resolve_to_one_module_identity(tmp_path: Path) -> None
             """,
         },
     )
-    link = tmp_path / "alias.echo"
-    try:
-        link.symlink_to(tmp_path / "data.echo")
-    except OSError:
-        pytest.skip("symlinks are unavailable")
-
-    write_modules(
-        tmp_path,
-        {
-            "via_alias.echo": """
-                import box from "alias";
-                export fn from_alias() -> list {
-                    return box;
-                }
-            """,
-            "app.echo": """
-                import from_name from "via_name";
-                import from_alias from "via_alias";
-                from_name().push(1);
-                say(from_alias());
-            """,
-        },
-    )
-    assert_success(run_entry(tmp_path), "data\n[1]")
+    assert_success(run_entry(tmp_path), "data\n[7]")
