@@ -32,6 +32,9 @@ class TokenType(Enum):
     MUT = auto()
     WATCH = auto()
     TYPE_KW = auto()
+    IMPORT = auto()
+    EXPORT = auto()
+    FROM = auto()
 
     PLUS = auto()
     MINUS = auto()
@@ -91,6 +94,9 @@ KEYWORDS: dict[str, TokenType] = {
     "mut": TokenType.MUT,
     "watch": TokenType.WATCH,
     "type": TokenType.TYPE_KW,
+    "import": TokenType.IMPORT,
+    "export": TokenType.EXPORT,
+    "from": TokenType.FROM,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "null": TokenType.NULL,

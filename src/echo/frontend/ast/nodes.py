@@ -226,3 +226,15 @@ class WatchStatement(Statement):
 class TypeAliasStatement(Statement):
     name: str
     target: TypeAnnotation
+
+
+@dataclass
+class ImportDeclaration(Statement):
+    name: str
+    module: str
+
+
+@dataclass
+class ExportDeclaration(Statement):
+    name: str
+    declaration: FunctionDeclaration | VariableDeclaration | None = None

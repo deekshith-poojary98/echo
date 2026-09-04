@@ -9,6 +9,7 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    ExportDeclaration,
     Expression,
     ExpressionStatement,
     ForStatement,
@@ -17,6 +18,7 @@ from echo.frontend.ast.nodes import (
     HashLiteral,
     HashPair,
     IfStatement,
+    ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     ListLiteral,
@@ -66,6 +68,10 @@ class Parser:
             return self.parse_foreach()
         if token.type == TokenType.FN:
             return self.parse_function()
+        if token.type == TokenType.IMPORT:
+            return self.parse_import()
+        if token.type == TokenType.EXPORT:
+            return self.parse_export()
         if token.type == TokenType.USE:
             return self.parse_use()
         if token.type == TokenType.WATCH:
@@ -229,6 +235,37 @@ class Parser:
         token = self._expect(TokenType.CONTINUE, "continue")
         self._expect(TokenType.SEMICOLON, ";")
         return ContinueStatement(token.location)
+
+    def parse_import(self) -> ImportDeclaration:
+        token = self._expect(TokenType.IMPORT, "import")
+        name = self._expect_name("imported name")
+        self._expect(TokenType.FROM, "from")
+        module_token = self._peek()
+        if module_token.type != TokenType.STRING:
+            raise ParseError("Expected module name string", module_token.location)
+        self._advance()
+        if self._check(TokenType.INTERPOLATION_START):
+            raise ParseError("Module name must be a plain string", self._peek().location)
+        self._expect(TokenType.SEMICOLON, ";")
+        return ImportDeclaration(token.location, name, module_token.lexeme)
+
+    def parse_export(self) -> ExportDeclaration:
+        token = self._expect(TokenType.EXPORT, "export")
+        if self._check(TokenType.FN):
+            declaration = self.parse_function()
+            return ExportDeclaration(token.location, declaration.name, declaration)
+        name_token = self._expect_name_token("exported name")
+        if self._match(TokenType.COLON):
+            declared_type = self._parse_type()
+            if isinstance(declared_type, TypeName) and declared_type.name == "void":
+                raise ParseError("Cannot use 'void' as a variable type", name_token.location)
+            self._expect(TokenType.EQUAL, "=")
+            value = self.parse_expression()
+            self._expect(TokenType.SEMICOLON, ";")
+            declaration = VariableDeclaration(name_token.location, name_token.lexeme, declared_type, value)
+            return ExportDeclaration(token.location, name_token.lexeme, declaration)
+        self._expect(TokenType.SEMICOLON, ";")
+        return ExportDeclaration(token.location, name_token.lexeme)
 
     def parse_use(self) -> UseStatement:
         token = self._expect(TokenType.USE, "use")
