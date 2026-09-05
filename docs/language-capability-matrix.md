@@ -2,11 +2,12 @@
 
 **Status:** Design audit after v0.3.0. Not a language contract.
 **Language contracts remain:** `docs/language-semantics.md` (v0.2) and `docs/module-semantics.md` (v0.3, frozen).
+**v0.4 boundary:** Frozen in `docs/v0.4-language-vs-stdlib.md` (host + stdlib, not a syntax release).
 **Date:** 2026-09-05
 
 This document is **not** a promise list and **not** a v0.4 specification.
-v0.3 language semantics stay frozen. Nothing here authorizes syntax or
-runtime changes until an explicit language revision.
+v0.3 language semantics stay frozen. The v0.4 boundary is a design
+decision, not permission to implement.
 
 ---
 
@@ -1248,13 +1249,11 @@ Do not weaken Model A or the two xfailed Model B tests.
 Do not treat this file as a contract. If it disagrees with
 `docs/language-semantics.md` or `docs/module-semantics.md`, those win.
 
-That conversation is now a design note, not an open question:
+The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 
-> See `docs/v0.4-language-vs-stdlib.md`.
-
-Short version: a first v0.4 cut should be builtins plus CLI argv plumbing,
-plus a written conversion contract. Slice syntax, `try/catch`, and function
-values are not part of that cut.
+Theme: host + standard library. Not a syntax release.
+`slice()` ships; `xs[1:4]` does not. Conversion is a semantic correction.
+Failure handling is design only. First-class functions stay frozen.
 
 ---
 
