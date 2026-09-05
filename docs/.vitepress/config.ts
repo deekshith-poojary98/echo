@@ -91,7 +91,8 @@ export default defineConfig({
       {
         text: 'Project',
         items: [
-          { text: 'Roadmap / Planned Improvements', link: '/project/roadmap' }
+          { text: 'Roadmap / Planned Improvements', link: '/project/roadmap' },
+          { text: 'Language Capability Matrix', link: '/language-capability-matrix' }
         ]
       }
     ],
