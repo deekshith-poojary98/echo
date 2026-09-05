@@ -1248,10 +1248,13 @@ Do not weaken Model A or the two xfailed Model B tests.
 Do not treat this file as a contract. If it disagrees with
 `docs/language-semantics.md` or `docs/module-semantics.md`, those win.
 
-The useful next conversation is only:
+That conversation is now a design note, not an open question:
 
-> Which usability holes are worth a v0.4 language revision,
-> and which belong in a standard library with no new syntax?
+> See `docs/v0.4-language-vs-stdlib.md`.
+
+Short version: a first v0.4 cut should be builtins plus CLI argv plumbing,
+plus a written conversion contract. Slice syntax, `try/catch`, and function
+values are not part of that cut.
 
 ---
 
