@@ -1,0 +1,175 @@
+from contextlib import redirect_stdout
+from io import StringIO
+
+from echo.cli.main import main
+from echo.runtime.host import Host
+from helpers import assert_no_python_leak, run_echo
+from modules.harness import assert_success, run_entry, write_modules
+
+
+def test_args_empty_by_default():
+    result = run_echo("say(args());\n")
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "[]"
+
+
+def test_args_returns_program_arguments():
+    result = run_echo(
+        "foreach flag: str in args() { say(flag); }\n",
+        host=Host(args=["input.txt", "--verbose"]),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["input.txt", "--verbose"]
+
+
+def test_args_rejects_extra_arguments():
+    result = run_echo("say(args(1));\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "takes no arguments" in result.output
+
+
+def test_cli_passes_remainder_after_dash_dash(tmp_path):
+    app = tmp_path / "app.echo"
+    app.write_text("foreach flag: str in args() { say(flag); }\n", encoding="utf-8")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        code = main([str(app), "--plain", "--", "one", "--verbose"])
+    assert code == 0
+    assert stdout.getvalue().splitlines() == ["one", "--verbose"]
+
+
+def test_cli_treats_extra_positionals_as_program_args(tmp_path):
+    app = tmp_path / "app.echo"
+    app.write_text("foreach flag: str in args() { say(flag); }\n", encoding="utf-8")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        code = main([str(app), "--plain", "alpha", "beta"])
+    assert code == 0
+    assert stdout.getvalue().splitlines() == ["alpha", "beta"]
+
+
+def test_env_reads_host_map():
+    result = run_echo(
+        'say(env("CITY"));\n',
+        host=Host(environ={"CITY": "Bengaluru"}),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "Bengaluru"
+
+
+def test_env_empty_string_is_set():
+    result = run_echo(
+        'say(env("EMPTY") == "");\n',
+        host=Host(environ={"EMPTY": ""}),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "true"
+
+
+def test_env_missing_aborts():
+    result = run_echo('say(env("MISSING"));\n', host=Host(environ={}))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not set" in result.output
+
+
+def test_env_or_fallback():
+    result = run_echo(
+        'say(envOr("CITY", "unknown"));\nsay(envOr("HOME", "no"));\n',
+        host=Host(environ={"HOME": "/tmp"}),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["unknown", "/tmp"]
+
+
+def test_read_and_write_file(tmp_path):
+    notes = tmp_path / "notes.txt"
+    notes.write_text("hello", encoding="utf-8")
+    result = run_echo(
+        """
+text: str = readFile("notes.txt");
+writeFile("out.txt", text + "!");
+say(readFile("out.txt"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "hello!"
+    assert (tmp_path / "out.txt").read_text(encoding="utf-8") == "hello!"
+
+
+def test_read_file_missing_is_echo_error(tmp_path):
+    result = run_echo('say(readFile("nope.txt"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "file not found" in result.output
+
+
+def test_file_denied_on_restricted_host():
+    result = run_echo('say(readFile("notes.txt"));\n', host=Host(allow_files=False))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+
+
+def test_parse_and_write_json_round_trip():
+    result = run_echo(
+        """
+data: dynamic = parseJson("{\\"n\\": 1, \\"ok\\": true, \\"xs\\": [2]}");
+say(data["n"].type());
+say(data["ok"]);
+say(writeJson(data));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines[0] == "int"
+    assert result.lines[1] == "true"
+    assert '"n": 1' in result.lines[2]
+    assert '"ok": true' in result.lines[2]
+
+
+def test_parse_json_invalid_is_echo_error():
+    result = run_echo('say(parseJson("{"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Invalid JSON" in result.output
+
+
+def test_parse_json_float_stays_float():
+    result = run_echo('say(parseJson("1.5").type());\n')
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "float"
+
+
+def test_imported_module_sees_same_args(tmp_path):
+    write_modules(
+        tmp_path,
+        {
+            "lib.echo": """
+                export fn first() -> str {
+                    flags: list = args();
+                    return flags[0];
+                }
+            """,
+            "app.echo": """
+                import first from "lib";
+                say(first());
+            """,
+        },
+    )
+    result = run_entry(tmp_path, host=Host(args=["shared"]))
+    assert_success(result, "shared")
+
+
+def test_write_json_rejects_non_echo_function():
+    result = run_echo(
+        """
+fn id(x: int) -> int {
+    return x;
+}
+say(writeJson(1));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "1"

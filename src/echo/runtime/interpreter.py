@@ -54,13 +54,26 @@ from echo.runtime.builtins import (
     as_bool,
     as_float,
     as_int,
+    do_args,
     do_clone,
+    do_contains,
+    do_env,
+    do_env_or,
+    do_has,
     do_length,
     do_merge,
+    do_parse_json,
+    do_read_file,
+    do_replace,
     do_reverse,
+    do_slice,
+    do_split,
     do_wait,
+    do_write_file,
+    do_write_json,
     resolve_builtin_args,
 )
+from echo.runtime.host import Host
 from echo.runtime.context import Environment
 from echo.runtime.functions import BreakSignal, ContinueSignal, EchoFunction, ReturnValue, bind_arguments, check_return, undefined_function
 from echo.runtime.operators import binary_op, unary_op
@@ -76,6 +89,9 @@ from echo.runtime.values import (
 
 
 class Interpreter:
+    def __init__(self, host: Host | None = None) -> None:
+        self.host = host or Host()
+
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
         for statement in program.statements:
@@ -447,6 +463,48 @@ class Interpreter:
             return take_last(require_hash(target, method, location), location)
         if method == "ensure":
             return ensure(require_hash(target, method, location), _nth(args, 0, method, location), _nth(args, 1, method, location), location)
+        if method == "split":
+            value = target if target is not None else _nth(args, 0, method, location)
+            separator = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_split(value, separator, location)
+        if method == "replace":
+            value = target if target is not None else _nth(args, 0, method, location)
+            old = args[0] if target is not None else _nth(args, 1, method, location)
+            new = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_replace(value, old, new, location)
+        if method == "contains":
+            value = target if target is not None else _nth(args, 0, method, location)
+            part = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_contains(value, part, location)
+        if method == "has":
+            value = target if target is not None else _nth(args, 0, method, location)
+            key = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_has(value, key, location)
+        if method == "slice":
+            value = target if target is not None else _nth(args, 0, method, location)
+            start = args[0] if target is not None else _nth(args, 1, method, location)
+            end = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_slice(value, start, end, location)
+        if method == "args":
+            if target is not None:
+                raise ArgumentError("args() takes no arguments", location, code="E2807")
+            return do_args(args, self.host, location)
+        if method == "env":
+            return do_env(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "envOr":
+            name = target if target is not None else _nth(args, 0, method, location)
+            fallback = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_env_or(name, fallback, self.host, location)
+        if method == "readFile":
+            return do_read_file(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "writeFile":
+            path = target if target is not None else _nth(args, 0, method, location)
+            contents = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_write_file(path, contents, self.host, location)
+        if method == "parseJson":
+            return do_parse_json(target if target is not None else _first(args, method, location), location)
+        if method == "writeJson":
+            return do_write_json(target if target is not None else _first(args, method, location), location)
         raise EchoRuntimeError(f"Unknown method: {method}", location, code="E2616")
 
     def _order(self, target: list, args: list[object], env: Environment, location: SourceLocation) -> list:

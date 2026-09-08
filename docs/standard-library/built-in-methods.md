@@ -63,6 +63,7 @@ say("Done.");
 
 ### `asInt()`
 Converts the value to an `int`. Can be called as a method or standalone.
+`bool`, `null`, lists, hashes, and non-integer strings are type errors.
 
 ```echo
 n: int = "42".asInt();
@@ -130,6 +131,49 @@ say(y.default(0));          // 5
 
 ---
 
+## Host
+
+These talk to the process, not new language syntax. They abort with Echo errors.
+
+### `args()`
+Returns the program argument list as `str` values. Does not include the source path or interpreter flags such as `--plain`.
+
+```echo
+foreach flag: str in args() {
+    say(flag);
+}
+```
+
+```bash
+echo app.echo --plain -- input.txt --verbose
+```
+
+### `env(name)` / `envOr(name, fallback)`
+`env` returns the named environment variable or aborts if it is unset. An empty value counts as set. `envOr` returns `fallback` when the name is unset.
+
+```echo
+home: str = env("HOME");
+city: str = envOr("CITY", "unknown");
+```
+
+### `readFile(path)` / `writeFile(path, contents)`
+UTF-8 text only. Relative paths use the process working directory. Missing files, permission errors, and invalid UTF-8 abort. The playground host denies both.
+
+```echo
+text: str = readFile("notes.txt");
+writeFile("out.txt", text);
+```
+
+### `parseJson(text)` / `writeJson(value)`
+JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort.
+
+```echo
+data: dynamic = parseJson("{\"n\": 1}");
+say(writeJson(data));
+```
+
+---
+
 ## Strings
 
 ### `trim()`
@@ -181,6 +225,36 @@ say(nums);                    // [3, 2, 1]
 ```
 
 ---
+
+### `split(separator)`
+Splits a string on a non-empty separator and returns a list of strings.
+
+```echo
+say("a,b,c".split(","));    // [a, b, c]
+```
+
+### `replace(old, new)`
+Replaces every non-overlapping occurrence of `old` with `new`. `old` must be a non-empty string.
+
+```echo
+say("foo foo".replace("foo", "bar"));    // bar bar
+```
+
+### `contains(part)`
+On a string, reports whether `part` occurs. On a list, reports whether a value is present using Echo `==`. Empty string `part` is `true`.
+
+```echo
+say("echo".contains("ch"));    // true
+say([1, 2].contains(2));       // true
+```
+
+### `slice(start, end)`
+Returns a new string or list from `start` up to but not including `end`. Both bounds must be integers in range. `slice(0, value.length())` copies the whole sequence.
+
+```echo
+say("Echo".slice(1, 3));       // ch
+say([1, 2, 3, 4].slice(1, 3)); // [2, 3]
+```
 
 ### `format(...)`
 Performs template string substitution. Use `{}` for sequential placeholders or `{0}`, `{1}`, ... for positional ones. To include literal braces, use doubled braces in the format template.
@@ -336,6 +410,13 @@ say(a);    // [1, 2, 3, 4]
 ---
 
 ## Hashes
+
+### `has(key)`
+Returns `true` if the hash has `key`. The key must be a `str`.
+
+```echo
+say({ name: "Ada" }.has("name"));    // true
+```
 
 ### `keys()`
 Returns a list of all keys in insertion order.

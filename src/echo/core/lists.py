@@ -67,3 +67,26 @@ def reverse_list(target: list) -> list:
 def order(target: list) -> list:
     target.sort()
     return target
+
+
+def list_contains(target: list, value: object, matches) -> bool:
+    return any(matches(item, value) for item in target)
+
+
+def require_slice_bound(value: object, name: str, location: SourceLocation | None = None) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise EchoTypeError(f"slice() {name} must be an integer", location, code="E2812")
+    return value
+
+
+def slice_sequence(value: object, start: object, end: object, location: SourceLocation | None = None) -> object:
+    if not isinstance(value, (list, str)):
+        raise EchoTypeError("slice() can only be called on lists or strings", location, code="E2812")
+    begin = require_slice_bound(start, "start", location)
+    finish = require_slice_bound(end, "end", location)
+    length = len(value)
+    if begin < 0 or begin > length:
+        raise EchoIndexError(f"slice() start {begin} out of range for length {length}", location, code="E2812")
+    if finish < begin or finish > length:
+        raise EchoIndexError(f"slice() end {finish} out of range for length {length}", location, code="E2812")
+    return value[begin:finish]

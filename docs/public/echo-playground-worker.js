@@ -10,6 +10,7 @@ import builtins
 from echo.errors import EchoError, format_diagnostic
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
+from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
 from echo.semantics.analyzer import SemanticAnalyzer
 
@@ -47,7 +48,7 @@ def run_echo(source, stdin_text):
         tokens = Lexer().tokenize(source, filename="<playground>")
         program = Parser(tokens).parse()
         SemanticAnalyzer().analyze(program)
-        Interpreter().execute(program)
+        Interpreter(Host(allow_files=False, environ={})).execute(program)
         return json.dumps({"ok": True, "output": stdout.getvalue()})
     except EchoError as exc:
         return json.dumps({"ok": False, "output": stdout.getvalue(), "error": format_diagnostic(exc, source)})
