@@ -310,7 +310,12 @@ class SemanticAnalyzer:
         if any(argument.name for argument in expression.arguments):
             return
         required = standalone_min_args(symbol.name)
-        if required is not None and len(expression.arguments) < required:
+        if required is None:
+            return
+        count = len(expression.arguments)
+        if required == 0 and count > 0:
+            raise SemanticError(f"{symbol.name}() takes no arguments", expression.location, code="E2807")
+        if count < required:
             if symbol.name == "wait":
                 message = "wait() requires a seconds argument"
                 code = "E2608"
@@ -318,7 +323,7 @@ class SemanticAnalyzer:
                 message = "format() requires a template string"
                 code = "E2615"
             else:
-                message = f"{symbol.name}() requires a target or at least one argument"
+                message = f"{symbol.name}() expected at least {required} argument(s)"
                 code = "E2620"
             raise SemanticError(message, expression.location, code=code)
 

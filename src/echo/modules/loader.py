@@ -12,6 +12,7 @@ from echo.modules.records import FAILED, INITIALIZED, INITIALIZING, Module
 from echo.modules.resolver import ModuleResolver
 from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
+from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
 from echo.semantics.analyzer import SemanticAnalyzer
 from echo.semantics.modules import ModuleSymbols
@@ -37,13 +38,13 @@ class ModuleLoader:
     def initialized_paths(self) -> list[Path]:
         return list(self._initialized)
 
-    def load(self, entry_path: str | Path) -> Module:
+    def load(self, entry_path: str | Path, host: Host | None = None) -> Module:
         entry = self._resolver.canonicalize(entry_path)
         graph = ModuleGraph()
         self._collect(entry, graph, set())
         graph.detect_cycles()
         self._analyze_modules()
-        interpreter = Interpreter()
+        interpreter = Interpreter(host=host)
         for path in graph.dependency_order(entry):
             self._initialize(self._modules[path], interpreter)
         return self._modules[entry]

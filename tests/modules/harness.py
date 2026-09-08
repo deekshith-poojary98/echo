@@ -6,6 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 
 from echo.cli.main import run_file
+from echo.runtime.host import Host
 from helpers import ExecutionResult, PYTHON_EXCEPTION_NAMES, assert_no_python_leak
 
 
@@ -17,12 +18,12 @@ def write_modules(root: Path, files: dict[str, str]) -> Path:
     return root
 
 
-def run_entry(root: Path, entry: str = "app.echo") -> ExecutionResult:
+def run_entry(root: Path, entry: str = "app.echo", host: Host | None = None) -> ExecutionResult:
     path = (root / entry).resolve()
     stdout = StringIO()
     with redirect_stdout(stdout):
         try:
-            exit_code = run_file(str(path), plain=True)
+            exit_code = run_file(str(path), plain=True, host=host)
         except Exception as exc:  # noqa: BLE001 — leak detector
             raise AssertionError(
                 f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"

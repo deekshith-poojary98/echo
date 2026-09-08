@@ -31,6 +31,12 @@ def take_last(target: dict, location: SourceLocation | None = None) -> list:
     return [key, value]
 
 
+def hash_has(target: dict, key: object, location: SourceLocation | None = None) -> bool:
+    if not isinstance(key, str):
+        raise EchoTypeError("has() key must be a string", location, code="E2506")
+    return key in target
+
+
 def ensure(target: dict, key: object, default: object, location: SourceLocation | None = None) -> object:
     if not isinstance(key, str):
         raise EchoTypeError("ensure() key must be a string", location, code="E2505")

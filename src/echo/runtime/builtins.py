@@ -2,10 +2,25 @@ from __future__ import annotations
 
 import time
 
-from echo.core.hashes import ensure, require_hash, take, take_last, wipe
-from echo.core.lists import count_of, empty, find, insert_at, pull, push, remove_value, require_list, reverse_list
-from echo.core.strings import apply_format, require_string
+from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
+from echo.core.jsonutil import parse_json, write_json
+from echo.core.lists import (
+    count_of,
+    empty,
+    find,
+    insert_at,
+    list_contains,
+    pull,
+    push,
+    remove_value,
+    require_list,
+    reverse_list,
+    slice_sequence,
+)
+from echo.core.strings import apply_format, replace_string, require_string, split_string, string_contains
 from echo.errors import ArgumentError, EchoRuntimeError, EchoTypeError, SourceLocation
+from echo.runtime.host import Host
+from echo.runtime.operators import echo_equal
 from echo.runtime.values import echo_type_name, is_truthy, stringify
 
 BUILTIN_NAMES = frozenset(
@@ -42,6 +57,18 @@ BUILTIN_NAMES = frozenset(
         "pairs",
         "default",
         "format",
+        "split",
+        "replace",
+        "contains",
+        "has",
+        "slice",
+        "args",
+        "env",
+        "envOr",
+        "readFile",
+        "writeFile",
+        "parseJson",
+        "writeJson",
     }
 )
 
@@ -81,11 +108,30 @@ BUILTIN_PARAMS = {
     "merge": ["other"],
     "ensure": ["key", "default"],
     "take": ["key"],
+    "split": ["separator"],
+    "replace": ["old", "new"],
+    "contains": ["value"],
+    "has": ["key"],
+    "slice": ["start", "end"],
+    "args": [],
+    "env": ["name"],
+    "envOr": ["name", "fallback"],
+    "readFile": ["path"],
+    "writeFile": ["contents"],
+    "parseJson": ["text"],
+    "writeJson": ["value"],
 }
 
 STANDALONE_PARAMS = {
     "find": ["items", "value"],
     "countOf": ["items", "value"],
+    "split": ["value", "separator"],
+    "replace": ["value", "old", "new"],
+    "contains": ["items", "value"],
+    "has": ["items", "key"],
+    "slice": ["items", "start", "end"],
+    "writeFile": ["path", "contents"],
+    "envOr": ["name", "fallback"],
 }
 
 
@@ -120,6 +166,18 @@ STANDALONE_MIN_ARGS = {
     "default": 2,
     "find": 2,
     "countOf": 2,
+    "split": 2,
+    "replace": 3,
+    "contains": 2,
+    "has": 2,
+    "slice": 3,
+    "args": 0,
+    "env": 1,
+    "envOr": 2,
+    "readFile": 1,
+    "writeFile": 2,
+    "parseJson": 1,
+    "writeJson": 1,
 }
 
 
@@ -176,21 +234,36 @@ def resolve_builtin_args(method: str, args: list, has_target: bool, location: So
 
 
 def as_int(value: object, location: SourceLocation | None = None) -> int:
-    try:
-        if isinstance(value, bool):
-            return int(value)
-        if isinstance(value, float):
-            return int(value)
-        return int(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError) as exc:
-        raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606") from exc
+    if isinstance(value, bool):
+        raise EchoTypeError("Cannot convert bool to int", location, code="E2606")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        text = value.strip()
+        signed = text[0] in "+-" if text else False
+        digits = text[1:] if signed else text
+        if text == "" or not digits.isdigit():
+            raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
+        return int(text)
+    raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
 
 
 def as_float(value: object, location: SourceLocation | None = None) -> float:
-    try:
-        return float(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError) as exc:
-        raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607") from exc
+    if isinstance(value, bool):
+        raise EchoTypeError("Cannot convert bool to float", location, code="E2607")
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if text == "":
+            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+        try:
+            return float(text)
+        except ValueError as exc:
+            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607") from exc
+    raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
 
 
 def as_bool(value: object) -> bool:
@@ -239,3 +312,90 @@ def do_length(value: object, location: SourceLocation | None = None) -> int:
     if isinstance(value, (str, list, dict)):
         return len(value)
     raise EchoTypeError("length() can only be used on strings, lists, or hashes", location, code="E2614")
+
+
+def do_split(value: object, separator: object, location: SourceLocation | None = None) -> list[str]:
+    return split_string(require_string(value, "split", location), separator, location)
+
+
+def do_replace(value: object, old: object, new: object, location: SourceLocation | None = None) -> str:
+    return replace_string(require_string(value, "replace", location), old, new, location)
+
+
+def do_contains(value: object, part: object, location: SourceLocation | None = None) -> bool:
+    if isinstance(value, str):
+        return string_contains(value, part, location)
+    if isinstance(value, list):
+        return list_contains(value, part, echo_equal)
+    raise EchoTypeError("contains() can only be called on lists or strings", location, code="E2813")
+
+
+def do_has(value: object, key: object, location: SourceLocation | None = None) -> bool:
+    return hash_has(require_hash(value, "has", location), key, location)
+
+
+def do_slice(value: object, start: object, end: object, location: SourceLocation | None = None) -> object:
+    return slice_sequence(value, start, end, location)
+
+
+def do_args(args: list[object], host: Host, location: SourceLocation | None = None) -> list[str]:
+    if args:
+        raise ArgumentError("args() takes no arguments", location, code="E2807")
+    return host.program_args()
+
+
+def do_env(name: object, host: Host, location: SourceLocation | None = None) -> str:
+    if not isinstance(name, str):
+        raise EchoTypeError("env() name must be a string", location, code="E2804")
+    mapping = host.environment()
+    if name not in mapping:
+        raise EchoRuntimeError(f"environment variable '{name}' is not set", location, code="E2804")
+    return mapping[name]
+
+
+def do_env_or(name: object, fallback: object, host: Host, location: SourceLocation | None = None) -> object:
+    if not isinstance(name, str):
+        raise EchoTypeError("envOr() name must be a string", location, code="E2804")
+    mapping = host.environment()
+    if name not in mapping:
+        return fallback
+    return mapping[name]
+
+
+def do_read_file(path: object, host: Host, location: SourceLocation | None = None) -> str:
+    if not host.allow_files:
+        raise EchoRuntimeError("readFile() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("readFile() path must be a string", location, code="E2802")
+    target = host.resolve_path(path)
+    try:
+        return target.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise EchoRuntimeError(f"file not found: {path}", location, code="E2802") from exc
+    except UnicodeDecodeError as exc:
+        raise EchoRuntimeError(f"file is not valid UTF-8: {path}", location, code="E2803") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot read file: {path}", location, code="E2803") from exc
+
+
+def do_write_file(path: object, contents: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("writeFile() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("writeFile() path must be a string", location, code="E2803")
+    if not isinstance(contents, str):
+        raise EchoTypeError("writeFile() contents must be a string", location, code="E2803")
+    target = host.resolve_path(path)
+    try:
+        target.write_text(contents, encoding="utf-8")
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot write file: {path}", location, code="E2803") from exc
+    return None
+
+
+def do_parse_json(text: object, location: SourceLocation | None = None) -> object:
+    return parse_json(text, location)
+
+
+def do_write_json(value: object, location: SourceLocation | None = None) -> str:
+    return write_json(value, location)

@@ -4,12 +4,11 @@
 This page lists the current limits of Echo as implemented today.
 
 ## Current Limitations
-- No module or import system for Echo source files
 - No classes or user-defined structs
 - No generics
 - No exceptions such as `try/catch`
 - No default parameter values
-- No variadic functions
+- No variadic user functions
 - No overloads
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
 - Object type aliases accept extra fields

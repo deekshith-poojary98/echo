@@ -21,6 +21,7 @@ from echo.frontend.ast.nodes import ImportDeclaration, Program
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.modules.loader import ModuleLoader
+from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
 from echo.semantics.analyzer import SemanticAnalyzer
 
@@ -32,19 +33,19 @@ except ImportError:
     Panel = None
 
 
-def run_source(source: str, filename: str = "<input>", *, plain: bool = True) -> int:
+def run_source(source: str, filename: str = "<input>", *, plain: bool = True, host: Host | None = None) -> int:
     try:
         tokens = Lexer().tokenize(source, filename=filename)
         program = Parser(tokens).parse()
         SemanticAnalyzer().analyze(program)
-        Interpreter().execute(program)
+        Interpreter(host=host).execute(program)
         return 0
     except EchoError as exc:
         _print_error(exc, source, plain)
         return 1
 
 
-def run_file(source_path: str, plain: bool = False) -> int:
+def run_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
     file_path = Path(source_path).expanduser().resolve()
     if not file_path.exists() or not file_path.is_file():
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
@@ -54,10 +55,10 @@ def run_file(source_path: str, plain: bool = False) -> int:
         tokens = Lexer().tokenize(source, filename=str(file_path))
         program = Parser(tokens).parse()
         if _has_imports(program):
-            ModuleLoader().load(file_path)
+            ModuleLoader().load(file_path, host=host)
         else:
             SemanticAnalyzer().analyze(program)
-            Interpreter().execute(program)
+            Interpreter(host=host).execute(program)
         return 0
     except EchoError as exc:
         _print_error(exc, _error_source(exc, source), plain)
@@ -120,7 +121,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     parser.add_argument("--version", action="store_true", help="Print the Echo version and exit")
-    args = parser.parse_args(argv)
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if "--" in raw:
+        split_at = raw.index("--")
+        interpreter_argv, program_args = raw[:split_at], raw[split_at + 1 :]
+        args, unknown = parser.parse_known_args(interpreter_argv)
+        if unknown:
+            parser.error(f"unrecognized arguments: {' '.join(unknown)}")
+    else:
+        args, program_args = parser.parse_known_args(raw)
 
     if args.version:
         print(f"Echo {__version__}")
@@ -128,7 +137,8 @@ def main(argv: list[str] | None = None) -> int:
     if not args.source:
         parser.print_help()
         return 2
-    return run_file(args.source, plain=args.plain)
+    host = Host(args=list(program_args))
+    return run_file(args.source, plain=args.plain, host=host)
 
 
 if __name__ == "__main__":

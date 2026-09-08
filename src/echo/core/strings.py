@@ -49,3 +49,23 @@ def require_string(value: object, method: str, location: SourceLocation | None =
     if not isinstance(value, str):
         raise EchoTypeError(f"{method}() can only be called on strings", location, code="E2305")
     return value
+
+
+def split_string(value: str, separator: object, location: SourceLocation | None = None) -> list[str]:
+    if not isinstance(separator, str) or separator == "":
+        raise EchoRuntimeError("split() separator must be a non-empty string", location, code="E2810")
+    return value.split(separator)
+
+
+def replace_string(value: str, old: object, new: object, location: SourceLocation | None = None) -> str:
+    if not isinstance(old, str) or not isinstance(new, str):
+        raise EchoTypeError("replace() requires string arguments", location, code="E2811")
+    if old == "":
+        raise EchoRuntimeError("replace() search string must be non-empty", location, code="E2811")
+    return value.replace(old, new)
+
+
+def string_contains(value: str, part: object, location: SourceLocation | None = None) -> bool:
+    if not isinstance(part, str):
+        raise EchoTypeError("contains() on a string requires a string", location, code="E2813")
+    return part in value

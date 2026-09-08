@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 from echo.cli.main import run_source
+from echo.runtime.host import Host
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -33,11 +34,11 @@ class ExecutionResult:
         return self.output.splitlines()
 
 
-def run_echo(source: str, *, filename: str = "<test>") -> ExecutionResult:
+def run_echo(source: str, *, filename: str = "<test>", host: Host | None = None) -> ExecutionResult:
     stdout = StringIO()
     with redirect_stdout(stdout):
         try:
-            exit_code = run_source(source, filename=filename, plain=True)
+            exit_code = run_source(source, filename=filename, plain=True, host=host)
         except Exception as exc:  # noqa: BLE001 — leak detector
             raise AssertionError(
                 f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"

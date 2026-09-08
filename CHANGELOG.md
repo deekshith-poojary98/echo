@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+Host and standard-library cut. No new syntax.
+
+- `args()`, `env()`, `envOr()`, `readFile()`, `writeFile()`, `parseJson()`, `writeJson()`
+- String/list `split`, `replace`, `contains`, `slice`; hash `has`
+- `asInt` / `asFloat` reject `bool` (semantic correction)
+- Failures still abort with Echo errors; playground denies files
+- Not included: slice syntax, `try/catch`, function values, classes
+
 ## 0.3.0
 
 File-based modules on top of the frozen v0.2.1 language.
