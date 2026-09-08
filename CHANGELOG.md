@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1
+
+Stdlib and tooling depth. No new syntax.
+
+- `join(separator)` on a list of strings
+- `startsWith` / `endsWith` on strings
+- `fileExists(path)` returns `bool` and does not abort when the file is missing
+- `echo check file.echo` analyzes without executing
+- Restricted hosts still deny `fileExists` the same way they deny `readFile`
+
 ## 0.4.0
 
 Host and standard-library cut. No new syntax.

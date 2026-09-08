@@ -57,9 +57,12 @@ from echo.runtime.builtins import (
     do_args,
     do_clone,
     do_contains,
+    do_ends_with,
     do_env,
     do_env_or,
+    do_file_exists,
     do_has,
+    do_join,
     do_length,
     do_merge,
     do_parse_json,
@@ -68,6 +71,7 @@ from echo.runtime.builtins import (
     do_reverse,
     do_slice,
     do_split,
+    do_starts_with,
     do_wait,
     do_write_file,
     do_write_json,
@@ -505,6 +509,20 @@ class Interpreter:
             return do_parse_json(target if target is not None else _first(args, method, location), location)
         if method == "writeJson":
             return do_write_json(target if target is not None else _first(args, method, location), location)
+        if method == "join":
+            value = target if target is not None else _nth(args, 0, method, location)
+            separator = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_join(value, separator, location)
+        if method == "startsWith":
+            value = target if target is not None else _nth(args, 0, method, location)
+            prefix = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_starts_with(value, prefix, location)
+        if method == "endsWith":
+            value = target if target is not None else _nth(args, 0, method, location)
+            suffix = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_ends_with(value, suffix, location)
+        if method == "fileExists":
+            return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         raise EchoRuntimeError(f"Unknown method: {method}", location, code="E2616")
 
     def _order(self, target: list, args: list[object], env: Environment, location: SourceLocation) -> list:

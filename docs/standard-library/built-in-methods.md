@@ -164,6 +164,15 @@ text: str = readFile("notes.txt");
 writeFile("out.txt", text);
 ```
 
+### `fileExists(path)`
+Returns `true` when `path` is an existing file. Missing paths and directories are `false`. Does not abort when the file is missing. A host that denies files (playground) still aborts.
+
+```echo
+if fileExists("notes.txt") {
+    say(readFile("notes.txt"));
+}
+```
+
 ### `parseJson(text)` / `writeJson(value)`
 JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort.
 
@@ -254,6 +263,22 @@ Returns a new string or list from `start` up to but not including `end`. Both bo
 ```echo
 say("Echo".slice(1, 3));       // ch
 say([1, 2, 3, 4].slice(1, 3)); // [2, 3]
+```
+
+### `startsWith(prefix)` / `endsWith(suffix)`
+Reports whether a string begins or ends with the given string. The argument must be a string. An empty prefix or suffix is `true`.
+
+```echo
+say("echo".startsWith("ec"));    // true
+say("echo".endsWith("ho"));      // true
+```
+
+### `join(separator)`
+Joins a list of strings with `separator` and returns a string. `separator` may be empty. An empty list is `""`. Non-string items or a non-string separator are type errors.
+
+```echo
+say(["a", "b", "c"].join(","));    // a,b,c
+say(join(["x", "y"], ""));         // xy
 ```
 
 ### `format(...)`

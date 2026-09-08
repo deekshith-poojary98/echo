@@ -346,4 +346,5 @@ See `docs/module-semantics.md`.
 v0.4 adds host and standard-library builtins (`args`, `env`, files, JSON,
 `split` / `replace` / `contains` / `has` / `slice`) and corrects conversion
 so `asInt(true)` / `asFloat(true)` are type errors. No new syntax.
+v0.4.1 adds `join`, `startsWith`, `endsWith`, `fileExists`, and `echo check`.
 See `docs/v0.4-stdlib.md`.

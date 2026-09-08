@@ -124,7 +124,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
 | IDE support | Ecosystem | Partial | Tooling | Tooling track |
 | Language server | Ecosystem | Missing | Tooling | Later |
-| REPL | Ecosystem | Missing | Tooling | Later (`echo check` / REPL) |
+| REPL | Ecosystem | Missing | Tooling | Later (REPL). `echo check` shipped in 0.4.1 |
 | Playground | Ecosystem | Partial | Tooling | Done enough |
 | Compiler / native exe | Runtime | Missing | Don't touch | Not now |
 | Bytecode / VM | Runtime | Missing | Don't touch | Not now |
@@ -1089,7 +1089,7 @@ public API.
 `echo` without a file prints help and exits. The docs playground runs
 programs in the browser. That is not a REPL.
 
-Roadmap already lists “REPL and `echo check`”.
+`echo check` shipped in 0.4.1. A REPL is still later.
 
 **Priority.** Tooling.
 
@@ -1218,7 +1218,7 @@ These block “write a real automation script” without changing Echo’s ident
 
 1. Formatter
 2. Official test command (library + CLI first)
-3. REPL / `echo check`
+3. REPL
 4. Richer editor support
 
 ### Not holes

@@ -27,10 +27,17 @@ python src/main.py program.echo --plain
 
 Use plain mode when you want simple text output without Rich panels.
 
+### Analyze without running
+```bash
+echo check program.echo
+echo check program.echo --plain
+```
+
+`check` lexes, parses, and analyzes the file and its import graph. It does not execute. Success prints nothing and exits 0. Failures use the same diagnostics as a normal run. The first argument must be the word `check`; `echo check.echo` still runs a file named `check.echo`.
+
 ## Notes
-- Echo currently runs one source file at a time.
-- There is no Echo module/import system yet.
-- Errors are reported by category: syntax, name, type, or execution.
+- The file passed to the CLI is the entry module when it contains `import`.
+- Errors are reported by category: syntax, semantic, name, type, argument, index, mutation, or execution.
 
 ## See Also
 - [Quick Start](/getting-started/quick-start)

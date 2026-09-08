@@ -28,3 +28,7 @@ class Host:
             return candidate
         root = self.cwd if self.cwd is not None else Path.cwd()
         return (root / candidate).resolve()
+
+    def file_exists(self, path: str) -> bool:
+        target = self.resolve_path(path)
+        return target.is_file()

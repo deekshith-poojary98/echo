@@ -11,7 +11,8 @@ v0.2 focused on architecture and correctness: typed AST, semantic analysis, lexi
 - Module/import system
 - Exact object type validation option
 - Richer numeric literals and formatting
-- REPL and `echo check`
+- REPL
+- `echo check` is available as of 0.4.1
 
 ## Notes
 This page is intentionally short. It is not a promise list. It reflects the most practical next improvements for Echo as it exists today.

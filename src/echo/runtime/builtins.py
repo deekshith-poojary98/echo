@@ -9,6 +9,7 @@ from echo.core.lists import (
     empty,
     find,
     insert_at,
+    join_strings,
     list_contains,
     pull,
     push,
@@ -17,7 +18,15 @@ from echo.core.lists import (
     reverse_list,
     slice_sequence,
 )
-from echo.core.strings import apply_format, replace_string, require_string, split_string, string_contains
+from echo.core.strings import (
+    apply_format,
+    replace_string,
+    require_string,
+    split_string,
+    string_contains,
+    string_ends_with,
+    string_starts_with,
+)
 from echo.errors import ArgumentError, EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.runtime.host import Host
 from echo.runtime.operators import echo_equal
@@ -69,6 +78,10 @@ BUILTIN_NAMES = frozenset(
         "writeFile",
         "parseJson",
         "writeJson",
+        "join",
+        "startsWith",
+        "endsWith",
+        "fileExists",
     }
 )
 
@@ -120,6 +133,10 @@ BUILTIN_PARAMS = {
     "writeFile": ["contents"],
     "parseJson": ["text"],
     "writeJson": ["value"],
+    "join": ["separator"],
+    "startsWith": ["prefix"],
+    "endsWith": ["suffix"],
+    "fileExists": ["path"],
 }
 
 STANDALONE_PARAMS = {
@@ -132,6 +149,9 @@ STANDALONE_PARAMS = {
     "slice": ["items", "start", "end"],
     "writeFile": ["path", "contents"],
     "envOr": ["name", "fallback"],
+    "join": ["items", "separator"],
+    "startsWith": ["value", "prefix"],
+    "endsWith": ["value", "suffix"],
 }
 
 
@@ -178,6 +198,10 @@ STANDALONE_MIN_ARGS = {
     "writeFile": 2,
     "parseJson": 1,
     "writeJson": 1,
+    "join": 2,
+    "startsWith": 2,
+    "endsWith": 2,
+    "fileExists": 1,
 }
 
 
@@ -399,3 +423,23 @@ def do_parse_json(text: object, location: SourceLocation | None = None) -> objec
 
 def do_write_json(value: object, location: SourceLocation | None = None) -> str:
     return write_json(value, location)
+
+
+def do_join(value: object, separator: object, location: SourceLocation | None = None) -> str:
+    return join_strings(require_list(value, "join", location), separator, location)
+
+
+def do_starts_with(value: object, prefix: object, location: SourceLocation | None = None) -> bool:
+    return string_starts_with(require_string(value, "startsWith", location), prefix, location)
+
+
+def do_ends_with(value: object, suffix: object, location: SourceLocation | None = None) -> bool:
+    return string_ends_with(require_string(value, "endsWith", location), suffix, location)
+
+
+def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:
+    if not host.allow_files:
+        raise EchoRuntimeError("fileExists() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("fileExists() path must be a string", location, code="E2802")
+    return host.file_exists(path)

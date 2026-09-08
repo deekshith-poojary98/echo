@@ -45,6 +45,25 @@ def run_source(source: str, filename: str = "<input>", *, plain: bool = True, ho
         return 1
 
 
+def check_file(source_path: str, plain: bool = False) -> int:
+    file_path = Path(source_path).expanduser().resolve()
+    if not file_path.exists() or not file_path.is_file():
+        _print_plain_error("Error", f"source file not found: {file_path}", plain)
+        return 1
+    source = file_path.read_text(encoding="utf-8")
+    try:
+        tokens = Lexer().tokenize(source, filename=str(file_path))
+        program = Parser(tokens).parse()
+        if _has_imports(program):
+            ModuleLoader().check(file_path)
+        else:
+            SemanticAnalyzer().analyze(program)
+        return 0
+    except EchoError as exc:
+        _print_error(exc, _error_source(exc, source), plain)
+        return 1
+
+
 def run_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
     file_path = Path(source_path).expanduser().resolve()
     if not file_path.exists() or not file_path.is_file():
@@ -117,11 +136,13 @@ def _print_plain_error(title: str, message: str, plain: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if raw[:1] == ["check"]:
+        return _main_check(raw[1:])
     parser = argparse.ArgumentParser(description="Run an Echo source file")
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     parser.add_argument("--version", action="store_true", help="Print the Echo version and exit")
-    raw = list(sys.argv[1:] if argv is None else argv)
     if "--" in raw:
         split_at = raw.index("--")
         interpreter_argv, program_args = raw[:split_at], raw[split_at + 1 :]
@@ -139,6 +160,17 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     host = Host(args=list(program_args))
     return run_file(args.source, plain=args.plain, host=host)
+
+
+def _main_check(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="echo check", description="Analyze an Echo source file without running it")
+    parser.add_argument("source", nargs="?", help="Path to .echo source file")
+    parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
+    args = parser.parse_args(argv)
+    if not args.source:
+        parser.print_help()
+        return 2
+    return check_file(args.source, plain=args.plain)
 
 
 if __name__ == "__main__":

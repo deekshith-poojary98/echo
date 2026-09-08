@@ -113,6 +113,35 @@ def test_file_denied_on_restricted_host():
     assert "not available in this host" in result.output
 
 
+def test_file_exists_true_and_false(tmp_path):
+    (tmp_path / "notes.txt").write_text("hello", encoding="utf-8")
+    (tmp_path / "folder").mkdir()
+    result = run_echo(
+        """
+say(fileExists("notes.txt"));
+say(fileExists("missing.txt"));
+say(fileExists("folder"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["true", "false", "false"]
+
+
+def test_file_exists_denied_on_restricted_host():
+    result = run_echo('say(fileExists("notes.txt"));\n', host=Host(allow_files=False))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+
+
+def test_file_exists_rejects_non_string_path():
+    result = run_echo("say(fileExists(1));\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "path must be a string" in result.output
+
+
 def test_parse_and_write_json_round_trip():
     result = run_echo(
         """

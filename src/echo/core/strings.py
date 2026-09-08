@@ -69,3 +69,15 @@ def string_contains(value: str, part: object, location: SourceLocation | None = 
     if not isinstance(part, str):
         raise EchoTypeError("contains() on a string requires a string", location, code="E2813")
     return part in value
+
+
+def string_starts_with(value: str, prefix: object, location: SourceLocation | None = None) -> bool:
+    if not isinstance(prefix, str):
+        raise EchoTypeError("startsWith() requires a string", location, code="E2814")
+    return value.startswith(prefix)
+
+
+def string_ends_with(value: str, suffix: object, location: SourceLocation | None = None) -> bool:
+    if not isinstance(suffix, str):
+        raise EchoTypeError("endsWith() requires a string", location, code="E2814")
+    return value.endswith(suffix)

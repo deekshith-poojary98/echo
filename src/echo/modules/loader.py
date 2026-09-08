@@ -49,6 +49,14 @@ class ModuleLoader:
             self._initialize(self._modules[path], interpreter)
         return self._modules[entry]
 
+    def check(self, entry_path: str | Path) -> Module:
+        entry = self._resolver.canonicalize(entry_path)
+        graph = ModuleGraph()
+        self._collect(entry, graph, set())
+        graph.detect_cycles()
+        self._analyze_modules()
+        return self._modules[entry]
+
     def _collect(self, path: Path, graph: ModuleGraph, walked: set[Path]) -> Module:
         module = self._materialize(path)
         graph.add_module(module.path)

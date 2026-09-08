@@ -73,6 +73,17 @@ def list_contains(target: list, value: object, matches) -> bool:
     return any(matches(item, value) for item in target)
 
 
+def join_strings(target: list, separator: object, location: SourceLocation | None = None) -> str:
+    if not isinstance(separator, str):
+        raise EchoTypeError("join() separator must be a string", location, code="E2815")
+    parts: list[str] = []
+    for item in target:
+        if not isinstance(item, str):
+            raise EchoTypeError("join() requires a list of strings", location, code="E2815")
+        parts.append(item)
+    return separator.join(parts)
+
+
 def require_slice_bound(value: object, name: str, location: SourceLocation | None = None) -> int:
     if not isinstance(value, int) or isinstance(value, bool):
         raise EchoTypeError(f"slice() {name} must be an integer", location, code="E2812")
