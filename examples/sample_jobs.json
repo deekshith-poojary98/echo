@@ -1,0 +1,8 @@
+{
+  "suite": "checkout",
+  "jobs": [
+    {"name": "login", "status": "pass", "ms": 120},
+    {"name": "cart", "status": "pass", "ms": 45},
+    {"name": "pay", "status": "fail", "ms": 80}
+  ]
+}

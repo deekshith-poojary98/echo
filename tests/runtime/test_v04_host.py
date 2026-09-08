@@ -3,7 +3,7 @@ from io import StringIO
 
 from echo.cli.main import main
 from echo.runtime.host import Host
-from helpers import assert_no_python_leak, run_echo
+from helpers import REPO_ROOT, assert_no_python_leak, run_echo
 from modules.harness import assert_success, run_entry, write_modules
 
 
@@ -173,3 +173,21 @@ say(writeJson(1));
     )
     assert result.exit_code == 0, result.output
     assert result.output.strip() == "1"
+
+
+def test_json_report_example_summarizes_and_writes(tmp_path):
+    source = (REPO_ROOT / "examples" / "json_report.echo").read_text(encoding="utf-8")
+    sample = str(REPO_ROOT / "examples" / "sample_jobs.json")
+    out = tmp_path / "report.json"
+    result = run_echo(
+        source,
+        filename="json_report.echo",
+        host=Host(args=[sample, str(out)]),
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert "wrote" in result.output
+    report = out.read_text(encoding="utf-8")
+    assert '"suite": "checkout"' in report
+    assert '"passed": 2' in report
+    assert '"failed": 1' in report

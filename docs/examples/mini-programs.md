@@ -52,6 +52,17 @@ Output:
 {"a": 2, "b": 1}
 ```
 
+### JSON job report (v0.4 host builtins)
+
+`examples/json_report.echo` reads a JSON suite, prints a summary, and can write it back out.
+
+```bash
+echo examples/json_report.echo -- examples/sample_jobs.json
+ECHO_REPORT=report.json echo examples/json_report.echo -- examples/sample_jobs.json
+```
+
+It uses `args()`, `envOr()`, `readFile()`, `writeFile()`, `parseJson()`, and `writeJson()`.
+
 ## Notes
 These are still small scripts, but they cover the kind of tasks Echo currently handles well.
 

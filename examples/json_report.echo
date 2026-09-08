@@ -1,0 +1,50 @@
+// Summarize a JSON job suite.
+//
+//   echo examples/json_report.echo -- examples/sample_jobs.json
+//   ECHO_REPORT=report.json echo examples/json_report.echo -- examples/sample_jobs.json
+//
+// args() / envOr pick the input. A second arg or ECHO_REPORT writes the summary.
+
+flags: list = args();
+input_path: str = envOr("ECHO_INPUT", "examples/sample_jobs.json");
+if flags.length() > 0 {
+    input_path = flags[0];
+}
+
+data: dynamic = parseJson(readFile(input_path));
+jobs: list = data["jobs"];
+
+passed: int = 0;
+failed: int = 0;
+total_ms: int = 0;
+
+foreach job: hash in jobs {
+    status: str = job["status"];
+    ms: int = job["ms"];
+    total_ms = total_ms + ms;
+    if status == "pass" {
+        passed = passed + 1;
+    } else {
+        failed = failed + 1;
+    }
+}
+
+summary: hash = {
+    suite: data["suite"],
+    jobs: jobs.length(),
+    passed: passed,
+    failed: failed,
+    total_ms: total_ms
+};
+
+report: str = writeJson(summary);
+say(report);
+
+out_path: str = envOr("ECHO_REPORT", "");
+if flags.length() > 1 {
+    out_path = flags[1];
+}
+if out_path.length() > 0 {
+    writeFile(out_path, report);
+    say("wrote ${out_path}");
+}
