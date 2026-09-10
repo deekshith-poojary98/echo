@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.1**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.1** hardens the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement. No new language features.
+Current released version is **v0.5.2**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -16,7 +16,7 @@ Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 | 6 | Multiline strings `"""` / `'''` | implemented (0.5.0) |
 | 7 | Number literals `.5` and `1e3` / `1e-3` | implemented (0.5.0) |
 | 8 | `readLine()` | implemented (0.5.0) |
-| 9 | REPL (`echo` with no file) | implemented (0.5.0) |
+| 9 | REPL (`echo` with no file) | implemented (0.5.2) |
 | 10 | `echo test path.echo` | implemented (0.5.0) |
 
 ### 1. `assert(cond, message)`
@@ -55,9 +55,11 @@ Read one line from stdin with no required prompt. EOF aborts with an Echo error.
 
 ### 9. REPL
 
-`echo` with no file enters a REPL. Keep `echo check` and `echo file.echo`. `--plain` supported. Simple loop: read, `run_source`, print.
+`echo` with no file enters a REPL. Keep `echo check` and `echo file.echo`. `--plain` supported.
 
-Harden 0.5.1: brace-depth and unterminated-triple continuation (`... `), empty lines ignored, `exit(code)` / EOF quit without a traceback, one failed submission does not kill the process. Bindings still do not persist across submissions.
+Harden 0.5.1: brace-depth and unterminated-triple continuation (`... `), empty lines ignored, `exit(code)` / EOF quit without a traceback, one failed submission does not kill the process.
+
+**0.5.2 REPL session state (done):** one Interpreter and Environment for the process. Analyzer-visible declarations persist across successful submissions, so a `fn` or variable defined at one `echo>` is usable at the next. Failed submissions do not drop earlier bindings. `import` loads sibling modules from the working directory into the session. `use mut` works for names declared earlier in the session.
 
 ### 10. `echo test`
 

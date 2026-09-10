@@ -20,17 +20,17 @@ from echo.semantics.modules import ModuleSymbols
 
 class ModuleLoader:
     def __init__(self, resolver: ModuleResolver | None = None) -> None:
-        self._resolver = resolver or ModuleResolver()
+        self.resolver = resolver or ModuleResolver()
         self._modules: dict[Path, Module] = {}
         self._declared_imports: dict[Path, list[str]] = {}
         self._initialized: list[Path] = []
 
     def declare_imports(self, importer_path: str | Path, names: Sequence[str]) -> None:
-        identity = self._resolver.canonicalize(importer_path)
+        identity = self.resolver.canonicalize(importer_path)
         self._declared_imports[identity] = list(names)
 
     def module(self, path: str | Path) -> Module | None:
-        return self._modules.get(self._resolver.canonicalize(path))
+        return self._modules.get(self.resolver.canonicalize(path))
 
     def modules(self) -> list[Module]:
         return list(self._modules.values())
@@ -39,7 +39,7 @@ class ModuleLoader:
         return list(self._initialized)
 
     def load(self, entry_path: str | Path, host: Host | None = None) -> Module:
-        entry = self._resolver.canonicalize(entry_path)
+        entry = self.resolver.canonicalize(entry_path)
         graph = ModuleGraph()
         self._collect(entry, graph, set())
         graph.detect_cycles()
@@ -50,7 +50,7 @@ class ModuleLoader:
         return self._modules[entry]
 
     def check(self, entry_path: str | Path) -> Module:
-        entry = self._resolver.canonicalize(entry_path)
+        entry = self.resolver.canonicalize(entry_path)
         graph = ModuleGraph()
         self._collect(entry, graph, set())
         graph.detect_cycles()
@@ -67,7 +67,7 @@ class ModuleLoader:
             self._discover_imports(module)
             module.discovered = True
         for name in self._import_names(module):
-            dependency = module.specifiers.get(name) or self._resolver.resolve(module.path, name)
+            dependency = module.specifiers.get(name) or self.resolver.resolve(module.path, name)
             if dependency not in module.dependencies:
                 module.dependencies.append(dependency)
             module.specifiers.setdefault(name, dependency)
@@ -79,7 +79,7 @@ class ModuleLoader:
         for statement in module.ast.statements:
             if not isinstance(statement, ImportDeclaration):
                 continue
-            dependency = self._resolver.resolve(module.path, statement.module)
+            dependency = self.resolver.resolve(module.path, statement.module)
             module.imported_bindings.append((statement.name, dependency))
             module.specifiers[statement.module] = dependency
 
@@ -97,7 +97,7 @@ class ModuleLoader:
         return names
 
     def _materialize(self, path: Path) -> Module:
-        identity = self._resolver.canonicalize(path)
+        identity = self.resolver.canonicalize(path)
         existing = self._modules.get(identity)
         if existing is not None:
             return existing

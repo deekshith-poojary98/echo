@@ -16,6 +16,13 @@ class Scope:
         if parent:
             self.type_aliases = dict(parent.type_aliases)
 
+    def copy(self) -> Scope:
+        clone = Scope(self.parent, is_function=self.is_function, is_loop=self.is_loop)
+        clone.symbols = dict(self.symbols)
+        clone.type_aliases = dict(self.type_aliases)
+        clone.in_function = self.in_function
+        return clone
+
     def define(self, symbol: Symbol) -> None:
         existing = self.symbols.get(symbol.name)
         if existing is not None and not existing.builtin:

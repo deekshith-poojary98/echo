@@ -13,9 +13,11 @@ from echo.errors import (
     EchoNameError,
     EchoTypeError,
     LexError,
+    ModuleLoadError,
     MutationError,
     ParseError,
     SemanticError,
+    SourceLocation,
     format_diagnostic,
 )
 from echo.frontend.ast.nodes import ImportDeclaration, Program
@@ -23,9 +25,14 @@ from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.frontend.tokens import TokenType
 from echo.modules.loader import ModuleLoader
+from echo.modules.records import Module
+from echo.runtime.context import Environment
+from echo.runtime.functions import EchoFunction
 from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
 from echo.semantics.analyzer import SemanticAnalyzer
+from echo.semantics.modules import ModuleSymbols
+from echo.semantics.scope import Scope
 
 try:
     from rich.console import Console
@@ -171,6 +178,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
     host = host or Host()
+    interpreter = Interpreter(host=host)
+    env = Environment()
+    session_scope = SemanticAnalyzer.module_scope(SourceLocation(1, 1, "<repl>"))
+    loader = ModuleLoader()
     print(f"Echo {__version__}")
     buffer: list[str] = []
     while True:
@@ -192,10 +203,7 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
             continue
         buffer.clear()
         try:
-            tokens = Lexer().tokenize(source, filename="<repl>")
-            program = Parser(tokens).parse()
-            SemanticAnalyzer().analyze(program)
-            Interpreter(host=host).execute(program)
+            session_scope = _run_repl_snippet(source, interpreter, env, session_scope, loader)
         except EchoExit as exc:
             return exc.code
         except EchoError as exc:
@@ -204,6 +212,72 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
             print()
         except Exception:
             _print_plain_error("Execution Error", "unexpected error", plain)
+
+
+def _run_repl_snippet(
+    source: str,
+    interpreter: Interpreter,
+    env: Environment,
+    session_scope: Scope,
+    loader: ModuleLoader,
+) -> Scope:
+    tokens = Lexer().tokenize(source, filename="<repl>")
+    program = Parser(tokens).parse()
+    snippet_scope = session_scope.copy()
+    dependencies = _repl_import_dependencies(program, loader)
+    SemanticAnalyzer().analyze(program, dependencies=dependencies, scope=snippet_scope)
+    _repl_bind_imports(program, loader, env, interpreter.host)
+    interpreter.execute(program, env)
+    return snippet_scope
+
+
+def _repl_import_dependencies(program: Program, loader: ModuleLoader) -> dict[str, ModuleSymbols]:
+    if not _has_imports(program):
+        return {}
+    importer = Path.cwd() / "<repl>"
+    dependencies: dict[str, ModuleSymbols] = {}
+    for statement in program.statements:
+        if not isinstance(statement, ImportDeclaration) or statement.module in dependencies:
+            continue
+        path = loader.resolver.resolve(importer, statement.module)
+        module = loader.check(path)
+        dependencies[statement.module] = SemanticAnalyzer().collect_symbols(module.ast)
+    return dependencies
+
+
+def _repl_bind_imports(program: Program, loader: ModuleLoader, env: Environment, host: Host) -> None:
+    if not _has_imports(program):
+        return
+    importer = Path.cwd() / "<repl>"
+    loaded: dict[str, Module] = {}
+    for statement in program.statements:
+        if not isinstance(statement, ImportDeclaration):
+            continue
+        if statement.module not in loaded:
+            path = loader.resolver.resolve(importer, statement.module)
+            loaded[statement.module] = loader.load(path, host=host)
+        value = _repl_export_value(loaded[statement.module], statement.name)
+        if isinstance(value, EchoFunction):
+            env.define_function(statement.name, value)
+        env.define(statement.name, value, mutable=False)
+
+
+def _repl_export_value(module: Module, name: str) -> object:
+    module_env = module.env
+    if module_env is None:
+        raise ModuleLoadError(
+            f"module '{module.path.name}' is not fully initialized",
+            code="E3005",
+        )
+    if name in module_env.values:
+        return module_env.values[name]
+    function = module_env.functions.get(name)
+    if function is not None:
+        return function
+    raise ModuleLoadError(
+        f"module '{module.path.name}' has no export '{name}'",
+        code="E3005",
+    )
 
 
 def _repl_source_incomplete(source: str) -> bool:

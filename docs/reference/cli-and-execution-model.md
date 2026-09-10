@@ -43,11 +43,15 @@ echo --plain
 
 With no source file, Echo starts a REPL. `--plain` uses the same plain diagnostics as file runs.
 
-Each submission is a complete program (names do not persist across prompts). A submission can span lines: Echo keeps reading while `{` is unclosed, or while a triple-quoted string is unterminated, and shows `... ` until the input is complete. A one-line `if true { say(1); }` works. Put a function and a call in the same submission if you need both.
+One process is one session: variables, functions, and type aliases persist across `echo>` submissions, and builtins remain available. `use mut` in a later `fn` can assign a variable declared earlier in the session, the same way a file can.
 
-Empty lines at a fresh `echo> ` prompt are ignored. A syntax, semantic, or runtime error prints an Echo diagnostic and returns to the prompt; it does not kill the process or print a Python traceback.
+A submission can span lines: Echo keeps reading while `{` is unclosed, or while a triple-quoted string is unterminated, and shows `... ` until the input is complete. A one-line `if true { say(1); }` works.
 
-Quit with `exit(code)` (the process returns that code) or EOF (Ctrl-D), which exits 0. Ctrl-C cancels the current submission and returns to `echo> `.
+`import name from "module";` resolves sibling `.echo` files from the current working directory, loads them with the existing module loader, and merges the imported bindings into the session. The loaded module is not re-initialized if you import from it again.
+
+Empty lines at a fresh `echo> ` prompt are ignored. A syntax, semantic, or runtime error prints an Echo diagnostic and returns to the prompt; it does not kill the process, print a Python traceback, or drop bindings from earlier successful submissions. If analysis fails, the snippet is not executed. A runtime error does not roll back the interpreter, so a failed `x: int = 1; bad();` may still leave `x` assigned.
+
+Quit with `exit(code)` (the process returns that code) or EOF (Ctrl-D), which exits 0. Session state does not survive process exit. Ctrl-C cancels the current submission and returns to `echo> `.
 
 ### Run as a test
 ```bash

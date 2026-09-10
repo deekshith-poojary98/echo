@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.2
+
+REPL session state. One `echo` process keeps one environment for the lifetime of the REPL.
+
+- Bindings, functions, and type aliases persist across submissions; builtins stay available
+- Analyzer scope is seeded from prior successful submissions so later snippets can use earlier names
+- A failed lex/parse/semantic/runtime submission does not drop earlier bindings; analyze failures are not executed
+- A runtime error does not roll back the interpreter: `x: int = 1; bad();` may leave `x` assigned even though that submission failed
+- `import` in the REPL loads sibling `.echo` files from the working directory into the session
+- `use mut` works for variables declared earlier in the session
+- `exit(code)`, EOF, `--plain`, and brace/triple continuation are unchanged
+
 ## 0.5.1
 
 Harden the 0.5.0 CLI and restricted host. No new language features.

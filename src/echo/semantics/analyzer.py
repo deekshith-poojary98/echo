@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from echo.errors import ArgumentError, EchoTypeError, SemanticError
+from echo.errors import ArgumentError, EchoTypeError, SemanticError, SourceLocation
 from echo.frontend.ast.nodes import (
     AssignmentStatement,
     BinaryExpression,
@@ -53,23 +53,35 @@ class SemanticAnalyzer:
         self._dependencies: Mapping[str, ModuleSymbols] = {}
         self._pending_exports: list[ExportDeclaration] = []
 
-    def analyze(self, program: Program, *, dependencies: Mapping[str, ModuleSymbols] | None = None) -> Program:
+    def analyze(
+        self,
+        program: Program,
+        *,
+        dependencies: Mapping[str, ModuleSymbols] | None = None,
+        scope: Scope | None = None,
+    ) -> Program:
         self.module_symbols = ModuleSymbols()
         self._dependencies = dependencies or {}
         self._pending_exports = []
+        if scope is None:
+            scope = self.module_scope(program.location)
+        self._statements(program.statements, scope)
+        return program
+
+    @staticmethod
+    def module_scope(location: SourceLocation) -> Scope:
         scope = Scope()
         for name in builtin_names():
             scope.define(
                 Symbol(
                     name=name,
                     kind=SymbolKind.FUNCTION,
-                    location=program.location,
+                    location=location,
                     builtin=True,
                     param_count=builtin_param_count(name),
                 )
             )
-        self._statements(program.statements, scope)
-        return program
+        return scope
 
     def collect_symbols(self, program: Program) -> ModuleSymbols:
         return self._collect_symbols(program)

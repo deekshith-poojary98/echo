@@ -275,6 +275,101 @@ def test_repl_exit_builtin_returns_that_code():
     assert "Traceback" not in stdout.getvalue()
 
 
+def test_repl_variable_persists_across_submissions():
+    stdout = StringIO()
+    with patch("builtins.input", side_effect=["x: int = 1;", "say(x);", EOFError]):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "1" in stdout.getvalue().splitlines()
+
+
+def test_repl_function_persists_across_submissions():
+    stdout = StringIO()
+    with patch(
+        "builtins.input",
+        side_effect=["fn add(a: int, b: int) -> int { return a + b; }", "say(add(2, 3));", EOFError],
+    ):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "5" in stdout.getvalue().splitlines()
+
+
+def test_repl_error_does_not_drop_earlier_bindings():
+    stdout = StringIO()
+    with patch("builtins.input", side_effect=["x: int = 1;", "say(missing);", "say(x);", EOFError]):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    output = stdout.getvalue()
+    assert "Error" in output
+    assert "1" in output.splitlines()
+
+
+def test_repl_empty_lines_and_continuation_use_session_state():
+    fake_input, prompts = _repl_input(
+        [
+            "x: int = 1;",
+            "",
+            "   ",
+            "if true {",
+            "say(x);",
+            "}",
+            EOFError,
+        ]
+    )
+    stdout = StringIO()
+    with patch("builtins.input", fake_input):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "1" in stdout.getvalue().splitlines()
+    assert "Syntax Error" not in stdout.getvalue()
+    assert prompts[:6] == ["echo> ", "echo> ", "echo> ", "echo> ", "... ", "... "]
+
+
+def test_repl_use_mut_sees_session_variable():
+    fake_input, _prompts = _repl_input(
+        [
+            "count: int = 0;",
+            "fn bump() {",
+            "use mut count;",
+            "count = count + 1;",
+            "}",
+            "bump();",
+            "say(count);",
+            EOFError,
+        ]
+    )
+    stdout = StringIO()
+    with patch("builtins.input", fake_input):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "1" in stdout.getvalue().splitlines()
+
+
+def test_repl_import_loads_into_session(tmp_path, monkeypatch):
+    write_modules(
+        tmp_path,
+        {
+            "math.echo": """
+                export fn add(a: int, b: int) -> int {
+                    return a + b;
+                }
+            """,
+        },
+    )
+    monkeypatch.chdir(tmp_path)
+    stdout = StringIO()
+    with patch("builtins.input", side_effect=['import add from "math";', "say(add(2, 3));", EOFError]):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "5" in stdout.getvalue().splitlines()
+
+
 def test_repl_exit_zero_is_success():
     stdout = StringIO()
     with patch("builtins.input", side_effect=["exit(0);"]):
