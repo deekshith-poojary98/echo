@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2
+
+Host completeness for scripts. No new syntax.
+
+- `cwd()` returns the host working directory as a string
+- `exit(code)` stops the program with that process code and no error diagnostic
+- `isDir(path)` returns `bool` and does not abort when the path is missing
+- `listFiles(path)` returns sorted directory entry names; missing paths and files abort
+- Restricted hosts deny `isDir` and `listFiles` the same way they deny `readFile`
+
 ## 0.4.1
 
 Stdlib and tooling depth. No new syntax.

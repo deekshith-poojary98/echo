@@ -57,13 +57,17 @@ from echo.runtime.builtins import (
     do_args,
     do_clone,
     do_contains,
+    do_cwd,
     do_ends_with,
     do_env,
     do_env_or,
+    do_exit,
     do_file_exists,
     do_has,
+    do_is_dir,
     do_join,
     do_length,
+    do_list_files,
     do_merge,
     do_parse_json,
     do_read_file,
@@ -523,6 +527,17 @@ class Interpreter:
             return do_ends_with(value, suffix, location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "cwd":
+            if target is not None:
+                raise ArgumentError("cwd() takes no arguments", location, code="E2807")
+            return do_cwd(args, self.host, location)
+        if method == "exit":
+            do_exit(target if target is not None else _first(args, method, location), location)
+            return None
+        if method == "isDir":
+            return do_is_dir(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "listFiles":
+            return do_list_files(target if target is not None else _first(args, method, location), self.host, location)
         raise EchoRuntimeError(f"Unknown method: {method}", location, code="E2616")
 
     def _order(self, target: list, args: list[object], env: Environment, location: SourceLocation) -> list:

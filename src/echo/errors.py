@@ -82,6 +82,14 @@ class ModuleLoadError(EchoError):
     pass
 
 
+class EchoExit(Exception):
+    """Requested by exit(). Not an Echo diagnostic."""
+
+    def __init__(self, code: int) -> None:
+        super().__init__(f"exit({code})")
+        self.code = code
+
+
 def format_diagnostic(error: EchoError, source: str | None = None) -> str:
     header = f"Error[{error.code}]: {error.message}" if error.code else f"Error: {error.message}"
     lines = [header]

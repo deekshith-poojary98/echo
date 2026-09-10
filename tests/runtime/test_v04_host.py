@@ -220,3 +220,120 @@ def test_json_report_example_summarizes_and_writes(tmp_path):
     assert '"suite": "checkout"' in report
     assert '"passed": 2' in report
     assert '"failed": 1' in report
+
+
+def test_cwd_returns_host_directory(tmp_path):
+    result = run_echo("say(cwd());\n", host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == str(tmp_path.resolve())
+
+
+def test_cwd_rejects_arguments():
+    result = run_echo('say(cwd("x"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "takes no arguments" in result.output
+
+
+def test_exit_stops_with_code_and_keeps_output():
+    result = run_echo('say("done");\nexit(2);\nsay("nope");\n')
+    assert result.exit_code == 2
+    assert_no_python_leak(result)
+    assert result.output.strip() == "done"
+    assert "Error" not in result.output
+    assert "exit(2)" not in result.output
+
+
+def test_exit_zero_is_success():
+    result = run_echo("exit(0);\n")
+    assert result.exit_code == 0
+    assert result.output == ""
+
+
+def test_exit_rejects_bool():
+    result = run_echo("exit(true);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "must be an integer" in result.output
+
+
+def test_is_dir_true_and_false(tmp_path):
+    (tmp_path / "notes.txt").write_text("hello", encoding="utf-8")
+    (tmp_path / "folder").mkdir()
+    result = run_echo(
+        """
+say(isDir("folder"));
+say(isDir("notes.txt"));
+say(isDir("missing"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["true", "false", "false"]
+
+
+def test_is_dir_denied_on_restricted_host():
+    result = run_echo('say(isDir("folder"));\n', host=Host(allow_files=False))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+
+
+def test_list_files_sorted_names(tmp_path):
+    (tmp_path / "b.txt").write_text("b", encoding="utf-8")
+    (tmp_path / "a.txt").write_text("a", encoding="utf-8")
+    (tmp_path / "sub").mkdir()
+    result = run_echo('say(listFiles("."));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == '["a.txt", "b.txt", "sub"]'
+
+
+def test_list_files_empty_directory(tmp_path):
+    result = run_echo('say(listFiles("."));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "[]"
+
+
+def test_list_files_missing_is_echo_error(tmp_path):
+    result = run_echo('say(listFiles("nope"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "directory not found" in result.output
+
+
+def test_list_files_rejects_file_path(tmp_path):
+    (tmp_path / "notes.txt").write_text("hello", encoding="utf-8")
+    result = run_echo('say(listFiles("notes.txt"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a directory" in result.output
+
+
+def test_list_files_denied_on_restricted_host():
+    result = run_echo('say(listFiles("."));\n', host=Host(allow_files=False))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+
+
+def test_exit_from_imported_module(tmp_path):
+    write_modules(
+        tmp_path,
+        {
+            "lib.echo": """
+                export fn ready() -> bool {
+                    return true;
+                }
+                say("lib");
+                exit(3);
+            """,
+            "app.echo": """
+                import ready from "lib";
+                say("app");
+            """,
+        },
+    )
+    result = run_entry(tmp_path)
+    assert result.exit_code == 3
+    assert_no_python_leak(result)
+    assert result.output.strip() == "lib"

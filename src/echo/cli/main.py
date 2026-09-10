@@ -8,6 +8,7 @@ from echo import __version__
 from echo.errors import (
     ArgumentError,
     EchoError,
+    EchoExit,
     EchoIndexError,
     EchoNameError,
     EchoTypeError,
@@ -40,6 +41,8 @@ def run_source(source: str, filename: str = "<input>", *, plain: bool = True, ho
         SemanticAnalyzer().analyze(program)
         Interpreter(host=host).execute(program)
         return 0
+    except EchoExit as exc:
+        return exc.code
     except EchoError as exc:
         _print_error(exc, source, plain)
         return 1
@@ -79,6 +82,8 @@ def run_file(source_path: str, plain: bool = False, host: Host | None = None) ->
             SemanticAnalyzer().analyze(program)
             Interpreter(host=host).execute(program)
         return 0
+    except EchoExit as exc:
+        return exc.code
     except EchoError as exc:
         _print_error(exc, _error_source(exc, source), plain)
         return 1

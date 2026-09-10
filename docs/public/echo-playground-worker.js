@@ -7,7 +7,7 @@ import sys
 import time
 import traceback
 import builtins
-from echo.errors import EchoError, format_diagnostic
+from echo.errors import EchoError, EchoExit, format_diagnostic
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.runtime.host import Host
@@ -50,6 +50,11 @@ def run_echo(source, stdin_text):
         SemanticAnalyzer().analyze(program)
         Interpreter(Host(allow_files=False, environ={})).execute(program)
         return json.dumps({"ok": True, "output": stdout.getvalue()})
+    except EchoExit as exc:
+        payload = {"ok": exc.code == 0, "output": stdout.getvalue()}
+        if exc.code != 0:
+            payload["error"] = f"exit({exc.code})"
+        return json.dumps(payload)
     except EchoError as exc:
         return json.dumps({"ok": False, "output": stdout.getvalue(), "error": format_diagnostic(exc, source)})
     except EOFError as exc:

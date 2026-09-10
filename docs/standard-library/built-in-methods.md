@@ -173,6 +173,39 @@ if fileExists("notes.txt") {
 }
 ```
 
+### `cwd()`
+Returns the host working directory as a string. Relative file paths resolve against this directory. Takes no arguments.
+
+```echo
+say(cwd());
+```
+
+### `exit(code)`
+Stops the program. `code` must be an integer (`bool` is a type error). The process returns that code. Success and failure both print nothing extra; earlier `say` output is kept.
+
+```echo
+if !fileExists("notes.txt") {
+    say("missing notes");
+    exit(1);
+}
+```
+
+### `isDir(path)`
+Returns `true` when `path` is an existing directory. Missing paths and files are `false`. A host that denies files still aborts.
+
+```echo
+say(isDir("out"));
+```
+
+### `listFiles(path)`
+Returns a sorted list of names in that directory, including files and subdirectories. Missing paths and non-directories abort. The playground host denies this.
+
+```echo
+foreach name: str in listFiles(".") {
+    say(name);
+}
+```
+
 ### `parseJson(text)` / `writeJson(value)`
 JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort.
 

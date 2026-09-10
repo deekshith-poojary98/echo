@@ -27,7 +27,7 @@ from echo.core.strings import (
     string_ends_with,
     string_starts_with,
 )
-from echo.errors import ArgumentError, EchoRuntimeError, EchoTypeError, SourceLocation
+from echo.errors import ArgumentError, EchoExit, EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.runtime.host import Host
 from echo.runtime.operators import echo_equal
 from echo.runtime.values import echo_type_name, is_truthy, stringify
@@ -82,6 +82,10 @@ BUILTIN_NAMES = frozenset(
         "startsWith",
         "endsWith",
         "fileExists",
+        "cwd",
+        "exit",
+        "isDir",
+        "listFiles",
     }
 )
 
@@ -137,6 +141,10 @@ BUILTIN_PARAMS = {
     "startsWith": ["prefix"],
     "endsWith": ["suffix"],
     "fileExists": ["path"],
+    "cwd": [],
+    "exit": ["code"],
+    "isDir": ["path"],
+    "listFiles": ["path"],
 }
 
 STANDALONE_PARAMS = {
@@ -202,6 +210,10 @@ STANDALONE_MIN_ARGS = {
     "startsWith": 2,
     "endsWith": 2,
     "fileExists": 1,
+    "cwd": 0,
+    "exit": 1,
+    "isDir": 1,
+    "listFiles": 1,
 }
 
 
@@ -443,3 +455,38 @@ def do_file_exists(path: object, host: Host, location: SourceLocation | None = N
     if not isinstance(path, str):
         raise EchoTypeError("fileExists() path must be a string", location, code="E2802")
     return host.file_exists(path)
+
+
+def do_cwd(args: list[object], host: Host, location: SourceLocation | None = None) -> str:
+    if args:
+        raise ArgumentError("cwd() takes no arguments", location, code="E2807")
+    return str(host.working_directory())
+
+
+def do_exit(code: object, location: SourceLocation | None = None) -> None:
+    if isinstance(code, bool) or not isinstance(code, int):
+        raise EchoTypeError("exit() code must be an integer", location, code="E2808")
+    raise EchoExit(code)
+
+
+def do_is_dir(path: object, host: Host, location: SourceLocation | None = None) -> bool:
+    if not host.allow_files:
+        raise EchoRuntimeError("isDir() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("isDir() path must be a string", location, code="E2802")
+    return host.is_dir(path)
+
+
+def do_list_files(path: object, host: Host, location: SourceLocation | None = None) -> list[str]:
+    if not host.allow_files:
+        raise EchoRuntimeError("listFiles() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("listFiles() path must be a string", location, code="E2802")
+    try:
+        return host.list_entries(path)
+    except FileNotFoundError as exc:
+        raise EchoRuntimeError(f"directory not found: {path}", location, code="E2802") from exc
+    except NotADirectoryError as exc:
+        raise EchoRuntimeError(f"not a directory: {path}", location, code="E2802") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot list directory: {path}", location, code="E2803") from exc

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
-from echo.errors import EchoError, ModuleLoadError
+from echo.errors import EchoError, EchoExit, ModuleLoadError
 from echo.frontend.ast.nodes import ImportDeclaration
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
@@ -143,6 +143,8 @@ class ModuleLoader:
         try:
             self._bind_imports(module, env)
             interpreter.execute(module.ast, env)
+        except EchoExit:
+            raise
         except EchoError:
             module.state = FAILED
             raise

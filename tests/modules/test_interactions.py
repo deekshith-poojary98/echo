@@ -334,7 +334,7 @@ def test_attempted_cross_module_use_mut(tmp_path: Path) -> None:
     )
     result = run_entry(tmp_path)
     assert_echo_error(result, "value")
-    assert "11" not in result.output
+    assert "11" not in result.lines
 
 
 def test_same_module_use_mut_still_works_without_imports() -> None:

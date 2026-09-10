@@ -29,6 +29,17 @@ class Host:
         root = self.cwd if self.cwd is not None else Path.cwd()
         return (root / candidate).resolve()
 
+    def working_directory(self) -> Path:
+        root = self.cwd if self.cwd is not None else Path.cwd()
+        return root.resolve()
+
     def file_exists(self, path: str) -> bool:
-        target = self.resolve_path(path)
-        return target.is_file()
+        return self.resolve_path(path).is_file()
+
+    def is_dir(self, path: str) -> bool:
+        return self.resolve_path(path).is_dir()
+
+    def list_entries(self, path: str) -> list[str]:
+        names = [entry.name for entry in self.resolve_path(path).iterdir()]
+        names.sort()
+        return names
