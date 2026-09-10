@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -12,6 +14,7 @@ class Host:
     args: list[str] = field(default_factory=list)
     environ: dict[str, str] | None = None
     allow_files: bool = True
+    allow_run: bool = True
     cwd: Path | None = None
 
     def program_args(self) -> list[str]:
@@ -52,3 +55,29 @@ class Host:
         if target.is_dir():
             raise IsADirectoryError(path)
         target.unlink()
+
+    def copy_file(self, src: str, dest: str) -> None:
+        source = self.resolve_path(src)
+        target = self.resolve_path(dest)
+        if source.is_dir():
+            raise IsADirectoryError(src)
+        if target.is_dir():
+            raise IsADirectoryError(dest)
+        shutil.copyfile(source, target)
+
+    def run_process(self, command: str, args: list[str]) -> dict[str, object]:
+        completed = subprocess.run(
+            [command, *args],
+            cwd=self.working_directory(),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            shell=False,
+            check=False,
+        )
+        return {
+            "code": completed.returncode,
+            "stdout": completed.stdout,
+            "stderr": completed.stderr,
+        }

@@ -10,7 +10,7 @@ nums.push(1);
 user.ensure("name", "Echo");
 ```
 
-> **Note:** Variadic built-ins (`say`, `eprint`, `format`) do not support keyword arguments. All other built-ins accept keyword arguments by parameter name, matching how user-defined functions work.
+> **Note:** Variadic built-ins (`say`, `eprint`, `format`, `pathJoin`) do not support keyword arguments. All other built-ins accept keyword arguments by parameter name, matching how user-defined functions work.
 
 ---
 
@@ -53,6 +53,15 @@ Output:
 ```text
 Enter your name: Ada
 Hello, Ada
+```
+
+---
+
+### `readLine()`
+Reads one line from stdin with no required prompt. EOF aborts with an Echo error. Takes no arguments.
+
+```echo
+line: str = readLine();
 ```
 
 ---
@@ -227,6 +236,42 @@ Deletes a file. Missing paths and directories abort. The playground host denies 
 
 ```echo
 removeFile("scratch.txt");
+```
+
+### `copyFile(src, dest)`
+Copies a file as bytes. Not a directory copy. Missing source and missing dest parent abort. Existing dest files are overwritten; dest directories abort. The playground host denies this.
+
+```echo
+copyFile("src.bin", "dest.bin");
+```
+
+### `pathJoin(...)`
+Joins 2+ string parts with pathlib (not string concat). Variadic like `say`. No keyword arguments. Does not need file access, so the playground keeps it.
+
+```echo
+say(pathJoin("a", "b", "c"));
+```
+
+### `run(command, args)`
+Runs `command` with a list of string arguments. Empty `args` is allowed. Does not use a shell. Returns a hash `{ "code": int, "stdout": str, "stderr": str }`. A non-zero process code is returned, not raised. Missing executables abort. The playground host denies this (`allow_run=False`).
+
+```echo
+proc: hash = run("true", []);
+say(proc["code"]);
+```
+
+### `now()`
+Returns the current unix time as an `int` number of seconds. Takes no arguments.
+
+```echo
+stamp: int = now();
+```
+
+### `assert(cond, message)`
+Aborts with an Echo error when `cond` is falsy. `message` must be a `str`. Truthy values continue.
+
+```echo
+assert(fileExists("notes.txt"), "missing notes");
 ```
 
 ### `parseJson(text)` / `writeJson(value)`
@@ -405,6 +450,20 @@ Rounds toward `-∞` or `+∞` and returns an `int`. `n` must be `int` or `float
 say(floor(3.2));     // 3
 say(ceil(3.2));      // 4
 say(floor(-3.2));    // -4
+```
+
+### `random()`
+Returns a `float` in `[0, 1)`. Takes no arguments.
+
+```echo
+n: float = random();
+```
+
+### `randomInt(min, max)`
+Inclusive integer in `[min, max]`. Both bounds are `int` (not `bool`). `min` must be `<= max`.
+
+```echo
+n: int = randomInt(1, 6);
 ```
 
 ---

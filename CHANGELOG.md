@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.0
+
+Language basics. Syntax and stdlib together: this is **0.5.0** because multiline strings and `.5` / scientific number literals change the grammar. Builtins-only would have been 0.4.4.
+
+- `assert(cond, message)` aborts with an Echo error when `cond` is falsy; `message` must be `str`
+- `copyFile(src, dest)` binary-copies a file; restricted hosts deny it
+- `pathJoin(...)` joins 2+ path parts with pathlib; available in the playground
+- `run(command, args)` runs a process without a shell and returns `{ code, stdout, stderr }`; `Host.allow_run` defaults true; playground sets `allow_run=False`
+- `now()` returns unix time as `int` seconds
+- `random()` is a float in `[0, 1)`; `randomInt(min, max)` is inclusive
+- Triple-quoted `"""` / `'''` strings may span lines and still interpolate `${...}`
+- Number literals `.5`, `1e3`, and `1e-3`; `5.` stays integer-then-dot
+- `readLine()` reads one stdin line; EOF aborts
+- `echo` with no file starts a REPL (`--plain` supported)
+- `echo test path.echo` runs a file; exit 0 is pass
+
 ## 0.4.3
 
 Host and stdlib depth. No new syntax.

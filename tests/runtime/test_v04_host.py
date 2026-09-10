@@ -461,3 +461,149 @@ def test_eprint_empty_writes_newline():
     assert result.exit_code == 0, result.output
     assert result.output == ""
     assert stderr.getvalue() == "\n"
+
+
+def test_copy_file_copies_bytes(tmp_path):
+    (tmp_path / "src.bin").write_bytes(b"\x00\xffhello")
+    result = run_echo(
+        """
+copyFile("src.bin", "dest.bin");
+say(fileExists("dest.bin"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "true"
+    assert (tmp_path / "dest.bin").read_bytes() == b"\x00\xffhello"
+
+
+def test_copy_file_overwrites_existing_file(tmp_path):
+    (tmp_path / "src.txt").write_bytes(b"new")
+    (tmp_path / "dest.txt").write_bytes(b"old")
+    result = run_echo('copyFile("src.txt", "dest.txt");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "dest.txt").read_bytes() == b"new"
+
+
+def test_copy_file_missing_src_aborts(tmp_path):
+    result = run_echo('copyFile("missing.bin", "out.bin");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "file not found" in result.output
+
+
+def test_copy_file_missing_dest_parent_aborts(tmp_path):
+    (tmp_path / "src.bin").write_bytes(b"x")
+    result = run_echo('copyFile("src.bin", "nope/out.bin");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "parent directory not found" in result.output
+
+
+def test_copy_file_directory_dest_aborts(tmp_path):
+    (tmp_path / "src.bin").write_bytes(b"x")
+    (tmp_path / "out").mkdir()
+    result = run_echo('copyFile("src.bin", "out");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "directory" in result.output
+    assert (tmp_path / "out").is_dir()
+
+
+def test_copy_file_directory_src_aborts(tmp_path):
+    (tmp_path / "folder").mkdir()
+    result = run_echo('copyFile("folder", "out.bin");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a file" in result.output
+
+
+def test_copy_file_denied_on_restricted_host(tmp_path):
+    (tmp_path / "src.bin").write_bytes(b"x")
+    result = run_echo(
+        'copyFile("src.bin", "dest.bin");\n',
+        host=Host(allow_files=False, cwd=tmp_path),
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+    assert not (tmp_path / "dest.bin").exists()
+
+
+def test_path_join_joins_with_pathlib():
+    from pathlib import Path
+
+    result = run_echo('say(pathJoin("a", "b", "c"));\nsay(pathJoin("x", "y"));\n')
+    assert result.exit_code == 0, result.output
+    assert result.lines == [str(Path("a").joinpath("b", "c")), str(Path("x") / "y")]
+
+
+def test_path_join_requires_two_args():
+    result = run_echo('say(pathJoin("a"));\n')
+    assert result.exit_code == 1
+    assert "at least 2" in result.output
+
+
+def test_path_join_rejects_non_string():
+    result = run_echo('say(pathJoin("a", 1));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "must be strings" in result.output
+
+
+def test_path_join_available_on_restricted_host():
+    from pathlib import Path
+
+    result = run_echo(
+        'say(pathJoin("a", "b"));\n',
+        host=Host(allow_files=False, allow_run=False),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == str(Path("a") / "b")
+
+
+def test_run_returns_code_and_output():
+    result = run_echo(
+        """
+out: hash = run("/bin/echo", ["hello"]);
+say(out["code"]);
+say(out["stdout"] == "hello\\n");
+say(out["stderr"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines[0] == "0"
+    assert result.lines[1] == "true"
+    assert result.lines[2] == ""
+
+
+def test_run_nonzero_exit_is_not_echo_error():
+    result = run_echo(
+        """
+out: hash = run("false", []);
+say(out["code"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "1"
+
+
+def test_run_missing_executable_is_echo_error():
+    result = run_echo('run("echo-no-such-command-xyz", []);\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "executable not found" in result.output
+
+
+def test_run_rejects_non_string_args():
+    result = run_echo('run("true", [1]);\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "list of strings" in result.output
+
+
+def test_run_denied_on_restricted_host():
+    result = run_echo('run("true", []);\n', host=Host(allow_run=False))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output

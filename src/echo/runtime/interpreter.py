@@ -57,9 +57,11 @@ from echo.runtime.builtins import (
     as_int,
     do_abs,
     do_args,
+    do_assert,
     do_ceil,
     do_clone,
     do_contains,
+    do_copy_file,
     do_cwd,
     do_ends_with,
     do_env,
@@ -78,15 +80,21 @@ from echo.runtime.builtins import (
     do_merge,
     do_min,
     do_mkdir,
+    do_now,
     do_pad_end,
     do_pad_start,
     do_parse_json,
+    do_path_join,
+    do_random,
+    do_random_int,
     do_read_file,
+    do_read_line,
     do_remove_file,
     do_repeat,
     do_replace,
     do_replace_first,
     do_reverse,
+    do_run,
     do_slice,
     do_split,
     do_starts_with,
@@ -600,6 +608,37 @@ class Interpreter:
             return do_floor(target if target is not None else _first(args, method, location), location)
         if method == "ceil":
             return do_ceil(target if target is not None else _first(args, method, location), location)
+        if method == "assert":
+            cond = target if target is not None else _nth(args, 0, method, location)
+            message = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_assert(cond, message, location)
+        if method == "copyFile":
+            src = target if target is not None else _nth(args, 0, method, location)
+            dest = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_copy_file(src, dest, self.host, location)
+        if method == "pathJoin":
+            parts = ([target] if target is not None else []) + list(args)
+            return do_path_join(parts, location)
+        if method == "run":
+            command = target if target is not None else _nth(args, 0, method, location)
+            argv = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_run(command, argv, self.host, location)
+        if method == "now":
+            if target is not None:
+                raise ArgumentError("now() takes no arguments", location, code="E2807")
+            return do_now(args, location)
+        if method == "random":
+            if target is not None:
+                raise ArgumentError("random() takes no arguments", location, code="E2807")
+            return do_random(args, location)
+        if method == "randomInt":
+            low = target if target is not None else _nth(args, 0, method, location)
+            high = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_random_int(low, high, location)
+        if method == "readLine":
+            if target is not None:
+                raise ArgumentError("readLine() takes no arguments", location, code="E2807")
+            return do_read_line(args, location)
         raise EchoRuntimeError(f"Unknown method: {method}", location, code="E2616")
 
     def _order(self, target: list, args: list[object], env: Environment, location: SourceLocation) -> list:

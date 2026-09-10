@@ -1,5 +1,6 @@
 from contextlib import redirect_stdout
 from io import StringIO
+from unittest.mock import patch
 
 from echo import __version__
 from echo.cli.main import check_file, main, run_file
@@ -120,6 +121,58 @@ def test_check_does_not_execute_imported_module(tmp_path):
 
 def test_check_dot_echo_still_runs_the_file(tmp_path):
     app = tmp_path / "check.echo"
+    app.write_text('say("ran");\n', encoding="utf-8")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        code = main([str(app), "--plain"])
+    assert code == 0
+    assert stdout.getvalue().strip() == "ran"
+
+
+def test_repl_runs_source_and_exits_on_eof():
+    stdout = StringIO()
+    with patch("builtins.input", side_effect=["say(1);", EOFError]):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    output = stdout.getvalue()
+    assert "1" in output
+    assert f"Echo {__version__}" in output
+
+
+def test_repl_keeps_going_after_error_then_exits():
+    stdout = StringIO()
+    with patch("builtins.input", side_effect=["say(1 / 0);", "say(2);", EOFError]):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    output = stdout.getvalue()
+    assert "Error" in output
+    assert "2" in output.splitlines()
+
+
+def test_echo_test_passes_on_exit_zero(tmp_path):
+    app = tmp_path / "ok.echo"
+    app.write_text('say("ok");\n', encoding="utf-8")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        code = main(["test", str(app), "--plain"])
+    assert code == 0
+    assert stdout.getvalue().strip() == "ok"
+
+
+def test_echo_test_fails_on_nonzero(tmp_path):
+    app = tmp_path / "bad.echo"
+    app.write_text("say(1 / 0);\n", encoding="utf-8")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        code = main(["test", str(app), "--plain"])
+    assert code == 1
+    assert "Error" in stdout.getvalue()
+
+
+def test_echo_test_dot_echo_still_runs_the_file(tmp_path):
+    app = tmp_path / "test.echo"
     app.write_text('say("ran");\n', encoding="utf-8")
     stdout = StringIO()
     with redirect_stdout(stdout):

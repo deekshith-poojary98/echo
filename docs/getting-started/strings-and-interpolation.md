@@ -42,6 +42,14 @@ a: str = "Echo";
 b: str = 'Echo';
 ```
 
+Triple quotes may span lines and still interpolate:
+
+```echo
+block: str = """
+hello ${name}
+""";
+```
+
 ### Escapes
 Supported escapes:
 

@@ -78,6 +78,28 @@
 	  "strings": {
 		"patterns": [
 		  {
+			"name": "string.quoted.triple.double.echo",
+			"begin": "\"\"\"",
+			"end": "\"\"\"",
+			"patterns": [
+			  {
+				"name": "constant.character.escape.echo",
+				"match": "\\\\."
+			  }
+			]
+		  },
+		  {
+			"name": "string.quoted.triple.single.echo",
+			"begin": "'''",
+			"end": "'''",
+			"patterns": [
+			  {
+				"name": "constant.character.escape.echo",
+				"match": "\\\\."
+			  }
+			]
+		  },
+		  {
 			"name": "string.quoted.double.echo",
 			"begin": "\"",
 			"end": "\"",
@@ -118,7 +140,7 @@
 		"patterns": [
 		  {
 			"name": "constant.numeric.decimal.echo",
-			"match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+			"match": "(?<![0-9.])(?:\\.[0-9]+|[0-9]+(?:\\.[0-9]+)?)(?:[eE][+-]?[0-9]+)?"
 		  },
 		  {
 			"name": "constant.numeric.hex.echo",

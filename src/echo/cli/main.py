@@ -144,6 +144,8 @@ def main(argv: list[str] | None = None) -> int:
     raw = list(sys.argv[1:] if argv is None else argv)
     if raw[:1] == ["check"]:
         return _main_check(raw[1:])
+    if raw[:1] == ["test"]:
+        return _main_test(raw[1:])
     parser = argparse.ArgumentParser(description="Run an Echo source file")
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
@@ -160,11 +162,36 @@ def main(argv: list[str] | None = None) -> int:
     if args.version:
         print(f"Echo {__version__}")
         return 0
-    if not args.source:
-        parser.print_help()
-        return 2
     host = Host(args=list(program_args))
+    if not args.source:
+        return run_repl(plain=args.plain, host=host)
     return run_file(args.source, plain=args.plain, host=host)
+
+
+def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
+    host = host or Host()
+    print(f"Echo {__version__}")
+    while True:
+        try:
+            line = input("echo> ")
+        except EOFError:
+            print()
+            return 0
+        except KeyboardInterrupt:
+            print()
+            continue
+        source = line.strip()
+        if not source:
+            continue
+        try:
+            tokens = Lexer().tokenize(source, filename="<repl>")
+            program = Parser(tokens).parse()
+            SemanticAnalyzer().analyze(program)
+            Interpreter(host=host).execute(program)
+        except EchoExit as exc:
+            return exc.code
+        except EchoError as exc:
+            _print_error(exc, source, plain)
 
 
 def _main_check(argv: list[str]) -> int:
@@ -176,6 +203,17 @@ def _main_check(argv: list[str]) -> int:
         parser.print_help()
         return 2
     return check_file(args.source, plain=args.plain)
+
+
+def _main_test(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="echo test", description="Run an Echo source file as a test")
+    parser.add_argument("source", nargs="?", help="Path to .echo source file")
+    parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
+    args = parser.parse_args(argv)
+    if not args.source:
+        parser.print_help()
+        return 2
+    return run_file(args.source, plain=args.plain)
 
 
 if __name__ == "__main__":

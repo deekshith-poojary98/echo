@@ -87,7 +87,7 @@ class Lexer:
         char = self._peek()
         if char in ('"', "'"):
             return self._string()
-        if char.isdigit():
+        if char.isdigit() or (char == "." and self._peek(1).isdigit()):
             return [self._number()]
         if char.isalpha() or char == "_":
             return [self._identifier()]
@@ -110,22 +110,44 @@ class Lexer:
     def _number(self) -> Token:
         start_line, start_col = self.line, self.column
         start = self.pos
-        while self._peek().isdigit():
-            self._advance()
+        is_float = False
 
-        if self._peek() == "." and self._peek(1).isdigit():
+        if self._peek() == ".":
+            is_float = True
             self._advance()
             while self._peek().isdigit():
                 self._advance()
-            lexeme = self.source[start:self.pos]
-            return Token(TokenType.FLOAT, lexeme, start_line, start_col, self.filename)
+        else:
+            while self._peek().isdigit():
+                self._advance()
+            if self._peek() == "." and self._peek(1).isdigit():
+                is_float = True
+                self._advance()
+                while self._peek().isdigit():
+                    self._advance()
+
+        if self._peek() in "eE":
+            sign = self._peek(1)
+            digits_at = 2 if sign in "+-" else 1
+            if self._peek(digits_at).isdigit():
+                is_float = True
+                self._advance()
+                if self._peek() in "+-":
+                    self._advance()
+                while self._peek().isdigit():
+                    self._advance()
 
         lexeme = self.source[start:self.pos]
-        return Token(TokenType.INTEGER, lexeme, start_line, start_col, self.filename)
+        token_type = TokenType.FLOAT if is_float else TokenType.INTEGER
+        return Token(token_type, lexeme, start_line, start_col, self.filename)
 
     def _string(self) -> list[Token]:
         quote = self._advance()
-        start_line, start_col = self.line, self.column - 1
+        triple = self._peek() == quote and self._peek(1) == quote
+        if triple:
+            self._advance()
+            self._advance()
+        start_line, start_col = self.line, self.column - (3 if triple else 1)
         parts: list[Token] = []
         text_start = self.pos
         text_line, text_col = self.line, self.column
@@ -137,30 +159,15 @@ class Lexer:
 
         while not self._at_end():
             char = self._peek()
-            if char == "\n":
+            if char == "\n" and not triple:
                 self._error(f"Unterminated string; did you forget a closing {quote}?", start_line, start_col)
             if char == "\\":
                 self._advance()
-                if self._at_end() or self._peek() == "\n":
+                if self._at_end() or (self._peek() == "\n" and not triple):
                     self._error("Unterminated string escape sequence", start_line, start_col)
                 self._advance()
                 continue
-            if quote == '"' and self.source.startswith("${", self.pos):
-                flush_text(self.pos)
-                interp_line, interp_col = self.line, self.column
-                self._advance()
-                self._advance()
-                parts.append(Token(TokenType.INTERPOLATION_START, "${", interp_line, interp_col, self.filename))
-                parts.extend(self._interpolation_expression())
-                if self._peek() != "}":
-                    self._error("Missing closing brace in string interpolation", interp_line, interp_col)
-                end_line, end_col = self.line, self.column
-                self._advance()
-                parts.append(Token(TokenType.INTERPOLATION_END, "}", end_line, end_col, self.filename))
-                text_start = self.pos
-                text_line, text_col = self.line, self.column
-                continue
-            if quote == "'" and self.source.startswith("${", self.pos):
+            if self.source.startswith("${", self.pos):
                 flush_text(self.pos)
                 interp_line, interp_col = self.line, self.column
                 self._advance()
@@ -176,6 +183,17 @@ class Lexer:
                 text_line, text_col = self.line, self.column
                 continue
             if char == quote:
+                if triple:
+                    if self._peek(1) == quote and self._peek(2) == quote:
+                        flush_text(self.pos)
+                        self._advance()
+                        self._advance()
+                        self._advance()
+                        if not parts:
+                            parts.append(Token(TokenType.STRING, "", start_line, start_col, self.filename))
+                        return parts
+                    self._advance()
+                    continue
                 flush_text(self.pos)
                 self._advance()
                 if not parts:
@@ -183,7 +201,8 @@ class Lexer:
                 return parts
             self._advance()
 
-        self._error(f"Unterminated string; did you forget a closing {quote}?", start_line, start_col)
+        closer = quote * 3 if triple else quote
+        self._error(f"Unterminated string; did you forget a closing {closer}?", start_line, start_col)
         return []
 
     def _interpolation_expression(self) -> list[Token]:

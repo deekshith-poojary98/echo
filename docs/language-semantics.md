@@ -280,17 +280,33 @@ and the remaining arguments as values.
 
 ---
 
+## Number literals
+
+Integers: `1`, `42`.
+
+Floats: `2.5`, `.5`, `1e3`, `1e-3`, `1.5e+2`. Scientific forms are `float`.
+
+A trailing dot is not a float: `5.` is the integer `5` followed by `.`, so
+`5.asInt()` stays a method call.
+
+`1..10` remains a range (`1` then `..` then `10`).
+
+---
+
 ## Strings
 
 Quotes: `"..."` and `'...'`.
 
+Triple quotes: `"""..."""` and `'''...'''`. These may span lines.
+
 Escapes: `\\`, `\"`, `\'`, `\n`, `\t`, `\r`.
 
-Interpolation `${expression}` is allowed in both quote styles,
+Interpolation `${expression}` is allowed in both quote styles and in triples,
 including at the start of the string (`"${name}"`).
 Escapes in the literal fragments are processed.
 
-Strings are single-line. A newline inside quotes is a lex error.
+Single-line `"..."` / `'...'` strings still reject a raw newline (lex error).
+Triples may contain newlines.
 
 Unterminated `/*` comments are a lex error.
 
@@ -349,4 +365,5 @@ so `asInt(true)` / `asFloat(true)` are type errors. No new syntax.
 v0.4.1 adds `join`, `startsWith`, `endsWith`, `fileExists`, and `echo check`.
 v0.4.2 adds `cwd`, `exit`, `isDir`, and `listFiles`.
 v0.4.3 adds `mkdir`, `removeFile`, string `indexOf` / `lastIndexOf` / `repeat` / `padStart` / `padEnd` / `replaceFirst`, numeric `abs` / `min` / `max` / `floor` / `ceil`, and `eprint`.
+v0.5.0 adds `assert`, `copyFile`, `pathJoin`, `run`, `now`, `random` / `randomInt`, `readLine`, a REPL, `echo test`, triple-quoted multiline strings, and `.5` / scientific number literals.
 See `docs/v0.4-stdlib.md`.

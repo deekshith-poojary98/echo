@@ -1,70 +1,82 @@
 # Echo remaining-feature priority
 
-Language syntax is frozen at the v0.4 line. Current released version is **v0.4.3**.
-This list tracks stdlib/host work only. Do not add held syntax.
+Current released version is **v0.5.0**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
-## Implement now (stdlib/host, no syntax)
+## Implement now
 
 | # | Item | Status |
 | --- | --- | --- |
-| 1 | File mutation: `mkdir(path)`, `removeFile(path)` | implemented (0.4.3) |
-| 2 | String position: `indexOf(part)` / `lastIndexOf(part)` | implemented (0.4.3) |
-| 3 | String extras: `repeat(n)`, `padStart` / `padEnd`, `replaceFirst` | implemented (0.4.3) |
-| 4 | Numbers: `abs`, `min`, `max`, `floor`, `ceil` | implemented (0.4.3) |
-| 5 | `eprint(...)` — `say` to stderr | implemented (0.4.3) |
+| 1 | `assert(cond, message)` | implemented (0.5.0) |
+| 2 | `copyFile(src, dest)` + `pathJoin(...)` | implemented (0.5.0) |
+| 3 | `run(command, args)` | implemented (0.5.0) |
+| 4 | `now()` — unix time as `int` seconds | implemented (0.5.0) |
+| 5 | `random()` / `randomInt(min, max)` | implemented (0.5.0) |
+| 6 | Multiline strings `"""` / `'''` | implemented (0.5.0) |
+| 7 | Number literals `.5` and `1e3` / `1e-3` | implemented (0.5.0) |
+| 8 | `readLine()` | implemented (0.5.0) |
+| 9 | REPL (`echo` with no file) | implemented (0.5.0) |
+| 10 | `echo test path.echo` | implemented (0.5.0) |
 
-### 1. File mutation
+### 1. `assert(cond, message)`
 
-`mkdir(path)` and `removeFile(path)`. Restricted host denies both (E2801). Path must be `str`.
+Abort with an Echo error if `cond` is falsy. `message` must be `str`. No Python `AssertionError` leaks. Analyzer: min 2 standalone args.
 
-Decisions:
+### 2. `copyFile` + `pathJoin`
 
-- `mkdir` creates the leaf directory only. Missing parent aborts. Existing path (file or directory) aborts.
-- `removeFile` deletes a file. Missing file and directories abort (no silent success).
-- Recursive create (`mkdir -p`), recursive delete, and `copyFile` stay held.
+`copyFile(src, dest)` is a UTF-8-agnostic binary copy of a file (not a directory). Restricted host (`allow_files=False`) denies with E2801. Missing src aborts. Missing dest parent aborts. Overwriting dest overwrites the file; abort if dest is a directory.
 
-### 2. String position
+`pathJoin` takes 2+ string parts (variadic like `say`). Uses pathlib join, not string concat. Restricted host: `pathJoin` stays available (pure path strings; no files).
 
-`indexOf(part)` / `lastIndexOf(part)` on strings. `part` must be `str` (E2814-style type error). Missing → `-1`. Empty part → `0` / length. Mirrors list `find` returning `-1`.
+### 3. `run(command, args)`
 
-### 3. String extras
+`command` is `str`. `args` is a list of `str` (empty list allowed). Returns `{ "code": int, "stdout": str, "stderr": str }`. No `shell=True`. `Host.allow_run: bool = True` by default; playground sets `allow_run=False`. Denied run → E2801-style “not available in this host”. Non-zero exit is not an Echo error. Missing executable is an Echo error.
 
-- `repeat(n)` — `n` is `int`, reject `bool`, `n >= 0`.
-- `padStart(width, fill)` / `padEnd(width, fill)` — `width` is `int` (not `bool`), `fill` is a non-empty `str`. If already `>= width`, return the original.
-- `replaceFirst(old, new)` — `old` is a non-empty `str`.
+### 4. `now()`
 
-### 4. Numbers
+No arguments. Returns unix time as `int` seconds.
 
-`abs(n)`, `floor(n)`, `ceil(n)`, `min(a, b)`, `max(a, b)`. Reject `bool`. `min` / `max` take two numeric args (`int` / `float`), not a list.
+### 5. `random` / `randomInt`
 
-### 5. stderr print
+`random()` → float in `[0, 1)`. `randomInt(min, max)` inclusive integers, reject `bool`, require `min <= max`. Python `random`.
 
-Name: `eprint(...)`. Variadic like `say`. No keyword args. Writes to stderr.
+### 6. Multiline strings
 
-## Hygiene (after at least items 1–2)
+Triple-quote `"""` and `'''`. Interpolation `${...}` works, matching `"..."` / `'...'`. Newlines are allowed only in triples; single-line quotes stay single-line.
 
-| # | Item | Status |
-| --- | --- | --- |
-| 6 | Update `docs/errors-diagnostics/known-limitations.md` for modules / `echo check` / host stdlib | implemented (0.4.3) |
+### 7. Number literals
+
+`.5` and scientific `1e3` / `1e-3`. Keep existing `5.` as integer then `.` (method calls like `5.asInt()` stay valid).
+
+### 8. `readLine()`
+
+Read one line from stdin with no required prompt. EOF aborts with an Echo error.
+
+### 9. REPL
+
+`echo` with no file enters a REPL. Keep `echo check` and `echo file.echo`. `--plain` supported. Simple loop: read, `run_source`, print.
+
+### 10. `echo test`
+
+`echo test path.echo` runs a file; exit 0 is pass. No test DSL.
 
 ## Held (do not implement)
 
 | Item | Status |
 | --- | --- |
-| User-level failure recovery | held — design only |
-| Formatter, REPL, `echo test`, LSP | held |
-| Dates, HTTP, regex | held |
-| `mkdir -p` / recursive delete / `copyFile` | held — after mkdir+removeFile if needed |
-| Slice syntax `xs[1:4]` | held |
-| `try` / `catch` | held |
-| First-class functions | held |
 | Classes | held |
-| Packages | held |
-| VM / JIT | held |
 | Generics | held |
 | Async | held |
+| VM / JIT | held |
+| Packages | held |
+| `try` / `catch` | held |
+| First-class `map` / `filter` | held |
+| User-level failure recovery | held — design only |
+| First-class functions | held |
+| Slice syntax `xs[1:4]` | held |
 | Default / variadic user args | held |
 | Overloading | held |
-| `map` / `filter` | held |
+| Formatter / LSP | held |
+| Dates, HTTP, regex | held |
+| `mkdir -p` / recursive delete | held |
