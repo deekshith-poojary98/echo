@@ -607,3 +607,17 @@ def test_run_denied_on_restricted_host():
     assert result.exit_code == 1
     assert_no_python_leak(result)
     assert "not available in this host" in result.output
+
+
+def test_host_run_process_respects_allow_run():
+    host = Host(allow_run=False)
+    try:
+        host.run_process("true", [])
+    except PermissionError:
+        return
+    raise AssertionError("restricted Host.run_process must not launch a process")
+
+
+def test_playground_worker_uses_restricted_host():
+    worker = (REPO_ROOT / "docs" / "public" / "echo-playground-worker.js").read_text(encoding="utf-8")
+    assert "Host(allow_files=False, allow_run=False, environ={})" in worker

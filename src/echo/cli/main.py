@@ -21,6 +21,7 @@ from echo.errors import (
 from echo.frontend.ast.nodes import ImportDeclaration, Program
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
+from echo.frontend.tokens import TokenType
 from echo.modules.loader import ModuleLoader
 from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
@@ -171,18 +172,25 @@ def main(argv: list[str] | None = None) -> int:
 def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
     host = host or Host()
     print(f"Echo {__version__}")
+    buffer: list[str] = []
     while True:
+        prompt = "echo> " if not buffer else "... "
         try:
-            line = input("echo> ")
+            line = input(prompt)
         except EOFError:
             print()
             return 0
         except KeyboardInterrupt:
             print()
+            buffer.clear()
             continue
-        source = line.strip()
-        if not source:
+        if not buffer and not line.strip():
             continue
+        buffer.append(line)
+        source = "\n".join(buffer)
+        if _repl_source_incomplete(source):
+            continue
+        buffer.clear()
         try:
             tokens = Lexer().tokenize(source, filename="<repl>")
             program = Parser(tokens).parse()
@@ -192,6 +200,28 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
             return exc.code
         except EchoError as exc:
             _print_error(exc, source, plain)
+        except KeyboardInterrupt:
+            print()
+        except Exception:
+            _print_plain_error("Execution Error", "unexpected error", plain)
+
+
+def _repl_source_incomplete(source: str) -> bool:
+    try:
+        tokens = Lexer().tokenize(source, filename="<repl>")
+    except LexError as exc:
+        return "closing \"\"\"" in exc.message or "closing '''" in exc.message
+    except EchoError:
+        return False
+    depth = 0
+    for token in tokens:
+        if token.type is TokenType.LEFT_BRACE:
+            depth += 1
+        elif token.type is TokenType.RIGHT_BRACE:
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth > 0
 
 
 def _main_check(argv: list[str]) -> int:

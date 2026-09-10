@@ -66,6 +66,8 @@ class Host:
         shutil.copyfile(source, target)
 
     def run_process(self, command: str, args: list[str]) -> dict[str, object]:
+        if not self.allow_run:
+            raise PermissionError("run is not available in this host")
         completed = subprocess.run(
             [command, *args],
             cwd=self.working_directory(),

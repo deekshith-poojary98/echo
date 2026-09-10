@@ -41,7 +41,13 @@ echo
 echo --plain
 ```
 
-With no source file, Echo starts a REPL. Each line is a complete program. `--plain` uses the same plain diagnostics as file runs. `exit(code)` leaves the REPL with that process code.
+With no source file, Echo starts a REPL. `--plain` uses the same plain diagnostics as file runs.
+
+Each submission is a complete program (names do not persist across prompts). A submission can span lines: Echo keeps reading while `{` is unclosed, or while a triple-quoted string is unterminated, and shows `... ` until the input is complete. A one-line `if true { say(1); }` works. Put a function and a call in the same submission if you need both.
+
+Empty lines at a fresh `echo> ` prompt are ignored. A syntax, semantic, or runtime error prints an Echo diagnostic and returns to the prompt; it does not kill the process or print a Python traceback.
+
+Quit with `exit(code)` (the process returns that code) or EOF (Ctrl-D), which exits 0. Ctrl-C cancels the current submission and returns to `echo> `.
 
 ### Run as a test
 ```bash
@@ -49,7 +55,7 @@ echo test program.echo
 echo test program.echo --plain
 ```
 
-Runs the file. Exit 0 is pass. There is no test DSL. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`.
+Runs the file, including imported modules. Exit 0 is pass (`exit(0)` in the file is also pass). Any other process code — including `exit(2)` — is a failed test. Semantic and runtime failures print an Echo diagnostic and exit non-zero. A missing file exits non-zero with `source file not found`. `echo test` with no path prints help and exits 2. Program stdout is shown (the runner is not silent). There is no test DSL. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`.
 
 ## Notes
 - The file passed to the CLI is the entry module when it contains `import`.

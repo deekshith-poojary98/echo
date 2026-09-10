@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.0**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for.
+Current released version is **v0.5.1**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.1** hardens the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement. No new language features.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -57,9 +57,13 @@ Read one line from stdin with no required prompt. EOF aborts with an Echo error.
 
 `echo` with no file enters a REPL. Keep `echo check` and `echo file.echo`. `--plain` supported. Simple loop: read, `run_source`, print.
 
+Harden 0.5.1: brace-depth and unterminated-triple continuation (`... `), empty lines ignored, `exit(code)` / EOF quit without a traceback, one failed submission does not kill the process. Bindings still do not persist across submissions.
+
 ### 10. `echo test`
 
 `echo test path.echo` runs a file; exit 0 is pass. No test DSL.
+
+Harden 0.5.1: no path → help and exit 2; missing file → non-zero Echo error; `exit(2)` fails the test; `exit(0)` passes; imported modules execute (unlike `check`).
 
 ## Held (do not implement)
 

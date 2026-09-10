@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1
+
+Harden the 0.5.0 CLI and restricted host. No new language features.
+
+- REPL continues while `{` is unclosed and while a triple-quoted string is unterminated
+- Empty REPL lines are ignored; `exit(code)` and EOF (Ctrl-D) leave without a Python traceback
+- A failed REPL submission returns to the prompt instead of killing the process
+- `echo test` with no path prints help and exits 2; `exit(2)` in a test file is a failed test; imports execute
+- `Host.run_process` refuses to launch when `allow_run=False` (playground policy)
+
 ## 0.5.0
 
 Language basics. Syntax and stdlib together: this is **0.5.0** because multiline strings and `.5` / scientific number literals change the grammar. Builtins-only would have been 0.4.4.
