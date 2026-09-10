@@ -348,4 +348,5 @@ v0.4 adds host and standard-library builtins (`args`, `env`, files, JSON,
 so `asInt(true)` / `asFloat(true)` are type errors. No new syntax.
 v0.4.1 adds `join`, `startsWith`, `endsWith`, `fileExists`, and `echo check`.
 v0.4.2 adds `cwd`, `exit`, `isDir`, and `listFiles`.
+v0.4.3 adds `mkdir`, `removeFile`, string `indexOf` / `lastIndexOf` / `repeat` / `padStart` / `padEnd` / `replaceFirst`, numeric `abs` / `min` / `max` / `floor` / `ceil`, and `eprint`.
 See `docs/v0.4-stdlib.md`.

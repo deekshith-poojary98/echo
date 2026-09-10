@@ -81,3 +81,65 @@ def string_ends_with(value: str, suffix: object, location: SourceLocation | None
     if not isinstance(suffix, str):
         raise EchoTypeError("endsWith() requires a string", location, code="E2814")
     return value.endswith(suffix)
+
+
+def string_index_of(value: str, part: object, location: SourceLocation | None = None) -> int:
+    if not isinstance(part, str):
+        raise EchoTypeError("indexOf() requires a string", location, code="E2814")
+    return value.find(part)
+
+
+def string_last_index_of(value: str, part: object, location: SourceLocation | None = None) -> int:
+    if not isinstance(part, str):
+        raise EchoTypeError("lastIndexOf() requires a string", location, code="E2814")
+    return value.rfind(part)
+
+
+def string_repeat(value: str, count: object, location: SourceLocation | None = None) -> str:
+    if isinstance(count, bool) or not isinstance(count, int):
+        raise EchoTypeError("repeat() count must be an integer", location, code="E2816")
+    if count < 0:
+        raise EchoRuntimeError("repeat() count must be non-negative", location, code="E2816")
+    return value * count
+
+
+def string_pad_start(value: str, width: object, fill: object, location: SourceLocation | None = None) -> str:
+    return _pad_string(value, width, fill, start=True, method="padStart", location=location)
+
+
+def string_pad_end(value: str, width: object, fill: object, location: SourceLocation | None = None) -> str:
+    return _pad_string(value, width, fill, start=False, method="padEnd", location=location)
+
+
+def _pad_string(
+    value: str,
+    width: object,
+    fill: object,
+    *,
+    start: bool,
+    method: str,
+    location: SourceLocation | None,
+) -> str:
+    if isinstance(width, bool) or not isinstance(width, int):
+        raise EchoTypeError(f"{method}() width must be an integer", location, code="E2817")
+    if width < 0:
+        raise EchoRuntimeError(f"{method}() width must be non-negative", location, code="E2817")
+    if not isinstance(fill, str):
+        raise EchoTypeError(f"{method}() fill must be a string", location, code="E2817")
+    if fill == "":
+        raise EchoRuntimeError(f"{method}() fill must be a non-empty string", location, code="E2817")
+    if len(value) >= width:
+        return value
+    needed = width - len(value)
+    padding = (fill * ((needed // len(fill)) + 1))[:needed]
+    if start:
+        return padding + value
+    return value + padding
+
+
+def replace_first_string(value: str, old: object, new: object, location: SourceLocation | None = None) -> str:
+    if not isinstance(old, str) or not isinstance(new, str):
+        raise EchoTypeError("replaceFirst() requires string arguments", location, code="E2811")
+    if old == "":
+        raise EchoRuntimeError("replaceFirst() search string must be non-empty", location, code="E2811")
+    return value.replace(old, new, 1)

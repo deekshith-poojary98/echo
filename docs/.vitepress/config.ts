@@ -92,6 +92,7 @@ export default defineConfig({
         text: 'Project',
         items: [
           { text: 'Roadmap / Planned Improvements', link: '/project/roadmap' },
+          { text: 'Remaining Feature Priority', link: '/project/priority' },
           { text: 'Language Capability Matrix', link: '/language-capability-matrix' },
           { text: 'v0.4 Language vs Stdlib', link: '/v0.4-language-vs-stdlib' },
           { text: 'v0.4 Standard Library', link: '/v0.4-stdlib' }

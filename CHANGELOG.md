@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.3
+
+Host and stdlib depth. No new syntax.
+
+- `mkdir(path)` creates the leaf directory only; missing parent, existing path, and a file in the way abort
+- `removeFile(path)` deletes a file; missing paths and directories abort
+- Restricted hosts deny `mkdir` and `removeFile` the same way they deny `readFile`
+- String `indexOf` / `lastIndexOf` (missing → `-1`; empty part → `0` / length)
+- String `repeat`, `padStart` / `padEnd`, and `replaceFirst`
+- Numeric `abs`, `min(a, b)`, `max(a, b)`, `floor`, and `ceil` (reject `bool`)
+- `eprint(...)` writes to stderr the same way `say` writes to stdout
+
 ## 0.4.2
 
 Host completeness for scripts. No new syntax.

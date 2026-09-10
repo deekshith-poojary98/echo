@@ -29,6 +29,9 @@ def test_variadic_builtins_still_reject_keyword_arguments():
     result = run_echo('say(value: "Echo");')
     assert result.exit_code == 1
     assert "say() does not support keyword arguments" in result.output
+    result = run_echo('eprint(value: "Echo");')
+    assert result.exit_code == 1
+    assert "eprint() does not support keyword arguments" in result.output
 
 
 def test_format_supports_positional_placeholders():

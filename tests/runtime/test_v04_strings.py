@@ -112,3 +112,86 @@ def test_ends_with_rejects_non_string_suffix():
     assert result.exit_code == 1
     assert_no_python_leak(result)
     assert "requires a string" in result.output
+
+
+def test_index_of_and_last_index_of():
+    result = run_echo(
+        """
+say("echo echo".indexOf("ch"));
+say("echo echo".indexOf("x"));
+say(indexOf("echo", ""));
+say("echo echo".lastIndexOf("echo"));
+say("echo".lastIndexOf("x"));
+say(lastIndexOf("echo", ""));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["1", "-1", "0", "5", "-1", "4"]
+
+
+def test_index_of_rejects_non_string_part():
+    result = run_echo('say("echo".indexOf(1));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "requires a string" in result.output
+
+
+def test_last_index_of_rejects_non_string_part():
+    result = run_echo('say("echo".lastIndexOf(true));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "requires a string" in result.output
+
+
+def test_repeat_string():
+    result = run_echo('say("ab".repeat(3));\nsay(repeat("x", 0));\n')
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["ababab", ""]
+
+
+def test_repeat_rejects_bool_and_negative():
+    result = run_echo('say("ab".repeat(true));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "must be an integer" in result.output
+    result = run_echo('say("ab".repeat(-1));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "non-negative" in result.output
+
+
+def test_pad_start_and_pad_end():
+    result = run_echo(
+        """
+say("5".padStart(3, "0"));
+say("5".padEnd(3, "0"));
+say("echo".padStart(3, "-"));
+say(padStart("5", 4, "ab"));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["005", "500", "echo", "aba5"]
+
+
+def test_pad_rejects_empty_fill_and_bool_width():
+    result = run_echo('say("5".padStart(3, ""));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "non-empty" in result.output
+    result = run_echo('say("5".padEnd(true, "0"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "must be an integer" in result.output
+
+
+def test_replace_first_only_first_occurrence():
+    result = run_echo('say("foo foo food".replaceFirst("foo", "bar"));\n')
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "bar foo food"
+
+
+def test_replace_first_rejects_empty_search():
+    result = run_echo('say("abc".replaceFirst("", "-"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "non-empty" in result.output

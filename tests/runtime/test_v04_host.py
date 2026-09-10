@@ -1,4 +1,4 @@
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 
 from echo.cli.main import main
@@ -316,6 +316,111 @@ def test_list_files_denied_on_restricted_host():
     assert "not available in this host" in result.output
 
 
+def test_mkdir_creates_leaf_directory(tmp_path):
+    result = run_echo(
+        """
+mkdir("out");
+say(isDir("out"));
+say(listFiles("out"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["true", "[]"]
+    assert (tmp_path / "out").is_dir()
+
+
+def test_mkdir_method_form(tmp_path):
+    result = run_echo('"nested".mkdir();\nsay(isDir("nested"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "true"
+
+
+def test_mkdir_missing_parent_aborts(tmp_path):
+    result = run_echo('mkdir("missing/child");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "parent directory not found" in result.output
+    assert not (tmp_path / "missing").exists()
+
+
+def test_mkdir_file_in_the_way_aborts(tmp_path):
+    (tmp_path / "notes.txt").write_text("hello", encoding="utf-8")
+    result = run_echo('mkdir("notes.txt");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "file in the way" in result.output
+    assert (tmp_path / "notes.txt").is_file()
+
+
+def test_mkdir_existing_directory_aborts(tmp_path):
+    (tmp_path / "out").mkdir()
+    result = run_echo('mkdir("out");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "already exists" in result.output
+
+
+def test_mkdir_rejects_non_string_path():
+    result = run_echo("mkdir(1);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "path must be a string" in result.output
+
+
+def test_mkdir_denied_on_restricted_host():
+    result = run_echo('mkdir("out");\n', host=Host(allow_files=False))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+
+
+def test_remove_file_deletes_file(tmp_path):
+    (tmp_path / "notes.txt").write_text("hello", encoding="utf-8")
+    result = run_echo(
+        """
+removeFile("notes.txt");
+say(fileExists("notes.txt"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "false"
+    assert not (tmp_path / "notes.txt").exists()
+
+
+def test_remove_file_missing_aborts(tmp_path):
+    result = run_echo('removeFile("missing.txt");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "file not found" in result.output
+
+
+def test_remove_file_directory_aborts(tmp_path):
+    (tmp_path / "out").mkdir()
+    result = run_echo('removeFile("out");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a file" in result.output
+    assert (tmp_path / "out").is_dir()
+
+
+def test_remove_file_rejects_non_string_path():
+    result = run_echo("removeFile(true);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "path must be a string" in result.output
+
+
+def test_remove_file_denied_on_restricted_host(tmp_path):
+    (tmp_path / "notes.txt").write_text("hello", encoding="utf-8")
+    result = run_echo('removeFile("notes.txt");\n', host=Host(allow_files=False, cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not available in this host" in result.output
+    assert (tmp_path / "notes.txt").is_file()
+
+
 def test_exit_from_imported_module(tmp_path):
     write_modules(
         tmp_path,
@@ -337,3 +442,22 @@ def test_exit_from_imported_module(tmp_path):
     assert result.exit_code == 3
     assert_no_python_leak(result)
     assert result.output.strip() == "lib"
+
+
+def test_eprint_writes_stderr_not_stdout():
+    stderr = StringIO()
+    with redirect_stderr(stderr):
+        result = run_echo('eprint("err", 1);\nsay("out");\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "out"
+    assert stderr.getvalue().strip() == "err 1"
+
+
+def test_eprint_empty_writes_newline():
+    stderr = StringIO()
+    with redirect_stderr(stderr):
+        result = run_echo("eprint();\n")
+    assert result.exit_code == 0, result.output
+    assert result.output == ""
+    assert stderr.getvalue() == "\n"

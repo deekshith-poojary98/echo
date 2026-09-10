@@ -43,3 +43,12 @@ class Host:
         names = [entry.name for entry in self.resolve_path(path).iterdir()]
         names.sort()
         return names
+
+    def mkdir(self, path: str) -> None:
+        self.resolve_path(path).mkdir()
+
+    def remove_file(self, path: str) -> None:
+        target = self.resolve_path(path)
+        if target.is_dir():
+            raise IsADirectoryError(path)
+        target.unlink()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from functools import cmp_to_key
 
 from echo.core.hashes import ensure, require_hash, take, take_last, wipe
@@ -54,7 +55,9 @@ from echo.runtime.builtins import (
     as_bool,
     as_float,
     as_int,
+    do_abs,
     do_args,
+    do_ceil,
     do_clone,
     do_contains,
     do_cwd,
@@ -63,15 +66,26 @@ from echo.runtime.builtins import (
     do_env_or,
     do_exit,
     do_file_exists,
+    do_floor,
     do_has,
+    do_index_of,
     do_is_dir,
     do_join,
+    do_last_index_of,
     do_length,
     do_list_files,
+    do_max,
     do_merge,
+    do_min,
+    do_mkdir,
+    do_pad_end,
+    do_pad_start,
     do_parse_json,
     do_read_file,
+    do_remove_file,
+    do_repeat,
     do_replace,
+    do_replace_first,
     do_reverse,
     do_slice,
     do_split,
@@ -391,6 +405,9 @@ class Interpreter:
         if method == "say":
             print(" ".join(stringify(value) for value in args))
             return None
+        if method == "eprint":
+            print(" ".join(stringify(value) for value in args), file=sys.stderr)
+            return None
         if method == "wait":
             if not args:
                 raise ArgumentError("wait() requires a seconds argument", location, code="E2608")
@@ -525,6 +542,33 @@ class Interpreter:
             value = target if target is not None else _nth(args, 0, method, location)
             suffix = args[0] if target is not None else _nth(args, 1, method, location)
             return do_ends_with(value, suffix, location)
+        if method == "indexOf":
+            value = target if target is not None else _nth(args, 0, method, location)
+            part = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_index_of(value, part, location)
+        if method == "lastIndexOf":
+            value = target if target is not None else _nth(args, 0, method, location)
+            part = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_last_index_of(value, part, location)
+        if method == "repeat":
+            value = target if target is not None else _nth(args, 0, method, location)
+            count = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_repeat(value, count, location)
+        if method == "padStart":
+            value = target if target is not None else _nth(args, 0, method, location)
+            width = args[0] if target is not None else _nth(args, 1, method, location)
+            fill = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_pad_start(value, width, fill, location)
+        if method == "padEnd":
+            value = target if target is not None else _nth(args, 0, method, location)
+            width = args[0] if target is not None else _nth(args, 1, method, location)
+            fill = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_pad_end(value, width, fill, location)
+        if method == "replaceFirst":
+            value = target if target is not None else _nth(args, 0, method, location)
+            old = args[0] if target is not None else _nth(args, 1, method, location)
+            new = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_replace_first(value, old, new, location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":
@@ -538,6 +582,24 @@ class Interpreter:
             return do_is_dir(target if target is not None else _first(args, method, location), self.host, location)
         if method == "listFiles":
             return do_list_files(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "mkdir":
+            return do_mkdir(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "removeFile":
+            return do_remove_file(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "abs":
+            return do_abs(target if target is not None else _first(args, method, location), location)
+        if method == "min":
+            left = target if target is not None else _nth(args, 0, method, location)
+            right = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_min(left, right, location)
+        if method == "max":
+            left = target if target is not None else _nth(args, 0, method, location)
+            right = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_max(left, right, location)
+        if method == "floor":
+            return do_floor(target if target is not None else _first(args, method, location), location)
+        if method == "ceil":
+            return do_ceil(target if target is not None else _first(args, method, location), location)
         raise EchoRuntimeError(f"Unknown method: {method}", location, code="E2616")
 
     def _order(self, target: list, args: list[object], env: Environment, location: SourceLocation) -> list:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import time
 
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
@@ -20,11 +21,17 @@ from echo.core.lists import (
 )
 from echo.core.strings import (
     apply_format,
+    replace_first_string,
     replace_string,
     require_string,
     split_string,
     string_contains,
     string_ends_with,
+    string_index_of,
+    string_last_index_of,
+    string_pad_end,
+    string_pad_start,
+    string_repeat,
     string_starts_with,
 )
 from echo.errors import ArgumentError, EchoExit, EchoRuntimeError, EchoTypeError, SourceLocation
@@ -37,6 +44,7 @@ BUILTIN_NAMES = frozenset(
         "wait",
         "ask",
         "say",
+        "eprint",
         "asInt",
         "asFloat",
         "asBool",
@@ -81,11 +89,24 @@ BUILTIN_NAMES = frozenset(
         "join",
         "startsWith",
         "endsWith",
+        "indexOf",
+        "lastIndexOf",
+        "repeat",
+        "padStart",
+        "padEnd",
+        "replaceFirst",
         "fileExists",
         "cwd",
         "exit",
         "isDir",
         "listFiles",
+        "mkdir",
+        "removeFile",
+        "abs",
+        "min",
+        "max",
+        "floor",
+        "ceil",
     }
 )
 
@@ -140,11 +161,24 @@ BUILTIN_PARAMS = {
     "join": ["separator"],
     "startsWith": ["prefix"],
     "endsWith": ["suffix"],
+    "indexOf": ["part"],
+    "lastIndexOf": ["part"],
+    "repeat": ["n"],
+    "padStart": ["width", "fill"],
+    "padEnd": ["width", "fill"],
+    "replaceFirst": ["old", "new"],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
     "isDir": ["path"],
     "listFiles": ["path"],
+    "mkdir": ["path"],
+    "removeFile": ["path"],
+    "abs": ["value"],
+    "min": ["other"],
+    "max": ["other"],
+    "floor": ["value"],
+    "ceil": ["value"],
 }
 
 STANDALONE_PARAMS = {
@@ -160,6 +194,14 @@ STANDALONE_PARAMS = {
     "join": ["items", "separator"],
     "startsWith": ["value", "prefix"],
     "endsWith": ["value", "suffix"],
+    "indexOf": ["value", "part"],
+    "lastIndexOf": ["value", "part"],
+    "repeat": ["value", "n"],
+    "padStart": ["value", "width", "fill"],
+    "padEnd": ["value", "width", "fill"],
+    "replaceFirst": ["value", "old", "new"],
+    "min": ["a", "b"],
+    "max": ["a", "b"],
 }
 
 
@@ -168,7 +210,7 @@ def builtin_names() -> frozenset[str]:
 
 
 def builtin_param_count(name: str) -> int | None:
-    if name in {"say", "format"}:
+    if name in {"say", "eprint", "format"}:
         return None
     params = BUILTIN_PARAMS.get(name)
     return len(params) if params is not None else None
@@ -209,11 +251,24 @@ STANDALONE_MIN_ARGS = {
     "join": 2,
     "startsWith": 2,
     "endsWith": 2,
+    "indexOf": 2,
+    "lastIndexOf": 2,
+    "repeat": 2,
+    "padStart": 3,
+    "padEnd": 3,
+    "replaceFirst": 3,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
     "isDir": 1,
     "listFiles": 1,
+    "mkdir": 1,
+    "removeFile": 1,
+    "abs": 1,
+    "min": 2,
+    "max": 2,
+    "floor": 1,
+    "ceil": 1,
 }
 
 
@@ -225,7 +280,7 @@ def resolve_builtin_args(method: str, args: list, has_target: bool, location: So
     has_keyword = any(getattr(arg, "name", None) for arg in args)
     if not has_keyword:
         return args
-    if method in {"say", "format"}:
+    if method in {"say", "eprint", "format"}:
         raise EchoTypeError(f"{method}() does not support keyword arguments", location, code="E2601")
     if not has_target and method in STANDALONE_PARAMS:
         params = STANDALONE_PARAMS[method]
@@ -449,6 +504,30 @@ def do_ends_with(value: object, suffix: object, location: SourceLocation | None 
     return string_ends_with(require_string(value, "endsWith", location), suffix, location)
 
 
+def do_index_of(value: object, part: object, location: SourceLocation | None = None) -> int:
+    return string_index_of(require_string(value, "indexOf", location), part, location)
+
+
+def do_last_index_of(value: object, part: object, location: SourceLocation | None = None) -> int:
+    return string_last_index_of(require_string(value, "lastIndexOf", location), part, location)
+
+
+def do_repeat(value: object, count: object, location: SourceLocation | None = None) -> str:
+    return string_repeat(require_string(value, "repeat", location), count, location)
+
+
+def do_pad_start(value: object, width: object, fill: object, location: SourceLocation | None = None) -> str:
+    return string_pad_start(require_string(value, "padStart", location), width, fill, location)
+
+
+def do_pad_end(value: object, width: object, fill: object, location: SourceLocation | None = None) -> str:
+    return string_pad_end(require_string(value, "padEnd", location), width, fill, location)
+
+
+def do_replace_first(value: object, old: object, new: object, location: SourceLocation | None = None) -> str:
+    return replace_first_string(require_string(value, "replaceFirst", location), old, new, location)
+
+
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:
     if not host.allow_files:
         raise EchoRuntimeError("fileExists() is not available in this host", location, code="E2801")
@@ -490,3 +569,79 @@ def do_list_files(path: object, host: Host, location: SourceLocation | None = No
         raise EchoRuntimeError(f"not a directory: {path}", location, code="E2802") from exc
     except OSError as exc:
         raise EchoRuntimeError(f"cannot list directory: {path}", location, code="E2803") from exc
+
+
+def do_mkdir(path: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("mkdir() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("mkdir() path must be a string", location, code="E2802")
+    target = host.resolve_path(path)
+    if target.is_file():
+        raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
+    if target.is_dir():
+        raise EchoRuntimeError(f"directory already exists: {path}", location, code="E2803")
+    try:
+        host.mkdir(path)
+    except FileNotFoundError as exc:
+        raise EchoRuntimeError(f"parent directory not found: {path}", location, code="E2802") from exc
+    except FileExistsError as exc:
+        if target.is_dir():
+            raise EchoRuntimeError(f"directory already exists: {path}", location, code="E2803") from exc
+        raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803") from exc
+    except NotADirectoryError as exc:
+        raise EchoRuntimeError(f"parent directory not found: {path}", location, code="E2802") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot create directory: {path}", location, code="E2803") from exc
+    return None
+
+
+def do_remove_file(path: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("removeFile() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("removeFile() path must be a string", location, code="E2802")
+    try:
+        host.remove_file(path)
+    except FileNotFoundError as exc:
+        raise EchoRuntimeError(f"file not found: {path}", location, code="E2802") from exc
+    except IsADirectoryError as exc:
+        raise EchoRuntimeError(f"not a file: {path}", location, code="E2802") from exc
+    except PermissionError as exc:
+        target = host.resolve_path(path)
+        if target.is_dir():
+            raise EchoRuntimeError(f"not a file: {path}", location, code="E2802") from exc
+        raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
+    return None
+
+
+def _require_number(value: object, method: str, location: SourceLocation | None = None) -> int | float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise EchoTypeError(f"{method}() requires a number", location, code="E2818")
+    return value
+
+
+def do_abs(value: object, location: SourceLocation | None = None) -> int | float:
+    return abs(_require_number(value, "abs", location))
+
+
+def do_min(left: object, right: object, location: SourceLocation | None = None) -> int | float:
+    first = _require_number(left, "min", location)
+    second = _require_number(right, "min", location)
+    return first if first <= second else second
+
+
+def do_max(left: object, right: object, location: SourceLocation | None = None) -> int | float:
+    first = _require_number(left, "max", location)
+    second = _require_number(right, "max", location)
+    return first if first >= second else second
+
+
+def do_floor(value: object, location: SourceLocation | None = None) -> int:
+    return math.floor(_require_number(value, "floor", location))
+
+
+def do_ceil(value: object, location: SourceLocation | None = None) -> int:
+    return math.ceil(_require_number(value, "ceil", location))

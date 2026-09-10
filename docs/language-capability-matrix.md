@@ -1270,5 +1270,4 @@ Judged from:
 Stale on purpose and **not** used as evidence:
 
 - `Echo-Technical-Audit.md` (pre-architecture snapshot)
-- `docs/errors-diagnostics/known-limitations.md` still says there is no module system
 - `docs/reference/cli-and-execution-model.md` still describes the v0.2 single-file CLI

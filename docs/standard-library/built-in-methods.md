@@ -10,7 +10,7 @@ nums.push(1);
 user.ensure("name", "Echo");
 ```
 
-> **Note:** Variadic built-ins (`say`, `format`) do not support keyword arguments. All other built-ins accept keyword arguments by parameter name, matching how user-defined functions work.
+> **Note:** Variadic built-ins (`say`, `eprint`, `format`) do not support keyword arguments. All other built-ins accept keyword arguments by parameter name, matching how user-defined functions work.
 
 ---
 
@@ -28,6 +28,15 @@ Output:
 ```text
 Echo true null
 [1, 2, 3]
+```
+
+---
+
+### `eprint(...)`
+Same as `say`, but writes to stderr. Variadic. No keyword arguments.
+
+```echo
+eprint("missing file");
 ```
 
 ---
@@ -206,6 +215,20 @@ foreach name: str in listFiles(".") {
 }
 ```
 
+### `mkdir(path)`
+Creates the leaf directory only. Does not create missing parents. Existing directories and a file in the way abort. The playground host denies this.
+
+```echo
+mkdir("out");
+```
+
+### `removeFile(path)`
+Deletes a file. Missing paths and directories abort. The playground host denies this.
+
+```echo
+removeFile("scratch.txt");
+```
+
 ### `parseJson(text)` / `writeJson(value)`
 JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort.
 
@@ -306,6 +329,37 @@ say("echo".startsWith("ec"));    // true
 say("echo".endsWith("ho"));      // true
 ```
 
+### `indexOf(part)` / `lastIndexOf(part)`
+Returns the first or last index of `part` in a string, or `-1` if it is missing. `part` must be a string. An empty `part` is `0` / the string length.
+
+```echo
+say("echo echo".indexOf("ch"));         // 1
+say("echo echo".lastIndexOf("echo"));   // 5
+say("echo".indexOf("x"));               // -1
+```
+
+### `repeat(n)`
+Repeats the string `n` times. `n` must be a non-negative integer (`bool` is a type error).
+
+```echo
+say("ab".repeat(3));    // ababab
+```
+
+### `padStart(width, fill)` / `padEnd(width, fill)`
+Pads the string to `width` using `fill`. `width` must be a non-negative integer. `fill` must be a non-empty string and is repeated as needed. If the string is already at least `width`, the original is returned.
+
+```echo
+say("5".padStart(3, "0"));    // 005
+say("5".padEnd(3, "0"));      // 500
+```
+
+### `replaceFirst(old, new)`
+Replaces the first non-overlapping occurrence of `old` with `new`. `old` must be a non-empty string.
+
+```echo
+say("foo foo".replaceFirst("foo", "bar"));    // bar foo
+```
+
 ### `join(separator)`
 Joins a list of strings with `separator` and returns a string. `separator` may be empty. An empty list is `""`. Non-string items or a non-string separator are type errors.
 
@@ -321,6 +375,36 @@ Performs template string substitution. Use `{}` for sequential placeholders or `
 say("Hello, {}!".format("Echo"));           // Hello, Echo!
 say("{0} + {1} = {2}".format(1, 2, 3));    // 1 + 2 = 3
 say("{{literal braces}}".format());         // {literal braces}
+```
+
+---
+
+## Numbers
+
+### `abs(n)`
+Returns the absolute value. `n` must be `int` or `float` (`bool` is a type error). An `int` stays an `int`; a `float` stays a `float`.
+
+```echo
+say(abs(-3));      // 3
+say(abs(-3.5));    // 3.5
+```
+
+### `min(a, b)` / `max(a, b)`
+Returns the lesser or greater of two numbers. Mixed `int` / `float` is allowed. `bool` is a type error.
+
+```echo
+say(min(2, 5));      // 2
+say(max(2, 5));      // 5
+say(min(1.5, 1));    // 1
+```
+
+### `floor(n)` / `ceil(n)`
+Rounds toward `-∞` or `+∞` and returns an `int`. `n` must be `int` or `float` (`bool` is a type error).
+
+```echo
+say(floor(3.2));     // 3
+say(ceil(3.2));      // 4
+say(floor(-3.2));    // -4
 ```
 
 ---
@@ -579,7 +663,7 @@ say(copy["name"]);        // Echo
 ---
 
 ## Notes
-- All built-ins except `say` and `format` support keyword arguments by parameter name — the same way user-defined functions do.
+- All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
 - For standalone `find(...)` and `countOf(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asFloat`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
