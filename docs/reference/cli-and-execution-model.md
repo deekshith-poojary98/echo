@@ -33,7 +33,7 @@ echo check program.echo
 echo check program.echo --plain
 ```
 
-`check` lexes, parses, and analyzes the file and its import graph. It does not execute. Success prints nothing and exits 0. Failures use the same diagnostics as a normal run. The first argument must be the word `check`; `echo check.echo` still runs a file named `check.echo`.
+`check` lexes, parses, and analyzes the file and its import graph. It does not execute. Success prints nothing and exits 0. Failures use the same diagnostics as a normal run. The first argument must be the word `check`; `echo check.echo` still runs a file named `check.echo`. The VS Code / Cursor extension can run this command as a task (`--plain`) and match the diagnostic into the Problems panel.
 
 ### REPL
 ```bash
@@ -79,7 +79,7 @@ FAIL path/foo_test.echo::testSub
 2 passed, 1 failed
 ```
 
-Program `say` output is shown. There is no `test "name" { }` syntax. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`.
+Program `say` output is shown. There is no `test "name" { }` syntax. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`. The editor extension can run `echo test --plain` as a task and match location-bearing failures.
 
 ### Format source files
 ```bash
@@ -89,7 +89,7 @@ echo fmt program.echo --check
 echo fmt program.echo --plain
 ```
 
-Rewrites Echo sources in place to the canonical layout (4-space indent, comments kept, `else if` flattening, parentheses from operator precedence). A directory argument formats `*.echo` files recursively. `--check` prints each path that would change and exits 1; already-formatted files print nothing and exit 0. Parse errors use the same diagnostics as `echo check` and do not write the file. `echo fmt` with no path prints help and exits 2. The first argument must be the word `fmt`; `echo fmt.echo` still runs a file named `fmt.echo`.
+Rewrites Echo sources in place to the canonical layout (4-space indent, comments kept, `else if` flattening, parentheses from operator precedence). A directory argument formats `*.echo` files recursively. `--check` prints each path that would change and exits 1; already-formatted files print nothing and exit 0. Parse errors use the same diagnostics as `echo check` and do not write the file. `echo fmt` with no path prints help and exits 2. The first argument must be the word `fmt`; `echo fmt.echo` still runs a file named `fmt.echo`. The editor extension can run this command (Format Document / Format workspace).
 
 Number literals may be respelled (`1e3` → `1000.0`). Strings are wrapped from raw lexemes and are not re-escaped, so quote style may change (`'hello'` → `"hello"`).
 
@@ -100,7 +100,7 @@ echo lint src/
 echo lint program.echo --plain
 ```
 
-Reports style and convention findings without running the program. A directory argument lints `*.echo` files recursively. Each finding prints `path:line:col: rule: message`. Any finding exits 1; a clean tree prints nothing and exits 0. Parse errors use the same diagnostics as `echo check`. `echo lint` with no path prints help and exits 2. The first argument must be the word `lint`; `echo lint.echo` still runs a file named `lint.echo`.
+Reports style and convention findings without running the program. A directory argument lints `*.echo` files recursively. Each finding prints `path:line:col: rule: message`. Any finding exits 1; a clean tree prints nothing and exits 0. Parse errors use the same diagnostics as `echo check`. `echo lint` with no path prints help and exits 2. The first argument must be the word `lint`; `echo lint.echo` still runs a file named `lint.echo`. The editor extension can run this command as a task (`--plain`) and match findings into the Problems panel.
 
 Rules:
 

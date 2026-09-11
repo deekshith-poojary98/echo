@@ -28,7 +28,7 @@ The items below are still out of scope. Classes, `try`/`catch`, first-class func
 - Interpolation tokenization is not fully strict
 - No `mkdir -p` or recursive delete
 - No dates, HTTP, or regex builtins
-- No LSP
+- No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
 
 ## Why This Page Exists
 Echo is still evolving. The docs should not make the language sound more complete than it is, and they should not hide capabilities that already shipped.

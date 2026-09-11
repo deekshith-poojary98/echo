@@ -122,7 +122,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Native test runner | Ecosystem | Implemented (0.5.6) | Tooling | 0.5.6 |
 | Debugger | Ecosystem | Partial | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
-| IDE support | Ecosystem | Partial | Tooling | Tooling track |
+| IDE support | Ecosystem | Partial (0.5.7) | Tooling | 0.5.7 |
 | Language server | Ecosystem | Missing | Tooling | Later |
 | REPL | Ecosystem | Missing | Tooling | Later (REPL). `echo check` shipped in 0.4.1 |
 | Playground | Ecosystem | Partial | Tooling | Done enough |
@@ -1060,17 +1060,22 @@ extract / API generator for Echo modules.
 
 ### IDE support
 
-**Status.** Partial.
+**Status.** Partial (0.5.7). Not an LSP.
 
-`echo-syntax-highlighter/` is a VS Code / Cursor TextMate grammar (also
-imported by the docs site for Echo code fences). It covers current keywords,
-types, builtins (`expect`, `fail`, `assert`, `*Or` twins, host/stdlib), comments,
-strings with `${...}`, and number literals. No completions, jump-to-definition,
-or diagnostics in the editor.
+`echo-syntax-highlighter/` is a VS Code / Cursor extension: TextMate grammar
+(also imported by the docs site for Echo code fences), task provider, and
+problem matchers. It highlights current keywords, types, builtins (`expect`,
+`fail`, `assert`, `*Or` twins, host/stdlib), comments, strings with `${...}`,
+and number literals.
 
-**Priority.** Tooling.
+Commands / Run Task run `echolang check`, `fmt`, `lint`, and `test` (`--plain`)
+so CLI diagnostics appear in the Problems panel. Format Document shells out to
+`echolang fmt`. There are still no completions, jump-to-definition, or a
+language server.
 
-**Possible version.** Tooling track.
+**Priority.** Tooling. Shipped as highlight + tasks.
+
+**Possible version.** 0.5.7.
 
 ---
 

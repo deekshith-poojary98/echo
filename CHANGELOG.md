@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.7
+
+Editor integration for the fmt / lint / test / check CLI (not an LSP).
+
+- The VS Code / Cursor extension `echo-syntax-highlighter/` contributes tasks, problem matchers, and commands that run `echolang check` / `fmt` / `lint` / `test` with `--plain` so diagnostics land in the Problems panel
+- Matchers cover `Error[E####]` / `Error:` plus `--> file:line:col` (check and parse errors), lint `path:line:col: rule: message`, and `echo test` failures that include a location
+- Format Document shells out to `echolang fmt`; this is not a language server, completions, or jump-to-definition
+- Install the Echo CLI (`echolang` on PATH). The Unix `echo` builtin is not the language
+
 ## 0.5.6
 
 Native `echo test` product: expect-style helpers, file and function units, pass/fail summary. No new keywords. No `test "name" { }` syntax.

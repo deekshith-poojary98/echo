@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.6**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.5.7**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -21,6 +21,7 @@ Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 | 11 | `fail(message)` | implemented (0.5.5) |
 | 12 | `echo lint` | implemented (0.5.5) |
 | 13 | `expect` / `expectEq` / `expectNeq` | implemented (0.5.6) |
+| 14 | Editor tasks + problem matchers | implemented (0.5.7) |
 
 ### 1. `assert(cond, message)`
 
@@ -88,6 +89,10 @@ Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`,
 
 Test-only continue-after-failure helpers. `message` must be `str`. `expect(cond, message)` requires `cond` to be `bool`. Under `echo test` a false/mismatch **records** and the unit continues. Outside `echo test` they abort like `assert`. `assert` / `fail` still abort. Codes **E2826** / **E2827** / **E2828**.
 
+### 14. Editor tasks + problem matchers
+
+VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command palette for `echo check`, `echo fmt`, `echo lint`, and `echo test`, with problem matchers into the Problems panel. Tasks use `--plain`. Not an LSP: no completions, jump-to-definition, or language-server diagnostics.
+
 ## Held (do not implement)
 
 | Item | Status |
@@ -107,6 +112,7 @@ Test-only continue-after-failure helpers. `message` must be `str`. `expect(cond,
 | Formatter / `echo fmt` | implemented (0.5.4) |
 | Linter / `echo lint` | implemented (0.5.5) |
 | Native test runner / `echo test` | implemented (0.5.6) |
+| Editor tasks + Problems matchers | implemented (0.5.7) |
 | LSP | held |
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |
