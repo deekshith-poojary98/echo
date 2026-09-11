@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.5.6
+
+- Grammar matches Echo v0.5.6, including `expect` / `expectEq` / `expectNeq`.
+
 ## 0.5.5
 
 - Grammar matches Echo v0.5.5, including `fail(message)`.

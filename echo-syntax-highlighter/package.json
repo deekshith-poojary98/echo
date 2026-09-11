@@ -2,7 +2,7 @@
   "name": "echo-syntax-highlighter",
   "displayName": "Echo Syntax Highlighter",
   "description": "Syntax highlighting for the Echo programming language (.echo files) in Visual Studio Code and Cursor.",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
   "engines": {

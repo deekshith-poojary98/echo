@@ -4,7 +4,7 @@ TextMate grammar for **Echo** (`.echo` files). It is the highlighting used in VS
 
 This package is **highlight-only**. There is no language server, completions, or diagnostics (LSP is held).
 
-It tracks Echo **v0.5.5**.
+It tracks Echo **v0.5.6**.
 
 ## Install
 
@@ -43,7 +43,7 @@ From this folder in VS Code or Cursor, press **F5**. A new window loads the gram
 | Keywords | `fn`, `if`, `else`, `while`, `for`, `foreach`, `return`, `break`, `continue`, `in`, `by`, `use`, `mut`, `watch`, `type`, `import`, `export`, `from` |
 | Types | `int`, `float`, `str`, `bool`, `list`, `hash`, `dynamic`, `void` |
 | Literals | `true`, `false`, `null` |
-| Builtins | Distinct from user functions: `say`, `assert`, `fail`, `*Or` twins, host/stdlib names from 0.4–0.5.x |
+| Builtins | Distinct from user functions: `say`, `assert`, `expect` / `expectEq` / `expectNeq`, `fail`, `*Or` twins, host/stdlib names from 0.4–0.5.x |
 | Comments | `//` line and `/* */` block |
 | Strings | `"..."`, `'...'`, `"""..."""`, `'''...'''`, escapes, and `${...}` interpolation (nested hashes inside `${}` keep matching braces) |
 | Numbers | Integers, `.5`, `1.5`, `1e3`, `1e-3`. Echo has no hex (`0x`) or binary (`0b`) literals |
