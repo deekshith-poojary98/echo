@@ -15,7 +15,7 @@ The items below are still out of scope. Classes, `try`/`catch`, first-class func
 ## Current Limitations
 - No classes or user-defined structs
 - No generics
-- No exceptions such as `try/catch` — host and stdlib failures abort with Echo errors
+- No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model))
 - No default parameter values
 - No variadic user functions (`say` / `eprint` / `format` / `pathJoin` are the variadic builtins)
 - No overloads
@@ -34,4 +34,4 @@ The items below are still out of scope. Classes, `try`/`catch`, first-class func
 Echo is still evolving. The docs should not make the language sound more complete than it is, and they should not hide capabilities that already shipped.
 
 ## Planned Improvement
-See [Roadmap / Planned Improvements](/project/roadmap) and [priority tracking](/project/priority) for remaining stdlib work versus held syntax.
+See [Failure model](/failure-model), [Roadmap / Planned Improvements](/project/roadmap), and [priority tracking](/project/priority) for remaining stdlib work versus held syntax.

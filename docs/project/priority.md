@@ -78,7 +78,7 @@ Harden 0.5.1: no path → help and exit 2; missing file → non-zero Echo error;
 | Packages | held |
 | `try` / `catch` | held |
 | First-class `map` / `filter` | held |
-| User-level failure recovery | held — design only |
+| User-level failure recovery | designed ([failure model](/failure-model)) — syntax held; `*Or` stdlib pending |
 | First-class functions | held |
 | Slice syntax `xs[1:4]` | held |
 | Default / variadic user args | held |

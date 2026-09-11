@@ -344,6 +344,9 @@ Categories:
 
 Diagnostics include file, line, and column when available.
 
+Recovery is inquiry and `*Or` twins, not `try` / `catch`. Abort stays the
+default. See `docs/failure-model.md`.
+
 ---
 
 ## Execution model
