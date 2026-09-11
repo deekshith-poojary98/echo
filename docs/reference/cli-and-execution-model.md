@@ -30,10 +30,11 @@ Use plain mode when you want simple text output without Rich panels.
 ### Analyze without running
 ```bash
 echo check program.echo
+echo check src/
 echo check program.echo --plain
 ```
 
-`check` lexes, parses, and analyzes the file and its import graph. It does not execute. Success prints nothing and exits 0. Failures use the same diagnostics as a normal run. The first argument must be the word `check`; `echo check.echo` still runs a file named `check.echo`. The VS Code / Cursor extension can run this command as a task (`--plain`) and match the diagnostic into the Problems panel.
+`check` lexes, parses, and analyzes each file and its import graph. It does not execute. A directory argument checks `*.echo` files recursively. Explicit file paths always check. Success prints nothing and exits 0. If any file fails, each diagnostic is printed and the process exits 1 after every path has been analyzed (it does not stop at the first bad file). Missing path exits 1. `echo check` with no path prints help and exits 2. The first argument must be the word `check`; `echo check.echo` still runs a file named `check.echo`. `--plain` disables Rich panels. The VS Code / Cursor extension can run **Echo: Check file** or **Echo: Check workspace** (`--plain`) and match diagnostics into the Problems panel.
 
 ### REPL
 ```bash

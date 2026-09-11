@@ -10,6 +10,13 @@
       "group": "build"
     },
     {
+      "label": "Echo: Check workspace",
+      "type": "shell",
+      "command": "echolang",
+      "args": ["check", "--plain", "${workspaceFolder}"],
+      "problemMatcher": ["$echo"]
+    },
+    {
       "label": "Echo: Lint workspace",
       "type": "shell",
       "command": "echolang",

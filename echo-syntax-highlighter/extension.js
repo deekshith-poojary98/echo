@@ -7,10 +7,11 @@ const vscode = require("vscode");
 const SOURCE = "echo";
 
 const COMMANDS = {
-  check: { title: "Echo: Check file", target: "file", extraArgs: ["--plain"], matchers: ["$echo"] },
+  check: { title: "Echo: Check workspace", target: "workspace", extraArgs: ["--plain"], matchers: ["$echo"] },
   lint: { title: "Echo: Lint workspace", target: "workspace", extraArgs: ["--plain"], matchers: ["$echo-lint", "$echo"] },
   fmt: { title: "Echo: Format workspace", target: "workspace", extraArgs: [], matchers: ["$echo"] },
   test: { title: "Echo: Test workspace", target: "workspace", extraArgs: ["--plain"], matchers: ["$echo-test-detail", "$echo-test"] },
+  "check-file": { title: "Echo: Check file", verb: "check", target: "file", extraArgs: ["--plain"], matchers: ["$echo"] },
   "lint-file": { title: "Echo: Lint file", verb: "lint", target: "file", extraArgs: ["--plain"], matchers: ["$echo-lint", "$echo"] },
   "fmt-file": { title: "Echo: Format file", verb: "fmt", target: "file", extraArgs: [], matchers: ["$echo"] },
   "test-file": { title: "Echo: Test file", verb: "test", target: "file", extraArgs: ["--plain"], matchers: ["$echo-test-detail", "$echo-test"] },
@@ -18,7 +19,8 @@ const COMMANDS = {
 
 function activate(context) {
   context.subscriptions.push(
-    vscode.commands.registerCommand("echo.checkFile", () => executeEchoCommand("check")),
+    vscode.commands.registerCommand("echo.checkFile", () => executeEchoCommand("check-file")),
+    vscode.commands.registerCommand("echo.checkWorkspace", () => executeEchoCommand("check")),
     vscode.commands.registerCommand("echo.lintWorkspace", () => executeEchoCommand("lint")),
     vscode.commands.registerCommand("echo.formatWorkspace", () => executeEchoCommand("fmt")),
     vscode.commands.registerCommand("echo.testWorkspace", () => executeEchoCommand("test")),

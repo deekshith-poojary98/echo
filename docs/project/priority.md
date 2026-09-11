@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.8**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.5.9**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -21,7 +21,8 @@ Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 | 11 | `fail(message)` | implemented (0.5.5) |
 | 12 | `echo lint` | implemented (0.5.5), expanded (0.5.8) |
 | 13 | `expect` / `expectEq` / `expectNeq` | implemented (0.5.6) |
-| 14 | Editor tasks + problem matchers | implemented (0.5.7) |
+| 14 | Editor tasks + problem matchers | implemented (0.5.7), Check workspace (0.5.9) |
+| 15 | `echo check [paths...]` | implemented (0.5.9) |
 
 ### 1. `assert(cond, message)`
 
@@ -91,7 +92,13 @@ Test-only continue-after-failure helpers. `message` must be `str`. `expect(cond,
 
 ### 14. Editor tasks + problem matchers
 
-VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command palette for `echo check`, `echo fmt`, `echo lint`, and `echo test`, with problem matchers into the Problems panel. Tasks use `--plain`. Not an LSP: no completions, jump-to-definition, or language-server diagnostics.
+VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command palette for `echo check`, `echo fmt`, `echo lint`, and `echo test`, with problem matchers into the Problems panel. Tasks use `--plain`. **Echo: Check workspace** (0.5.9) runs `echolang check --plain` on the folder; **Echo: Check file** remains. Not an LSP: no completions, jump-to-definition, or language-server diagnostics.
+
+### 15. `echo check [paths...]`
+
+Last 0.5.x tooling slice. No new language syntax.
+
+`echo check [paths...]` walks files or recursive `*.echo` directories, same collection helper as `fmt` / `lint`. Analyze only; do not run. Exit 0 if every file is clean; 1 if any parse/semantic check fails. After a failure, continue so `echo check .` reports every bad file, then exit 1. Missing path exits 1. No path prints help and exits 2. The first token `check` is the subcommand; `echo check.echo` still runs that file. `--plain` is supported.
 
 ## Held (do not implement)
 
@@ -112,7 +119,8 @@ VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command p
 | Formatter / `echo fmt` | implemented (0.5.4) |
 | Linter / `echo lint` | implemented (0.5.5), expanded (0.5.8) |
 | Native test runner / `echo test` | implemented (0.5.6) |
-| Editor tasks + Problems matchers | implemented (0.5.7) |
+| Multi-path `echo check` | implemented (0.5.9) |
+| Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |

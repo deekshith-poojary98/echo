@@ -8,7 +8,7 @@ As of v0.5.0, Echo already has:
 - Frozen v0.2 language syntax, plus v0.3 file-based modules (`import` / `export`)
 - Multiline `"""` / `'''` strings and `.5` / scientific number literals
 - A host and standard library (`args`, `env`, files, JSON, string/list helpers, numeric helpers, `assert`, `expect` / `expectEq` / `expectNeq`, `fail`, `run`, `now`, `random`)
-- `echo check`, a REPL (`echo` with no file), `echo test [paths...]`, `echo fmt`, and `echo lint` (`test-naming`, `self-assign`, `unreachable-after-fail` added in 0.5.8)
+- `echo check [paths...]`, a REPL (`echo` with no file), `echo test [paths...]`, `echo fmt`, and `echo lint` (`test-naming`, `self-assign`, `unreachable-after-fail` added in 0.5.8; multi-path `check` in 0.5.9)
 
 The items below are still out of scope. Classes, `try`/`catch`, first-class functions, and the other frozen holds are not implemented.
 

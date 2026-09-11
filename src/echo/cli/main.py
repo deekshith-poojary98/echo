@@ -307,14 +307,23 @@ def _repl_source_incomplete(source: str) -> bool:
 
 
 def _main_check(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="echo check", description="Analyze an Echo source file without running it")
-    parser.add_argument("source", nargs="?", help="Path to .echo source file")
+    parser = argparse.ArgumentParser(prog="echo check", description="Analyze Echo source files without running them")
+    parser.add_argument("paths", nargs="*", help="Files or directories of .echo sources")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     args = parser.parse_args(argv)
-    if not args.source:
+    if not args.paths:
         parser.print_help()
         return 2
-    return check_file(args.source, plain=args.plain)
+    status = 0
+    for raw_path in args.paths:
+        collected = _collect_echo_files(raw_path, args.plain)
+        if isinstance(collected, int):
+            return collected
+        for file_path in collected:
+            code = check_file(str(file_path), plain=args.plain)
+            if code != 0:
+                status = code
+    return status
 
 
 def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:

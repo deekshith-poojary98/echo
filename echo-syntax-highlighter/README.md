@@ -4,7 +4,7 @@ TextMate grammar plus **editor tasks** for **Echo** (`.echo` files) in VS Code a
 
 This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`echolang check` / `lint` / `test`) through tasks and problem matchers.
 
-It tracks Echo **v0.5.8**.
+It tracks Echo **v0.5.9**.
 
 ## Install
 
@@ -51,11 +51,12 @@ Tasks pass **`--plain`** so problem matchers see stable text (not Rich panels).
 | Action | How |
 | --- | --- |
 | Check the current file | Command Palette → **Echo: Check file**, or Terminal → Run Task → **Echo: Check file** |
+| Check the workspace | **Echo: Check workspace** (command) or Run Task → **Echo: Check workspace** (`*.echo` recursively, same as `echolang check .`) |
 | Lint the workspace | **Echo: Lint** (command) or Run Task → **Echo: Lint workspace** |
 | Format the workspace | **Echo: Format** (command) or Run Task → **Echo: Format workspace**. Format Document (`Shift+Alt+F`) also shells out to `echolang fmt` on a temp copy of the buffer |
 | Run tests | **Echo: Test** (command) or Run Task → **Echo: Test workspace** (`*_test.echo` discovery, same as the CLI) |
 
-File-scoped variants are also on the task list: **Echo: Lint file**, **Echo: Format file**, **Echo: Test file**.
+File-scoped variants are also on the task list: **Echo: Check file**, **Echo: Lint file**, **Echo: Format file**, **Echo: Test file**.
 
 Findings land in the **Problems** panel:
 

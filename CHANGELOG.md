@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.9
+
+Last 0.5.x tooling slice. `echo check` accepts the same multi-path layout as `fmt` / `lint` / `test`. No language change.
+
+- `echo check [paths...]` analyzes files or recursively `*.echo` directories without running them. Explicit file paths always check
+- Exit 0 if every file is clean; 1 if any file fails parse or semantic analysis. After a failure, continue so `echo check .` prints every diagnostic, then exit 1
+- Missing path prints an error and exits 1; no path prints help and exits 2
+- The first argument must be the word `check`; `echo check.echo` still runs a file named `check.echo`. `--plain` is unchanged
+- Editor: **Echo: Check workspace** runs `echolang check --plain` on `${workspaceFolder}` with the `$echo` matcher. **Echo: Check file** remains
+
 ## 0.5.8
 
 A small `echo lint` rule expansion. Same finding format. Not a second typechecker.

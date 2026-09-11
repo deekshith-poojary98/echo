@@ -106,16 +106,20 @@ def test_package_exports_named_matchers_and_tracks_version():
     assert package["main"] == "./extension.js"
     assert (root / "extension.js").is_file()
     json.loads((root / "snippets" / "echo.json").read_text(encoding="utf-8"))
-    json.loads((root / "templates" / "tasks.json").read_text(encoding="utf-8"))
+    tasks = json.loads((root / "templates" / "tasks.json").read_text(encoding="utf-8"))
     names = set(_matchers())
     assert names == {"echo", "echo-lint", "echo-test", "echo-test-detail"}
     commands = {item["command"] for item in package["contributes"]["commands"]}
     assert commands == {
         "echo.checkFile",
+        "echo.checkWorkspace",
         "echo.lintWorkspace",
         "echo.formatWorkspace",
         "echo.testWorkspace",
     }
+    labels = {item["label"] for item in tasks["tasks"]}
+    assert "Echo: Check file" in labels
+    assert "Echo: Check workspace" in labels
 
 
 def test_echo_matcher_on_check_semantic_fixture(tmp_path):

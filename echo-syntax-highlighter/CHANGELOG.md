@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.5.9
+
+- Version tracks Echo v0.5.9.
+- **Echo: Check workspace** runs `echolang check --plain` on `${workspaceFolder}` with the `$echo` matcher. **Echo: Check file** is unchanged.
+
 ## 0.5.8
 
 - Version tracks Echo v0.5.8. No grammar or builtin changes.

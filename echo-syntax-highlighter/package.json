@@ -2,7 +2,7 @@
   "name": "echo-syntax-highlighter",
   "displayName": "Echo Syntax Highlighter",
   "description": "Syntax highlighting, tasks, and Problems panel matchers for Echo (.echo files). Not a language server.",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
   "engines": {
@@ -63,6 +63,10 @@
         "title": "Echo: Check file"
       },
       {
+        "command": "echo.checkWorkspace",
+        "title": "Echo: Check workspace"
+      },
+      {
         "command": "echo.lintWorkspace",
         "title": "Echo: Lint"
       },
@@ -82,6 +86,9 @@
           "when": "editorLangId == echo"
         },
         {
+          "command": "echo.checkWorkspace"
+        },
+        {
           "command": "echo.lintWorkspace"
         },
         {
@@ -94,6 +101,11 @@
       "editor/context": [
         {
           "command": "echo.checkFile",
+          "when": "editorLangId == echo",
+          "group": "echo@1"
+        },
+        {
+          "command": "echo.checkWorkspace",
           "when": "editorLangId == echo",
           "group": "echo@1"
         },
@@ -138,12 +150,13 @@
         "properties": {
           "command": {
             "type": "string",
-            "description": "Echo CLI verb or file-scoped variant: check, lint, fmt, test, lint-file, fmt-file, test-file.",
+            "description": "Echo CLI verb or file-scoped variant: check, lint, fmt, test, check-file, lint-file, fmt-file, test-file.",
             "enum": [
               "check",
               "lint",
               "fmt",
               "test",
+              "check-file",
               "lint-file",
               "fmt-file",
               "test-file"
