@@ -37,7 +37,7 @@ Common causes:
 
 `fail(message)` always aborts with `message` (code `E2825`). `assert(cond, message)` aborts with the same diagnostic shape when `cond` is falsy (code `E2819`). `expect(cond, message)` requires a `bool` condition (code `E2826`). `expectEq` / `expectNeq` compare with Echo `==` (codes `E2827` / `E2828`).
 
-`echo lint` is not an Echo runtime error. Findings print `path:line:col: rule: message` and exit 1. Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`. Zero-arg `fn test*` functions are not unused-function.
+`echo lint` is not an Echo runtime error. Findings print `path:line:col: rule: message` and exit 1. Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`, `test-naming`, `self-assign`, `unreachable-after-fail`. Zero-arg `fn test*` functions are not unused-function. `test-naming` flags a top-level `fn` that looks like a test but is not a zero-arg `testXxx` unit.
 
 ## Example
 ```echo

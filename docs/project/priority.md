@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.7**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.5.8**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -19,7 +19,7 @@ Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 | 9 | REPL (`echo` with no file) | implemented (0.5.2) |
 | 10 | `echo test` product | implemented (0.5.6) |
 | 11 | `fail(message)` | implemented (0.5.5) |
-| 12 | `echo lint` | implemented (0.5.5) |
+| 12 | `echo lint` | implemented (0.5.5), expanded (0.5.8) |
 | 13 | `expect` / `expectEq` / `expectNeq` | implemented (0.5.6) |
 | 14 | Editor tasks + problem matchers | implemented (0.5.7) |
 
@@ -83,7 +83,7 @@ Abort with an Echo error. `message` must be `str`. Same diagnostic family as `as
 
 Style and convention findings, not a second typechecker. `echo lint [paths...]` walks files or recursive `*.echo` directories. Findings exit 1; clean exit 0; no path prints help and exits 2; parse errors match `echo check`. The first token `lint` is the subcommand; `echo lint.echo` still runs that file.
 
-Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`. Zero-arg `fn test*` entries are not unused-function (the test runner calls them).
+Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`, `test-naming`, `self-assign`, `unreachable-after-fail`. Zero-arg `fn test*` entries are not unused-function (the test runner calls them). `test-naming` flags a top-level `fn` that looks like a test (`test*` / `Test*`) but is not a zero-arg `testXxx` unit. Unused parameters stay `unused-local`. `unused-export` is skipped (exports are for importers; no file-local convention). `redundant-parens` is skipped (the AST does not keep grouping parentheses).
 
 ### 13. `expect` / `expectEq` / `expectNeq`
 
@@ -110,7 +110,7 @@ VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command p
 | Default / variadic user args | held |
 | Overloading | held |
 | Formatter / `echo fmt` | implemented (0.5.4) |
-| Linter / `echo lint` | implemented (0.5.5) |
+| Linter / `echo lint` | implemented (0.5.5), expanded (0.5.8) |
 | Native test runner / `echo test` | implemented (0.5.6) |
 | Editor tasks + Problems matchers | implemented (0.5.7) |
 | LSP | held |

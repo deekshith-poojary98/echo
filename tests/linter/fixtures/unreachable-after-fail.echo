@@ -1,0 +1,12 @@
+fn afterReturn() {
+    return;
+    say("after return");
+}
+
+fn afterFail() {
+    fail("nope");
+    say("after fail");
+}
+
+afterReturn();
+afterFail();

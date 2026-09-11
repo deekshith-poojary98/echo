@@ -1,0 +1,17 @@
+fn testAdd() {
+    expect(true, "ok");
+}
+
+fn helper(n: int) {
+    say(n);
+}
+
+fn outer() {
+    fn testNested() {
+        expect(true, "nested");
+    }
+    testNested();
+}
+
+helper(1);
+outer();

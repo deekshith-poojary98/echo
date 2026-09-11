@@ -118,7 +118,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Multiline strings | Usability | Missing | Later | Later |
 | Package manager | Ecosystem | Missing | Tooling | Tooling track |
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
-| Linter | Ecosystem | Implemented (0.5.5) | Tooling | 0.5.5 |
+| Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
 | Native test runner | Ecosystem | Implemented (0.5.6) | Tooling | 0.5.6 |
 | Debugger | Ecosystem | Partial | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
@@ -1006,16 +1006,18 @@ Go’s `gofmt` is still the reference: one style, no layout knobs.
 
 ### Linter
 
-**Status.** Implemented (0.5.5).
+**Status.** Implemented (0.5.5), expanded (0.5.8).
 
 The semantic analyzer already rejects real mistakes. `echo lint` covers
 style and convention: unused locals/functions/imports, comparison to
-boolean literals, redundant `by 1`, empty if/function bodies, and
-shadowed builtins. It does not re-run typechecking.
+boolean literals, redundant `by 1`, empty if/function bodies, shadowed
+builtins, `test-naming`, `self-assign`, and `unreachable-after-fail`.
+It does not re-run typechecking. Unused parameters are `unused-local`.
+`unused-export` and `redundant-parens` are not rules.
 
 **Priority.** Tooling. Shipped.
 
-**Possible version.** 0.5.5.
+**Possible version.** 0.5.8.
 
 ---
 

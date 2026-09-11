@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.8
+
+A small `echo lint` rule expansion. Same finding format. Not a second typechecker.
+
+- New rules: `test-naming` (top-level `fn` that looks like a test but is not a zero-arg `testXxx` unit), `self-assign` (`x = x` / `x = x + 0` / `x = 0 + x`), and `unreachable-after-fail` (later statements in the same block after `fail(...)` or `return`)
+- Unused parameters stay `unused-local`; there is no separate `unused-param` rule
+- `unused-export` is not shipped: exports are for other files, and Echo has no file-local convention that would distinguish a dead export from a library API
+- `redundant-parens` is not shipped: the parser drops grouping parentheses, so the AST cannot see what the formatter would omit
+- Findings still print `path:line:col: rule: message`. Matcher `$echo-lint` is unchanged
+
 ## 0.5.7
 
 Editor integration for the fmt / lint / test / check CLI (not an LSP).

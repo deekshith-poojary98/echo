@@ -113,8 +113,11 @@ Rules:
 | `redundant-by-one` | explicit `by 1` on `for` (the formatter omits it) |
 | `empty-block` | empty `if` / `else` body or empty function body |
 | `shadow-builtin` | a declared name that shadows a builtin |
+| `test-naming` | top-level `fn` that looks like a test but is not a zero-arg `testXxx` unit |
+| `self-assign` | `x = x` or `x = x + 0` / `x = 0 + x` |
+| `unreachable-after-fail` | a later statement in the same block after `fail(...)` or `return` |
 
-This is not a second typechecker. Semantic errors stay `echo check`.
+This is not a second typechecker. Semantic errors stay `echo check`. Unused parameters are `unused-local`. `unused-export` and `redundant-parens` are not rules: exports are for other files, and grouping parentheses are not kept on the AST.
 
 ## Notes
 - The file passed to the CLI is the entry module when it contains `import`.

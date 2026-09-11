@@ -52,6 +52,9 @@ RULES = {
     "redundant-by-one": "explicit `by 1` on for; the formatter omits it",
     "empty-block": "empty if/else body or empty function body",
     "shadow-builtin": "a declared name shadows a builtin",
+    "test-naming": "top-level fn looks like a test but is not a zero-arg testXxx entry",
+    "self-assign": "assignment of a name to itself, or to itself plus zero",
+    "unreachable-after-fail": "statement in the same block after fail(...) or return",
 }
 
 
@@ -124,10 +127,15 @@ class _Linter:
         return sorted(self._findings, key=lambda item: (item.line, item.column, item.rule, item.message))
 
     def lint_program(self, program: Program) -> None:
+        for statement in program.statements:
+            function = self._function_of(statement)
+            if function is not None:
+                self._test_naming(function)
         scope = _Scope()
         self._block(program.statements, scope, allow_test_entries=True)
 
     def _block(self, statements: list[Statement], scope: _Scope, *, allow_test_entries: bool = False) -> None:
+        self._unreachable(statements)
         exported: set[str] = set()
         for statement in statements:
             function = self._function_of(statement)
@@ -153,6 +161,7 @@ class _Linter:
             scope.define(_Binding(statement.name, "local", statement.location))
             return
         if isinstance(statement, AssignmentStatement):
+            self._self_assign(statement)
             self._expr(statement.value, scope)
             return
         if isinstance(statement, CompoundAssignment):
@@ -311,6 +320,42 @@ class _Linter:
         if isinstance(expression, StringLiteralExpression) and isinstance(expression.value, str):
             scope.mark_used(expression.value)
 
+    def _test_naming(self, function: FunctionDeclaration) -> None:
+        if not _looks_like_test_name(function.name):
+            return
+        if _is_test_xxx_unit(function.name, len(function.parameters)):
+            return
+        self._finding(
+            function.location,
+            "test-naming",
+            f"function '{function.name}' looks like a test but is not a zero-arg testXxx entry",
+        )
+
+    def _self_assign(self, statement: AssignmentStatement) -> None:
+        value = statement.value
+        if isinstance(value, VariableExpression) and value.name == statement.name:
+            self._finding(statement.location, "self-assign", f"self-assignment of '{statement.name}'")
+            return
+        if not isinstance(value, BinaryExpression) or value.operator.type is not TokenType.PLUS:
+            return
+        left, right = value.left, value.right
+        same_plus_zero = _is_name(left, statement.name) and _is_numeric_zero(right)
+        zero_plus_same = _is_numeric_zero(left) and _is_name(right, statement.name)
+        if same_plus_zero or zero_plus_same:
+            self._finding(statement.location, "self-assign", f"self-assignment of '{statement.name}'")
+
+    def _unreachable(self, statements: list[Statement]) -> None:
+        terminator: str | None = None
+        for statement in statements:
+            if terminator is not None:
+                self._finding(
+                    statement.location,
+                    "unreachable-after-fail",
+                    f"unreachable code after {terminator}",
+                )
+                continue
+            terminator = _exits_block(statement)
+
     def _comparison_to_bool(self, expression: BinaryExpression) -> None:
         if expression.operator.type not in {TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL}:
             return
@@ -365,3 +410,42 @@ class _Linter:
         if not isinstance(step, LiteralExpression) or isinstance(step.value, bool) or step.value != 1:
             return False
         return step.location != statement.end.location
+
+
+def _looks_like_test_name(name: str) -> bool:
+    return len(name) >= 4 and name[:4].lower() == "test"
+
+
+def _is_test_xxx_name(name: str) -> bool:
+    if not name.startswith("test"):
+        return False
+    return len(name) == 4 or not name[4].islower()
+
+
+def _is_test_xxx_unit(name: str, parameter_count: int) -> bool:
+    return parameter_count == 0 and _is_test_xxx_name(name)
+
+
+def _is_name(expression: Expression, name: str) -> bool:
+    return isinstance(expression, VariableExpression) and expression.name == name
+
+
+def _is_numeric_zero(expression: Expression) -> bool:
+    if not isinstance(expression, LiteralExpression) or isinstance(expression.value, bool):
+        return False
+    return expression.value == 0
+
+
+def _is_fail_call(expression: Expression) -> bool:
+    if not isinstance(expression, CallExpression):
+        return False
+    callee = expression.callee
+    return isinstance(callee, VariableExpression) and callee.name == "fail"
+
+
+def _exits_block(statement: Statement) -> str | None:
+    if isinstance(statement, ReturnStatement):
+        return "return"
+    if isinstance(statement, ExpressionStatement) and _is_fail_call(statement.expression):
+        return "fail"
+    return None

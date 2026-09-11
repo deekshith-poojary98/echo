@@ -1,0 +1,9 @@
+fn maybe(flag: bool) {
+    if flag {
+        return;
+    }
+    say("reachable");
+}
+
+maybe(true);
+maybe(false);

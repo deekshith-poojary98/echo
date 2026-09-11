@@ -1,0 +1,11 @@
+fn testAdd(x: int) {
+    say(x);
+}
+
+fn testing() {
+    expect(true, "ok");
+}
+
+fn TestAdd() {
+    expect(true, "ok");
+}

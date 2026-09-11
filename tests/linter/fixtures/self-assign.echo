@@ -1,0 +1,9 @@
+x: int = 1;
+x = x;
+say(x);
+y: int = 2;
+y = y + 0;
+say(y);
+z: int = 3;
+z = 0 + z;
+say(z);

@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.5.8
+
+- Version tracks Echo v0.5.8. No grammar or builtin changes.
+
 ## 0.5.7
 
 - Editor integration (not an LSP): tasks, problem matchers, and Problems panel wiring for `echolang check` / `fmt` / `lint` / `test`.

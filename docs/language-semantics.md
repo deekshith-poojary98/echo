@@ -374,4 +374,5 @@ v0.5.4 adds `echo fmt`.
 v0.5.5 adds `fail(message)` and `echo lint`.
 v0.5.6 adds the native `echo test` product: `expect` / `expectEq` / `expectNeq`, file and `fn testXxx()` units, and a pass/fail summary. No new keywords.
 v0.5.7 adds VS Code / Cursor tasks and problem matchers for `echo check` / `fmt` / `lint` / `test`. No LSP. No new keywords.
+v0.5.8 adds `echo lint` rules `test-naming`, `self-assign`, and `unreachable-after-fail`. No new keywords.
 See `docs/v0.4-stdlib.md`.

@@ -1,8 +1,20 @@
+from pathlib import Path
+
 from echo.linter import lint_source
+
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _rules(source: str) -> list[str]:
     return [finding.rule for finding in lint_source(source, filename="app.echo")]
+
+
+def _fixture(name: str) -> str:
+    return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+def _fixture_rules(name: str) -> list[str]:
+    return [finding.rule for finding in lint_source(_fixture(name), filename=name)]
 
 
 def test_unused_local():
@@ -109,8 +121,8 @@ fn testAdd(n: int) {
 }
 """
     findings = lint_source(source, filename="app_test.echo")
-    assert [finding.rule for finding in findings] == ["unused-function"]
-    assert "testAdd" in findings[0].message
+    assert {finding.rule for finding in findings} == {"unused-function", "test-naming"}
+    assert all("testAdd" in finding.message for finding in findings)
 
 
 def test_used_names_are_clean():
@@ -124,3 +136,92 @@ greet("Echo");
 say(x);
 """
     assert _rules(source) == []
+
+
+def test_unused_parameter_is_unused_local():
+    source = """
+fn greet(user: str) {
+    say(1);
+}
+greet("Echo");
+"""
+    assert _rules(source) == ["unused-local"]
+    findings = lint_source(source, filename="app.echo")
+    assert "user" in findings[0].message
+
+
+def test_test_naming_fixture():
+    findings = lint_source(_fixture("test-naming.echo"), filename="test-naming.echo")
+    named = [finding for finding in findings if finding.rule == "test-naming"]
+    messages = [finding.message for finding in named]
+    assert [finding.rule for finding in named] == ["test-naming", "test-naming", "test-naming"]
+    assert any("testAdd" in message for message in messages)
+    assert any("testing" in message for message in messages)
+    assert any("TestAdd" in message for message in messages)
+    assert all(finding.format().startswith("test-naming.echo:") for finding in named)
+    assert all(": test-naming: " in finding.format() for finding in named)
+
+
+def test_test_naming_ok_fixture_is_clean():
+    assert _fixture_rules("test-naming-ok.echo") == []
+
+
+def test_test_naming_skips_nested_functions():
+    source = """
+fn outer() {
+    fn testNested() {
+        expect(true, "nested");
+    }
+    testNested();
+}
+outer();
+"""
+    assert "test-naming" not in _rules(source)
+
+
+def test_self_assign_fixture():
+    findings = lint_source(_fixture("self-assign.echo"), filename="self-assign.echo")
+    assert [finding.rule for finding in findings] == ["self-assign", "self-assign", "self-assign"]
+    assert [finding.message for finding in findings] == [
+        "self-assignment of 'x'",
+        "self-assignment of 'y'",
+        "self-assignment of 'z'",
+    ]
+
+
+def test_self_assign_ok_fixture_is_clean():
+    assert _fixture_rules("self-assign-ok.echo") == []
+
+
+def test_self_assign_ignores_bool_zero():
+    source = """
+flag: bool = false;
+flag = flag + false;
+say(flag);
+"""
+    assert "self-assign" not in _rules(source)
+
+
+def test_unreachable_after_fail_fixture():
+    findings = lint_source(
+        _fixture("unreachable-after-fail.echo"),
+        filename="unreachable-after-fail.echo",
+    )
+    assert [finding.rule for finding in findings] == ["unreachable-after-fail", "unreachable-after-fail"]
+    assert findings[0].message == "unreachable code after return"
+    assert findings[1].message == "unreachable code after fail"
+
+
+def test_unreachable_after_fail_ok_fixture_is_clean():
+    assert _fixture_rules("unreachable-after-fail-ok.echo") == []
+
+
+def test_unreachable_after_fail_same_block_only():
+    source = """
+fail("stop");
+say("dead");
+say("also dead");
+"""
+    findings = lint_source(source, filename="app.echo")
+    assert [finding.rule for finding in findings] == ["unreachable-after-fail", "unreachable-after-fail"]
+    assert findings[0].format() == "app.echo:3:1: unreachable-after-fail: unreachable code after fail"
