@@ -405,14 +405,20 @@ def _main_lint(argv: list[str]) -> int:
 
 
 def _main_test(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="echo test", description="Run an Echo source file as a test")
-    parser.add_argument("source", nargs="?", help="Path to .echo source file")
+    parser = argparse.ArgumentParser(prog="echo test", description="Run Echo tests")
+    parser.add_argument("paths", nargs="*", help="Test files or directories of *_test.echo files")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     args = parser.parse_args(argv)
-    if not args.source:
+    if not args.paths:
         parser.print_help()
         return 2
-    return run_file(args.source, plain=args.plain)
+    from echo.cli.test_runner import print_summary, run_tests
+
+    code, results = run_tests(args.paths, plain=args.plain)
+    if not results and code != 0:
+        return code
+    print_summary(results)
+    return code
 
 
 if __name__ == "__main__":

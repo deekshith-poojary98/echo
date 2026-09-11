@@ -119,7 +119,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Package manager | Ecosystem | Missing | Tooling | Tooling track |
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
 | Linter | Ecosystem | Implemented (0.5.5) | Tooling | 0.5.5 |
-| Native test runner | Ecosystem | Missing | Tooling | Tooling / vision |
+| Native test runner | Ecosystem | Implemented (0.5.6) | Tooling | 0.5.6 |
 | Debugger | Ecosystem | Partial | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
 | IDE support | Ecosystem | Partial | Tooling | Tooling track |
@@ -1021,18 +1021,15 @@ shadowed builtins. It does not re-run typechecking.
 
 ### Native test runner
 
-**Status.** Missing as a language product.
+**Status.** Implemented (0.5.6) as tooling. No new keywords.
 
-The repo has a serious pytest suite for Echo itself (341 passed, 2
-xfailed at the v0.3.0 collection fix). That tests the interpreter.
-There is no `echo test` and no `test "name" { }` syntax.
+`echo test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit.
 
-Vision wants a native testing story. That can start as a library plus
-CLI, without new keywords.
+There is no `test "name" { }` syntax. That stays vision / held.
 
-**Priority.** Tooling / vision. High identity fit.
+**Priority.** Tooling / vision. Shipped as a library-plus-CLI.
 
-**Possible version.** Tooling first; syntax only if the library is not enough.
+**Possible version.** 0.5.6.
 
 ---
 
@@ -1067,7 +1064,7 @@ extract / API generator for Echo modules.
 
 `echo-syntax-highlighter/` is a VS Code / Cursor TextMate grammar (also
 imported by the docs site for Echo code fences). It covers current keywords,
-types, builtins (`fail`, `assert`, `*Or` twins, host/stdlib), comments,
+types, builtins (`expect`, `fail`, `assert`, `*Or` twins, host/stdlib), comments,
 strings with `${...}`, and number literals. No completions, jump-to-definition,
 or diagnostics in the editor.
 

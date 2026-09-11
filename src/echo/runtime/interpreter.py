@@ -69,6 +69,9 @@ from echo.runtime.builtins import (
     do_env,
     do_env_or,
     do_exit,
+    do_expect,
+    do_expect_eq,
+    do_expect_neq,
     do_fail,
     do_file_exists,
     do_floor,
@@ -110,6 +113,7 @@ from echo.runtime.builtins import (
 )
 from echo.runtime.host import Host
 from echo.runtime.context import Environment
+from echo.runtime.testing import TestSession
 from echo.runtime.functions import BreakSignal, ContinueSignal, EchoFunction, ReturnValue, bind_arguments, check_return, undefined_function
 from echo.runtime.operators import binary_op, unary_op
 from echo.runtime.values import (
@@ -124,8 +128,9 @@ from echo.runtime.values import (
 
 
 class Interpreter:
-    def __init__(self, host: Host | None = None) -> None:
+    def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
+        self.test_session = test_session
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -633,6 +638,20 @@ class Interpreter:
             cond = target if target is not None else _nth(args, 0, method, location)
             message = args[0] if target is not None else _nth(args, 1, method, location)
             return do_assert(cond, message, location)
+        if method == "expect":
+            cond = target if target is not None else _nth(args, 0, method, location)
+            message = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_expect(cond, message, location, self.test_session)
+        if method == "expectEq":
+            left = target if target is not None else _nth(args, 0, method, location)
+            right = args[0] if target is not None else _nth(args, 1, method, location)
+            message = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_expect_eq(left, right, message, location, self.test_session)
+        if method == "expectNeq":
+            left = target if target is not None else _nth(args, 0, method, location)
+            right = args[0] if target is not None else _nth(args, 1, method, location)
+            message = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_expect_neq(left, right, message, location, self.test_session)
         if method == "fail":
             return do_fail(target if target is not None else _first(args, method, location), location)
         if method == "copyFile":

@@ -25,6 +25,7 @@ Already-shipped exceptions, which this note does not rewrite:
 - Fallback twin: `envOr(name, fallback)`, `readFileOr(path, fallback)`, `parseJsonOr(text, fallback)`, `asIntOr(value, fallback)`, `asFloatOr(value, fallback)`
 - Status value: `run` → `{ "code", "stdout", "stderr" }` (non-zero is not an Echo error)
 - Programmer abort: `assert(cond, message)`, `fail(message)`, `exit(code)`
+- Test-only continue: `expect` / `expectEq` / `expectNeq` under `echo test` (0.5.6). They record and continue in that runner; outside `echo test` they abort like `assert`. This is not `try` / `catch` and not user-level recovery.
 - Host policy: `allow_files=False` / `allow_run=False` always abort (`E2801`)
 
 `default()` is truthiness. It is not error handling. Do not overload it.
@@ -46,9 +47,12 @@ Programmer or contract violations. Never recoverable. No `*Or` twin.
 - Missing executable for `run`
 - `assert` failure
 - `fail(message)` — assert-without-condition; always abort; code `E2825`
+- `expect` / `expectEq` / `expectNeq` type errors (non-`bool` condition, non-`str` message) — always abort; codes `E2826` / `E2827` / `E2828`
 - `asInt(true)` / `asFloat(true)` — bool has no twin
 
 Catching these would hide bugs.
+
+`expect*` false/mismatch is a test assertion, not a language recovery form. Only `echo test` continues after it, and only for that helper. `assert` / `fail` still abort the current test unit.
 
 ### 2. Expected absence — check or fallback
 

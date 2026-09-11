@@ -87,6 +87,32 @@ export fn add(a: int, b: int) -> int {
     assert _rules(source) == []
 
 
+def test_zero_arg_test_function_is_not_unused():
+    source = """
+fn testAdd() {
+    expect(true, "ok");
+}
+
+fn helper() {
+    say(1);
+}
+"""
+    findings = lint_source(source, filename="app_test.echo")
+    assert [finding.rule for finding in findings] == ["unused-function"]
+    assert "helper" in findings[0].message
+
+
+def test_parameterized_test_function_is_unused():
+    source = """
+fn testAdd(n: int) {
+    say(n);
+}
+"""
+    findings = lint_source(source, filename="app_test.echo")
+    assert [finding.rule for finding in findings] == ["unused-function"]
+    assert "testAdd" in findings[0].message
+
+
 def test_used_names_are_clean():
     source = """
 import add from "math";

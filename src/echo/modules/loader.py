@@ -38,13 +38,18 @@ class ModuleLoader:
     def initialized_paths(self) -> list[Path]:
         return list(self._initialized)
 
-    def load(self, entry_path: str | Path, host: Host | None = None) -> Module:
+    def load(
+        self,
+        entry_path: str | Path,
+        host: Host | None = None,
+        interpreter: Interpreter | None = None,
+    ) -> Module:
         entry = self.resolver.canonicalize(entry_path)
         graph = ModuleGraph()
         self._collect(entry, graph, set())
         graph.detect_cycles()
         self._analyze_modules()
-        interpreter = Interpreter(host=host)
+        interpreter = interpreter or Interpreter(host=host)
         for path in graph.dependency_order(entry):
             self._initialize(self._modules[path], interpreter)
         return self._modules[entry]

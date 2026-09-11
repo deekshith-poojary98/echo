@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.6
+
+Native `echo test` product: expect-style helpers, file and function units, pass/fail summary. No new keywords. No `test "name" { }` syntax.
+
+- `echo test [paths...]` runs files or recursively discovers `*_test.echo` in directories. Explicit file paths always run, even if they are not named `*_test.echo`. No path prints help and exits 2
+- Zero-argument top-level `fn testXxx()` functions are separate units (Go-shaped). Other top-level statements run once as setup, or as the file unit when there are no `test*` functions
+- `expect(cond, message)`, `expectEq(left, right, message)`, and `expectNeq(left, right, message)` record a failure and continue under `echo test`. Outside a test run they abort like `assert`. `cond` must be `bool`. Codes **E2826** / **E2827** / **E2828**
+- `assert` / `fail` still abort the current unit. Later units still run. The runner exits 0 if every unit passed and 1 if any failed (including `exit(n)` with n ≠ 0)
+- Summary lines look like `ok   path/foo_test.echo::testAdd` / `FAIL path/foo_test.echo::testSub` then `N passed, M failed`
+- The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`
+
 ## 0.5.5
 
 `fail(message)` and `echo lint`. No new syntax. No `try` / `catch`.

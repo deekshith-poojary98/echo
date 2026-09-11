@@ -53,13 +53,33 @@ Empty lines at a fresh `echo> ` prompt are ignored. A syntax, semantic, or runti
 
 Quit with `exit(code)` (the process returns that code) or EOF (Ctrl-D), which exits 0. Session state does not survive process exit. Ctrl-C cancels the current submission and returns to `echo> `.
 
-### Run as a test
+### Run tests
 ```bash
 echo test program.echo
+echo test path/foo_test.echo
+echo test tests/
 echo test program.echo --plain
 ```
 
-Runs the file, including imported modules. Exit 0 is pass (`exit(0)` in the file is also pass). Any other process code — including `exit(2)` — is a failed test. Semantic and runtime failures print an Echo diagnostic and exit non-zero. A missing file exits non-zero with `source file not found`. `echo test` with no path prints help and exits 2. Program stdout is shown (the runner is not silent). There is no test DSL. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`.
+Runs Echo tests. A directory argument recursively runs `*_test.echo` files. An explicit file path always runs, even if it is not named `*_test.echo`. `echo test` with no path prints help and exits 2.
+
+Each discovered file is a test file. If it defines top-level zero-argument `fn testXxx()` functions, the runner calls each as a separate unit after running the remaining top-level statements once as setup. If there are no such functions, the file itself is one unit.
+
+`expect(cond, message)`, `expectEq(left, right, message)`, and `expectNeq(left, right, message)` record a failure and continue under this runner (codes E2826 / E2827 / E2828). Outside `echo test` they abort like `assert`. `assert` / `fail` still abort the current unit; later units still run. Parse and load errors fail that file as a unit.
+
+The process exits 0 if every unit passed and 1 if any failed. `exit(0)` in a unit passes that unit; any other `exit(n)` fails it. The runner exit code is 0 or 1 (or 2 for usage), not the program's `exit(n)`.
+
+Output is a line per unit then a count:
+
+```text
+ok   path/foo_test.echo::testAdd
+FAIL path/foo_test.echo::testSub
+     Error[E2827]: sub
+     expected 3, got 4
+2 passed, 1 failed
+```
+
+Program `say` output is shown. There is no `test "name" { }` syntax. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`.
 
 ### Format source files
 ```bash
@@ -87,7 +107,7 @@ Rules:
 | Rule | What it flags |
 | --- | --- |
 | `unused-local` | declared local, parameter, or loop variable that is never read |
-| `unused-function` | function never called in this file and not exported |
+| `unused-function` | function never called in this file, not exported, and not a zero-arg `test*` entry |
 | `unused-import` | imported name that is never used |
 | `comparison-to-bool` | `== true` / `!= false` and the other boolean-literal comparisons |
 | `redundant-by-one` | explicit `by 1` on `for` (the formatter omits it) |

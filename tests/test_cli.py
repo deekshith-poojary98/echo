@@ -429,8 +429,10 @@ def test_echo_test_passes_on_exit_zero(tmp_path):
     stdout = StringIO()
     with redirect_stdout(stdout):
         code = main(["test", str(app), "--plain"])
+    output = stdout.getvalue()
     assert code == 0
-    assert stdout.getvalue().strip() == "ok"
+    assert "ok" in output
+    assert "1 passed, 0 failed" in output
 
 
 def test_echo_test_fails_on_nonzero(tmp_path):
@@ -443,6 +445,8 @@ def test_echo_test_fails_on_nonzero(tmp_path):
     assert code == 1
     assert_no_python_leak(ExecutionResult(code, output))
     assert "Error" in output
+    assert "FAIL" in output
+    assert "0 passed, 1 failed" in output
 
 
 def test_echo_test_dot_echo_still_runs_the_file(tmp_path):
@@ -484,6 +488,7 @@ def test_echo_test_explicit_exit_zero_passes(tmp_path):
     with redirect_stdout(stdout):
         code = main(["test", str(app), "--plain"])
     assert code == 0
+    assert "1 passed, 0 failed" in stdout.getvalue()
 
 
 def test_echo_test_exit_two_is_failure(tmp_path):
@@ -492,8 +497,11 @@ def test_echo_test_exit_two_is_failure(tmp_path):
     stdout = StringIO()
     with redirect_stdout(stdout):
         code = main(["test", str(app), "--plain"])
-    assert code == 2
-    assert "Error" not in stdout.getvalue()
+    output = stdout.getvalue()
+    assert code == 1
+    assert "FAIL" in output
+    assert "exit code 2" in output
+    assert "0 passed, 1 failed" in output
 
 
 def test_echo_test_executes_imported_module(tmp_path):
@@ -515,8 +523,11 @@ def test_echo_test_executes_imported_module(tmp_path):
     stdout = StringIO()
     with redirect_stdout(stdout):
         code = main(["test", str(tmp_path / "app.echo"), "--plain"])
+    output = stdout.getvalue()
     assert code == 0
-    assert stdout.getvalue().strip() == "math\n5"
+    assert "math" in output
+    assert "5" in output
+    assert "1 passed, 0 failed" in output
 
 
 def test_echo_test_failing_import_fails_the_test(tmp_path):
@@ -542,3 +553,5 @@ def test_echo_test_failing_import_fails_the_test(tmp_path):
     assert code == 1
     assert_no_python_leak(ExecutionResult(code, output))
     assert "Error" in output
+    assert "FAIL" in output
+    assert "0 passed, 1 failed" in output

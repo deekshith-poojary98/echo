@@ -39,6 +39,7 @@ from echo.core.strings import (
 from echo.errors import ArgumentError, EchoExit, EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.runtime.host import Host
 from echo.runtime.operators import echo_equal
+from echo.runtime.testing import TestSession
 from echo.runtime.values import echo_type_name, is_truthy, stringify
 
 BUILTIN_NAMES = frozenset(
@@ -111,6 +112,9 @@ BUILTIN_NAMES = frozenset(
         "copyFile",
         "pathJoin",
         "assert",
+        "expect",
+        "expectEq",
+        "expectNeq",
         "fail",
         "run",
         "now",
@@ -196,6 +200,9 @@ BUILTIN_PARAMS = {
     "copyFile": ["dest"],
     "pathJoin": ["part"],
     "assert": ["message"],
+    "expect": ["message"],
+    "expectEq": ["right", "message"],
+    "expectNeq": ["right", "message"],
     "fail": [],
     "run": ["args"],
     "now": [],
@@ -236,6 +243,9 @@ STANDALONE_PARAMS = {
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
     "assert": ["cond", "message"],
+    "expect": ["cond", "message"],
+    "expectEq": ["left", "right", "message"],
+    "expectNeq": ["left", "right", "message"],
     "fail": ["message"],
     "run": ["command", "args"],
     "randomInt": ["min", "max"],
@@ -308,6 +318,9 @@ STANDALONE_MIN_ARGS = {
     "copyFile": 2,
     "pathJoin": 2,
     "assert": 2,
+    "expect": 2,
+    "expectEq": 3,
+    "expectNeq": 3,
     "fail": 1,
     "run": 2,
     "now": 0,
@@ -748,6 +761,67 @@ def do_fail(message: object, location: SourceLocation | None = None) -> None:
     if not isinstance(message, str):
         raise EchoTypeError("fail() message must be a string", location, code="E2825")
     raise EchoRuntimeError(message, location, code="E2825")
+
+
+def _require_expect_message(method: str, message: object, location: SourceLocation | None, code: str) -> str:
+    if not isinstance(message, str):
+        raise EchoTypeError(f"{method}() message must be a string", location, code=code)
+    return message
+
+
+def _equality_detail(left: object, right: object) -> str:
+    return f"expected {stringify(right, True)}, got {stringify(left, True)}"
+
+
+def do_expect(
+    cond: object,
+    message: object,
+    location: SourceLocation | None = None,
+    session: TestSession | None = None,
+) -> None:
+    text = _require_expect_message("expect", message, location, "E2826")
+    if not isinstance(cond, bool):
+        raise EchoTypeError("expect() condition must be a bool", location, code="E2826")
+    if cond:
+        return None
+    if session is None:
+        raise EchoRuntimeError(text, location, code="E2826")
+    session.record("E2826", text, location=location)
+    return None
+
+
+def do_expect_eq(
+    left: object,
+    right: object,
+    message: object,
+    location: SourceLocation | None = None,
+    session: TestSession | None = None,
+) -> None:
+    text = _require_expect_message("expectEq", message, location, "E2827")
+    if echo_equal(left, right):
+        return None
+    detail = _equality_detail(left, right)
+    if session is None:
+        raise EchoRuntimeError(text, location, help_text=detail, code="E2827")
+    session.record("E2827", text, detail=detail, location=location)
+    return None
+
+
+def do_expect_neq(
+    left: object,
+    right: object,
+    message: object,
+    location: SourceLocation | None = None,
+    session: TestSession | None = None,
+) -> None:
+    text = _require_expect_message("expectNeq", message, location, "E2828")
+    if not echo_equal(left, right):
+        return None
+    detail = f"expected values to differ, both were {stringify(left, True)}"
+    if session is None:
+        raise EchoRuntimeError(text, location, help_text=detail, code="E2828")
+    session.record("E2828", text, detail=detail, location=location)
+    return None
 
 
 def do_copy_file(src: object, dest: object, host: Host, location: SourceLocation | None = None) -> None:

@@ -91,3 +91,5 @@ def test_echo_test_fail_aborts(tmp_path):
     assert "nope" in output
     assert "E2825" in output
     assert "after" not in output
+    assert "FAIL" in output
+    assert "0 passed, 1 failed" in output

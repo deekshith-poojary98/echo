@@ -53,7 +53,7 @@ pip install -e .
 ## Available Commands
 - `echolang path/to/file.echo`
 - `echolang check path/to/file.echo`
-- `echolang test path/to/file.echo`
+- `echolang test [paths...]`
 - `echolang fmt [paths...] [--check]`
 - `echolang lint [paths...]`
 

@@ -41,11 +41,12 @@ from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.frontend.tokens import TokenType
 from echo.runtime.builtins import builtin_names
+from echo.runtime.testing import is_test_entry
 
 
 RULES = {
     "unused-local": "declared local, parameter, or loop variable is never read",
-    "unused-function": "function is never called in this file and is not exported",
+    "unused-function": "function is never called in this file, is not exported, and is not a zero-arg test* entry",
     "unused-import": "imported name is never used",
     "comparison-to-bool": "== true / != false and the other boolean-literal comparisons",
     "redundant-by-one": "explicit `by 1` on for; the formatter omits it",
@@ -124,15 +125,16 @@ class _Linter:
 
     def lint_program(self, program: Program) -> None:
         scope = _Scope()
-        self._block(program.statements, scope)
+        self._block(program.statements, scope, allow_test_entries=True)
 
-    def _block(self, statements: list[Statement], scope: _Scope) -> None:
+    def _block(self, statements: list[Statement], scope: _Scope, *, allow_test_entries: bool = False) -> None:
         exported: set[str] = set()
         for statement in statements:
             function = self._function_of(statement)
             if function is not None:
                 self._shadow(function.name, function.location)
-                scope.define(_Binding(function.name, "function", function.location))
+                used = allow_test_entries and is_test_entry(function.name, len(function.parameters))
+                scope.define(_Binding(function.name, "function", function.location, used=used))
             if isinstance(statement, ExportDeclaration):
                 exported.add(statement.name)
         for statement in statements:
