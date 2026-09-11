@@ -53,6 +53,8 @@ pip install -e .
 ## Available Commands
 - `echolang path/to/file.echo`
 - `echolang check path/to/file.echo`
+- `echolang test path/to/file.echo`
+- `echolang fmt [paths...] [--check]`
 
 The package also exposes an `echo` command, but most shells already reserve `echo` as a built-in command, so `echolang` is the reliable command to document and use.
 

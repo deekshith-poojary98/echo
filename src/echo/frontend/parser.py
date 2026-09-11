@@ -514,13 +514,26 @@ class Parser:
         return body
 
     def _peek(self) -> Token:
+        self._skip_comments()
         return self.tokens[self.pos]
 
     def _peek_offset(self, offset: int) -> Token | None:
-        index = self.pos + offset
-        if 0 <= index < len(self.tokens):
-            return self.tokens[index]
+        index = self.pos
+        seen = 0
+        while index < len(self.tokens):
+            token = self.tokens[index]
+            if token.type == TokenType.COMMENT:
+                index += 1
+                continue
+            if seen == offset:
+                return token
+            seen += 1
+            index += 1
         return None
+
+    def _skip_comments(self) -> None:
+        while self.pos < len(self.tokens) and self.tokens[self.pos].type == TokenType.COMMENT:
+            self.pos += 1
 
     def _advance(self) -> Token:
         token = self._peek()

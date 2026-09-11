@@ -61,6 +61,18 @@ echo test program.echo --plain
 
 Runs the file, including imported modules. Exit 0 is pass (`exit(0)` in the file is also pass). Any other process code — including `exit(2)` — is a failed test. Semantic and runtime failures print an Echo diagnostic and exit non-zero. A missing file exits non-zero with `source file not found`. `echo test` with no path prints help and exits 2. Program stdout is shown (the runner is not silent). There is no test DSL. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`.
 
+### Format source files
+```bash
+echo fmt program.echo
+echo fmt src/
+echo fmt program.echo --check
+echo fmt program.echo --plain
+```
+
+Rewrites Echo sources in place to the canonical layout (4-space indent, comments kept, `else if` flattening, parentheses from operator precedence). A directory argument formats `*.echo` files recursively. `--check` prints each path that would change and exits 1; already-formatted files print nothing and exit 0. Parse errors use the same diagnostics as `echo check` and do not write the file. `echo fmt` with no path prints help and exits 2. The first argument must be the word `fmt`; `echo fmt.echo` still runs a file named `fmt.echo`.
+
+Number literals may be respelled (`1e3` → `1000.0`). Strings are wrapped from raw lexemes and are not re-escaped, so quote style may change (`'hello'` → `"hello"`).
+
 ## Notes
 - The file passed to the CLI is the entry module when it contains `import`.
 - Errors are reported by category: syntax, semantic, name, type, argument, index, mutation, or execution.

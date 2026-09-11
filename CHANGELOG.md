@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.4
+
+Canonical `echo fmt`. No language change.
+
+- `echo fmt [paths...]` rewrites Echo sources in place: 4-space indent, comments kept, `else if` flattening, parentheses from operator precedence
+- `echo fmt --check` prints paths that would change and exits 1; already-formatted files exit 0
+- A directory argument formats `*.echo` files recursively; no path prints help and exits 2
+- Parse errors print the same diagnostic as `echo check` and do not write a broken file
+- The first argument must be the word `fmt`; `echo fmt.echo` still runs a file named `fmt.echo`
+- Number literals may be respelled (`1e3` → `1000.0`); strings are wrapped from raw lexemes and are not re-escaped
+
 ## 0.5.3
 
 Fallback `*Or` twins for untrusted input. Aborting originals are unchanged. No `try` / `catch`. No `Result` type.

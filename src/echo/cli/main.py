@@ -20,6 +20,7 @@ from echo.errors import (
     SourceLocation,
     format_diagnostic,
 )
+from echo.formatter import format_source
 from echo.frontend.ast.nodes import ImportDeclaration, Program
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
@@ -154,6 +155,8 @@ def main(argv: list[str] | None = None) -> int:
         return _main_check(raw[1:])
     if raw[:1] == ["test"]:
         return _main_test(raw[1:])
+    if raw[:1] == ["fmt"]:
+        return _main_fmt(raw[1:])
     parser = argparse.ArgumentParser(description="Run an Echo source file")
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
@@ -289,6 +292,8 @@ def _repl_source_incomplete(source: str) -> bool:
         return False
     depth = 0
     for token in tokens:
+        if token.type is TokenType.COMMENT:
+            continue
         if token.type is TokenType.LEFT_BRACE:
             depth += 1
         elif token.type is TokenType.RIGHT_BRACE:
@@ -307,6 +312,57 @@ def _main_check(argv: list[str]) -> int:
         parser.print_help()
         return 2
     return check_file(args.source, plain=args.plain)
+
+
+def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:
+    file_path = Path(source_path).expanduser().resolve()
+    if not file_path.exists() or not file_path.is_file():
+        _print_plain_error("Error", f"source file not found: {file_path}", plain)
+        return 1
+    source = file_path.read_text(encoding="utf-8")
+    try:
+        formatted = format_source(source, filename=str(file_path))
+    except EchoError as exc:
+        _print_error(exc, _error_source(exc, source), plain)
+        return 1
+    if formatted == source:
+        return 0
+    if check:
+        print(file_path)
+        return 1
+    file_path.write_text(formatted, encoding="utf-8")
+    return 0
+
+
+def _collect_fmt_files(source_path: str, plain: bool) -> list[Path] | int:
+    path = Path(source_path).expanduser().resolve()
+    if path.is_file():
+        return [path]
+    if path.is_dir():
+        return sorted(item for item in path.rglob("*.echo") if item.is_file())
+    _print_plain_error("Error", f"source file not found: {path}", plain)
+    return 1
+
+
+def _main_fmt(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="echo fmt", description="Format Echo source files")
+    parser.add_argument("paths", nargs="*", help="Files or directories of .echo sources")
+    parser.add_argument("--check", action="store_true", help="Exit 1 if any file would change")
+    parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
+    args = parser.parse_args(argv)
+    if not args.paths:
+        parser.print_help()
+        return 2
+    status = 0
+    for raw_path in args.paths:
+        collected = _collect_fmt_files(raw_path, args.plain)
+        if isinstance(collected, int):
+            return collected
+        for file_path in collected:
+            code = format_file(str(file_path), check=args.check, plain=args.plain)
+            if code != 0:
+                status = code
+    return status
 
 
 def _main_test(argv: list[str]) -> int:

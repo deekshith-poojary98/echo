@@ -992,14 +992,15 @@ Python interpreter package.
 
 ### Formatter
 
-**Status.** Missing.
+**Status.** Implemented (0.5.4).
 
-No canonical `echo fmt`. Go’s `gofmt` is the reference for leverage:
-one style, no arguments.
+`echo fmt [paths...]` rewrites Echo sources in place. `--check` reports
+dirty files without writing. Directory arguments recurse for `*.echo`.
+Go’s `gofmt` is still the reference: one style, no layout knobs.
 
-**Priority.** Tooling. High value, no language change.
+**Priority.** Tooling. Shipped.
 
-**Possible version.** Tooling track.
+**Possible version.** 0.5.4.
 
 ---
 

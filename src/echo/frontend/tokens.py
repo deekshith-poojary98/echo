@@ -75,6 +75,7 @@ class TokenType(Enum):
     INTERPOLATION_START = auto()
     INTERPOLATION_END = auto()
 
+    COMMENT = auto()
     EOF = auto()
 
 

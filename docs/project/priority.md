@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.3**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.5.4**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -83,6 +83,7 @@ Harden 0.5.1: no path → help and exit 2; missing file → non-zero Echo error;
 | Slice syntax `xs[1:4]` | held |
 | Default / variadic user args | held |
 | Overloading | held |
-| Formatter / LSP | held |
+| Formatter / `echo fmt` | implemented (0.5.4) |
+| LSP | held |
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |

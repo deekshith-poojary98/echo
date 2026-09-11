@@ -16,7 +16,7 @@ class Lexer:
         tokens: list[Token] = []
 
         while not self._at_end():
-            self._skip_whitespace_and_comments()
+            tokens.extend(self._skip_whitespace_and_collect_comments())
             if self._at_end():
                 break
             tokens.extend(self._next_tokens())
@@ -56,18 +56,23 @@ class Lexer:
             SourceLocation(line or self.line, column or self.column, self.filename),
         )
 
-    def _skip_whitespace_and_comments(self) -> None:
+    def _skip_whitespace_and_collect_comments(self) -> list[Token]:
+        comments: list[Token] = []
         while not self._at_end():
             char = self._peek()
             if char in " \t\r\n":
                 self._advance()
                 continue
             if char == "/" and self._peek(1) == "/":
+                start_line, start_col = self.line, self.column
+                start = self.pos
                 while not self._at_end() and self._peek() != "\n":
                     self._advance()
+                comments.append(self._make_token(TokenType.COMMENT, self.source[start:self.pos], start_line, start_col))
                 continue
             if char == "/" and self._peek(1) == "*":
                 start_line, start_col = self.line, self.column
+                start = self.pos
                 self._advance()
                 self._advance()
                 closed = False
@@ -80,8 +85,10 @@ class Lexer:
                     self._advance()
                 if not closed:
                     self._error("Unterminated block comment", start_line, start_col)
+                comments.append(self._make_token(TokenType.COMMENT, self.source[start:self.pos], start_line, start_col))
                 continue
             break
+        return comments
 
     def _next_tokens(self) -> list[Token]:
         char = self._peek()
