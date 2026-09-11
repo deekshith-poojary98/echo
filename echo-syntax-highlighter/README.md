@@ -1,14 +1,22 @@
 # Echo Syntax Highlighter
 
-TextMate grammar for **Echo** (`.echo` files). It is the highlighting used in VS Code / Cursor and, via import, in the Echo docs site (Shiki code fences).
+TextMate grammar plus **editor tasks** for **Echo** (`.echo` files) in VS Code and Cursor. The docs site also imports this grammar for Echo code fences (Shiki).
 
-This package is **highlight-only**. There is no language server, completions, or diagnostics (LSP is held).
+This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`echolang check` / `lint` / `test`) through tasks and problem matchers.
 
-It tracks Echo **v0.5.6**.
+It tracks Echo **v0.5.7**.
 
 ## Install
 
 The extension is not published to the Marketplace yet. Install it from this repo.
+
+The Echo CLI must be on `PATH` as **`echolang`** (recommended). Most shells already have an `echo` builtin, so tasks default to `echolang`. After `pipx install` / `pip install`, confirm:
+
+```bash
+echolang --version
+```
+
+If your executable is named something else, set **`echo.path`** in VS Code/Cursor settings.
 
 ### VS Code
 
@@ -34,7 +42,30 @@ Open any `.echo` file. The status bar language mode should read **Echo**.
 
 ### Develop against a host window
 
-From this folder in VS Code or Cursor, press **F5**. A new window loads the grammar. Open `examples/highlight-sample.echo` to check scopes.
+From this folder in VS Code or Cursor, press **F5**. A new window loads the grammar and tasks. Open `examples/highlight-sample.echo` to check scopes.
+
+## Check / Lint / Format / Test from the editor
+
+Tasks pass **`--plain`** so problem matchers see stable text (not Rich panels).
+
+| Action | How |
+| --- | --- |
+| Check the current file | Command Palette → **Echo: Check file**, or Terminal → Run Task → **Echo: Check file** |
+| Lint the workspace | **Echo: Lint** (command) or Run Task → **Echo: Lint workspace** |
+| Format the workspace | **Echo: Format** (command) or Run Task → **Echo: Format workspace**. Format Document (`Shift+Alt+F`) also shells out to `echolang fmt` on a temp copy of the buffer |
+| Run tests | **Echo: Test** (command) or Run Task → **Echo: Test workspace** (`*_test.echo` discovery, same as the CLI) |
+
+File-scoped variants are also on the task list: **Echo: Lint file**, **Echo: Format file**, **Echo: Test file**.
+
+Findings land in the **Problems** panel:
+
+- `$echo` — `echo check` / parse errors (`Error[E####]` or `Error:` plus `--> file:line:col`)
+- `$echo-lint` — `echo lint` lines `path:line:col: rule: message`
+- `$echo-test` / `$echo-test-detail` — `echo test` failures that include a `--> file:line:col` location
+
+`FAIL path::testName` summary lines without a column are not matched. Install the CLI; the extension does not embed the interpreter.
+
+To copy tasks into a workspace instead of using the provider, see `templates/tasks.json`.
 
 ## What it highlights
 
@@ -49,6 +80,8 @@ From this folder in VS Code or Cursor, press **F5**. A new window loads the gram
 | Numbers | Integers, `.5`, `1.5`, `1e3`, `1e-3`. Echo has no hex (`0x`) or binary (`0b`) literals |
 | Operators | Arithmetic, comparison, `&&` `||` `!`, `..` `...`, `+=` and friends, `->` `=>` |
 | Names | `fn` definitions, user calls, and `TYPE`-style constants |
+
+Snippets cover `fn testName()`, `expect` / `expectEq`, and `fail`.
 
 The grammar does **not** invent syntax Echo does not have (`try`/`catch`, classes, slice syntax, `as` as a keyword, hex/binary literals).
 

@@ -1,0 +1,22 @@
+{
+  "Test function": {
+    "prefix": ["fn test", "testfn"],
+    "body": ["fn test${1:Name}() {", "    $0", "}"],
+    "description": "Zero-argument Echo test unit (echo test)"
+  },
+  "expectEq": {
+    "prefix": "expectEq",
+    "body": ["expectEq(${1:left}, ${2:right}, \"${3:message}\");"],
+    "description": "expectEq(left, right, message)"
+  },
+  "expect": {
+    "prefix": "expect",
+    "body": ["expect(${1:cond}, \"${2:message}\");"],
+    "description": "expect(cond, message)"
+  },
+  "fail": {
+    "prefix": "fail",
+    "body": ["fail(\"${1:message}\");"],
+    "description": "fail(message) — abort the current unit"
+  }
+}

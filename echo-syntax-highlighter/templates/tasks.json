@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Echo: Check file",
+      "type": "shell",
+      "command": "echolang",
+      "args": ["check", "--plain", "${file}"],
+      "problemMatcher": ["$echo"],
+      "group": "build"
+    },
+    {
+      "label": "Echo: Lint workspace",
+      "type": "shell",
+      "command": "echolang",
+      "args": ["lint", "--plain", "${workspaceFolder}"],
+      "problemMatcher": ["$echo-lint", "$echo"]
+    },
+    {
+      "label": "Echo: Format workspace",
+      "type": "shell",
+      "command": "echolang",
+      "args": ["fmt", "${workspaceFolder}"],
+      "problemMatcher": ["$echo"]
+    },
+    {
+      "label": "Echo: Test workspace",
+      "type": "shell",
+      "command": "echolang",
+      "args": ["test", "--plain", "${workspaceFolder}"],
+      "problemMatcher": ["$echo-test-detail", "$echo-test"],
+      "group": "test"
+    }
+  ]
+}

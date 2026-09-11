@@ -1,26 +1,35 @@
 {
   "name": "echo-syntax-highlighter",
   "displayName": "Echo Syntax Highlighter",
-  "description": "Syntax highlighting for the Echo programming language (.echo files) in Visual Studio Code and Cursor.",
-  "version": "0.5.6",
+  "description": "Syntax highlighting, tasks, and Problems panel matchers for Echo (.echo files). Not a language server.",
+  "version": "0.5.7",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Linters",
+    "Formatters"
   ],
   "keywords": [
     "echo",
     "echolang",
-    "syntax highlighting"
+    "syntax highlighting",
+    "linter",
+    "formatter"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/deekshith-poojary98/echo",
     "directory": "echo-syntax-highlighter"
   },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:echo",
+    "onTaskType:echo"
+  ],
   "contributes": {
     "languages": [
       {
@@ -40,6 +49,211 @@
         "language": "echo",
         "scopeName": "source.echo",
         "path": "./syntaxes/echo.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "echo",
+        "path": "./snippets/echo.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "echo.checkFile",
+        "title": "Echo: Check file"
+      },
+      {
+        "command": "echo.lintWorkspace",
+        "title": "Echo: Lint"
+      },
+      {
+        "command": "echo.formatWorkspace",
+        "title": "Echo: Format"
+      },
+      {
+        "command": "echo.testWorkspace",
+        "title": "Echo: Test"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "echo.checkFile",
+          "when": "editorLangId == echo"
+        },
+        {
+          "command": "echo.lintWorkspace"
+        },
+        {
+          "command": "echo.formatWorkspace"
+        },
+        {
+          "command": "echo.testWorkspace"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "echo.checkFile",
+          "when": "editorLangId == echo",
+          "group": "echo@1"
+        },
+        {
+          "command": "echo.lintWorkspace",
+          "when": "editorLangId == echo",
+          "group": "echo@2"
+        },
+        {
+          "command": "echo.formatWorkspace",
+          "when": "editorLangId == echo",
+          "group": "echo@3"
+        },
+        {
+          "command": "echo.testWorkspace",
+          "when": "editorLangId == echo",
+          "group": "echo@4"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Echo",
+      "properties": {
+        "echo.path": {
+          "type": "string",
+          "default": "echolang",
+          "description": "Echo CLI executable. Default is echolang (the Unix echo builtin is not the Echo language). Install the Echo package so this command is on PATH."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[echo]": {
+        "editor.defaultFormatter": "deekshith-poojary98.echo-syntax-highlighter"
+      }
+    },
+    "taskDefinitions": [
+      {
+        "type": "echo",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Echo CLI verb or file-scoped variant: check, lint, fmt, test, lint-file, fmt-file, test-file.",
+            "enum": [
+              "check",
+              "lint",
+              "fmt",
+              "test",
+              "lint-file",
+              "fmt-file",
+              "test-file"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "description": "file uses the active editor; workspace uses the folder.",
+            "enum": [
+              "file",
+              "workspace"
+            ]
+          }
+        }
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "echo",
+        "label": "Echo check / runtime diagnostics",
+        "owner": "echo",
+        "source": "echo",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "severity": "error",
+        "pattern": [
+          {
+            "regexp": "^.+ Error: (Error(?:\\[(E\\d+)\\])?: .+)$",
+            "message": 1,
+            "code": 2
+          },
+          {
+            "regexp": "^\\s+--> (.+):(\\d+):(\\d+)\\s*$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ]
+      },
+      {
+        "name": "echo-lint",
+        "label": "Echo lint findings",
+        "owner": "echo-lint",
+        "source": "echo-lint",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "severity": "warning",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+): ([a-z0-9-]+): (.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "code": 4,
+          "message": 5
+        }
+      },
+      {
+        "name": "echo-test",
+        "label": "Echo test failures (error + location)",
+        "owner": "echo-test",
+        "source": "echo-test",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "severity": "error",
+        "pattern": [
+          {
+            "regexp": "^\\s+(Error(?:\\[(E\\d+)\\])?: .+)$",
+            "message": 1,
+            "code": 2
+          },
+          {
+            "regexp": "^\\s+--> (.+):(\\d+):(\\d+)\\s*$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ]
+      },
+      {
+        "name": "echo-test-detail",
+        "label": "Echo test failures (error + detail + location)",
+        "owner": "echo-test",
+        "source": "echo-test",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "absolute"
+        ],
+        "severity": "error",
+        "pattern": [
+          {
+            "regexp": "^\\s+(Error(?:\\[(E\\d+)\\])?: .+)$",
+            "message": 1,
+            "code": 2
+          },
+          {
+            "regexp": "^\\s+(?!-->).+$"
+          },
+          {
+            "regexp": "^\\s+--> (.+):(\\d+):(\\d+)\\s*$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ]
       }
     ]
   }

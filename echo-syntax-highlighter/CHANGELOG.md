@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.5.7
+
+- Editor integration (not an LSP): tasks, problem matchers, and Problems panel wiring for `echolang check` / `fmt` / `lint` / `test`.
+- Commands: Echo: Check file, Lint, Format, Test. Format Document shells out to `echolang fmt`.
+- Snippets for `fn testName()`, `expect` / `expectEq`, and `fail`.
+- Grammar still matches Echo v0.5.6 language surface; no new keywords.
+
 ## 0.5.6
 
 - Grammar matches Echo v0.5.6, including `expect` / `expectEq` / `expectNeq`.
