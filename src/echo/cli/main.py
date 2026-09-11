@@ -21,6 +21,7 @@ from echo.errors import (
     format_diagnostic,
 )
 from echo.formatter import format_source
+from echo.linter import LintFinding, lint_source
 from echo.frontend.ast.nodes import ImportDeclaration, Program
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
@@ -157,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
         return _main_test(raw[1:])
     if raw[:1] == ["fmt"]:
         return _main_fmt(raw[1:])
+    if raw[:1] == ["lint"]:
+        return _main_lint(raw[1:])
     parser = argparse.ArgumentParser(description="Run an Echo source file")
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
@@ -334,7 +337,7 @@ def format_file(source_path: str, *, check: bool = False, plain: bool = False) -
     return 0
 
 
-def _collect_fmt_files(source_path: str, plain: bool) -> list[Path] | int:
+def _collect_echo_files(source_path: str, plain: bool) -> list[Path] | int:
     path = Path(source_path).expanduser().resolve()
     if path.is_file():
         return [path]
@@ -355,11 +358,47 @@ def _main_fmt(argv: list[str]) -> int:
         return 2
     status = 0
     for raw_path in args.paths:
-        collected = _collect_fmt_files(raw_path, args.plain)
+        collected = _collect_echo_files(raw_path, args.plain)
         if isinstance(collected, int):
             return collected
         for file_path in collected:
             code = format_file(str(file_path), check=args.check, plain=args.plain)
+            if code != 0:
+                status = code
+    return status
+
+
+def lint_file(source_path: str, *, plain: bool = False) -> tuple[int, list[LintFinding]]:
+    file_path = Path(source_path).expanduser().resolve()
+    if not file_path.exists() or not file_path.is_file():
+        _print_plain_error("Error", f"source file not found: {file_path}", plain)
+        return 1, []
+    source = file_path.read_text(encoding="utf-8")
+    try:
+        findings = lint_source(source, filename=str(file_path))
+    except EchoError as exc:
+        _print_error(exc, _error_source(exc, source), plain)
+        return 1, []
+    return (1 if findings else 0), findings
+
+
+def _main_lint(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="echo lint", description="Lint Echo source files for style and convention")
+    parser.add_argument("paths", nargs="*", help="Files or directories of .echo sources")
+    parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
+    args = parser.parse_args(argv)
+    if not args.paths:
+        parser.print_help()
+        return 2
+    status = 0
+    for raw_path in args.paths:
+        collected = _collect_echo_files(raw_path, args.plain)
+        if isinstance(collected, int):
+            return collected
+        for file_path in collected:
+            code, findings = lint_file(str(file_path), plain=args.plain)
+            for finding in findings:
+                print(finding.format())
             if code != 0:
                 status = code
     return status

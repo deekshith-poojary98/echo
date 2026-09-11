@@ -73,6 +73,29 @@ Rewrites Echo sources in place to the canonical layout (4-space indent, comments
 
 Number literals may be respelled (`1e3` → `1000.0`). Strings are wrapped from raw lexemes and are not re-escaped, so quote style may change (`'hello'` → `"hello"`).
 
+### Lint source files
+```bash
+echo lint program.echo
+echo lint src/
+echo lint program.echo --plain
+```
+
+Reports style and convention findings without running the program. A directory argument lints `*.echo` files recursively. Each finding prints `path:line:col: rule: message`. Any finding exits 1; a clean tree prints nothing and exits 0. Parse errors use the same diagnostics as `echo check`. `echo lint` with no path prints help and exits 2. The first argument must be the word `lint`; `echo lint.echo` still runs a file named `lint.echo`.
+
+Rules:
+
+| Rule | What it flags |
+| --- | --- |
+| `unused-local` | declared local, parameter, or loop variable that is never read |
+| `unused-function` | function never called in this file and not exported |
+| `unused-import` | imported name that is never used |
+| `comparison-to-bool` | `== true` / `!= false` and the other boolean-literal comparisons |
+| `redundant-by-one` | explicit `by 1` on `for` (the formatter omits it) |
+| `empty-block` | empty `if` / `else` body or empty function body |
+| `shadow-builtin` | a declared name that shadows a builtin |
+
+This is not a second typechecker. Semantic errors stay `echo check`.
+
 ## Notes
 - The file passed to the CLI is the entry module when it contains `import`.
 - Errors are reported by category: syntax, semantic, name, type, argument, index, mutation, or execution.

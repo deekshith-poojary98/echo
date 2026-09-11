@@ -291,6 +291,13 @@ Aborts with an Echo error when `cond` is falsy. `message` must be a `str`. Truth
 assert(fileExists("notes.txt"), "missing notes");
 ```
 
+### `fail(message)`
+Always aborts with an Echo error. `message` must be a `str`. Same diagnostic shape as `assert` (code `E2825`). Not recoverable. No `*Or` twin.
+
+```echo
+fail("unsupported shape");
+```
+
 ### `parseJson(text)` / `parseJsonOr(text, fallback)` / `writeJson(value)`
 JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort `parseJson`. `parseJsonOr` returns `fallback` for invalid JSON. Non-string text is a type error for both.
 

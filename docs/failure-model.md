@@ -24,7 +24,7 @@ Already-shipped exceptions, which this note does not rewrite:
 - Inquiry: `fileExists`, `isDir`, `has`, `contains`, `find` (`-1`)
 - Fallback twin: `envOr(name, fallback)`, `readFileOr(path, fallback)`, `parseJsonOr(text, fallback)`, `asIntOr(value, fallback)`, `asFloatOr(value, fallback)`
 - Status value: `run` → `{ "code", "stdout", "stderr" }` (non-zero is not an Echo error)
-- Programmer abort: `assert(cond, message)`, `exit(code)`
+- Programmer abort: `assert(cond, message)`, `fail(message)`, `exit(code)`
 - Host policy: `allow_files=False` / `allow_run=False` always abort (`E2801`)
 
 `default()` is truthiness. It is not error handling. Do not overload it.
@@ -45,6 +45,7 @@ Programmer or contract violations. Never recoverable. No `*Or` twin.
 - Host denied (`E2801`)
 - Missing executable for `run`
 - `assert` failure
+- `fail(message)` — assert-without-condition; always abort; code `E2825`
 - `asInt(true)` / `asFloat(true)` — bool has no twin
 
 Catching these would hide bugs.
@@ -93,7 +94,7 @@ Do **not** convert `readFile` itself into a hash or `null`. The aborting name st
 
 **Which failures are bugs vs expected.** The table above. File-not-found, unset env, and invalid JSON-from-text are expected. `notes[99]` and `asInt(true)` are bugs. Invalid JSON on `parseJson` of a trusted file can stay abort; untrusted text uses `parseJsonOr`.
 
-**Can a user function produce the same kind of failure a builtin produces?** No catchable form. A user `fn` returns a value or it aborts (`assert`, or a future `fail(message)` as assert-without-condition). Recoverable user APIs return an ordinary hash the author defined (`{ "ok": true, "value": x }`). That is a convention for *that* function, not a language `Result` type and not something builtins must adopt.
+**Can a user function produce the same kind of failure a builtin produces?** No catchable form. A user `fn` returns a value or it aborts (`assert`, or `fail(message)` as assert-without-condition). Recoverable user APIs return an ordinary hash the author defined (`{ "ok": true, "value": x }`). That is a convention for *that* function, not a language `Result` type and not something builtins must adopt.
 
 **Is recovery in-language, or is hash-in-caller enough?** Recovery for builtins is in-language only as **named twins and inquiry**, not control-flow. Hash-in-caller is allowed for user functions only. A global `{ ok, value, error }` return from every builtin is rejected.
 

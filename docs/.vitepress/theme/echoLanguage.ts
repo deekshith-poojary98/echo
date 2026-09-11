@@ -1,6 +1,8 @@
 import { StreamLanguage } from '@codemirror/language'
 import type { StreamParser } from '@codemirror/language'
 
+// Keywords and type names: src/echo/frontend/tokens.py (KEYWORDS, TYPE_NAMES).
+// `as` is not a keyword. `true` / `false` / `null` are literals, not keywords.
 const KEYWORDS = new Set([
   'if',
   'else',
@@ -20,83 +22,286 @@ const KEYWORDS = new Set([
   'import',
   'export',
   'from',
-  'as',
 ])
 
 const TYPES = new Set(['int', 'float', 'str', 'bool', 'list', 'hash', 'dynamic', 'void'])
 const LITERALS = new Set(['true', 'false', 'null'])
+
+// Keep in sync with BUILTIN_NAMES in src/echo/runtime/builtins.py
+// (and echo-syntax-highlighter/syntaxes/echo.tmLanguage.json). Only calls highlight.
 const BUILTINS = new Set([
-  'wait',
-  'ask',
-  'say',
-  'asInt',
-  'asFloat',
+  'abs',
+  'args',
   'asBool',
+  'asFloat',
+  'asFloatOr',
+  'asInt',
+  'asIntOr',
+  'ask',
+  'assert',
   'asString',
-  'type',
-  'trim',
-  'upperCase',
-  'lowerCase',
-  'length',
-  'keys',
-  'values',
-  'reverse',
-  'push',
-  'empty',
+  'ceil',
   'clone',
+  'contains',
+  'copyFile',
   'countOf',
-  'merge',
+  'cwd',
+  'default',
+  'empty',
+  'endsWith',
+  'ensure',
+  'env',
+  'envOr',
+  'eprint',
+  'exit',
+  'fail',
+  'fileExists',
   'find',
+  'floor',
+  'format',
+  'has',
+  'indexOf',
   'insertAt',
-  'pull',
-  'removeValue',
+  'isDir',
+  'join',
+  'keys',
+  'lastIndexOf',
+  'length',
+  'listFiles',
+  'lowerCase',
+  'max',
+  'merge',
+  'min',
+  'mkdir',
+  'now',
   'order',
-  'wipe',
+  'padEnd',
+  'padStart',
+  'pairs',
+  'parseJson',
+  'parseJsonOr',
+  'pathJoin',
+  'pull',
+  'push',
+  'random',
+  'randomInt',
+  'readFile',
+  'readFileOr',
+  'readLine',
+  'removeFile',
+  'removeValue',
+  'repeat',
+  'replace',
+  'replaceFirst',
+  'reverse',
+  'run',
+  'say',
+  'slice',
+  'split',
+  'startsWith',
   'take',
   'take_last',
-  'ensure',
-  'pairs',
-  'default',
-  'format',
+  'trim',
+  'type',
+  'upperCase',
+  'values',
+  'wait',
+  'wipe',
+  'writeFile',
+  'writeJson',
 ])
 
+const NUMBER_RE = /^(?:\.[0-9]+|[0-9]+(?:\.[0-9]+)?)(?:[eE][+-]?[0-9]+)?/
+const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*/
+const CONSTANT_RE = /^[A-Z_][A-Z0-9_]*$/
+const CALL_AFTER_RE = /^\s*\(/
+
+type StringFrame = { kind: 'string'; quote: '"' | "'"; triple: boolean }
+type InterpFrame = { kind: 'interp'; depth: number }
+type CommentFrame = { kind: 'comment' }
+type Frame = StringFrame | InterpFrame | CommentFrame
+
 type EchoState = {
-  comment: boolean
-  quote: '"' | "'" | null
-  interp: number
+  stack: Frame[]
+  afterFn: boolean
+  afterType: boolean
+}
+
+function topFrame(state: EchoState): Frame | undefined {
+  return state.stack[state.stack.length - 1]
+}
+
+function clearDecl(state: EchoState) {
+  state.afterFn = false
+  state.afterType = false
+}
+
+type EchoStream = Parameters<StreamParser<EchoState>['token']>[0]
+
+function tokenBlockComment(stream: EchoStream, state: EchoState): string {
+  if (stream.match(/^.*?\*\//)) {
+    state.stack.pop()
+  } else {
+    stream.skipToEnd()
+  }
+  return 'comment'
+}
+
+function tokenString(stream: EchoStream, state: EchoState, frame: StringFrame): string {
+  if (stream.match('${')) {
+    state.stack.push({ kind: 'interp', depth: 0 })
+    return 'string-2'
+  }
+  if (stream.match('\\')) {
+    if (!stream.eol()) {
+      stream.next()
+    }
+    return 'string'
+  }
+
+  const closer = frame.triple ? frame.quote.repeat(3) : frame.quote
+  if (stream.match(closer)) {
+    state.stack.pop()
+    return 'string'
+  }
+
+  while (!stream.eol()) {
+    const next = stream.peek()
+    if (next === '\\') {
+      break
+    }
+    if (next === '$' && stream.string.startsWith('${', stream.pos)) {
+      break
+    }
+    if (frame.triple) {
+      if (next === frame.quote && stream.string.startsWith(closer, stream.pos)) {
+        break
+      }
+    } else if (next === frame.quote) {
+      break
+    }
+    stream.next()
+  }
+  return 'string'
+}
+
+function tokenCode(stream: EchoStream, state: EchoState): string | null {
+  const interp = topFrame(state)
+  const inInterp = interp?.kind === 'interp' ? interp : null
+
+  if (inInterp) {
+    if (stream.peek() === '{') {
+      stream.next()
+      inInterp.depth += 1
+      clearDecl(state)
+      return 'bracket'
+    }
+    if (stream.peek() === '}') {
+      stream.next()
+      if (inInterp.depth === 0) {
+        state.stack.pop()
+        clearDecl(state)
+        return 'string-2'
+      }
+      inInterp.depth -= 1
+      clearDecl(state)
+      return 'bracket'
+    }
+  }
+
+  if (stream.match(NUMBER_RE)) {
+    clearDecl(state)
+    return 'number'
+  }
+
+  if (stream.match(/^(?:&&|\|\||==|!=|<=|>=|\+=|-=|\*=|\/=|%=|->|=>|\.\.\.|\.\.)/)) {
+    clearDecl(state)
+    return 'operator'
+  }
+  if (stream.match(/^[+\-*/%=<>!]/)) {
+    clearDecl(state)
+    return 'operator'
+  }
+  if (stream.match(/^[()[\]{},.:;]/)) {
+    clearDecl(state)
+    return 'punctuation'
+  }
+
+  if (stream.match(IDENT_RE)) {
+    const word = stream.current()
+    const isCall = CALL_AFTER_RE.test(stream.string.slice(stream.pos))
+
+    if (state.afterFn) {
+      clearDecl(state)
+      return 'def'
+    }
+    if (state.afterType) {
+      clearDecl(state)
+      return 'type'
+    }
+
+    if (word === 'fn') {
+      state.afterFn = true
+      state.afterType = false
+      return 'keyword'
+    }
+    if (word === 'type') {
+      state.afterType = true
+      state.afterFn = false
+      return 'keyword'
+    }
+    if (KEYWORDS.has(word)) {
+      clearDecl(state)
+      return 'keyword'
+    }
+    if (TYPES.has(word)) {
+      clearDecl(state)
+      return 'type'
+    }
+    if (LITERALS.has(word)) {
+      clearDecl(state)
+      return 'atom'
+    }
+    if (isCall && BUILTINS.has(word)) {
+      clearDecl(state)
+      return 'builtin'
+    }
+    if (isCall) {
+      clearDecl(state)
+      return 'def'
+    }
+    if (CONSTANT_RE.test(word) && /[A-Z]/.test(word)) {
+      clearDecl(state)
+      return 'atom'
+    }
+    clearDecl(state)
+    return 'variable'
+  }
+
+  stream.next()
+  clearDecl(state)
+  return null
 }
 
 const echoParser: StreamParser<EchoState> = {
   name: 'echo',
   startState() {
-    return { comment: false, quote: null, interp: 0 }
+    return { stack: [], afterFn: false, afterType: false }
   },
   copyState(state) {
-    return { ...state }
+    return {
+      stack: state.stack.map((frame) => ({ ...frame })),
+      afterFn: state.afterFn,
+      afterType: state.afterType,
+    }
   },
   token(stream, state) {
-    if (state.comment) {
-      if (stream.match(/.*?\*\//)) {
-        state.comment = false
-      } else {
-        stream.skipToEnd()
-      }
-      return 'comment'
+    const top = topFrame(state)
+    if (top?.kind === 'comment') {
+      return tokenBlockComment(stream, state)
     }
-
-    if (state.quote && state.interp === 0) {
-      if (stream.match('${')) {
-        state.interp = 1
-        return 'string-2'
-      }
-      if (stream.match('\\')) {
-        stream.next()
-        return 'string'
-      }
-      if (stream.next() === state.quote) {
-        state.quote = null
-      }
-      return 'string'
+    if (top?.kind === 'string') {
+      return tokenString(stream, state, top)
     }
 
     if (stream.eatSpace()) {
@@ -108,63 +313,24 @@ const echoParser: StreamParser<EchoState> = {
       return 'comment'
     }
     if (stream.match('/*')) {
-      state.comment = true
+      state.stack.push({ kind: 'comment' })
       return 'comment'
     }
 
-    if (state.interp > 0 && stream.peek() === '{') {
-      stream.next()
-      state.interp += 1
-      return 'bracket'
+    if (stream.match('"""') || stream.match("'''")) {
+      clearDecl(state)
+      const quote = stream.current()[0] as '"' | "'"
+      state.stack.push({ kind: 'string', quote, triple: true })
+      return 'string'
     }
-    if (state.interp > 0 && stream.peek() === '}') {
-      stream.next()
-      state.interp -= 1
-      return state.interp === 0 ? 'string-2' : 'bracket'
-    }
-
     if (stream.match('"') || stream.match("'")) {
-      state.quote = stream.current() as '"' | "'"
+      clearDecl(state)
+      const quote = stream.current() as '"' | "'"
+      state.stack.push({ kind: 'string', quote, triple: false })
       return 'string'
     }
 
-    if (stream.match(/0x[0-9a-fA-F]+/) || stream.match(/0b[01]+/) || stream.match(/\d+(?:\.\d+)?/)) {
-      return 'number'
-    }
-
-    if (stream.match(/&&|\|\||==|!=|<=|>=|\+=|-=|\*=|\/=|%=|->|=>|\.\.\.|\.\./)) {
-      return 'operator'
-    }
-    if (stream.match(/[+\-*/%=<>!]/)) {
-      return 'operator'
-    }
-    if (stream.match(/[()[\]{},.:;]/)) {
-      return 'punctuation'
-    }
-
-    if (stream.match(/[A-Za-z_][A-Za-z0-9_]*/)) {
-      const word = stream.current()
-      if (KEYWORDS.has(word)) {
-        return 'keyword'
-      }
-      if (TYPES.has(word)) {
-        return 'type'
-      }
-      if (LITERALS.has(word)) {
-        return 'atom'
-      }
-      if (BUILTINS.has(word)) {
-        return 'builtin'
-      }
-      const after = stream.string.slice(stream.pos).match(/^\s*\(/)
-      if (after) {
-        return 'def'
-      }
-      return 'variable'
-    }
-
-    stream.next()
-    return null
+    return tokenCode(stream, state)
   },
   languageData: {
     commentTokens: { line: '//', block: { open: '/*', close: '*/' } },

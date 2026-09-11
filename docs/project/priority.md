@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.4**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.5.5**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -18,6 +18,8 @@ Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 | 8 | `readLine()` | implemented (0.5.0) |
 | 9 | REPL (`echo` with no file) | implemented (0.5.2) |
 | 10 | `echo test path.echo` | implemented (0.5.0) |
+| 11 | `fail(message)` | implemented (0.5.5) |
+| 12 | `echo lint` | implemented (0.5.5) |
 
 ### 1. `assert(cond, message)`
 
@@ -67,6 +69,16 @@ Harden 0.5.1: brace-depth and unterminated-triple continuation (`... `), empty l
 
 Harden 0.5.1: no path → help and exit 2; missing file → non-zero Echo error; `exit(2)` fails the test; `exit(0)` passes; imported modules execute (unlike `check`).
 
+### 11. `fail(message)`
+
+Abort with an Echo error. `message` must be `str`. Same diagnostic family as `assert` (code **E2825**). Always abort. No `*Or` twin. Required message so scripts stay explicit.
+
+### 12. `echo lint`
+
+Style and convention findings, not a second typechecker. `echo lint [paths...]` walks files or recursive `*.echo` directories. Findings exit 1; clean exit 0; no path prints help and exits 2; parse errors match `echo check`. The first token `lint` is the subcommand; `echo lint.echo` still runs that file.
+
+Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`.
+
 ## Held (do not implement)
 
 | Item | Status |
@@ -84,6 +96,7 @@ Harden 0.5.1: no path → help and exit 2; missing file → non-zero Echo error;
 | Default / variadic user args | held |
 | Overloading | held |
 | Formatter / `echo fmt` | implemented (0.5.4) |
+| Linter / `echo lint` | implemented (0.5.5) |
 | LSP | held |
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |

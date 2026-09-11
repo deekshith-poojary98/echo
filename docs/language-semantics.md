@@ -370,4 +370,6 @@ v0.4.2 adds `cwd`, `exit`, `isDir`, and `listFiles`.
 v0.4.3 adds `mkdir`, `removeFile`, string `indexOf` / `lastIndexOf` / `repeat` / `padStart` / `padEnd` / `replaceFirst`, numeric `abs` / `min` / `max` / `floor` / `ceil`, and `eprint`.
 v0.5.0 adds `assert`, `copyFile`, `pathJoin`, `run`, `now`, `random` / `randomInt`, `readLine`, a REPL, `echo test`, triple-quoted multiline strings, and `.5` / scientific number literals.
 v0.5.3 adds `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`.
+v0.5.4 adds `echo fmt`.
+v0.5.5 adds `fail(message)` and `echo lint`.
 See `docs/v0.4-stdlib.md`.

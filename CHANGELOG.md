@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.5
+
+`fail(message)` and `echo lint`. No new syntax. No `try` / `catch`.
+
+- `fail(message)` always aborts with an Echo error; `message` must be `str`. Not recoverable. No `*Or` twin. Error code **E2825**
+- `echo lint [paths...]` reports style findings without running the program: unused locals/functions/imports, comparison to boolean literals, redundant `by 1`, empty if/function bodies, and names that shadow builtins
+- Dirty lint findings print `path:line:col: rule: message` and exit 1; a clean tree exits 0
+- A directory argument lints `*.echo` recursively; parse errors use the same diagnostic as `echo check`; no path prints help and exits 2
+- The first argument must be the word `lint`; `echo lint.echo` still runs a file named `lint.echo`. `fail` is a builtin, not a CLI command, so `echo fail.echo` still runs that file
+
 ## 0.5.4
 
 Canonical `echo fmt`. No language change.

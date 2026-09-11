@@ -187,6 +187,7 @@ After installation, these commands are available:
 ```bash
 echo path/to/file.echo
 echolang path/to/file.echo
+echolang lint path/to/file.echo
 ```
 
 In Windows PowerShell, prefer `echolang path/to/file.echo`.

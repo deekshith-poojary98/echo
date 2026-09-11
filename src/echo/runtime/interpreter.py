@@ -69,6 +69,7 @@ from echo.runtime.builtins import (
     do_env,
     do_env_or,
     do_exit,
+    do_fail,
     do_file_exists,
     do_floor,
     do_has,
@@ -632,6 +633,8 @@ class Interpreter:
             cond = target if target is not None else _nth(args, 0, method, location)
             message = args[0] if target is not None else _nth(args, 1, method, location)
             return do_assert(cond, message, location)
+        if method == "fail":
+            return do_fail(target if target is not None else _first(args, method, location), location)
         if method == "copyFile":
             src = target if target is not None else _nth(args, 0, method, location)
             dest = args[0] if target is not None else _nth(args, 1, method, location)

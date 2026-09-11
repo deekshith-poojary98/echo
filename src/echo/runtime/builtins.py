@@ -111,6 +111,7 @@ BUILTIN_NAMES = frozenset(
         "copyFile",
         "pathJoin",
         "assert",
+        "fail",
         "run",
         "now",
         "random",
@@ -195,6 +196,7 @@ BUILTIN_PARAMS = {
     "copyFile": ["dest"],
     "pathJoin": ["part"],
     "assert": ["message"],
+    "fail": [],
     "run": ["args"],
     "now": [],
     "random": [],
@@ -234,6 +236,7 @@ STANDALONE_PARAMS = {
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
     "assert": ["cond", "message"],
+    "fail": ["message"],
     "run": ["command", "args"],
     "randomInt": ["min", "max"],
 }
@@ -305,6 +308,7 @@ STANDALONE_MIN_ARGS = {
     "copyFile": 2,
     "pathJoin": 2,
     "assert": 2,
+    "fail": 1,
     "run": 2,
     "now": 0,
     "random": 0,
@@ -738,6 +742,12 @@ def do_assert(cond: object, message: object, location: SourceLocation | None = N
     if not is_truthy(cond):
         raise EchoRuntimeError(message, location, code="E2819")
     return None
+
+
+def do_fail(message: object, location: SourceLocation | None = None) -> None:
+    if not isinstance(message, str):
+        raise EchoTypeError("fail() message must be a string", location, code="E2825")
+    raise EchoRuntimeError(message, location, code="E2825")
 
 
 def do_copy_file(src: object, dest: object, host: Host, location: SourceLocation | None = None) -> None:

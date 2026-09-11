@@ -117,8 +117,8 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | JSON / interchange | Usability | Missing | Usability now | v0.4 candidate (library) |
 | Multiline strings | Usability | Missing | Later | Later |
 | Package manager | Ecosystem | Missing | Tooling | Tooling track |
-| Formatter | Ecosystem | Missing | Tooling | Tooling track |
-| Linter | Ecosystem | Missing | Tooling | Tooling track |
+| Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
+| Linter | Ecosystem | Implemented (0.5.5) | Tooling | 0.5.5 |
 | Native test runner | Ecosystem | Missing | Tooling | Tooling / vision |
 | Debugger | Ecosystem | Partial | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
@@ -1006,14 +1006,16 @@ Go’s `gofmt` is still the reference: one style, no layout knobs.
 
 ### Linter
 
-**Status.** Missing.
+**Status.** Implemented (0.5.5).
 
-The semantic analyzer already rejects real mistakes. A linter would
-cover style and smells (`use` unused, shadowed names, etc.).
+The semantic analyzer already rejects real mistakes. `echo lint` covers
+style and convention: unused locals/functions/imports, comparison to
+boolean literals, redundant `by 1`, empty if/function bodies, and
+shadowed builtins. It does not re-run typechecking.
 
-**Priority.** Tooling. After or with a formatter.
+**Priority.** Tooling. Shipped.
 
-**Possible version.** Tooling track.
+**Possible version.** 0.5.5.
 
 ---
 
@@ -1063,8 +1065,11 @@ extract / API generator for Echo modules.
 
 **Status.** Partial.
 
-`echo-syntax-highlighter/` is a VS Code TextMate grammar. No completions,
-no jump-to-definition, no diagnostics in the editor.
+`echo-syntax-highlighter/` is a VS Code / Cursor TextMate grammar (also
+imported by the docs site for Echo code fences). It covers current keywords,
+types, builtins (`fail`, `assert`, `*Or` twins, host/stdlib), comments,
+strings with `${...}`, and number literals. No completions, jump-to-definition,
+or diagnostics in the editor.
 
 **Priority.** Tooling.
 

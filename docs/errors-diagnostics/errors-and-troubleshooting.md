@@ -32,6 +32,11 @@ Common causes:
 - missing hash key
 - invalid method usage
 - invalid `format()` placeholder
+- `assert` / `fail` abort (`E2819` / `E2825`)
+
+`fail(message)` always aborts with `message` (code `E2825`). `assert(cond, message)` aborts with the same diagnostic shape when `cond` is falsy (code `E2819`).
+
+`echo lint` is not an Echo runtime error. Findings print `path:line:col: rule: message` and exit 1. Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`.
 
 ## Example
 ```echo
