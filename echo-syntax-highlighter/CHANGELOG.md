@@ -1,9 +1,13 @@
 # Change Log
 
-All notable changes to the "echo-syntax-highlighter" extension will be documented in this file.
+## 0.5.5
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+- Grammar matches Echo v0.5.5, including `fail(message)`.
+- Builtin calls use a distinct scope, including `assert`, `*Or` twins, and host/stdlib names from 0.4–0.5.x.
+- Strings highlight `${...}` interpolation; numbers match `.5` and scientific literals.
+- Removed tokens Echo does not have (`as` keyword, hex/binary literals).
+- README covers install in VS Code / Cursor and how to update the builtin list.
 
-## [Unreleased]
+## 0.0.1
 
-- Initial release
+- Initial TextMate grammar stub.

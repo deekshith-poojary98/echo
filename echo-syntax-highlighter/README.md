@@ -1,50 +1,78 @@
-# echo-syntax-highlighter README
+# Echo Syntax Highlighter
 
-This is the README for your extension "echo-syntax-highlighter". After writing up a brief description, we recommend including the following sections.
+TextMate grammar for **Echo** (`.echo` files). It is the highlighting used in VS Code / Cursor and, via import, in the Echo docs site (Shiki code fences).
 
-## Features
+This package is **highlight-only**. There is no language server, completions, or diagnostics (LSP is held).
 
-The **Echo Syntax Highlighter** extension provides syntax highlighting support for the **Echo** programming language in Visual Studio Code. This extension offers:
+It tracks Echo **v0.5.5**.
 
-- Syntax highlighting for Echo's keywords, operators, comments, functions, variables, types, and more.
-- Support for `.echo` files, making it easy to edit Echo code directly in VS Code.
-- Customizable token color settings for comments and keywords.
+## Install
 
-For example, here's a screenshot of the extension in action:
+The extension is not published to the Marketplace yet. Install it from this repo.
 
-![feature screenshot](images/feature-x.png)
+### VS Code
 
-> Tip: To showcase the extension in action, you can also use short animations to demonstrate its features, like highlighting keywords, operators, and comments.
+Symlink or copy this folder into your extensions directory, then reload the window:
 
-## Requirements
+```bash
+# macOS / Linux
+ln -s "$(pwd)/echo-syntax-highlighter" ~/.vscode/extensions/echo-syntax-highlighter
 
-There are no additional dependencies for this extension. Just install **Visual Studio Code** and this extension to get started with **Echo** syntax highlighting.
+# Windows (Command Prompt, from the repo root)
+mklink /D "%USERPROFILE%\.vscode\extensions\echo-syntax-highlighter" "%CD%\echo-syntax-highlighter"
+```
 
-## Known Issues
+### Cursor
 
-- The extension may not support auto-formatting for Echo code at this time.
-- Syntax highlighting for new or custom Echo keywords may require an update to the extension.
+Same layout, different extensions folder:
 
-## Release Notes
+```bash
+ln -s "$(pwd)/echo-syntax-highlighter" ~/.cursor/extensions/echo-syntax-highlighter
+```
 
-### 1.0.0
+Open any `.echo` file. The status bar language mode should read **Echo**.
 
-- Initial release of **Echo Syntax Highlighter** extension.
-- Added syntax highlighting for basic Echo language constructs like keywords, functions, comments, and operators.
+### Develop against a host window
 
----
+From this folder in VS Code or Cursor, press **F5**. A new window loads the grammar. Open `examples/highlight-sample.echo` to check scopes.
 
-## Working with Markdown
+## What it highlights
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+| Category | Examples |
+| --- | --- |
+| Keywords | `fn`, `if`, `else`, `while`, `for`, `foreach`, `return`, `break`, `continue`, `in`, `by`, `use`, `mut`, `watch`, `type`, `import`, `export`, `from` |
+| Types | `int`, `float`, `str`, `bool`, `list`, `hash`, `dynamic`, `void` |
+| Literals | `true`, `false`, `null` |
+| Builtins | Distinct from user functions: `say`, `assert`, `fail`, `*Or` twins, host/stdlib names from 0.4–0.5.x |
+| Comments | `//` line and `/* */` block |
+| Strings | `"..."`, `'...'`, `"""..."""`, `'''...'''`, escapes, and `${...}` interpolation (nested hashes inside `${}` keep matching braces) |
+| Numbers | Integers, `.5`, `1.5`, `1e3`, `1e-3`. Echo has no hex (`0x`) or binary (`0b`) literals |
+| Operators | Arithmetic, comparison, `&&` `||` `!`, `..` `...`, `+=` and friends, `->` `=>` |
+| Names | `fn` definitions, user calls, and `TYPE`-style constants |
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+The grammar does **not** invent syntax Echo does not have (`try`/`catch`, classes, slice syntax, `as` as a keyword, hex/binary literals).
 
-## For more information
+## Keep the builtin list in sync
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+Builtin names are a **manual** list in `syntaxes/echo.tmLanguage.json`, under the `builtins` repository pattern (`support.function.builtin.echo`).
 
-**Enjoy!**
+When Echo gains or renames a builtin:
+
+1. Read `BUILTIN_NAMES` in `src/echo/runtime/builtins.py`.
+2. Add any reserved names that are not in that set yet.
+3. Put the names in the `builtins` `match` regex, **alphabetically**, each followed by `\\s*(?=\\()` so only calls highlight as builtins.
+4. Run the sync test:
+
+```bash
+python -m pytest echo-syntax-highlighter/tests/test_grammar_sync.py -q
+```
+
+Keywords and type names come from `src/echo/frontend/tokens.py` (`KEYWORDS`, `TYPE_NAMES`). Number, string, comment, and interpolation rules must match `src/echo/frontend/lexer.py`.
+
+The docs site imports this grammar directly (`docs/.vitepress/config.ts`). Updating the JSON updates markdown Echo fences; you do not copy the file into `docs/`.
+
+The playground editor uses a separate CodeMirror stream parser (`docs/.vitepress/theme/echoLanguage.ts`), not this TextMate file.
+
+## License
+
+MIT, same as Echo.
