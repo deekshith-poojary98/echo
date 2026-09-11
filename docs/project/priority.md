@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.2**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.5.3**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
@@ -78,7 +78,7 @@ Harden 0.5.1: no path → help and exit 2; missing file → non-zero Echo error;
 | Packages | held |
 | `try` / `catch` | held |
 | First-class `map` / `filter` | held |
-| User-level failure recovery | designed ([failure model](/failure-model)) — syntax held; `*Or` stdlib pending |
+| User-level failure recovery | designed ([failure model](/failure-model)) — syntax held; `*Or` stdlib implemented (0.5.3) |
 | First-class functions | held |
 | Slice syntax `xs[1:4]` | held |
 | Default / variadic user args | held |

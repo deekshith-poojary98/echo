@@ -54,7 +54,9 @@ from echo.runtime.builtins import (
     MUTATING_METHODS,
     as_bool,
     as_float,
+    as_float_or,
     as_int,
+    as_int_or,
     do_abs,
     do_args,
     do_assert,
@@ -84,10 +86,12 @@ from echo.runtime.builtins import (
     do_pad_end,
     do_pad_start,
     do_parse_json,
+    do_parse_json_or,
     do_path_join,
     do_random,
     do_random_int,
     do_read_file,
+    do_read_file_or,
     do_read_line,
     do_remove_file,
     do_repeat,
@@ -428,6 +432,14 @@ class Interpreter:
             return as_int(target if target is not None else _first(args, method, location), location)
         if method == "asFloat":
             return as_float(target if target is not None else _first(args, method, location), location)
+        if method == "asIntOr":
+            value = target if target is not None else _nth(args, 0, method, location)
+            fallback = args[0] if target is not None else _nth(args, 1, method, location)
+            return as_int_or(value, fallback, location)
+        if method == "asFloatOr":
+            value = target if target is not None else _nth(args, 0, method, location)
+            fallback = args[0] if target is not None else _nth(args, 1, method, location)
+            return as_float_or(value, fallback, location)
         if method == "asBool":
             return as_bool(target if target is not None else _first(args, method, location))
         if method == "asString":
@@ -530,12 +542,20 @@ class Interpreter:
             return do_env_or(name, fallback, self.host, location)
         if method == "readFile":
             return do_read_file(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "readFileOr":
+            path = target if target is not None else _nth(args, 0, method, location)
+            fallback = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_read_file_or(path, fallback, self.host, location)
         if method == "writeFile":
             path = target if target is not None else _nth(args, 0, method, location)
             contents = args[0] if target is not None else _nth(args, 1, method, location)
             return do_write_file(path, contents, self.host, location)
         if method == "parseJson":
             return do_parse_json(target if target is not None else _first(args, method, location), location)
+        if method == "parseJsonOr":
+            text = target if target is not None else _nth(args, 0, method, location)
+            fallback = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_parse_json_or(text, fallback, location)
         if method == "writeJson":
             return do_write_json(target if target is not None else _first(args, method, location), location)
         if method == "join":

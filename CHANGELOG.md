@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.3
+
+Fallback `*Or` twins for untrusted input. Aborting originals are unchanged. No `try` / `catch`. No `Result` type.
+
+- `readFileOr(path, fallback)` returns file text on success and `fallback` for missing files, invalid UTF-8, directories, and other read OS errors
+- Restricted hosts still deny `readFileOr` with E2801; a non-string path is still a type error
+- `parseJsonOr(text, fallback)` returns the parsed value or `fallback` for invalid JSON; non-string text is still a type error
+- `asIntOr(value, fallback)` / `asFloatOr(value, fallback)` return the converted number or `fallback` for unparseable strings, `null`, lists, and hashes
+- `asIntOr(true, 0)` / `asFloatOr(true, 0.0)` stay type errors — bool has no twin
+- `readFile`, `parseJson`, `asInt`, and `asFloat` still abort
+
 ## 0.5.2
 
 REPL session state. One `echo` process keeps one environment for the lifetime of the REPL.

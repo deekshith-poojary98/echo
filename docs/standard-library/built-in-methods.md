@@ -89,6 +89,14 @@ say(n + 1);        // 43
 say(asInt(3.9));   // 3
 ```
 
+### `asIntOr(fallback)`
+Same conversion as `asInt`, but unparseable strings, `null`, lists, and hashes return `fallback`. `bool` is still a type error. `asInt` still aborts.
+
+```echo
+n: int = asIntOr("abc", 0);    // 0
+say(" 42 ".asIntOr(0));        // 42
+```
+
 ---
 
 ### `asFloat()`
@@ -98,6 +106,14 @@ Converts the value to a `float`.
 f: float = "3.14".asFloat();
 say(f);            // 3.14
 say(asFloat(7));   // 7.0
+```
+
+### `asFloatOr(fallback)`
+Same conversion as `asFloat`, but unparseable strings, `null`, lists, and hashes return `fallback`. `bool` is still a type error. `asFloat` still aborts.
+
+```echo
+f: float = asFloatOr("nope", 0.0);    // 0.0
+say("3.5".asFloatOr(0.0));            // 3.5
 ```
 
 ---
@@ -174,11 +190,12 @@ home: str = env("HOME");
 city: str = envOr("CITY", "unknown");
 ```
 
-### `readFile(path)` / `writeFile(path, contents)`
-UTF-8 text only. Relative paths use the process working directory. Missing files, permission errors, and invalid UTF-8 abort. The playground host denies both.
+### `readFile(path)` / `readFileOr(path, fallback)` / `writeFile(path, contents)`
+UTF-8 text only. Relative paths use the process working directory. Missing files, permission errors, and invalid UTF-8 abort `readFile`. `readFileOr` returns `fallback` for those expected read failures (including a directory path). The playground host denies both; a non-string path is a type error.
 
 ```echo
 text: str = readFile("notes.txt");
+maybe: str = readFileOr("notes.txt", "");
 writeFile("out.txt", text);
 ```
 
@@ -274,11 +291,12 @@ Aborts with an Echo error when `cond` is falsy. `message` must be a `str`. Truth
 assert(fileExists("notes.txt"), "missing notes");
 ```
 
-### `parseJson(text)` / `writeJson(value)`
-JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort.
+### `parseJson(text)` / `parseJsonOr(text, fallback)` / `writeJson(value)`
+JSON objects become hashes, arrays become lists, whole numbers become `int`, other finite numbers become `float`. Invalid JSON and non-finite floats abort `parseJson`. `parseJsonOr` returns `fallback` for invalid JSON. Non-string text is a type error for both.
 
 ```echo
 data: dynamic = parseJson("{\"n\": 1}");
+maybe: dynamic = parseJsonOr("{", null);
 say(writeJson(data));
 ```
 
@@ -724,7 +742,7 @@ say(copy["name"]);        // Echo
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
 - For standalone `find(...)` and `countOf(...)` calls, use `items:` for the collection argument.
-- Most conversion built-ins (`asInt`, `asFloat`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
+- Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
 

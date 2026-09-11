@@ -1,6 +1,6 @@
 # Echo failure model
 
-> **Status:** Frozen design decision. Docs only as of v0.5.2.
+> **Status:** Frozen design decision. `*Or` stdlib twins shipped in v0.5.3.
 > **Theme:** Abort by default. Recovery is inquiry and `*Or` twins, not `try/catch`.
 > **Questions answered:** [`docs/v0.4-language-vs-stdlib.md`](/v0.4-language-vs-stdlib) section 8
 
@@ -22,7 +22,7 @@ That is still the honest default for host and stdlib builtins.
 Already-shipped exceptions, which this note does not rewrite:
 
 - Inquiry: `fileExists`, `isDir`, `has`, `contains`, `find` (`-1`)
-- Fallback twin: `envOr(name, fallback)`
+- Fallback twin: `envOr(name, fallback)`, `readFileOr(path, fallback)`, `parseJsonOr(text, fallback)`, `asIntOr(value, fallback)`, `asFloatOr(value, fallback)`
 - Status value: `run` → `{ "code", "stdout", "stderr" }` (non-zero is not an Echo error)
 - Programmer abort: `assert(cond, message)`, `exit(code)`
 - Host policy: `allow_files=False` / `allow_run=False` always abort (`E2801`)
@@ -45,6 +45,7 @@ Programmer or contract violations. Never recoverable. No `*Or` twin.
 - Host denied (`E2801`)
 - Missing executable for `run`
 - `assert` failure
+- `asInt(true)` / `asFloat(true)` — bool has no twin
 
 Catching these would hide bugs.
 
@@ -64,14 +65,18 @@ if fileExists("notes.txt") {
 
 ```echo
 home: str = envOr("HOME", "");
+text: str = readFileOr("notes.txt", "");
+data: dynamic = parseJsonOr(text, null);
+n: int = asIntOr(raw, 0);
 ```
 
-Later stdlib (not this design pass): `readFileOr`, `parseJsonOr`, `asIntOr` / `asFloatOr` for untrusted input. Same rules as `envOr`:
+Shipped in 0.5.3: `readFileOr`, `parseJsonOr`, `asIntOr` / `asFloatOr` for untrusted input. Same rules as `envOr`:
 
 - Success → the real value
 - Expected failure → `fallback` (any Echo value)
 - Wrong argument types still abort
 - Host deny still aborts
+- `asIntOr(true, 0)` / `asFloatOr(true, 0.0)` still abort — bool is a bug, not untrusted input
 - `default()` is not this
 
 Do **not** convert `readFile` itself into a hash or `null`. The aborting name stays the honest default.
@@ -86,7 +91,7 @@ Do **not** convert `readFile` itself into a hash or `null`. The aborting name st
 
 ## Answers section 8 required
 
-**Which failures are bugs vs expected.** The table above. File-not-found, unset env, and invalid JSON-from-text are expected. `notes[99]` and `asInt(true)` are bugs. Invalid JSON on `parseJson` of a trusted file can stay abort; untrusted text uses a future `parseJsonOr`.
+**Which failures are bugs vs expected.** The table above. File-not-found, unset env, and invalid JSON-from-text are expected. `notes[99]` and `asInt(true)` are bugs. Invalid JSON on `parseJson` of a trusted file can stay abort; untrusted text uses `parseJsonOr`.
 
 **Can a user function produce the same kind of failure a builtin produces?** No catchable form. A user `fn` returns a value or it aborts (`assert`, or a future `fail(message)` as assert-without-condition). Recoverable user APIs return an ordinary hash the author defined (`{ "ok": true, "value": x }`). That is a convention for *that* function, not a language `Result` type and not something builtins must adopt.
 
@@ -105,9 +110,17 @@ Do **not** convert `readFile` itself into a hash or `null`. The aborting name st
 
 ---
 
-## Later stdlib (not syntax)
+## Shipped stdlib twins (0.5.3)
 
-`readFileOr`, `parseJsonOr`, `asIntOr`, `asFloatOr` may ship as builtins after this note. They do not open a language revision.
+`readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr` are builtins. They do not open a language revision.
+
+| Twin | Fallback | Still abort |
+| --- | --- | --- |
+| `readFileOr(path, fallback)` | missing file, invalid UTF-8, directory, other read OSError that `readFile` reports as cannot-read | host deny (`E2801`); non-`str` path |
+| `parseJsonOr(text, fallback)` | invalid JSON | non-`str` text |
+| `asIntOr(value, fallback)` / `asFloatOr(value, fallback)` | unparseable `str`, `null`, list, hash, and other “cannot convert” values | `bool` (no twin); success still returns the number |
+
+---
 
 ## See also
 

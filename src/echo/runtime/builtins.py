@@ -85,9 +85,13 @@ BUILTIN_NAMES = frozenset(
         "env",
         "envOr",
         "readFile",
+        "readFileOr",
         "writeFile",
         "parseJson",
+        "parseJsonOr",
         "writeJson",
+        "asIntOr",
+        "asFloatOr",
         "join",
         "startsWith",
         "endsWith",
@@ -143,6 +147,8 @@ BUILTIN_PARAMS = {
     "default": ["fallback"],
     "asInt": ["value"],
     "asFloat": ["value"],
+    "asIntOr": ["value", "fallback"],
+    "asFloatOr": ["value", "fallback"],
     "asBool": ["value"],
     "asString": ["value"],
     "type": ["value"],
@@ -165,8 +171,10 @@ BUILTIN_PARAMS = {
     "env": ["name"],
     "envOr": ["name", "fallback"],
     "readFile": ["path"],
+    "readFileOr": ["path", "fallback"],
     "writeFile": ["contents"],
     "parseJson": ["text"],
+    "parseJsonOr": ["text", "fallback"],
     "writeJson": ["value"],
     "join": ["separator"],
     "startsWith": ["prefix"],
@@ -209,6 +217,10 @@ STANDALONE_PARAMS = {
     "slice": ["items", "start", "end"],
     "writeFile": ["path", "contents"],
     "envOr": ["name", "fallback"],
+    "readFileOr": ["path", "fallback"],
+    "parseJsonOr": ["text", "fallback"],
+    "asIntOr": ["value", "fallback"],
+    "asFloatOr": ["value", "fallback"],
     "join": ["items", "separator"],
     "startsWith": ["value", "prefix"],
     "endsWith": ["value", "suffix"],
@@ -242,6 +254,8 @@ STANDALONE_MIN_ARGS = {
     "wait": 1,
     "asInt": 1,
     "asFloat": 1,
+    "asIntOr": 2,
+    "asFloatOr": 2,
     "asBool": 1,
     "asString": 1,
     "type": 1,
@@ -267,8 +281,10 @@ STANDALONE_MIN_ARGS = {
     "env": 1,
     "envOr": 2,
     "readFile": 1,
+    "readFileOr": 2,
     "writeFile": 2,
     "parseJson": 1,
+    "parseJsonOr": 2,
     "writeJson": 1,
     "join": 2,
     "startsWith": 2,
@@ -352,6 +368,24 @@ def resolve_builtin_args(method: str, args: list, has_target: bool, location: So
         if slot is None:
             raise EchoTypeError(f"{method}() missing argument '{params[index]}'", location, code="E2605")
     return slots
+
+
+def as_int_or(value: object, fallback: object, location: SourceLocation | None = None) -> object:
+    if isinstance(value, bool):
+        raise EchoTypeError("Cannot convert bool to int", location, code="E2606")
+    try:
+        return as_int(value, location)
+    except EchoTypeError:
+        return fallback
+
+
+def as_float_or(value: object, fallback: object, location: SourceLocation | None = None) -> object:
+    if isinstance(value, bool):
+        raise EchoTypeError("Cannot convert bool to float", location, code="E2607")
+    try:
+        return as_float(value, location)
+    except EchoTypeError:
+        return fallback
 
 
 def as_int(value: object, location: SourceLocation | None = None) -> int:
@@ -499,6 +533,18 @@ def do_read_file(path: object, host: Host, location: SourceLocation | None = Non
         raise EchoRuntimeError(f"cannot read file: {path}", location, code="E2803") from exc
 
 
+def do_read_file_or(path: object, fallback: object, host: Host, location: SourceLocation | None = None) -> object:
+    if not host.allow_files:
+        raise EchoRuntimeError("readFileOr() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("readFileOr() path must be a string", location, code="E2802")
+    target = host.resolve_path(path)
+    try:
+        return target.read_text(encoding="utf-8")
+    except (FileNotFoundError, UnicodeDecodeError, OSError):
+        return fallback
+
+
 def do_write_file(path: object, contents: object, host: Host, location: SourceLocation | None = None) -> None:
     if not host.allow_files:
         raise EchoRuntimeError("writeFile() is not available in this host", location, code="E2801")
@@ -516,6 +562,15 @@ def do_write_file(path: object, contents: object, host: Host, location: SourceLo
 
 def do_parse_json(text: object, location: SourceLocation | None = None) -> object:
     return parse_json(text, location)
+
+
+def do_parse_json_or(text: object, fallback: object, location: SourceLocation | None = None) -> object:
+    if not isinstance(text, str):
+        raise EchoTypeError("parseJsonOr() requires a string", location, code="E2805")
+    try:
+        return parse_json(text, location)
+    except EchoRuntimeError:
+        return fallback
 
 
 def do_write_json(value: object, location: SourceLocation | None = None) -> str:
