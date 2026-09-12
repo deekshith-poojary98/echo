@@ -28,6 +28,7 @@ say(items.countOf(3));
 - `countOf()` counts exact value matches.
 - `map(f)` / `filter(f)` return a new list from a function value or lambda.
 - `reduce(init, f)` folds from required `init`; empty list returns `init`.
+- `flatMap(f)` concatenates callback lists one level into a new list.
 
 ## See Also
 - [Lists](/core-concepts/lists)

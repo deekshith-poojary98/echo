@@ -622,3 +622,125 @@ say(forEach([1, 2, 3], fn(x: int) -> int { return fail("each"); }));
     assert_no_python_leak(result)
     assert "each" in result.output
 
+
+def test_flatmap_named_fn_and_lambda_flatten_one_level():
+    result = run_echo(
+        """
+fn wrap(x: int) -> list {
+    return [x, x];
+}
+fn nest(xs: list) -> list {
+    return xs;
+}
+say(flatMap([1, 2], wrap));
+say(flatMap([[1, 2], [3], []], nest));
+say(flatMap([1, 2], fn(x: int) -> list { return [[x]]; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 1, 2, 2]", "[1, 2, 3]", "[[1], [2]]"]
+
+
+def test_flatmap_empty_list():
+    result = run_echo(
+        """
+fn boom(x: int) -> list {
+    return fail("called");
+}
+empty: list = [];
+say(flatMap(empty, boom));
+say(flatMap(empty, fn(x: int) -> list { return fail("called"); }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[]", "[]"]
+
+
+def test_flatmap_do_not_mutate_input():
+    result = run_echo(
+        """
+nums: list = [1, 2, 3];
+flat: list = nums.flatMap(fn(x: int) -> list { return [x]; });
+say(nums);
+say(flat);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "[1, 2, 3]"]
+
+
+def test_flatmap_method_and_keyword_form():
+    result = run_echo(
+        """
+fn wrap(x: int) -> list {
+    return [x, x * 10];
+}
+nums: list = [1, 2];
+say(nums.flatMap(wrap));
+say(flatMap(items: nums, f: wrap));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 10, 2, 20]", "[1, 10, 2, 20]"]
+
+
+def test_flatmap_callback_must_return_list():
+    result = run_echo(
+        """
+say(flatMap([1, 2], fn(x: int) -> int { return x; }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "flatMap()" in result.output
+    assert "list" in result.output
+    assert "E2839" in result.output
+
+
+def test_flatmap_wrong_callback_type():
+    not_fn = run_echo("say(flatMap([1, 2], 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "flatMap()" in not_fn.output
+    assert "function" in not_fn.output
+    assert "E2837" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn add(a: int, b: int) -> list {
+    return [a, b];
+}
+say(flatMap([1, 2], add));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "flatMap()" in wrong_arity.output
+    assert "one argument" in wrong_arity.output
+    assert "E2838" in wrong_arity.output
+
+    extra_default = run_echo(
+        """
+fn wrap(x: int, extra: int = 0) -> list {
+    return [x];
+}
+say(flatMap([1, 2], wrap));
+"""
+    )
+    assert extra_default.exit_code == 1
+    assert_no_python_leak(extra_default)
+    assert "one argument" in extra_default.output
+    assert "E2838" in extra_default.output
+
+
+def test_flatmap_callback_abort():
+    result = run_echo(
+        """
+say(flatMap([1, 2, 3], fn(x: int) -> list { return fail("flattened"); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "flattened" in result.output
+
+

@@ -13,6 +13,7 @@ As of v0.5.0, Echo already has:
 - List `map` / `filter` (0.6.1)
 - List `reduce` (0.6.2)
 - List `forEach` (0.6.3)
+- List `flatMap` (0.6.4)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 

@@ -713,6 +713,27 @@ say(forEach(items: nums, f: collect));
 
 ---
 
+### `flatMap(f)`
+Applies unary function value `f` to each element. `f` must return a `list`. Concatenates those lists **one** level into a **new** list. Nested lists inside a callback result stay nested. Does not mutate the input. Empty list returns `[]`. A callback that aborts aborts the call.
+
+```echo
+fn wrap(x: int) -> list {
+    return [x, x];
+}
+
+nums: list = [1, 2];
+say(nums.flatMap(wrap));    // [1, 1, 2, 2]
+say(flatMap([[1, 2], [3], []], fn(xs: list) -> list { return xs; }));    // [1, 2, 3]
+```
+
+Standalone keyword form:
+
+```echo
+say(flatMap(items: nums, f: wrap));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -851,7 +872,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, and `forEach(...)` calls, use `items:` for the collection argument.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, and `flatMap(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -864,6 +885,7 @@ say(copy["name"]);        // Echo
 - Assuming `filter` keeps truthy `int` values such as `1`
 - Calling `reduce` without `init`, or with a callback that is not exactly two parameters
 - Calling `forEach` with a callback that is not exactly one parameter, or expecting it to return a list
+- Calling `flatMap` with a callback that does not return a list, or expecting nested lists to flatten more than one level
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

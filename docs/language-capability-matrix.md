@@ -107,7 +107,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
 | Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
 | Destructuring | Usability | Missing | Later | Later |
-| Collection operations | Usability | Partial (forEach 0.6.3) | Usability now | 0.6.3 |
+| Collection operations | Usability | Partial (flatMap 0.6.4) | Usability now | 0.6.4 |
 | String utilities | Usability | Partial | Usability now | v0.4 candidate |
 | Date / time | Usability | Missing | Later | Later (library) |
 | Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
@@ -356,7 +356,7 @@ lex error. No raw / multiline literal.
 
 Built-ins include `push`, `insertAt`, `pull`, `removeValue`, `empty`,
 `find`, `countOf`, `order`, `clone`, `merge`, `reverse`, `length`,
-`map`, `filter`, `reduce`, and `forEach`.
+`map`, `filter`, `reduce`, `forEach`, and `flatMap`.
 
 **Limitations.** `clone()` is shallow. Slice syntax `xs[1:4]` (both bounds
 required) desugars to `slice()`. `order(comparator)` accepts a function
@@ -364,6 +364,8 @@ value, a lambda, or a function name string. `map` / `filter` take a unary
 function value or lambda; `filter` requires a `bool` return. `reduce` takes
 a binary function value or lambda and a required `init`. `forEach` takes a
 unary function value or lambda, discards the callback return, and yields `null`.
+`flatMap` takes a unary function value or lambda that must return a `list`,
+and concatenates those lists one level.
 `removeValue` errors if the value is missing (contract); some older docs
 still say it is a no-op.
 
@@ -558,14 +560,15 @@ still accepts a function value, a lambda, or a name string. List
 `map` / `filter` take a unary function value or lambda. List `reduce`
 takes a binary function value or lambda and a required `init`. List
 `forEach` takes a unary function value or lambda, discards the callback
-return, and yields `null`.
+return, and yields `null`. List `flatMap` takes a unary function value or
+lambda that must return a `list`, and concatenates those lists one level.
 
 ```echo
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 say(map([1, 2, 3], double));
 ```
 
-**Limitations.** No overloading. No flatMap.
+**Limitations.** No overloading. No some/every/findIndex.
 
 **Priority.** Frozen.
 
@@ -819,7 +822,7 @@ taste than `try/catch`.
 
 ### Collection operations
 
-**What it means.** Slice, map, filter, reduce, forEach, contains, without handwritten loops.
+**What it means.** Slice, map, filter, reduce, forEach, flatMap, contains, without handwritten loops.
 
 **Why languages need it.** Real scripts spend most of their time on collections.
 
@@ -827,12 +830,12 @@ taste than `try/catch`.
 
 Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
 `contains`, `slice()`, slice syntax `xs[1:4]`, list `map` / `filter` (0.6.1),
-list `reduce` (0.6.2), and list `forEach` (0.6.3).
-It does not have flatMap.
+list `reduce` (0.6.2), list `forEach` (0.6.3), and list `flatMap` (0.6.4).
+It does not have some/every/findIndex.
 
 **Priority.** Remaining higher-order collection helpers later.
 
-**Possible version.** `forEach` shipped in 0.6.3.
+**Possible version.** `flatMap` shipped in 0.6.4.
 
 ---
 
@@ -1266,7 +1269,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. Failure handling is still design only.
 
 ---
 

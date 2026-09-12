@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.4
+
+List `flatMap` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No some/every, findIndex, or first-class builtins.
+
+- `flatMap(items: list, f: fn(T) -> list) -> list` applies unary `f` to each element and concatenates the returned lists one level into a new list
+- Method form: `items.flatMap(f)`. List only. Empty list returns `[]` and does not call `f`. Input is not mutated
+- `f` is a function value (named `fn` or lambda) with **exactly one** parameter. Defaults and extra variadics do not count toward that arity. Not a name string
+- Each callback result must be a `list` (`E2839`). Wrong callback type is `E2837`; wrong arity is `E2838`
+- `flatMap` is a call, not an assignable value
+
 ## 0.6.3
 
 List `forEach` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No flatMap, some/every, or first-class builtins.

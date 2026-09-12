@@ -252,6 +252,13 @@ value or lambda on each element and discards the return value. The builtin
 returns `null`. Empty list does not call `f` and returns `null`. A callback
 that aborts aborts the whole call. The input list is not mutated. List only.
 
+List `flatMap(items, f)` (and `items.flatMap(f)`) applies a unary function
+value or lambda. Each callback result must be a `list`. Those lists are
+concatenated **one** level into a new list. Nested lists inside a callback
+result stay nested. Empty list returns empty list and does not call `f`.
+A callback that aborts aborts the whole call. The input list is not mutated.
+List only.
+
 `return` outside a function is a semantic error.
 Functions may recurse.
 
@@ -415,4 +422,5 @@ v0.6.0 adds first-class functions including lambdas (`fn(x: int) -> int { ... }`
 v0.6.1 adds list `map` / `filter` on those function values.
 v0.6.2 adds list `reduce` (`init` required; empty list returns `init`).
 v0.6.3 adds list `forEach` (unary callback; return discarded; yields `null`).
+v0.6.4 adds list `flatMap` (unary callback must return a list; concatenates one level).
 See `docs/v0.4-stdlib.md`.

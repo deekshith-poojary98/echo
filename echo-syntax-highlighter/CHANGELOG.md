@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.4
+
+- Version tracks Echo v0.6.4.
+- Builtin highlighting includes `flatMap`.
+
 ## 0.6.3
 
 - Version tracks Echo v0.6.3.

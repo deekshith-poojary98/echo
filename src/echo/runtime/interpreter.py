@@ -711,6 +711,10 @@ class Interpreter:
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
             return self._filter(items, callback, location)
+        if method == "flatMap":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._flatMap(items, callback, location)
         if method == "forEach":
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
@@ -838,6 +842,20 @@ class Interpreter:
             if keep is True:
                 kept.append(item)
         return kept
+
+    def _flatMap(self, items: list, callback: object, location: SourceLocation) -> list:
+        function = self._require_callback("flatMap", callback, location, 1, "E2837", "E2838")
+        flattened: list[object] = []
+        for item in list(items):
+            mapped = self.call_function_with_values(function, [item], location)
+            if not isinstance(mapped, list):
+                raise EchoTypeError(
+                    f"flatMap() callback '{function.declaration.name}' must return list",
+                    location,
+                    code="E2839",
+                )
+            flattened.extend(mapped)
+        return flattened
 
     def _forEach(self, items: list, callback: object, location: SourceLocation) -> None:
         function = self._require_callback("forEach", callback, location, 1, "E2835", "E2836")

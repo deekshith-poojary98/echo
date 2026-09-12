@@ -34,6 +34,7 @@ say(nums);
 - `map(f)` / `filter(f)` return a new list. `filter` requires a `bool` callback.
 - `reduce(init, f)` folds the list from required `init`. Empty list returns `init`.
 - `forEach(f)` calls unary `f` for each element and returns `null`. Empty list is a no-op.
+- `flatMap(f)` applies unary `f` that returns a list and concatenates one level into a new list. Empty list returns `[]`.
 
 ## Common Mistakes
 - Calling list methods on non-list values
