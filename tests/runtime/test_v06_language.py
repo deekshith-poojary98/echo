@@ -102,15 +102,58 @@ def test_slice_out_of_bounds_aborts():
     assert "out of range" in result.output
 
 
-def test_slice_requires_both_bounds():
-    missing_end = run_echo("say([1, 2, 3][1:]);\n")
-    missing_start = run_echo("say([1, 2, 3][:2]);\n")
-    missing_both = run_echo("say([1, 2, 3][:]);\n")
-    for result in (missing_end, missing_start, missing_both):
+def test_optional_slice_bounds_lists_and_strings():
+    result = run_echo(
+        """
+xs: list = [10, 20, 30, 40];
+s: str = "Echo";
+say(xs[:]);
+say(xs[1:]);
+say(xs[:3]);
+say(xs[1:3]);
+say(s[:]);
+say(s[1:]);
+say(s[:3]);
+say(s[1:3]);
+say(xs[0]);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == [
+        "[10, 20, 30, 40]",
+        "[20, 30, 40]",
+        "[10, 20, 30]",
+        "[20, 30]",
+        "Echo",
+        "cho",
+        "Ech",
+        "ch",
+        "10",
+    ]
+
+
+def test_empty_list_full_slice():
+    result = run_echo("say([][:]);\n")
+    assert result.exit_code == 0
+    assert result.output.strip() == "[]"
+
+
+def test_optional_slice_out_of_bounds_aborts():
+    missing_end = run_echo("say([1, 2][9:]);\n")
+    missing_start = run_echo("say([1, 2][:9]);\n")
+    string_oob = run_echo('say("Echo"[9:]);\n')
+    for result in (missing_end, missing_start, string_oob):
         assert result.exit_code == 1
         assert_no_python_leak(result)
-        assert "Syntax Error" in result.output
-        assert "bound" in result.output.lower()
+        assert "slice()" in result.output
+        assert "out of range" in result.output
+
+
+def test_empty_brackets_are_not_a_slice():
+    result = run_echo("say([1, 2][]);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Syntax Error" in result.output
 
 
 def test_default_arguments_and_call_time_evaluation():
@@ -223,6 +266,9 @@ def test_check_fmt_lint_accept_new_syntax():
 fn apply(mapper: fn(int) -> int, punct: str = ",", nums: int...) {
     xs: list = [1, 2, 3, 4];
     say(xs[1:3]);
+    say(xs[1:]);
+    say(xs[:2]);
+    say(xs[:]);
     say(mapper(2));
     say(punct);
     foreach v: int in nums {
@@ -239,6 +285,9 @@ apply(fn(x: int) -> int { return x * 2; });
     assert "punct: str = \",\"" in formatted
     assert "nums: int..." in formatted
     assert "xs[1:3]" in formatted
+    assert "xs[1:]" in formatted
+    assert "xs[:2]" in formatted
+    assert "xs[:]" in formatted
     assert format_source(formatted) == formatted
 
     findings = lint_source(formatted, filename="app.echo")

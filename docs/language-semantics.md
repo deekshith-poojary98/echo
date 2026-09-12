@@ -304,10 +304,12 @@ Conditions use truthiness.
 - List indexes are `int` in range `[0, length)`.
 - Hash keys used in `[]` must be `str`.
 - Out-of-range list/string indexes and missing hash keys are runtime errors.
-- Slice syntax `xs[1:4]` (colon, both bounds required) desugars to
-  `slice(start, end)` with the same rules: start and end in `[0, length]`,
-  end exclusive, no negatives, out of bounds aborts. `xs[1:]`, `xs[:4]`,
-  and `xs[:]` are parse errors.
+- Slice syntax `xs[1:4]` (colon required) desugars to `slice(start, end)`
+  with the same rules: start and end in `[0, length]`, end exclusive, no
+  negatives, out of bounds aborts. Omitted start is `0`; omitted end is
+  `length`. `xs[1:]`, `xs[:4]`, and `xs[:]` are allowed (`xs[:]` is a
+  shallow list copy or the full string). `xs[]` is not a slice. There is
+  no step form `xs[1::2]`.
 - `clone()` is a shallow copy.
 
 ### `find`
@@ -434,4 +436,5 @@ v0.6.2 adds list `reduce` (`init` required; empty list returns `init`).
 v0.6.3 adds list `forEach` (unary callback; return discarded; yields `null`).
 v0.6.4 adds list `flatMap` (unary callback must return a list; concatenates one level).
 v0.6.5 adds list `some` / `every` / `findIndex` (unary `bool` predicates; `find(value)` stays value search).
+v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted start is `0`, omitted end is `length`).
 See `docs/v0.4-stdlib.md`.

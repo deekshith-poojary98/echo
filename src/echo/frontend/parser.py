@@ -366,25 +366,23 @@ class Parser:
                     expr = MemberExpression(expr.location, expr, name_token.lexeme)
                 continue
             if self._match(TokenType.LEFT_BRACKET):
-                if self._check(TokenType.COLON):
-                    raise ParseError(
-                        "Slice start bound is required; write xs[start:end]",
-                        self._peek().location,
-                        help_text="Both slice bounds are required. Use xs[1:4], not xs[:4] or xs[:].",
-                    )
-                start = self.parse_expression()
+                start: Expression | None = None
+                end: Expression | None = None
+                is_slice = False
                 if self._match(TokenType.COLON):
-                    if self._check(TokenType.RIGHT_BRACKET):
-                        raise ParseError(
-                            "Slice end bound is required; write xs[start:end]",
-                            self._peek().location,
-                            help_text="Both slice bounds are required. Use xs[1:4], not xs[1:] or xs[:].",
-                        )
-                    end = self.parse_expression()
+                    is_slice = True
+                else:
+                    start = self.parse_expression()
+                    if self._match(TokenType.COLON):
+                        is_slice = True
+                if is_slice:
+                    if not self._check(TokenType.RIGHT_BRACKET):
+                        end = self.parse_expression()
                     self._expect(TokenType.RIGHT_BRACKET, "]")
                     expr = SliceExpression(expr.location, expr, start, end)
                 else:
                     self._expect(TokenType.RIGHT_BRACKET, "]")
+                    assert start is not None
                     expr = IndexExpression(expr.location, expr, start)
                 continue
             if self._match(TokenType.LEFT_PAREN):

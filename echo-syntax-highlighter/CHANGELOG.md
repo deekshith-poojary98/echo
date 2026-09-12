@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.6
+
+- Version tracks Echo v0.6.6.
+- Sample highlights optional slice bounds `xs[1:]` / `xs[:4]` / `xs[:]`. Colon and brackets stay punctuation (same as `xs[1:4]`).
+
 ## 0.6.5
 
 - Version tracks Echo v0.6.5.

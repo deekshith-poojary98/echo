@@ -78,6 +78,9 @@ fn join(punct: str="!", parts: str...) {
     say(fn(x: int) -> int { return x; }(1));
     xs: list = [1, 2, 3, 4];
     say(xs[1:3]);
+    say(xs[1:]);
+    say(xs[:2]);
+    say(xs[:]);
 }
 """
     formatted = _assert_idempotent(source)
@@ -85,6 +88,20 @@ fn join(punct: str="!", parts: str...) {
     assert "parts: str..." in formatted
     assert "fn(x: int) -> int { return x; }" in formatted
     assert "xs[1:3]" in formatted
+    assert "xs[1:]" in formatted
+    assert "xs[:2]" in formatted
+    assert "xs[:]" in formatted
+
+
+def test_optional_slice_bounds_format_idempotent():
+    source = "say(xs[1:]);\nsay(xs[:4]);\nsay(xs[:]);\nsay(xs[1:4]);\n"
+    formatted = _assert_idempotent(source)
+    assert "xs[1:]" in formatted
+    assert "xs[:4]" in formatted
+    assert "xs[:]" in formatted
+    assert "xs[1:4]" in formatted
+    assert "xs[1:xs" not in formatted
+    assert "length" not in formatted
 
 
 def test_for_by_literal_one_is_omitted():

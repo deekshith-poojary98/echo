@@ -28,6 +28,7 @@ say(nums);
 - Lists are mutable.
 - Indexing requires an `int`.
 - Nested indexing and nested assignment are supported.
+- Slice syntax `xs[1:4]`, `xs[1:]`, `xs[:4]`, and `xs[:]` matches `slice()`.
 - `clone()` returns a shallow copy.
 - `order()` sorts ascending by default.
 - `order(cmpFn)` uses a comparator function that returns `int`.

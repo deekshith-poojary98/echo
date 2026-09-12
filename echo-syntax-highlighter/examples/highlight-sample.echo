@@ -38,6 +38,9 @@ use mut n;
 
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 mid: list = items[0:1];
+tail: list = items[1:];
+head: list = items[:1];
+copy: list = items[:];
 doubled: list = items.map(double);
 evens: list = filter(items, fn(x: int) -> bool { return x % 2 == 0; });
 total: int = items.reduce(0, fn(acc: int, x: int) -> int { return acc + x; });

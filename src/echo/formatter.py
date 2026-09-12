@@ -255,7 +255,9 @@ class _Printer:
         if isinstance(expression, IndexExpression):
             return f"{self._expr(expression.target, PREC_POSTFIX)}[{self._expr(expression.index)}]"
         if isinstance(expression, SliceExpression):
-            return f"{self._expr(expression.target, PREC_POSTFIX)}[{self._expr(expression.start)}:{self._expr(expression.end)}]"
+            start = self._expr(expression.start) if expression.start is not None else ""
+            end = self._expr(expression.end) if expression.end is not None else ""
+            return f"{self._expr(expression.target, PREC_POSTFIX)}[{start}:{end}]"
         if isinstance(expression, LambdaExpression):
             return self._lambda(expression)
         if isinstance(expression, ListLiteral):

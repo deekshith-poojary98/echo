@@ -331,8 +331,10 @@ class SemanticAnalyzer:
             self._expression(expression.index, scope)
         elif isinstance(expression, SliceExpression):
             self._expression(expression.target, scope)
-            self._expression(expression.start, scope)
-            self._expression(expression.end, scope)
+            if expression.start is not None:
+                self._expression(expression.start, scope)
+            if expression.end is not None:
+                self._expression(expression.end, scope)
         elif isinstance(expression, LambdaExpression):
             return_type = expression.return_type
             if return_type is not None:

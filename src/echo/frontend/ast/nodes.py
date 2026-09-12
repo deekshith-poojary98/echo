@@ -113,8 +113,8 @@ class IndexExpression(Expression):
 @dataclass
 class SliceExpression(Expression):
     target: Expression
-    start: Expression
-    end: Expression
+    start: Expression | None
+    end: Expression | None
 
 
 @dataclass

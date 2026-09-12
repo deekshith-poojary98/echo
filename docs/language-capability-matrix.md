@@ -107,7 +107,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
 | Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
 | Destructuring | Usability | Missing | Later | Later |
-| Collection operations | Usability | Partial (some/every/findIndex 0.6.5) | Usability now | 0.6.5 |
+| Collection operations | Usability | Partial (optional slice bounds 0.6.6) | Usability now | 0.6.6 |
 | String utilities | Usability | Partial | Usability now | v0.4 candidate |
 | Date / time | Usability | Missing | Later | Later (library) |
 | Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
@@ -358,8 +358,9 @@ Built-ins include `push`, `insertAt`, `pull`, `removeValue`, `empty`,
 `find`, `countOf`, `order`, `clone`, `merge`, `reverse`, `length`,
 `map`, `filter`, `reduce`, `forEach`, `flatMap`, `some`, `every`, and `findIndex`.
 
-**Limitations.** `clone()` is shallow. Slice syntax `xs[1:4]` (both bounds
-required) desugars to `slice()`. `order(comparator)` accepts a function
+**Limitations.** `clone()` is shallow. Slice syntax `xs[1:4]` (optional
+bounds `xs[1:]` / `xs[:4]` / `xs[:]` as of 0.6.6) desugars to `slice()`.
+`order(comparator)` accepts a function
 value, a lambda, or a function name string. `map` / `filter` take a unary
 function value or lambda; `filter` requires a `bool` return. `reduce` takes
 a binary function value or lambda and a required `init`. `forEach` takes a
@@ -833,14 +834,15 @@ taste than `try/catch`.
 **Echo status.** Partial.
 
 Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
-`contains`, `slice()`, slice syntax `xs[1:4]`, list `map` / `filter` (0.6.1),
+`contains`, `slice()`, slice syntax `xs[1:4]` with optional bounds `xs[1:]` /
+`xs[:4]` / `xs[:]` (0.6.6), list `map` / `filter` (0.6.1),
 list `reduce` (0.6.2), list `forEach` (0.6.3), list `flatMap` (0.6.4), and
 list `some` / `every` / `findIndex` (0.6.5).
-It does not have zip / unique / optional slice bounds.
+It does not have zip / unique.
 
 **Priority.** Remaining higher-order collection helpers later.
 
-**Possible version.** `some` / `every` / `findIndex` shipped in 0.6.5.
+**Possible version.** Optional slice bounds shipped in 0.6.6.
 
 ---
 
@@ -1274,7 +1276,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). Failure handling is still design only.
 
 ---
 

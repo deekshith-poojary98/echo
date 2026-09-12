@@ -233,6 +233,7 @@ function tokenCode(stream: EchoStream, state: EchoState): string | null {
     clearDecl(state)
     return 'operator'
   }
+  // Brackets and colon cover index `xs[i]` and slices `xs[1:4]` / `xs[1:]` / `xs[:4]` / `xs[:]`.
   if (stream.match(/^[()[\]{},.:;]/)) {
     clearDecl(state)
     return 'punctuation'

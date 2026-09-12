@@ -82,6 +82,7 @@ describe(age: 21, name: "Alice");
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 
 say("slice:", nums[1:3]);
+say("tail:", nums[1:]);
 say("map:", nums.map(double));
 say("filter:", nums.filter(fn(x: int) -> bool { return x % 2 == 0; }));
 say("reduce:", nums.reduce(0, fn(acc: int, x: int) -> int { return acc + x; }));

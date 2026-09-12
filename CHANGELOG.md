@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.6
+
+Optional slice bounds on the `xs[1:4]` syntax from 0.6.0. Same abort rules as `slice()`. No step form. Failure model is unchanged. No zip, unique, or first-class builtins.
+
+- `xs[a:]` omits end (`length`); `xs[:b]` omits start (`0`); `xs[:]` is `slice(0, length)` — a shallow list copy or the full string
+- Colon is still required (`xs[]` is not a slice). Single index `xs[i]` is unchanged. There is no `xs[1::2]` step syntax
+- Bounds still `[0, length]`, end exclusive, no negatives; out of range aborts. Lists and strings, matching `slice()`
+- Formatter preserves omitted bounds (`xs[1:]`, not invented `0` / `len`)
+- Playground Lambdas & lists example and highlighter sample include optional-bound slices
+
 ## 0.6.5
 
 List `some` / `every` / `findIndex` on function values from 0.6.0. Same bool rule as `filter`. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. `find(value)` stays value search. No zip, optional slice bounds, or first-class builtins.

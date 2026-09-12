@@ -292,8 +292,10 @@ class _Linter:
             return
         if isinstance(expression, SliceExpression):
             self._expr(expression.target, scope)
-            self._expr(expression.start, scope)
-            self._expr(expression.end, scope)
+            if expression.start is not None:
+                self._expr(expression.start, scope)
+            if expression.end is not None:
+                self._expr(expression.end, scope)
             return
         if isinstance(expression, LambdaExpression):
             self._lambda(expression, scope)

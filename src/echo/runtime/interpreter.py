@@ -319,12 +319,15 @@ class Interpreter:
         if isinstance(expression, IndexExpression):
             return self._index(self.evaluate(expression.target, env), self.evaluate(expression.index, env), expression.location)
         if isinstance(expression, SliceExpression):
-            return do_slice(
-                self.evaluate(expression.target, env),
-                self.evaluate(expression.start, env),
-                self.evaluate(expression.end, env),
-                expression.location,
-            )
+            target = self.evaluate(expression.target, env)
+            start = self.evaluate(expression.start, env) if expression.start is not None else 0
+            if expression.end is not None:
+                end = self.evaluate(expression.end, env)
+            elif isinstance(target, (list, str)):
+                end = len(target)
+            else:
+                end = 0
+            return do_slice(target, start, end, expression.location)
         if isinstance(expression, LambdaExpression):
             return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):

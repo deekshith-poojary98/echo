@@ -399,12 +399,15 @@ say([1, 2].contains(2));       // true
 ```
 
 ### `slice(start, end)`
-Returns a new string or list from `start` up to but not including `end`. Both bounds must be integers in range. `slice(0, value.length())` copies the whole sequence.
+Returns a new string or list from `start` up to but not including `end`. Both bounds must be integers in range. `slice(0, value.length())` copies the whole sequence. Slice syntax matches that: `xs[1:3]`, `xs[1:]`, `xs[:3]`, and `xs[:]` (omitted start is `0`, omitted end is `length`).
 
 ```echo
 say("Echo".slice(1, 3));       // ch
 say([1, 2, 3, 4].slice(1, 3)); // [2, 3]
-say([1, 2, 3, 4][1:3]);        // [2, 3] — both bounds required
+say([1, 2, 3, 4][1:3]);        // [2, 3]
+say([1, 2, 3, 4][1:]);         // [2, 3, 4]
+say([1, 2, 3, 4][:2]);         // [1, 2]
+say([1, 2, 3, 4][:]);          // [1, 2, 3, 4]
 ```
 
 ### `startsWith(prefix)` / `endsWith(suffix)`
