@@ -95,7 +95,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Functions | Fundamentals | Supported | Frozen | Done |
 | Recursion | Fundamentals | Partial | Later | Later |
 | Closures | Fundamentals | Supported | Frozen | Done |
-| First-class functions | Fundamentals | Excluded | Design hold | v0.4+ reconsideration |
+| First-class functions | Fundamentals | Supported (0.6.0) | Frozen | 0.6.0 |
 | Scope | Fundamentals | Supported | Frozen | Done |
 | Mutation (`use` / `use mut`) | Fundamentals | Supported | Frozen | Done |
 | Modules | Fundamentals | Supported | Frozen | Done (v0.3) |
@@ -112,7 +112,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Date / time | Usability | Missing | Later | Later (library) |
 | Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
 | Program CLI arguments | Usability | Missing | Usability now | v0.4 candidate |
-| Default / variadic args | Usability | Excluded | Design hold | Later reconsideration |
+| Default / variadic args | Usability | Supported (0.6.0) | Frozen | 0.6.0 |
 | Function overloading | Usability | Excluded | Design hold | Hold |
 | JSON / interchange | Usability | Missing | Usability now | v0.4 candidate (library) |
 | Multiline strings | Usability | Missing | Later | Later |
@@ -357,8 +357,9 @@ lex error. No raw / multiline literal.
 Built-ins include `push`, `insertAt`, `pull`, `removeValue`, `empty`,
 `find`, `countOf`, `order`, `clone`, `merge`, `reverse`, `length`.
 
-**Limitations.** `clone()` is shallow. No slice syntax. `order(comparator)`
-is the only place a function may be referred to by name as a value.
+**Limitations.** `clone()` is shallow. Slice syntax `xs[1:4]` (both bounds
+required) desugars to `slice()`. `order(comparator)` accepts a function
+value, a lambda, or a function name string.
 `removeValue` errors if the value is missing (contract); some older docs
 still say it is a no-op.
 
@@ -487,9 +488,10 @@ fn square(x: int) -> int => x * x;
 Every parameter needs a type. `return` requires a return annotation.
 Calls support positional and keyword arguments. Missing, extra,
 unexpected, and duplicate arguments are semantic errors.
+Default parameters (`name: T = expr`) and a trailing variadic
+(`rest: T...`) shipped in 0.6.0. Overloading stays held.
 
-**Limitations.** No default arguments, variadics, or overloads. That is
-the v0.2 contract, not an accident.
+**Limitations.** No overloads.
 
 **Priority.** Frozen.
 
@@ -544,32 +546,22 @@ do not inherit `use mut`.
 
 **Why languages need it.** Higher-order APIs, callbacks, `map`/`filter`.
 
-**Echo status.** Excluded.
+**Echo status.** Supported (0.6.0).
 
-Echo currently:
-
-- supports functions
-- supports closures
-- supports a named function reference in `order(comparator)`
-- does **not** generally treat functions as values in source syntax
-
-This is in `docs/language-semantics.md`. It is not accidentally missing.
+Named functions are values. Lambdas use `fn(x: int) -> int { ... }`.
+The function type spelling is `fn(int) -> int`. `order(comparator)`
+still accepts a function value, a lambda, or a name string.
 
 ```echo
-// legal special case
-nums.order(descending);
-
-// not a general function value
-// fn makeCounter() { ... return bump; }
+double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
+nums.order(double);
 ```
 
-**Limitations.** You cannot store a function in a list, return one, or
-pass one except to `order`.
+**Limitations.** No `map` / `filter` yet (0.6.1). No overloading.
 
-**Priority.** Design hold.
+**Priority.** Frozen.
 
-**Possible version.** v0.4+ reconsideration. Reopening this is a language
-change, not a bugfix.
+**Possible version.** 0.6.0.
 
 ---
 
@@ -825,16 +817,13 @@ taste than `try/catch`.
 
 **Echo status.** Partial.
 
-Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs.
-It does not have slices, map/filter, or `contains` as a primitive.
+Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
+`contains`, `slice()`, and slice syntax `xs[1:4]`.
+It does not have `map` / `filter` (0.6.1).
 
-Higher-order helpers collide with the first-class-function hold.
-Any `map`/`filter` design has to face that decision.
+**Priority.** `map` / `filter` after function values (0.6.1).
 
-**Priority.** Usability now for non-higher-order helpers (`contains`,
-slice, maybe `join`). Hold `map`/`filter` until functions-as-values is reopened.
-
-**Possible version.** v0.4 candidate for the non-HOF set.
+**Possible version.** 0.6.1 for `map` / `filter`.
 
 ---
 
@@ -911,14 +900,17 @@ are for the interpreter, not the program.
 
 **Why languages need it.** Convenience at API boundaries.
 
-**Echo status.** Excluded.
+**Echo status.** Supported (0.6.0).
 
-The v0.2 contract: no default arguments, variadics, or overloads.
-`say` and `format` are variadic built-ins only.
+User `fn` parameters may have defaults (`punct: str = "!"`) and a
+trailing variadic (`parts: int...`, bound as a list of `T`). Defaults
+come before the variadic and are evaluated at call time when omitted.
+`say` / `eprint` / `format` / `pathJoin` stay variadic builtins.
+Overloading stays held.
 
-**Priority.** Design hold.
+**Priority.** Frozen.
 
-**Possible version.** Later reconsideration.
+**Possible version.** 0.6.0.
 
 ---
 
@@ -1263,8 +1255,9 @@ Do not treat this file as a contract. If it disagrees with
 The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 
 Theme: host + standard library. Not a syntax release.
-`slice()` ships; `xs[1:4]` does not. Conversion is a semantic correction.
-Failure handling is design only. First-class functions stay frozen.
+v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
+first-class functions including lambdas, and user `fn` defaults/variadics.
+Failure handling is still design only. `map` / `filter` wait for 0.6.1.
 
 ---
 

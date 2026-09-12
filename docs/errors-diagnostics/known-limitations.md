@@ -9,17 +9,16 @@ As of v0.5.0, Echo already has:
 - Multiline `"""` / `'''` strings and `.5` / scientific number literals
 - A host and standard library (`args`, `env`, files, JSON, string/list helpers, numeric helpers, `assert`, `expect` / `expectEq` / `expectNeq`, `fail`, `run`, `now`, `random`)
 - `echo check [paths...]`, a REPL (`echo` with no file), `echo test [paths...]`, `echo fmt`, and `echo lint` (`test-naming`, `self-assign`, `unreachable-after-fail` added in 0.5.8; multi-path `check` in 0.5.9)
+- First-class functions including lambdas, slice syntax `xs[1:4]`, and user `fn` defaults/variadics (0.6.0)
 
-The items below are still out of scope. Classes, `try`/`catch`, first-class functions, and the other frozen holds are not implemented.
+The items below are still out of scope. Classes, `try`/`catch`, `map`/`filter`, and the other frozen holds are not implemented.
 
 ## Current Limitations
 - No classes or user-defined structs
 - No generics
 - No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
-- No default parameter values
-- No variadic user functions (`say` / `eprint` / `format` / `pathJoin` are the variadic builtins)
 - No overloads
-- No first-class function values
+- No `map` / `filter` (planned 0.6.1)
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
 - Object type aliases accept extra fields
 - Hash runtime indexing only supports string keys

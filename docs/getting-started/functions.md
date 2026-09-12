@@ -25,6 +25,24 @@ fn describe(name: str, age: int) {
 describe(age: 21, name: "Alice");
 ```
 
+Lambdas and function types:
+
+```echo
+double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
+say(double(21));
+```
+
+Defaults and a trailing variadic:
+
+```echo
+fn join(punct: str = ",", parts: str...) {
+    say(parts.join(punct));
+}
+
+join(parts: ["a", "b"]);
+join(" | ", "a", "b", "c");
+```
+
 ## Output
 ```text
 Alice is 21
@@ -88,10 +106,8 @@ fn bump() {
 That raises a runtime type error.
 
 ## Current Limitation
-- No default parameters
-- No variadic functions
 - No overloads
-- No anonymous function values
+- No `map` / `filter` yet
 
 ## See Also
 - [Scope, use, and watch](/core-concepts/scope-use-watch)

@@ -37,10 +37,19 @@ class ObjectType(TypeAnnotation):
 
 
 @dataclass
+class FunctionType(TypeAnnotation):
+    param_types: list[TypeAnnotation]
+    return_type: TypeAnnotation
+    variadic: bool = False
+
+
+@dataclass
 class Parameter:
     name: str
     type: TypeAnnotation
     location: SourceLocation
+    default: Expression | None = None
+    variadic: bool = False
 
 
 @dataclass
@@ -99,6 +108,21 @@ class MemberExpression(Expression):
 class IndexExpression(Expression):
     target: Expression
     index: Expression
+
+
+@dataclass
+class SliceExpression(Expression):
+    target: Expression
+    start: Expression
+    end: Expression
+
+
+@dataclass
+class LambdaExpression(Expression):
+    parameters: list[Parameter]
+    body: list[Statement] | Expression
+    inline: bool
+    return_type: TypeAnnotation | None = None
 
 
 @dataclass

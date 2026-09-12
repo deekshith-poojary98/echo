@@ -243,6 +243,30 @@ def test_repl_function_and_call_in_one_submission():
     assert prompts[:3] == ["echo> ", "... ", "... "]
 
 
+def test_repl_continues_lambda_and_slice():
+    fake_input, prompts = _repl_input(
+        [
+            "double: fn(int) -> int = fn(x: int) -> int {",
+            "return x * 2;",
+            "};",
+            "say(double(21));",
+            "say([1, 2, 3, 4][",
+            "1:3",
+            "]);",
+            EOFError,
+        ]
+    )
+    stdout = StringIO()
+    with patch("builtins.input", fake_input):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "42" in stdout.getvalue().splitlines()
+    assert "[2, 3]" in stdout.getvalue().splitlines()
+    assert prompts[:3] == ["echo> ", "... ", "... "]
+    assert "... " in prompts
+
+
 def test_repl_two_statements_on_one_line_run():
     stdout = StringIO()
     with patch("builtins.input", side_effect=["say(1); say(2);", EOFError]):

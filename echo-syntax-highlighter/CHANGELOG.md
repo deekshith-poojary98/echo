@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.0
+
+- Version tracks Echo v0.6.0.
+- Grammar already highlighted `fn` and `...`; lambdas `fn(...)`, function types `fn(int) -> int`, slice `xs[1:4]`, and `name: T = expr` / `name: T...` use those tokens.
+
 ## 0.5.9
 
 - Version tracks Echo v0.5.9.

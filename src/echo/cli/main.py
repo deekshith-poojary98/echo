@@ -293,17 +293,31 @@ def _repl_source_incomplete(source: str) -> bool:
         return "closing \"\"\"" in exc.message or "closing '''" in exc.message
     except EchoError:
         return False
-    depth = 0
+    braces = 0
+    parens = 0
+    brackets = 0
     for token in tokens:
         if token.type is TokenType.COMMENT:
             continue
         if token.type is TokenType.LEFT_BRACE:
-            depth += 1
+            braces += 1
         elif token.type is TokenType.RIGHT_BRACE:
-            depth -= 1
-            if depth < 0:
+            braces -= 1
+            if braces < 0:
                 return False
-    return depth > 0
+        elif token.type is TokenType.LEFT_PAREN:
+            parens += 1
+        elif token.type is TokenType.RIGHT_PAREN:
+            parens -= 1
+            if parens < 0:
+                return False
+        elif token.type is TokenType.LEFT_BRACKET:
+            brackets += 1
+        elif token.type is TokenType.RIGHT_BRACKET:
+            brackets -= 1
+            if brackets < 0:
+                return False
+    return braces > 0 or parens > 0 or brackets > 0
 
 
 def _main_check(argv: list[str]) -> int:

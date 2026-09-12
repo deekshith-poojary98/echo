@@ -21,11 +21,13 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    LambdaExpression,
     ListLiteral,
     LiteralExpression,
     MemberExpression,
     Program,
     ReturnStatement,
+    SliceExpression,
     Statement,
     StringInterpolation,
     StringLiteralExpression,
@@ -250,6 +252,8 @@ class _Linter:
     def _function_body(self, statement: FunctionDeclaration, scope: _Scope) -> None:
         inner = _Scope(scope)
         for parameter in statement.parameters:
+            if parameter.default is not None:
+                self._expr(parameter.default, inner)
             self._shadow(parameter.name, parameter.location)
             inner.define(_Binding(parameter.name, "local", parameter.location))
         if statement.inline:
@@ -286,6 +290,14 @@ class _Linter:
             self._expr(expression.target, scope)
             self._expr(expression.index, scope)
             return
+        if isinstance(expression, SliceExpression):
+            self._expr(expression.target, scope)
+            self._expr(expression.start, scope)
+            self._expr(expression.end, scope)
+            return
+        if isinstance(expression, LambdaExpression):
+            self._lambda(expression, scope)
+            return
         if isinstance(expression, ListLiteral):
             for element in expression.elements:
                 self._expr(element, scope)
@@ -300,6 +312,25 @@ class _Linter:
             return
         if isinstance(expression, (LiteralExpression, StringLiteralExpression)):
             return
+
+    def _lambda(self, expression: LambdaExpression, scope: _Scope) -> None:
+        inner = _Scope(scope)
+        for parameter in expression.parameters:
+            if parameter.default is not None:
+                self._expr(parameter.default, inner)
+            self._shadow(parameter.name, parameter.location)
+            inner.define(_Binding(parameter.name, "local", parameter.location))
+        if expression.inline:
+            assert isinstance(expression.body, Expression)
+            self._expr(expression.body, inner)
+        else:
+            assert isinstance(expression.body, list)
+            if not expression.body:
+                self._finding(expression.location, "empty-block", "empty lambda body")
+            else:
+                self._block(expression.body, inner)
+                return
+        self._report_unused(inner, set())
 
     def _call(self, expression: CallExpression, scope: _Scope) -> None:
         callee = expression.callee

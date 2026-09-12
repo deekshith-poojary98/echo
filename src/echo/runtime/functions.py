@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from echo.errors import ArgumentError, EchoRuntimeError, EchoTypeError, SourceLocation
-from echo.frontend.ast.nodes import Argument, Expression, FunctionDeclaration, TypeAnnotation
+from echo.frontend.ast.nodes import Argument, Expression, FunctionDeclaration, ListLiteral, Parameter, TypeAnnotation
 from echo.runtime.context import Environment
 from echo.runtime.values import format_type, matches_type
 
@@ -29,7 +29,7 @@ class ContinueSignal(Exception):
 
 def bind_arguments(
     function_name: str,
-    parameters: list[str],
+    parameters: list[Parameter],
     raw_args: list[Argument],
     location: SourceLocation | None = None,
 ) -> dict[str, Expression]:
@@ -48,27 +48,35 @@ def bind_arguments(
         else:
             positional.append(argument.value)
 
-    if len(positional) > len(parameters):
-        expected = len(parameters)
-        noun = "argument" if expected == 1 else "arguments"
-        raise ArgumentError(
-            f"Function '{function_name}' expected at most {expected} {noun}, got {len(positional)}",
-            location,
-            code="E2202",
-        )
+    names = [parameter.name for parameter in parameters]
+    variadic = next((parameter for parameter in parameters if parameter.variadic), None)
+    required = [parameter for parameter in parameters if not parameter.variadic]
+    extra: list[Expression] = []
+    if variadic is None:
+        if len(positional) > len(parameters):
+            expected = len(parameters)
+            noun = "argument" if expected == 1 else "arguments"
+            raise ArgumentError(
+                f"Function '{function_name}' expected at most {expected} {noun}, got {len(positional)}",
+                location,
+                code="E2202",
+            )
+    else:
+        extra = positional[len(required) :]
+        positional = positional[: len(required)]
 
     bound: dict[str, Expression] = {}
-    for index, parameter in enumerate(parameters[: len(positional)]):
-        bound[parameter] = positional[index]
+    for index, parameter in enumerate(required[: len(positional)]):
+        bound[parameter.name] = positional[index]
 
     for name, value in keyword.items():
-        if name not in parameters:
+        if name not in names:
             raise ArgumentError(
                 f"Function '{function_name}' got an unexpected keyword argument '{name}'",
                 location,
                 code="E2203",
             )
-        if name in bound:
+        if name in bound or (variadic is not None and name == variadic.name and extra):
             raise ArgumentError(
                 f"Function '{function_name}' got multiple values for argument '{name}'",
                 location,
@@ -76,13 +84,21 @@ def bind_arguments(
             )
         bound[name] = value
 
-    missing = [parameter for parameter in parameters if parameter not in bound]
-    if missing:
+    for parameter in required:
+        if parameter.name in bound:
+            continue
+        if parameter.default is not None:
+            bound[parameter.name] = parameter.default
+            continue
         raise ArgumentError(
-            f"Missing argument for parameter '{missing[0]}' in function '{function_name}'",
+            f"Missing argument for parameter '{parameter.name}' in function '{function_name}'",
             location,
             code="E2205",
         )
+
+    if variadic is not None and variadic.name not in bound:
+        loc = location or variadic.location
+        bound[variadic.name] = ListLiteral(loc, extra)
     return bound
 
 

@@ -22,5 +22,7 @@ class Symbol:
     mutable: bool = True
     param_count: int | None = None
     param_names: list[str] | None = None
+    param_defaults: list[bool] | None = None
+    variadic: bool = False
     builtin: bool = False
     imported: bool = False

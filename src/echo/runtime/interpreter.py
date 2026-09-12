@@ -32,11 +32,13 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    LambdaExpression,
     ListLiteral,
     LiteralExpression,
     MemberExpression,
     Program,
     ReturnStatement,
+    SliceExpression,
     Statement,
     StringInterpolation,
     StringLiteralExpression,
@@ -316,6 +318,15 @@ class Interpreter:
             return unary_op(expression.operator.type, self.evaluate(expression.operand, env), expression.location)
         if isinstance(expression, IndexExpression):
             return self._index(self.evaluate(expression.target, env), self.evaluate(expression.index, env), expression.location)
+        if isinstance(expression, SliceExpression):
+            return do_slice(
+                self.evaluate(expression.target, env),
+                self.evaluate(expression.start, env),
+                self.evaluate(expression.end, env),
+                expression.location,
+            )
+        if isinstance(expression, LambdaExpression):
+            return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):
             raise EchoRuntimeError(
                 f"Property access '.{expression.name}' is not supported; use method calls or hash indexing",
@@ -337,18 +348,56 @@ class Interpreter:
                 return self._call_user_function(function, expression.arguments, env, expression.location)
             if callee.name in BUILTIN_NAMES:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
+            if env.is_defined(callee.name):
+                value = env.get(callee.name, expression.location)
+                if isinstance(value, EchoFunction):
+                    return self._call_user_function(value, expression.arguments, env, expression.location)
+                raise EchoTypeError(
+                    f"Cannot call '{callee.name}' because it is not a function",
+                    expression.location,
+                    code="E2705",
+                )
             undefined_function(callee.name, expression.location)
+        value = self.evaluate(callee, env)
+        if isinstance(value, EchoFunction):
+            return self._call_user_function(value, expression.arguments, env, expression.location)
         raise EchoRuntimeError("Invalid call target", expression.location, code="E2705")
+
+    def _lambda_function(self, expression: LambdaExpression, env: Environment) -> EchoFunction:
+        declaration = FunctionDeclaration(
+            expression.location,
+            "<lambda>",
+            expression.parameters,
+            expression.body,
+            expression.inline,
+            expression.return_type,
+        )
+        return EchoFunction(declaration, env)
 
     def _call_user_function(self, function: EchoFunction, raw_args, env: Environment, location: SourceLocation) -> object:
         declaration = function.declaration
-        params = [parameter.name for parameter in declaration.parameters]
-        bound = bind_arguments(declaration.name, params, raw_args, location)
+        bound = bind_arguments(declaration.name, declaration.parameters, raw_args, location)
         new_env = Environment(parent=function.closure, is_function=True)
         new_env.function_name = declaration.name
         for parameter in declaration.parameters:
-            value = self.evaluate(bound[parameter.name], env)
-            if not matches_type(value, parameter.type):
+            value = self.evaluate(bound[parameter.name], new_env if parameter.default is bound[parameter.name] else env)
+            if parameter.variadic:
+                if not isinstance(value, list):
+                    raise EchoTypeError(
+                        f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                        f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                        location,
+                        code="E2706",
+                    )
+                for item in value:
+                    if not matches_type(item, parameter.type):
+                        raise EchoTypeError(
+                            f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                            f"{format_type(parameter.type)}, got list",
+                            location,
+                            code="E2706",
+                        )
+            elif not matches_type(value, parameter.type):
                 raise EchoTypeError(
                     f"Argument '{parameter.name}' in function '{declaration.name}' must be of type "
                     f"{format_type(parameter.type)}, got {echo_type_name(value)}",

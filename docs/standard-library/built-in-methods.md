@@ -404,6 +404,7 @@ Returns a new string or list from `start` up to but not including `end`. Both bo
 ```echo
 say("Echo".slice(1, 3));       // ch
 say([1, 2, 3, 4].slice(1, 3)); // [2, 3]
+say([1, 2, 3, 4][1:3]);        // [2, 3] — both bounds required
 ```
 
 ### `startsWith(prefix)` / `endsWith(suffix)`
@@ -605,7 +606,7 @@ say(countOf(items: items, value: 1));    // 3
 ---
 
 ### `order([comparator])`
-Sorts the list **in place** in ascending order by default. Optionally accepts a comparator function that takes two arguments and returns a negative `int` (first before second), `0` (equal), or positive `int` (first after second).
+Sorts the list **in place** in ascending order by default. Optionally accepts a comparator function that takes two arguments and returns a negative `int` (first before second), `0` (equal), or positive `int` (first after second). Pass a function value, a lambda, or a function name string.
 
 ```echo
 nums: list = [3, 1, 2];

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0
+
+Language release: first-class functions including lambdas, slice syntax, and user `fn` defaults plus variadics. Failure model is unchanged — callback or default expressions that abort still abort. No `map` / `filter`, `try` / `catch`, classes, or overloading.
+
+- Named functions are values. Lambdas spell `fn(x: int) -> int { ... }` (inline `=>` also works). The function type is `fn(int) -> int`
+- `order(comparator)` accepts a function value, a lambda, or a function name string
+- Slice syntax `xs[1:4]` (colon, both bounds required) desugars to `slice(start, end)` with the same abort/bounds rules. `xs[1:]`, `xs[:4]`, and `xs[:]` are parse errors
+- User `fn` default parameters (`punct: str = "!"`) and a trailing variadic (`parts: int...`, bound as a `list` of `T`) ship together. Defaults come before the variadic and are evaluated at call time when omitted
+- Formatter, linter, REPL continuation (parens/brackets as well as braces), and highlighter track the new surface
+
 ## 0.5.9
 
 Last 0.5.x tooling slice. `echo check` accepts the same multi-path layout as `fmt` / `lint` / `test`. No language change.

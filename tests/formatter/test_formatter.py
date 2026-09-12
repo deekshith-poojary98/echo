@@ -72,6 +72,21 @@ if true {
     assert flat == expected
 
 
+def test_v06_syntax_formats_stably():
+    source = """
+fn join(punct: str="!", parts: str...) {
+    say(fn(x: int) -> int { return x; }(1));
+    xs: list = [1, 2, 3, 4];
+    say(xs[1:3]);
+}
+"""
+    formatted = _assert_idempotent(source)
+    assert "punct: str = \"!\"" in formatted
+    assert "parts: str..." in formatted
+    assert "fn(x: int) -> int { return x; }" in formatted
+    assert "xs[1:3]" in formatted
+
+
 def test_for_by_literal_one_is_omitted():
     formatted = _assert_idempotent("for i: int in 1..3 by 1 { say(i); }")
     assert "by 1" not in formatted

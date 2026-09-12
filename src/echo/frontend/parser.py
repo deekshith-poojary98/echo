@@ -15,12 +15,14 @@ from echo.frontend.ast.nodes import (
     ForStatement,
     ForeachStatement,
     FunctionDeclaration,
+    FunctionType,
     HashLiteral,
     HashPair,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    LambdaExpression,
     ListLiteral,
     LiteralExpression,
     MemberExpression,
@@ -28,6 +30,7 @@ from echo.frontend.ast.nodes import (
     Parameter,
     Program,
     ReturnStatement,
+    SliceExpression,
     Statement,
     StringInterpolation,
     StringLiteralExpression,
@@ -67,6 +70,10 @@ class Parser:
         if token.type == TokenType.FOREACH:
             return self.parse_foreach()
         if token.type == TokenType.FN:
+            if self._check_offset(1, TokenType.LEFT_PAREN):
+                expr = self.parse_expression()
+                self._expect(TokenType.SEMICOLON, ";")
+                return ExpressionStatement(expr.location, expr)
             return self.parse_function()
         if token.type == TokenType.IMPORT:
             return self.parse_import()
@@ -137,13 +144,7 @@ class Parser:
         fn_token = self._expect(TokenType.FN, "fn")
         name = self._expect_name("function name")
         self._expect(TokenType.LEFT_PAREN, "(")
-        parameters: list[Parameter] = []
-        while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
-            param_token = self._expect_name_token("parameter name")
-            self._expect(TokenType.COLON, ":")
-            param_type = self._parse_type()
-            parameters.append(Parameter(param_token.lexeme, param_type, param_token.location))
-            self._match(TokenType.COMMA)
+        parameters = self._parse_parameters()
         self._expect(TokenType.RIGHT_PAREN, ")")
 
         return_type = None
@@ -365,11 +366,28 @@ class Parser:
                     expr = MemberExpression(expr.location, expr, name_token.lexeme)
                 continue
             if self._match(TokenType.LEFT_BRACKET):
-                index = self.parse_expression()
-                self._expect(TokenType.RIGHT_BRACKET, "]")
-                expr = IndexExpression(expr.location, expr, index)
+                if self._check(TokenType.COLON):
+                    raise ParseError(
+                        "Slice start bound is required; write xs[start:end]",
+                        self._peek().location,
+                        help_text="Both slice bounds are required. Use xs[1:4], not xs[:4] or xs[:].",
+                    )
+                start = self.parse_expression()
+                if self._match(TokenType.COLON):
+                    if self._check(TokenType.RIGHT_BRACKET):
+                        raise ParseError(
+                            "Slice end bound is required; write xs[start:end]",
+                            self._peek().location,
+                            help_text="Both slice bounds are required. Use xs[1:4], not xs[1:] or xs[:].",
+                        )
+                    end = self.parse_expression()
+                    self._expect(TokenType.RIGHT_BRACKET, "]")
+                    expr = SliceExpression(expr.location, expr, start, end)
+                else:
+                    self._expect(TokenType.RIGHT_BRACKET, "]")
+                    expr = IndexExpression(expr.location, expr, start)
                 continue
-            if self._match(TokenType.LEFT_PAREN) and isinstance(expr, (VariableExpression, MemberExpression)):
+            if self._match(TokenType.LEFT_PAREN):
                 args = self._parse_arg_list("function call")
                 expr = CallExpression(expr.location, expr, args)
                 continue
@@ -397,6 +415,8 @@ class Parser:
             return self._parse_string_or_interpolation()
         if token.type == TokenType.INTERPOLATION_START:
             return self._parse_string_or_interpolation()
+        if token.type == TokenType.FN:
+            return self._parse_lambda()
         if self._is_name(token) or token.type == TokenType.TYPE_KW:
             self._advance()
             return VariableExpression(token.location, token.lexeme)
@@ -486,6 +506,8 @@ class Parser:
 
     def _parse_type(self) -> TypeAnnotation:
         token = self._peek()
+        if token.type == TokenType.FN:
+            return self._parse_function_type()
         if token.type == TokenType.LEFT_BRACE:
             return self._parse_object_type()
         if token.type == TokenType.TYPE:
@@ -495,6 +517,86 @@ class Parser:
             self._advance()
             return TypeName(token.location, token.lexeme)
         raise ParseError("Expected type", token.location)
+
+    def _parse_function_type(self) -> FunctionType:
+        fn_token = self._expect(TokenType.FN, "fn")
+        self._expect(TokenType.LEFT_PAREN, "(")
+        param_types: list[TypeAnnotation] = []
+        variadic = False
+        while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
+            if variadic:
+                raise ParseError("Variadic type must be the last parameter type", self._peek().location)
+            if self._is_name(self._peek()) and self._check_offset(1, TokenType.COLON):
+                raise ParseError(
+                    "Function types use parameter types only, e.g. fn(int) -> int",
+                    self._peek().location,
+                    help_text="Write fn(int, str) -> int, not fn(x: int, y: str) -> int.",
+                )
+            param_type = self._parse_type()
+            if self._match(TokenType.DOT_DOT_DOT):
+                variadic = True
+            param_types.append(param_type)
+            self._match(TokenType.COMMA)
+        self._expect(TokenType.RIGHT_PAREN, ")")
+        if not self._match(TokenType.ARROW):
+            raise ParseError(
+                "Function type must include a return type, e.g. fn(int) -> int",
+                self._peek().location,
+            )
+        return_type = self._parse_type()
+        return FunctionType(fn_token.location, param_types, return_type, variadic)
+
+    def _parse_lambda(self) -> LambdaExpression:
+        fn_token = self._expect(TokenType.FN, "fn")
+        self._expect(TokenType.LEFT_PAREN, "(")
+        parameters = self._parse_parameters()
+        self._expect(TokenType.RIGHT_PAREN, ")")
+        return_type = None
+        if self._match(TokenType.ARROW):
+            return_type = self._parse_type()
+        if self._match(TokenType.FAT_ARROW):
+            body_expr = self.parse_expression()
+            return LambdaExpression(fn_token.location, parameters, body_expr, True, return_type)
+        self._expect(TokenType.LEFT_BRACE, "{")
+        body = self._parse_block_body()
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return LambdaExpression(fn_token.location, parameters, body, False, return_type)
+
+    def _parse_parameters(self) -> list[Parameter]:
+        parameters: list[Parameter] = []
+        while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
+            param_token = self._expect_name_token("parameter name")
+            self._expect(TokenType.COLON, ":")
+            param_type = self._parse_type()
+            variadic = bool(self._match(TokenType.DOT_DOT_DOT))
+            default = None
+            if self._match(TokenType.EQUAL):
+                if variadic:
+                    raise ParseError(
+                        "Variadic parameter cannot have a default; omitted args become an empty list",
+                        param_token.location,
+                    )
+                default = self.parse_expression()
+            parameters.append(Parameter(param_token.lexeme, param_type, param_token.location, default, variadic))
+            self._match(TokenType.COMMA)
+        self._validate_parameters(parameters)
+        return parameters
+
+    def _validate_parameters(self, parameters: list[Parameter]) -> None:
+        seen_default = False
+        for index, parameter in enumerate(parameters):
+            if parameter.variadic:
+                if index != len(parameters) - 1:
+                    raise ParseError("Variadic parameter must be last", parameter.location)
+                continue
+            if parameter.default is not None:
+                seen_default = True
+            elif seen_default:
+                raise ParseError(
+                    "Parameter without a default cannot follow a default parameter",
+                    parameter.location,
+                    help_text="Put default parameters last, immediately before a variadic parameter if there is one.",
+                )
 
     def _parse_object_type(self) -> ObjectType:
         token = self._expect(TokenType.LEFT_BRACE, "{")

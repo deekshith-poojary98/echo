@@ -16,17 +16,21 @@ from echo.frontend.ast.nodes import (
     ForStatement,
     ForeachStatement,
     FunctionDeclaration,
+    FunctionType,
     HashLiteral,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    LambdaExpression,
     ListLiteral,
     LiteralExpression,
     MemberExpression,
     ObjectType,
+    Parameter,
     Program,
     ReturnStatement,
+    SliceExpression,
     Statement,
     StringInterpolation,
     StringLiteralExpression,
@@ -227,27 +231,50 @@ class SemanticAnalyzer:
                     raise SemanticError(f"Cannot watch undefined variable '{name}'", statement.location, code="E1007")
 
     def _function_body(self, statement: FunctionDeclaration, scope: Scope) -> None:
-        for parameter in statement.parameters:
+        self._analyze_callable(
+            statement.parameters,
+            statement.body,
+            statement.inline,
+            statement.return_type,
+            statement.location,
+            statement.name,
+            scope,
+        )
+
+    def _analyze_callable(
+        self,
+        parameters: list[Parameter],
+        body: list[Statement] | Expression,
+        inline: bool,
+        return_type: TypeAnnotation | None,
+        location: SourceLocation,
+        name: str,
+        scope: Scope,
+    ) -> None:
+        for parameter in parameters:
             parameter.type = self._resolve_type(parameter.type, scope)
 
-        has_return = self._contains_return(statement.body)
-        if has_return and statement.return_type is None:
+        has_return = self._contains_return(body)
+        if has_return and return_type is None:
+            kind = "lambda" if name == "<lambda>" else f"function '{name}'"
             raise SemanticError(
-                f"Return type annotation required for function '{statement.name}' because it contains a return statement",
-                statement.location,
+                f"Return type annotation required for {kind} because it contains a return statement",
+                location,
                 code="E1009",
             )
 
         function_scope = Scope(scope, is_function=True)
-        for parameter in statement.parameters:
+        for parameter in parameters:
+            if parameter.default is not None:
+                self._expression(parameter.default, function_scope)
             function_scope.define(Symbol(parameter.name, SymbolKind.VARIABLE, parameter.location, parameter.type))
 
-        if statement.inline:
-            assert isinstance(statement.body, Expression)
-            self._expression(statement.body, function_scope)
+        if inline:
+            assert isinstance(body, Expression)
+            self._expression(body, function_scope)
         else:
-            assert isinstance(statement.body, list)
-            self._statements(statement.body, function_scope)
+            assert isinstance(body, list)
+            self._statements(body, function_scope)
 
     def _expression(self, expression: Expression, scope: Scope) -> None:
         if isinstance(expression, VariableExpression):
@@ -273,13 +300,24 @@ class SemanticAnalyzer:
                         help_text="Define the function with 'fn name(...) { ... }' before calling it.",
                         code="E1010",
                     )
-                if symbol.kind != SymbolKind.FUNCTION:
+                if symbol.kind == SymbolKind.FUNCTION:
+                    self._check_call_arity(symbol, expression)
+                elif symbol.kind == SymbolKind.VARIABLE:
+                    declared = symbol.declared_type
+                    if isinstance(declared, FunctionType):
+                        self._check_function_type_arity(declared, expression)
+                    elif not (isinstance(declared, TypeName) and declared.name == "dynamic"):
+                        raise SemanticError(
+                            f"Cannot call '{expression.callee.name}' because it is not a function",
+                            expression.location,
+                            code="E1014",
+                        )
+                else:
                     raise SemanticError(
                         f"Cannot call '{expression.callee.name}' because it is not a function",
                         expression.location,
                         code="E1014",
                     )
-                self._check_call_arity(symbol, expression)
             elif isinstance(expression.callee, MemberExpression):
                 self._expression(expression.callee.object, scope)
             else:
@@ -291,6 +329,23 @@ class SemanticAnalyzer:
         elif isinstance(expression, IndexExpression):
             self._expression(expression.target, scope)
             self._expression(expression.index, scope)
+        elif isinstance(expression, SliceExpression):
+            self._expression(expression.target, scope)
+            self._expression(expression.start, scope)
+            self._expression(expression.end, scope)
+        elif isinstance(expression, LambdaExpression):
+            return_type = expression.return_type
+            if return_type is not None:
+                expression.return_type = self._resolve_type(return_type, scope)
+            self._analyze_callable(
+                expression.parameters,
+                expression.body,
+                expression.inline,
+                expression.return_type,
+                expression.location,
+                "<lambda>",
+                scope,
+            )
         elif isinstance(expression, ListLiteral):
             for element in expression.elements:
                 self._expression(element, scope)
@@ -309,10 +364,52 @@ class SemanticAnalyzer:
             return
         if symbol.param_names is None:
             return
+        parameters = self._parameters_from_symbol(symbol)
         try:
-            bind_arguments(symbol.name, symbol.param_names, expression.arguments, expression.location)
+            bind_arguments(symbol.name, parameters, expression.arguments, expression.location)
         except ArgumentError as exc:
             raise SemanticError(exc.message, expression.location, help_text=exc.help_text, code=exc.code) from exc
+
+    def _check_function_type_arity(self, function_type: FunctionType, expression: CallExpression) -> None:
+        if any(argument.name for argument in expression.arguments):
+            return
+        count = len(expression.arguments)
+        expected = len(function_type.param_types)
+        if function_type.variadic:
+            minimum = max(0, expected - 1)
+            if count < minimum:
+                raise SemanticError(
+                    f"Function value expected at least {minimum} argument(s), got {count}",
+                    expression.location,
+                    code="E2205",
+                )
+            return
+        if count != expected:
+            noun = "argument" if expected == 1 else "arguments"
+            if count > expected:
+                raise SemanticError(
+                    f"Function value expected at most {expected} {noun}, got {count}",
+                    expression.location,
+                    code="E2202",
+                )
+            raise SemanticError(
+                f"Function value expected {expected} {noun}, got {count}",
+                expression.location,
+                code="E2205",
+            )
+
+    def _parameters_from_symbol(self, symbol: Symbol) -> list[Parameter]:
+        names = symbol.param_names or []
+        defaults = symbol.param_defaults or [False] * len(names)
+        dummy_type = TypeName(symbol.location, "dynamic")
+        dummy_default = LiteralExpression(symbol.location, None)
+        parameters: list[Parameter] = []
+        for index, name in enumerate(names):
+            variadic = bool(symbol.variadic) and index == len(names) - 1
+            has_default = defaults[index] if index < len(defaults) else False
+            default = dummy_default if has_default and not variadic else None
+            parameters.append(Parameter(name, dummy_type, symbol.location, default, variadic))
+        return parameters
 
     def _check_builtin_call(self, symbol: Symbol, expression: CallExpression) -> None:
         try:
@@ -399,6 +496,8 @@ class SemanticAnalyzer:
             statement.return_type,
             param_count=len(statement.parameters),
             param_names=[parameter.name for parameter in statement.parameters],
+            param_defaults=[parameter.default is not None for parameter in statement.parameters],
+            variadic=any(parameter.variadic for parameter in statement.parameters),
         )
 
     def _variable_symbol(self, statement: VariableDeclaration) -> Symbol:
@@ -413,6 +512,8 @@ class SemanticAnalyzer:
             mutable=False,
             param_count=exported.param_count,
             param_names=exported.param_names,
+            param_defaults=exported.param_defaults,
+            variadic=exported.variadic,
             imported=True,
         )
 
@@ -517,6 +618,10 @@ class SemanticAnalyzer:
         statement.target = resolved
 
     def _resolve_type(self, type_annotation: TypeAnnotation, scope: Scope) -> TypeAnnotation:
+        if isinstance(type_annotation, FunctionType):
+            param_types = [self._resolve_type(param_type, scope) for param_type in type_annotation.param_types]
+            return_type = self._resolve_type(type_annotation.return_type, scope)
+            return FunctionType(type_annotation.location, param_types, return_type, type_annotation.variadic)
         if isinstance(type_annotation, ObjectType):
             fields = {
                 name: self._resolve_type(field_type, scope)

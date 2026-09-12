@@ -216,6 +216,19 @@ def test_unreachable_after_fail_ok_fixture_is_clean():
     assert _fixture_rules("unreachable-after-fail-ok.echo") == []
 
 
+def test_lambda_unused_param_and_empty_body():
+    source = """
+fn run(cb: fn(int) -> int) {
+    say(cb(1));
+}
+run(fn(x: int) -> int { return 1; });
+run(fn() {});
+"""
+    rules = _rules(source)
+    assert "unused-local" in rules
+    assert "empty-block" in rules
+
+
 def test_unreachable_after_fail_same_block_only():
     source = """
 fail("stop");

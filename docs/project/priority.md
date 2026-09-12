@@ -1,10 +1,12 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.5.9**. This list is language basics: a few host/stdlib builtins plus two syntax extensions the user asked for. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
+Current released version is **v0.6.0**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics (see **0.6.x** below).
+
+The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `in progress` / `implemented (version)` / `held`.
 
-## Implement now
+## Implement now (0.5.x — completed)
 
 | # | Item | Status |
 | --- | --- | --- |
@@ -100,7 +102,46 @@ Last 0.5.x tooling slice. No new language syntax.
 
 `echo check [paths...]` walks files or recursive `*.echo` directories, same collection helper as `fmt` / `lint`. Analyze only; do not run. Exit 0 if every file is clean; 1 if any parse/semantic check fails. After a failure, continue so `echo check .` reports every bad file, then exit 1. Missing path exits 1. No path prints help and exits 2. The first token `check` is the subcommand; `echo check.echo` still runs that file. `--plain` is supported.
 
+## 0.6.x
+
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language.
+
+**0.6.0** ships all three language items in **one** release (not split across 0.6.0 / 0.6.1 / 0.6.2):
+
+1. First-class functions **including lambdas**
+2. Slice syntax
+3. Default **and** variadic user `fn` args **together**
+
+**0.6.1** (next language increment after 0.6.0): `map` / `filter` (needs function values).
+
+Failure model is unchanged: callbacks or default expressions that abort still abort. No `try` / `catch`. No `Result` / `Option`.
+
+| # | Item | Status |
+| --- | --- | --- |
+| 1 | First-class functions including lambdas | implemented (0.6.0) |
+| 2 | Slice syntax `xs[1:4]` | implemented (0.6.0) |
+| 3 | Default and variadic user `fn` args | implemented (0.6.0) |
+| 4 | `map` / `filter` | pending (0.6.1) |
+
+### 0.6.0 — first-class functions (including lambdas)
+
+Functions are values. Lambda spelling: **`fn(x: int) -> int { ... }`** (inline `=>` also works). Function type spelling: **`fn(int) -> int`**. `order(comparator)` accepts a function value, a lambda, or a name string.
+
+### 0.6.0 — slice syntax
+
+Spelling: **`xs[1:4]`** (colon, not `..`). **Both bounds required** — no `xs[1:]`, `xs[:4]`, or `xs[:]`. Desugars to existing `slice(start, end)` with the same bounds as today: start and end in `[0, length]`, end exclusive, no negatives, out-of-bounds aborts.
+
+### 0.6.0 — default and variadic user `fn` args
+
+User `fn` default arguments and variadic arguments ship **together**. Spelling: **`punct: str = "!"`** and **`parts: int...`** (variadic last, rest is a `list` of `T`). Defaults come before the variadic and are evaluated at call time. Overloading stays held.
+
+### 0.6.1 — `map` / `filter`
+
+List `map` / `filter` after function values exist. Not part of 0.6.0.
+
 ## Held (do not implement)
+
+Do not move these into 0.6.0. `const` / destructuring stay 0.7+ unless reopened.
 
 | Item | Status |
 | --- | --- |
@@ -110,11 +151,8 @@ Last 0.5.x tooling slice. No new language syntax.
 | VM / JIT | held |
 | Packages | held |
 | `try` / `catch` | held |
-| First-class `map` / `filter` | held |
+| `Result` / `Option` | held |
 | User-level failure recovery | designed ([failure model](/failure-model)) — syntax held; `*Or` stdlib implemented (0.5.3) |
-| First-class functions | held |
-| Slice syntax `xs[1:4]` | held |
-| Default / variadic user args | held |
 | Overloading | held |
 | Formatter / `echo fmt` | implemented (0.5.4) |
 | Linter / `echo lint` | implemented (0.5.5), expanded (0.5.8) |
@@ -124,3 +162,5 @@ Last 0.5.x tooling slice. No new language syntax.
 | LSP | held |
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |
+| Test DSL (`test "name" { }`) | held |
+| `const` / destructuring | held (0.7+ unless reopened) |

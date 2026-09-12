@@ -14,17 +14,21 @@ from echo.frontend.ast.nodes import (
     ForStatement,
     ForeachStatement,
     FunctionDeclaration,
+    FunctionType,
     HashLiteral,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    LambdaExpression,
     ListLiteral,
     LiteralExpression,
     MemberExpression,
     ObjectType,
+    Parameter,
     Program,
     ReturnStatement,
+    SliceExpression,
     Statement,
     StringInterpolation,
     StringLiteralExpression,
@@ -180,7 +184,7 @@ class _Printer:
         raise TypeError(f"unhandled statement: {type(statement).__name__}")
 
     def _function(self, statement: FunctionDeclaration) -> None:
-        params = ", ".join(f"{param.name}: {self._type(param.type)}" for param in statement.parameters)
+        params = ", ".join(self._param(param) for param in statement.parameters)
         header = f"fn {statement.name}({params})"
         if statement.return_type is not None:
             header += f" -> {self._type(statement.return_type)}"
@@ -250,6 +254,10 @@ class _Printer:
             return f"{self._expr(expression.object, PREC_POSTFIX)}.{expression.name}"
         if isinstance(expression, IndexExpression):
             return f"{self._expr(expression.target, PREC_POSTFIX)}[{self._expr(expression.index)}]"
+        if isinstance(expression, SliceExpression):
+            return f"{self._expr(expression.target, PREC_POSTFIX)}[{self._expr(expression.start)}:{self._expr(expression.end)}]"
+        if isinstance(expression, LambdaExpression):
+            return self._lambda(expression)
         if isinstance(expression, ListLiteral):
             return f"[{', '.join(self._expr(item) for item in expression.elements)}]"
         if isinstance(expression, HashLiteral):
@@ -262,8 +270,10 @@ class _Printer:
             return _BIN_PREC[expression.operator.type]
         if isinstance(expression, UnaryExpression):
             return PREC_UNARY
-        if isinstance(expression, (CallExpression, MemberExpression, IndexExpression)):
+        if isinstance(expression, (CallExpression, MemberExpression, IndexExpression, SliceExpression)):
             return PREC_POSTFIX
+        if isinstance(expression, LambdaExpression):
+            return PREC_PRIMARY
         return PREC_PRIMARY
 
     def _argument(self, argument: Argument) -> str:
@@ -272,9 +282,44 @@ class _Printer:
             return f"{argument.name}: {value}"
         return value
 
+    def _param(self, parameter: Parameter) -> str:
+        text = f"{parameter.name}: {self._type(parameter.type)}"
+        if parameter.variadic:
+            text += "..."
+        if parameter.default is not None:
+            text += f" = {self._expr(parameter.default)}"
+        return text
+
+    def _lambda(self, expression: LambdaExpression) -> str:
+        params = ", ".join(self._param(param) for param in expression.parameters)
+        header = f"fn({params})"
+        if expression.return_type is not None:
+            header += f" -> {self._type(expression.return_type)}"
+        if expression.inline:
+            assert isinstance(expression.body, Expression)
+            return f"{header} => {self._expr(expression.body)}"
+        assert isinstance(expression.body, list)
+        inner = self._flatten_statements(expression.body)
+        return f"{header} {{ {inner} }}" if inner else f"{header} {{}}"
+
+    def _flatten_statements(self, statements: list[Statement]) -> str:
+        nested = _Printer([])
+        for statement in statements:
+            nested._statement(statement)
+        text = "\n".join(nested._lines)
+        if nested._current:
+            text = f"{text}\n{nested._current}" if text else nested._current
+        return " ".join(line.strip() for line in text.splitlines() if line.strip())
+
     def _type(self, annotation: TypeAnnotation) -> str:
         if isinstance(annotation, TypeName):
             return annotation.name
+        if isinstance(annotation, FunctionType):
+            params = []
+            for index, param_type in enumerate(annotation.param_types):
+                suffix = "..." if annotation.variadic and index == len(annotation.param_types) - 1 else ""
+                params.append(f"{self._type(param_type)}{suffix}")
+            return f"fn({', '.join(params)}) -> {self._type(annotation.return_type)}"
         if isinstance(annotation, ObjectType):
             fields = ", ".join(f"{name}: {self._type(field)}" for name, field in annotation.fields.items())
             return f"{{{fields}}}" if fields else "{}"

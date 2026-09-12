@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from echo.errors import EchoTypeError, SourceLocation
-from echo.frontend.ast.nodes import ObjectType, TypeAnnotation, TypeName
+from echo.frontend.ast.nodes import FunctionType, ObjectType, TypeAnnotation, TypeName
 
 
 def echo_type_name(value: object) -> str:
@@ -19,7 +19,9 @@ def echo_type_name(value: object) -> str:
         return "list"
     if isinstance(value, dict):
         return "hash"
-    if callable(value) or value.__class__.__name__ == "EchoFunction":
+    if _is_echo_function(value):
+        return "fn"
+    if callable(value):
         return "dynamic"
     return "dynamic"
 
@@ -41,6 +43,8 @@ def is_echo_type(value: object, expected: str) -> bool:
         return isinstance(value, dict)
     if expected == "void":
         return value is None
+    if expected == "fn":
+        return _is_echo_function(value)
     return False
 
 
@@ -60,6 +64,20 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
             if not matches_type(value[field_name], field_type):
                 return False
         return True
+    if isinstance(type_spec, FunctionType):
+        if not _is_echo_function(value):
+            return False
+        declaration = value.declaration
+        params = declaration.parameters
+        if len(params) != len(type_spec.param_types):
+            return False
+        actual_variadic = bool(params) and params[-1].variadic
+        if bool(type_spec.variadic) != actual_variadic:
+            return False
+        for parameter, expected in zip(params, type_spec.param_types):
+            if not _type_compatible(parameter.type, expected):
+                return False
+        return _type_compatible(declaration.return_type, type_spec.return_type)
     return False
 
 
@@ -73,6 +91,12 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
     if isinstance(type_spec, ObjectType):
         fields = ", ".join(f"{name}: {format_type(field)}" for name, field in type_spec.fields.items())
         return "{ " + fields + " }"
+    if isinstance(type_spec, FunctionType):
+        params = []
+        for index, param_type in enumerate(type_spec.param_types):
+            suffix = "..." if type_spec.variadic and index == len(type_spec.param_types) - 1 else ""
+            params.append(f"{format_type(param_type)}{suffix}")
+        return f"fn({', '.join(params)}) -> {format_type(type_spec.return_type)}"
     return str(type_spec)
 
 
@@ -135,4 +159,39 @@ def stringify(value: object, nested: bool = False) -> str:
     if isinstance(value, dict):
         parts = [f"{stringify(key, True)}: {stringify(item, True)}" for key, item in value.items()]
         return "{" + ", ".join(parts) + "}"
+    if _is_echo_function(value):
+        name = value.declaration.name
+        return "<fn>" if name == "<lambda>" else f"<fn {name}>"
     return str(value)
+
+
+def _is_echo_function(value: object) -> bool:
+    return value.__class__.__name__ == "EchoFunction"
+
+
+def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> bool:
+    if left is None or right is None:
+        return left is right
+    if isinstance(left, TypeName) and isinstance(right, TypeName):
+        return left.name == right.name
+    if isinstance(left, ObjectType) and isinstance(right, ObjectType):
+        if left.fields.keys() != right.fields.keys():
+            return False
+        return all(_same_type(left.fields[name], right.fields[name]) for name in left.fields)
+    if isinstance(left, FunctionType) and isinstance(right, FunctionType):
+        if left.variadic != right.variadic or len(left.param_types) != len(right.param_types):
+            return False
+        if not all(_same_type(actual, expected) for actual, expected in zip(left.param_types, right.param_types)):
+            return False
+        return _same_type(left.return_type, right.return_type)
+    return False
+
+
+def _type_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:
+    if expected is None:
+        return True
+    if isinstance(expected, TypeName) and expected.name == "dynamic":
+        return True
+    if actual is None:
+        return isinstance(expected, TypeName) and expected.name in {"dynamic", "void"}
+    return _same_type(actual, expected)

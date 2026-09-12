@@ -217,12 +217,25 @@ fn square(x: int) -> int => x * x;
 - Calls support positional and keyword arguments.
 - Positional arguments cannot follow keyword arguments.
 - Missing, extra, unexpected, and duplicate arguments are semantic errors.
-- No default arguments, variadics, or overloads.
+- Default parameters: `punct: str = "!"`. Once a default appears, later
+  non-variadic parameters must also have defaults.
+- A trailing variadic: `parts: int...` binds extra positionals as a `list`
+  of that type. Defaults come before the variadic. The variadic itself has
+  no default expression; omitting it binds `[]`.
+- Defaults are evaluated at call time, only when the argument is omitted.
+  A default that aborts still aborts.
+- No overloads.
+
+Function values use the type `fn(int) -> int` (parameter types only, then
+a required return type). Lambdas are `fn(x: int) -> int { ... }` or the
+inline `fn(x: int) -> int => x * 2`. Named functions are values: assign,
+pass, return, and call through a function-typed or `dynamic` variable.
+
+`order(comparator)` accepts a function value, a lambda, or a function name
+string.
 
 `return` outside a function is a semantic error.
 Functions may recurse.
-Functions are not first-class values in source syntax yet, except that
-`order(comparator)` may refer to a function by name.
 
 ---
 
@@ -256,6 +269,10 @@ Conditions use truthiness.
 - List indexes are `int` in range `[0, length)`.
 - Hash keys used in `[]` must be `str`.
 - Out-of-range list/string indexes and missing hash keys are runtime errors.
+- Slice syntax `xs[1:4]` (colon, both bounds required) desugars to
+  `slice(start, end)` with the same rules: start and end in `[0, length]`,
+  end exclusive, no negatives, out of bounds aborts. `xs[1:]`, `xs[:4]`,
+  and `xs[:]` are parse errors.
 - `clone()` is a shallow copy.
 
 ### `find`
@@ -376,4 +393,5 @@ v0.5.6 adds the native `echo test` product: `expect` / `expectEq` / `expectNeq`,
 v0.5.7 adds VS Code / Cursor tasks and problem matchers for `echo check` / `fmt` / `lint` / `test`. No LSP. No new keywords.
 v0.5.8 adds `echo lint` rules `test-naming`, `self-assign`, and `unreachable-after-fail`. No new keywords.
 v0.5.9 makes `echo check [paths...]` recurse directories like `fmt` / `lint` / `test`, and adds **Echo: Check workspace**. No new keywords.
+v0.6.0 adds first-class functions including lambdas (`fn(x: int) -> int { ... }`, type `fn(int) -> int`), slice syntax `xs[1:4]`, and user `fn` default plus variadic parameters.
 See `docs/v0.4-stdlib.md`.
