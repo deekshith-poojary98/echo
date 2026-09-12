@@ -40,6 +40,7 @@ double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 mid: list = items[0:1];
 doubled: list = items.map(double);
 evens: list = filter(items, fn(x: int) -> bool { return x % 2 == 0; });
+total: int = items.reduce(0, fn(acc: int, x: int) -> int { return acc + x; });
 fn join(punct: str = ",", parts: str...) {
     say(parts.join(punct));
 }

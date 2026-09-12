@@ -27,6 +27,7 @@ say(items.countOf(3));
 - `order()` sorts the list in place.
 - `countOf()` counts exact value matches.
 - `map(f)` / `filter(f)` return a new list from a function value or lambda.
+- `reduce(init, f)` folds from required `init`; empty list returns `init`.
 
 ## See Also
 - [Lists](/core-concepts/lists)

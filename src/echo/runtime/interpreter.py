@@ -711,6 +711,11 @@ class Interpreter:
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
             return self._filter(items, callback, location)
+        if method == "reduce":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            init = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            callback = _nth(args, 1, method, location) if target is not None else _nth(args, 2, method, location)
+            return self._reduce(items, init, callback, location)
         if method == "copyFile":
             src = target if target is not None else _nth(args, 0, method, location)
             dest = args[0] if target is not None else _nth(args, 1, method, location)
@@ -788,16 +793,28 @@ class Interpreter:
             ) from exc
         return target
 
-    def _require_unary_callback(self, method: str, callback: object, location: SourceLocation) -> EchoFunction:
+    def _require_callback(
+        self,
+        method: str,
+        callback: object,
+        location: SourceLocation,
+        arity: int,
+        not_fn_code: str,
+        arity_code: str,
+    ) -> EchoFunction:
         if not isinstance(callback, EchoFunction):
-            raise EchoTypeError(f"{method}() callback must be a function", location, code="E2829")
-        if len(callback.declaration.parameters) != 1:
+            raise EchoTypeError(f"{method}() callback must be a function", location, code=not_fn_code)
+        if len(callback.declaration.parameters) != arity:
+            expected = {1: "one argument", 2: "two arguments"}.get(arity, f"{arity} arguments")
             raise EchoTypeError(
-                f"{method}() callback '{callback.declaration.name}' must take exactly one argument",
+                f"{method}() callback '{callback.declaration.name}' must take exactly {expected}",
                 location,
-                code="E2830",
+                code=arity_code,
             )
         return callback
+
+    def _require_unary_callback(self, method: str, callback: object, location: SourceLocation) -> EchoFunction:
+        return self._require_callback(method, callback, location, 1, "E2829", "E2830")
 
     def _map(self, items: list, callback: object, location: SourceLocation) -> list:
         function = self._require_unary_callback("map", callback, location)
@@ -817,6 +834,21 @@ class Interpreter:
             if keep is True:
                 kept.append(item)
         return kept
+
+    def _reduce(self, items: list, init: object, callback: object, location: SourceLocation) -> object:
+        function = self._require_callback("reduce", callback, location, 2, "E2832", "E2833")
+        accumulator = init
+        expected = echo_type_name(init)
+        for item in list(items):
+            accumulator = self.call_function_with_values(function, [accumulator, item], location)
+            if expected != "dynamic" and echo_type_name(accumulator) != expected:
+                raise EchoTypeError(
+                    f"reduce() callback '{function.declaration.name}' must return {expected}, "
+                    f"got {echo_type_name(accumulator)}",
+                    location,
+                    code="E2834",
+                )
+        return accumulator
 
     def _loop_bound(self, expression: Expression, env: Environment, location: SourceLocation) -> int:
         value = self.evaluate(expression, env)

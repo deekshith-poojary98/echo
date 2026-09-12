@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.2
+
+List `reduce` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No forEach, flatMap, fold twin, or first-class builtins.
+
+- `reduce(items: list, init, f: fn(acc, item) -> acc) -> acc` folds `f` over `items` starting from required `init`
+- Method form: `items.reduce(init, f)`. List only. Empty list returns `init` and does not call `f`. Input is not mutated
+- `f` is a function value (named `fn` or lambda) with **exactly two** parameters. Defaults and extra variadics do not count toward that arity. Not a name string
+- Each callback result must match `init`'s type (`E2834`). Wrong callback type is `E2832`; wrong arity is `E2833`
+- `reduce` is a call, not an assignable value
+
 ## 0.6.1
 
 List `map` / `filter` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No reduce/fold, flatMap, forEach, or first-class builtins.

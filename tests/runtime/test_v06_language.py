@@ -380,3 +380,124 @@ say(filter([1, 2, 3], fn(x: int) -> bool { return fail("filtered"); }));
     assert_no_python_leak(filtered)
     assert "filtered" in filtered.output
 
+
+def test_reduce_named_fn_and_lambda():
+    result = run_echo(
+        """
+fn add(acc: int, x: int) -> int {
+    return acc + x;
+}
+fn concat(acc: str, item: str) -> str {
+    return acc + item;
+}
+say(reduce([1, 2, 3], 0, add));
+say(reduce([1, 2, 3], 10, fn(acc: int, x: int) -> int { return acc + x; }));
+say(reduce(["a", "b", "c"], "", concat));
+say(reduce(["a", "b"], "x", fn(acc: str, item: str) -> str { return acc + item; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["6", "16", "abc", "xab"]
+
+
+def test_reduce_empty_list_returns_init_without_calling_f():
+    result = run_echo(
+        """
+fn boom(acc: int, x: int) -> int {
+    return fail("called");
+}
+empty: list = [];
+say(reduce(empty, 10, boom));
+say(reduce(empty, "init", fn(acc: str, x: str) -> str { return fail("called"); }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["10", "init"]
+
+
+def test_reduce_do_not_mutate_input():
+    result = run_echo(
+        """
+nums: list = [1, 2, 3];
+total: int = nums.reduce(0, fn(acc: int, x: int) -> int { return acc + x; });
+say(nums);
+say(total);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "6"]
+
+
+def test_reduce_method_and_keyword_form():
+    result = run_echo(
+        """
+fn add(acc: int, x: int) -> int {
+    return acc + x;
+}
+nums: list = [1, 2, 3];
+say(nums.reduce(0, add));
+say(reduce(items: nums, init: 0, f: add));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["6", "6"]
+
+
+def test_reduce_wrong_callback_type():
+    not_fn = run_echo("say(reduce([1, 2], 0, 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "reduce()" in not_fn.output
+    assert "function" in not_fn.output
+    assert "E2832" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn double(x: int) -> int {
+    return x * 2;
+}
+say(reduce([1, 2], 0, double));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "reduce()" in wrong_arity.output
+    assert "two arguments" in wrong_arity.output
+    assert "E2833" in wrong_arity.output
+
+    extra_default = run_echo(
+        """
+fn add3(acc: int, x: int, extra: int = 0) -> int {
+    return acc + x + extra;
+}
+say(reduce([1, 2], 0, add3));
+"""
+    )
+    assert extra_default.exit_code == 1
+    assert_no_python_leak(extra_default)
+    assert "two arguments" in extra_default.output
+    assert "E2833" in extra_default.output
+
+
+def test_reduce_callback_return_must_match_init():
+    result = run_echo(
+        """
+say(reduce([1, 2], 0, fn(acc: int, x: int) -> str { return acc.asString(); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "reduce()" in result.output
+    assert "E2834" in result.output
+
+
+def test_reduce_callback_abort():
+    result = run_echo(
+        """
+say(reduce([1, 2, 3], 0, fn(acc: int, x: int) -> int { return fail("reduced"); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "reduced" in result.output
+

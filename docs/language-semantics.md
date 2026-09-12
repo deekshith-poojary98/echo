@@ -240,6 +240,13 @@ apply a unary function value or lambda. `map` returns a new list of results.
 `bool` (not a truthy `int`). A callback that aborts aborts the whole call.
 Empty list returns empty list. The input list is not mutated. List only.
 
+List `reduce(items, init, f)` (and `items.reduce(init, f)`) folds a binary
+function value or lambda over the list. `init` is required. `f` takes
+exactly two parameters `(accumulator, element)` and returns the next
+accumulator. Empty list returns `init` and does not call `f`. Each callback
+result must match `init`'s type. A callback that aborts aborts the whole
+call. The input list is not mutated. List only. No `fold` twin.
+
 `return` outside a function is a semantic error.
 Functions may recurse.
 
@@ -401,4 +408,5 @@ v0.5.8 adds `echo lint` rules `test-naming`, `self-assign`, and `unreachable-aft
 v0.5.9 makes `echo check [paths...]` recurse directories like `fmt` / `lint` / `test`, and adds **Echo: Check workspace**. No new keywords.
 v0.6.0 adds first-class functions including lambdas (`fn(x: int) -> int { ... }`, type `fn(int) -> int`), slice syntax `xs[1:4]`, and user `fn` default plus variadic parameters.
 v0.6.1 adds list `map` / `filter` on those function values.
+v0.6.2 adds list `reduce` (`init` required; empty list returns `init`).
 See `docs/v0.4-stdlib.md`.

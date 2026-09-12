@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.6.1**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter` (see **0.6.x** below).
+Current tagged version is **v0.6.2**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter`; **0.6.2** adds list `reduce`. **0.6 continues through 0.6.9** — seven pending increments below. **0.7 starts only after 0.6.9 has shipped.** `const` / destructuring stay **0.7**, not late 0.6.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,9 +104,9 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language. **Policy: do not start 0.7 until Echo has shipped through 0.6.9.** Current tag is **v0.6.2**. Each of **0.6.3–0.6.9** is one shippable increment (same rhythm as 0.5.4–0.6.2): function/collection/language ergonomics plus small stdlib that needs 0.6.0 function values.
 
-**0.6.0** ships all three language items in **one** release (not split across 0.6.0 / 0.6.1 / 0.6.2):
+**0.6.0** shipped all three language items in **one** release:
 
 1. First-class functions **including lambdas**
 2. Slice syntax
@@ -114,14 +114,28 @@ Last 0.5.x tooling slice. No new language syntax.
 
 **0.6.1** ships list `map` / `filter` on the function values from 0.6.0.
 
-Failure model is unchanged: callbacks or default expressions that abort still abort. No `try` / `catch`. No `Result` / `Option`.
+**0.6.2** ships list `reduce` on those same function values.
 
-| # | Item | Status |
+Failure model is unchanged through 0.6.9: callbacks or default expressions that abort still abort. No `try` / `catch`. No `Result` / `Option`. No extra `*Or` twins in this stretch — the 0.5.3 set still covers the designed recovery cases.
+
+Already shipped, so **not** re-proposed: `args` / `env` / files / JSON / `fmt` / `lint` / `test` / `check` / `map` / `filter` / `reduce` / `slice()` / `xs[1:4]` / lambdas / defaults / variadics / `order(comparator)` / `find(value)` / `reverse` / `contains`.
+
+Held items below stay held for the whole 0.6.3–0.6.9 stretch (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring are **0.7**, not 0.6.8/0.6.9.
+
+| Version | Item | Status |
 | --- | --- | --- |
-| 1 | First-class functions including lambdas | implemented (0.6.0) |
-| 2 | Slice syntax `xs[1:4]` | implemented (0.6.0) |
-| 3 | Default and variadic user `fn` args | implemented (0.6.0) |
-| 4 | `map` / `filter` | implemented (0.6.1) |
+| 0.6.0 | First-class functions including lambdas | implemented (0.6.0) |
+| 0.6.0 | Slice syntax `xs[1:4]` | implemented (0.6.0) |
+| 0.6.0 | Default and variadic user `fn` args | implemented (0.6.0) |
+| 0.6.1 | `map` / `filter` | implemented (0.6.1) |
+| 0.6.2 | `reduce` | implemented (0.6.2) |
+| 0.6.3 | `forEach` | pending |
+| 0.6.4 | `flatMap` | pending |
+| 0.6.5 | `some` / `every` / `findIndex` | pending |
+| 0.6.6 | Optional slice bounds `xs[1:]` `xs[:4]` `xs[:]` | pending |
+| 0.6.7 | `zip` | pending |
+| 0.6.8 | `unique` | pending |
+| 0.6.9 | Function types honor defaults | pending |
 
 ### 0.6.0 — first-class functions (including lambdas)
 
@@ -133,15 +147,58 @@ Spelling: **`xs[1:4]`** (colon, not `..`). **Both bounds required** — no `xs[1
 
 ### 0.6.0 — default and variadic user `fn` args
 
-User `fn` default arguments and variadic arguments ship **together**. Spelling: **`punct: str = "!"`** and **`parts: int...`** (variadic last, rest is a `list` of `T`). Defaults come before the variadic and are evaluated at call time. Overloading stays held.
+User `fn` default arguments and variadic arguments ship **together**. Spelling: **`punct: str = "!"`** and **`parts: int...`** (variadic last, rest is a `list` of `T`). Defaults come before the variadic and are evaluated at call time. Overloading stays held. Function types still spell parameter types only (`fn(int, str) -> int`) and do not yet treat defaulted parameters as optional when assigning (that is **0.6.9**).
 
 ### 0.6.1 — `map` / `filter`
 
 List `map(items, f)` / `filter(items, f)` and method form `items.map(f)` / `items.filter(f)`. `filter` requires a `bool` return (`1` is not kept). Callbacks that abort abort the call. No string or hash variants; hashes have no map/filter iteration in this cut.
 
+### 0.6.2 — `reduce`
+
+List `reduce(items, init, f)` / `items.reduce(init, f)`. `f` is `fn(acc, item) -> acc`. `init` is required; empty list returns `init` and does not call `f`. Returns a new value; does not mutate the input. A callback that aborts aborts the call. List only. No second `fold` builtin. Codes: non-function `f` **E2832**, wrong arity **E2833**, callback result type ≠ `init` **E2834**.
+
+### 0.6.3 — `forEach`
+
+List `forEach(items, f)` / `items.forEach(f)`. Unary callback; the return value is discarded. Returns `null`. Does not mutate the input itself (the callback may, under `use mut`). Empty list is a no-op. A callback that aborts aborts the call. List only.
+
+### 0.6.4 — `flatMap`
+
+List `flatMap(items, f)` / `items.flatMap(f)`. Unary `f` must return a `list`; a non-list return is a type error. Concatenates those lists **one** level into a new list. Empty input returns `[]`. Does not mutate the input. A callback that aborts aborts the call. List only.
+
+### 0.6.5 — `some` / `every` / `findIndex`
+
+List predicates on a unary `fn(T) -> bool` (same bool rule as `filter`). `some` is `true` if any element matches (empty → `false`). `every` is `true` if all match (empty → `true`). `findIndex` is the first matching index, or `-1` if none — same sentinel as existing `find(value)`. `find(value)` stays value search; do not overload it. Short-circuit. Method + standalone. List only. Callbacks that abort abort the call.
+
+### 0.6.6 — optional slice bounds
+
+`xs[1:]`, `xs[:4]`, and `xs[:]` parse and desugar to `slice`. Omitted start is `0`; omitted end is `length`. Same abort rules as today for any bound that is present: `[0, length]`, end exclusive, no negatives, out of range aborts. `xs[:]` is `slice(0, length)`. Lists and strings, matching `slice()`. This is why 0.6.x does not also ship `take` / `drop`.
+
+### 0.6.7 — `zip`
+
+Standalone `zip(left, right)` → a new list of 2-element lists `[left[i], right[i]]`. Both arguments must be `list`. Length is `min(len(left), len(right))` (unequal is not an Echo error). Empty either side returns `[]`. Does not mutate the inputs. Two lists only — no N-way zip, no zipper callback (that is `map` after `zip`, or later).
+
+### 0.6.8 — `unique`
+
+List `unique(items)` / `items.unique()` → a new list of first occurrences in original order, using Echo `==`. Does not mutate the input. Empty → `[]`. List only. Not `reverse` (already in-place on lists). Not hash `take`.
+
+### 0.6.9 — function types honor defaults
+
+Closes the 0.6.0 caveat: types still spell **`fn(int) -> int`** (no default markers, no `?`). A function whose trailing parameters have defaults is assignable to a function type that **omits** those parameters, and still to the full-arity type. `fn(x: int, y: int = 0) -> int` matches `fn(int) -> int` and `fn(int, int) -> int`, not `fn() -> int`. Calls through the narrower type pass only those args; the implementation fills defaults at call time. Required parameters and variadics still have to match the type. Not builtins-as-values.
+
+### After 0.6.9 (0.7 — do not start yet)
+
+Not scheduled as 0.6.x, not dummy versions:
+
+- `const` / destructuring (held for 0.7; not stretched into 0.6.8/0.6.9)
+- Builtins as assignable values (`say` / `map` as function values — too big for this stretch)
+- Exact object types (reject extra fields)
+- Range as a value (`0...10` producing a list; loop ranges already exist)
+- `echo test -run` / JSON reporter (no test DSL)
+- String `map` / `filter` over graphemes (awkward; skipped)
+
 ## Held (do not implement)
 
-Do not move these into 0.6.0. `const` / destructuring stay 0.7+ unless reopened.
+Do not move these into 0.6.3–0.6.9. `const` / destructuring stay **0.7** (after 0.6.9), not late 0.6.
 
 | Item | Status |
 | --- | --- |
@@ -163,4 +220,4 @@ Do not move these into 0.6.0. `const` / destructuring stay 0.7+ unless reopened.
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |
 | Test DSL (`test "name" { }`) | held |
-| `const` / destructuring | held (0.7+ unless reopened) |
+| `const` / destructuring | held (0.7, after 0.6.9) |

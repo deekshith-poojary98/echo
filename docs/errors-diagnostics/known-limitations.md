@@ -11,6 +11,7 @@ As of v0.5.0, Echo already has:
 - `echo check [paths...]`, a REPL (`echo` with no file), `echo test [paths...]`, `echo fmt`, and `echo lint` (`test-naming`, `self-assign`, `unreachable-after-fail` added in 0.5.8; multi-path `check` in 0.5.9)
 - First-class functions including lambdas, slice syntax `xs[1:4]`, and user `fn` defaults/variadics (0.6.0)
 - List `map` / `filter` (0.6.1)
+- List `reduce` (0.6.2)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 

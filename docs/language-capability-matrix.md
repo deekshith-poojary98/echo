@@ -107,7 +107,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
 | Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
 | Destructuring | Usability | Missing | Later | Later |
-| Collection operations | Usability | Partial (map/filter 0.6.1) | Usability now | 0.6.1 |
+| Collection operations | Usability | Partial (reduce 0.6.2) | Usability now | 0.6.2 |
 | String utilities | Usability | Partial | Usability now | v0.4 candidate |
 | Date / time | Usability | Missing | Later | Later (library) |
 | Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
@@ -356,12 +356,13 @@ lex error. No raw / multiline literal.
 
 Built-ins include `push`, `insertAt`, `pull`, `removeValue`, `empty`,
 `find`, `countOf`, `order`, `clone`, `merge`, `reverse`, `length`,
-`map`, and `filter`.
+`map`, `filter`, and `reduce`.
 
 **Limitations.** `clone()` is shallow. Slice syntax `xs[1:4]` (both bounds
 required) desugars to `slice()`. `order(comparator)` accepts a function
 value, a lambda, or a function name string. `map` / `filter` take a unary
-function value or lambda; `filter` requires a `bool` return.
+function value or lambda; `filter` requires a `bool` return. `reduce` takes
+a binary function value or lambda and a required `init`.
 `removeValue` errors if the value is missing (contract); some older docs
 still say it is a no-op.
 
@@ -553,14 +554,15 @@ do not inherit `use mut`.
 Named functions are values. Lambdas use `fn(x: int) -> int { ... }`.
 The function type spelling is `fn(int) -> int`. `order(comparator)`
 still accepts a function value, a lambda, or a name string. List
-`map` / `filter` take a unary function value or lambda.
+`map` / `filter` take a unary function value or lambda. List `reduce`
+takes a binary function value or lambda and a required `init`.
 
 ```echo
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 say(map([1, 2, 3], double));
 ```
 
-**Limitations.** No overloading. No reduce/fold, flatMap, or forEach.
+**Limitations.** No overloading. No flatMap or forEach.
 
 **Priority.** Frozen.
 
@@ -821,12 +823,13 @@ taste than `try/catch`.
 **Echo status.** Partial.
 
 Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
-`contains`, `slice()`, slice syntax `xs[1:4]`, and list `map` / `filter` (0.6.1).
-It does not have reduce/fold, flatMap, or forEach.
+`contains`, `slice()`, slice syntax `xs[1:4]`, list `map` / `filter` (0.6.1),
+and list `reduce` (0.6.2).
+It does not have flatMap or forEach.
 
 **Priority.** Remaining higher-order collection helpers later.
 
-**Possible version.** `map` / `filter` shipped in 0.6.1.
+**Possible version.** `reduce` shipped in 0.6.2.
 
 ---
 
@@ -1260,7 +1263,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. Failure handling is still design only.
 
 ---
 

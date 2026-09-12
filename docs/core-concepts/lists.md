@@ -32,6 +32,7 @@ say(nums);
 - `order()` sorts ascending by default.
 - `order(cmpFn)` uses a comparator function that returns `int`.
 - `map(f)` / `filter(f)` return a new list. `filter` requires a `bool` callback.
+- `reduce(init, f)` folds the list from required `init`. Empty list returns `init`.
 
 ## Common Mistakes
 - Calling list methods on non-list values

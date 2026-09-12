@@ -668,6 +668,27 @@ say(filter(items: nums, f: even));
 
 ---
 
+### `reduce(init, f)`
+Folds binary function value `f` over the list, starting from required `init`, and returns the accumulated value. `f` must take exactly two arguments `(accumulator, element)`. Does not mutate the input. Empty list returns `init` and does not call `f`. A callback that aborts aborts the call. Each callback result must match `init`'s type.
+
+```echo
+fn add(acc: int, x: int) -> int {
+    return acc + x;
+}
+
+nums: list = [1, 2, 3];
+say(nums.reduce(0, add));    // 6
+say(reduce(["a", "b"], "", fn(acc: str, item: str) -> str { return acc + item; }));    // ab
+```
+
+Standalone keyword form:
+
+```echo
+say(reduce(items: nums, init: 0, f: add));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -806,7 +827,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, and `filter(...)` calls, use `items:` for the collection argument.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, and `reduce(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -817,6 +838,7 @@ say(copy["name"]);        // Echo
 - Calling `pull()` on an empty list
 - Assuming `order()` accepts more than one comparator
 - Assuming `filter` keeps truthy `int` values such as `1`
+- Calling `reduce` without `init`, or with a callback that is not exactly two parameters
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

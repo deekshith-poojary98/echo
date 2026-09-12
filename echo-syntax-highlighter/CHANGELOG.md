@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.2
+
+- Version tracks Echo v0.6.2.
+- Builtin highlighting includes `reduce`.
+
 ## 0.6.1
 
 - Version tracks Echo v0.6.1.
