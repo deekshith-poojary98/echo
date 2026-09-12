@@ -651,7 +651,7 @@ say(map(items: nums, f: double));
 ---
 
 ### `filter(f)`
-Returns a **new** list of elements for which `f` returns `true`. `f` must take one argument and return `bool` — `1` is a type error, not a kept element. Does not mutate the input. Empty list returns `[]`. A callback that aborts aborts the call.
+Returns a **new** list of elements, or a **new** hash of entries, for which `f` returns `true`. `f` must take one argument and return `bool` — `1` is a type error, not a kept element. On a hash, `f` receives each **value** (keys stay the same). Dispatches on the receiver / first argument: `list` or `hash`. Does not mutate the input. Empty list returns `[]`; empty hash returns `{}`. A callback that aborts aborts the call. Hash results preserve insertion order.
 
 ```echo
 fn even(x: int) -> bool {
@@ -661,12 +661,17 @@ fn even(x: int) -> bool {
 nums: list = [1, 2, 3, 4];
 say(nums.filter(even));    // [2, 4]
 say(filter(nums, fn(x: int) -> bool { return x > 2; }));    // [3, 4]
+
+scores: hash = { a: 1, b: 2 };
+say(scores.filter(even));    // {"b": 2}
+say(filter(scores, even));
 ```
 
 Standalone keyword form:
 
 ```echo
 say(filter(items: nums, f: even));
+say(filter(items: scores, f: even));
 ```
 
 ---
@@ -836,6 +841,55 @@ say(unique(items: nums));
 
 ---
 
+### `chunk(size)`
+Splits this list into a **new** list of lists of length `size`. The last chunk may be shorter. `size` must be an `int` `>= 1`. Empty list returns `[]`. Does not mutate the input. List only.
+
+```echo
+nums: list = [1, 2, 3, 4, 5];
+say(nums.chunk(2));    // [[1, 2], [3, 4], [5]]
+say(chunk([], 3));     // []
+```
+
+Standalone keyword form:
+
+```echo
+say(chunk(items: nums, size: 2));
+```
+
+---
+
+### `rangeList(start, end)`
+Returns a **new** `list` of `int` with the same values as `for i in start...end` (exclusive end, step `1`). Empty when that loop would not iterate (`rangeList(0, 0)` is `[]`). Not range-as-a-value syntax: `0...10` is not a list. Method form is not required.
+
+```echo
+say(rangeList(0, 5));    // [0, 1, 2, 3, 4]
+say(rangeList(5, 3));    // []
+```
+
+Standalone keyword form:
+
+```echo
+say(rangeList(start: 0, end: 5));
+```
+
+---
+
+### `rangeListInclusive(start, end)`
+Same as `rangeList`, but matches `for i in start..end` (inclusive end). `rangeListInclusive(0, 0)` is `[0]`. Empty when `start > end` with step `1`.
+
+```echo
+say(rangeListInclusive(0, 5));    // [0, 1, 2, 3, 4, 5]
+say(rangeListInclusive(0, 0));    // [0]
+```
+
+Standalone keyword form:
+
+```echo
+say(rangeListInclusive(start: 0, end: 5));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -886,6 +940,27 @@ Returns a list of all values in insertion order.
 ```echo
 user: hash = { name: "Ada", role: "admin" };
 say(user.values());    // [Ada, admin]
+```
+
+---
+
+### `mapValues(f)`
+Returns a **new** hash with the same keys. Unary `f` is called with each value. Empty hash returns `{}`. Does not mutate the input. A callback that aborts aborts the call. Preserves insertion order. Hash only.
+
+```echo
+fn double(x: int) -> int {
+    return x * 2;
+}
+
+scores: hash = { a: 1, b: 2 };
+say(scores.mapValues(double));    // {"a": 2, "b": 4}
+say(mapValues(scores, fn(x: int) -> int { return x + 1; }));
+```
+
+Standalone keyword form:
+
+```echo
+say(mapValues(items: scores, f: double));
 ```
 
 ---
@@ -974,7 +1049,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `some(...)`, `every(...)`, `findIndex(...)`, and `unique(...)` calls, use `items:` for the collection argument. For standalone `zip(...)`, use `left:` and `right:`.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `some(...)`, `every(...)`, `findIndex(...)`, `unique(...)`, `chunk(...)`, and `mapValues(...)` calls, use `items:` for the collection argument. For standalone `zip(...)`, use `left:` and `right:`. For `rangeList(...)` / `rangeListInclusive(...)`, use `start:` and `end:`. For `chunk(...)`, also use `size:`.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -990,6 +1065,9 @@ say(copy["name"]);        // Echo
 - Calling `flatMap` with a callback that does not return a list, or expecting nested lists to flatten more than one level
 - Assuming `some` / `every` / `findIndex` keep truthy `int` values such as `1`, or treating `findIndex(f)` as `find(value)`
 - Treating unequal `zip` lengths as an error, or expecting `unique` to treat `true` as `1`
+- Calling `chunk` with `size` `0`, a `bool`, or a float
+- Treating `rangeList(0, 5)` as inclusive, or expecting `0...10` to be a list value
+- Assuming hash `filter` / `mapValues` mutate the input, or that `filter` keeps truthy `1` on hash values
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

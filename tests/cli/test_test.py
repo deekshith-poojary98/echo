@@ -203,3 +203,118 @@ def test_parse_error_fails_that_unit_later_files_run(tmp_path):
     assert "Error" in output
     assert "::testOk" in output
     assert "1 passed, 1 failed" in output
+
+
+def test_run_filters_function_units_not_file_names(tmp_path):
+    app = tmp_path / "units_test.echo"
+    app.write_text(
+        """
+say("setup");
+
+fn testAdd() {
+    expectEq(1 + 1, 2, "add");
+}
+
+fn testMul() {
+    expectEq(2 * 3, 6, "mul");
+}
+
+fn testAdder() {
+    fail("should-not-run");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(app), "-run", "testAdd", "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 0
+    assert "setup" in output
+    assert "::testAdd" in output
+    assert "::testMul" not in output
+    assert "::testAdder" not in output
+    assert "should-not-run" not in output
+    assert "1 passed, 0 failed" in output
+
+    code, output = _run_main(["test", str(app), "--run", "*Add*", "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "::testAdd" in output
+    assert "::testAdder" in output
+    assert "::testMul" not in output
+    assert "1 passed, 1 failed" in output
+
+
+def test_run_skips_file_with_no_matching_units(tmp_path):
+    app = tmp_path / "units_test.echo"
+    app.write_text(
+        """
+say("setup");
+
+fn testAdd() {
+    fail("add");
+}
+
+fn testMul() {
+    fail("mul");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(app), "-run", "testNone", "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 0
+    assert "setup" not in output
+    assert "FAIL" not in output
+    assert "::testAdd" not in output
+    assert "0 passed, 0 failed" in output
+
+
+def test_run_skips_file_unit_without_test_functions(tmp_path):
+    app = tmp_path / "bare_test.echo"
+    app.write_text('fail("should-not-run");\n', encoding="utf-8")
+    code, output = _run_main(["test", str(app), "-run", "testAdd", "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 0
+    assert "should-not-run" not in output
+    assert "0 passed, 0 failed" in output
+
+
+def test_run_with_directory_and_plain(tmp_path):
+    suite = tmp_path / "suite"
+    suite.mkdir()
+    add_file = suite / "add_test.echo"
+    mul_file = suite / "mul_test.echo"
+    add_file.write_text(
+        """
+fn testAdd() {
+    expect(true, "add");
+}
+
+fn testOther() {
+    fail("other");
+}
+""",
+        encoding="utf-8",
+    )
+    mul_file.write_text(
+        """
+fn testMul() {
+    fail("mul");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(suite), "-run", "*Add*", "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 0
+    assert "add_test.echo::testAdd" in output
+    assert "testOther" not in output
+    assert "mul_test.echo" not in output
+    assert "1 passed, 0 failed" in output
+    assert "FAIL" not in output
+

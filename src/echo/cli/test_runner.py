@@ -11,7 +11,7 @@ from echo.modules.loader import ModuleLoader
 from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
 from echo.runtime.interpreter import Interpreter
-from echo.runtime.testing import ExpectFailure, TestSession, discover_test_functions
+from echo.runtime.testing import ExpectFailure, TestSession, discover_test_functions, test_unit_matches
 from echo.semantics.analyzer import SemanticAnalyzer
 
 
@@ -31,7 +31,7 @@ def collect_test_files(source_path: str) -> list[Path] | str:
     return f"source file not found: {path}"
 
 
-def run_tests(paths: list[str], *, plain: bool) -> tuple[int, list[TestUnitResult]]:
+def run_tests(paths: list[str], *, plain: bool, run: str | None = None) -> tuple[int, list[TestUnitResult]]:
     _ = plain
     files: list[Path] = []
     seen: set[Path] = set()
@@ -48,21 +48,26 @@ def run_tests(paths: list[str], *, plain: bool) -> tuple[int, list[TestUnitResul
 
     results: list[TestUnitResult] = []
     for file_path in files:
-        for result in run_test_file(file_path):
+        for result in run_test_file(file_path, run=run):
             print_unit(result)
             results.append(result)
     return (0 if all(result.passed for result in results) else 1), results
 
 
-def run_test_file(path: Path) -> list[TestUnitResult]:
+def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]:
     display = _display_path(path)
     session = TestSession()
     interpreter = Interpreter(test_session=session)
     source = ""
+    program = None
     try:
         source = path.read_text(encoding="utf-8")
         tokens = Lexer().tokenize(source, filename=str(path))
         program = Parser(tokens).parse()
+        if run is not None:
+            discovered = discover_test_functions(program)
+            if not any(test_unit_matches(declaration.name, run) for declaration in discovered):
+                return []
         if _has_imports(program):
             module = ModuleLoader().load(path, host=interpreter.host, interpreter=interpreter)
             program = module.ast
@@ -77,6 +82,10 @@ def run_test_file(path: Path) -> list[TestUnitResult]:
         return [_result_from_finish(display, session.take(), abort=exc, exit_code=None, source=source)]
 
     test_fns = discover_test_functions(program)
+    if run is not None:
+        test_fns = [declaration for declaration in test_fns if test_unit_matches(declaration.name, run)]
+        if not test_fns:
+            return []
     setup_failures = session.take()
     if not test_fns:
         return [_result_from_finish(display, setup_failures, abort=None, exit_code=None, source=source)]

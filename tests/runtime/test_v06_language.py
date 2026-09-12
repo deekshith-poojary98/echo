@@ -1137,3 +1137,267 @@ def test_unique_rejects_non_list():
     assert "list" in text.output
 
 
+def test_chunk_even_and_short_last():
+    result = run_echo(
+        """
+say(chunk([1, 2, 3, 4], 2));
+say(chunk([1, 2, 3, 4, 5], 2));
+say(chunk([1, 2, 3], 5));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[1, 2], [3, 4]]", "[[1, 2], [3, 4], [5]]", "[[1, 2, 3]]"]
+
+
+def test_chunk_empty_and_no_mutate():
+    result = run_echo(
+        """
+empty: list = [];
+say(chunk(empty, 2));
+nums: list = [1, 2, 3];
+out: list = nums.chunk(2);
+out[0][0] = 9;
+say(nums);
+say(out);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[]", "[1, 2, 3]", "[[9, 2], [3]]"]
+
+
+def test_chunk_method_and_keyword_form():
+    result = run_echo(
+        """
+nums: list = [1, 2, 3, 4];
+say(nums.chunk(3));
+say(chunk(items: nums, size: 3));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[1, 2, 3], [4]]", "[[1, 2, 3], [4]]"]
+
+
+def test_chunk_size_must_be_int_at_least_one():
+    zero = run_echo("say(chunk([1, 2], 0));\n")
+    assert zero.exit_code == 1
+    assert_no_python_leak(zero)
+    assert "E2842" in zero.output
+
+    negative = run_echo("say(chunk([1, 2], -1));\n")
+    assert negative.exit_code == 1
+    assert_no_python_leak(negative)
+    assert "E2842" in negative.output
+
+    flag = run_echo("say(chunk([1, 2], true));\n")
+    assert flag.exit_code == 1
+    assert_no_python_leak(flag)
+    assert "E2842" in flag.output
+
+    number = run_echo("say(chunk(1, 2));\n")
+    assert number.exit_code == 1
+    assert_no_python_leak(number)
+    assert "chunk()" in number.output
+    assert "list" in number.output
+
+
+def test_range_list_exclusive_matches_dots():
+    result = run_echo(
+        """
+say(rangeList(0, 5));
+say(rangeList(0, 0));
+say(rangeList(5, 3));
+say(rangeList(-2, 2));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[0, 1, 2, 3, 4]", "[]", "[]", "[-2, -1, 0, 1]"]
+
+
+def test_range_list_inclusive_matches_dot_dot():
+    result = run_echo(
+        """
+say(rangeListInclusive(0, 5));
+say(rangeListInclusive(0, 0));
+say(rangeListInclusive(5, 3));
+say(rangeListInclusive(-2, 2));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[0, 1, 2, 3, 4, 5]", "[0]", "[]", "[-2, -1, 0, 1, 2]"]
+
+
+def test_range_list_keyword_form():
+    result = run_echo(
+        """
+say(rangeList(start: 1, end: 4));
+say(rangeListInclusive(start: 1, end: 4));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "[1, 2, 3, 4]"]
+
+
+def test_range_list_rejects_non_int_bounds():
+    flag = run_echo("say(rangeList(true, 3));\n")
+    assert flag.exit_code == 1
+    assert_no_python_leak(flag)
+    assert "E2843" in flag.output
+
+    text = run_echo('say(rangeListInclusive("a", 3));\n')
+    assert text.exit_code == 1
+    assert_no_python_leak(text)
+    assert "E2843" in text.output
+
+
+def test_map_values_named_fn_and_lambda():
+    result = run_echo(
+        """
+fn double(x: int) -> int {
+    return x * 2;
+}
+
+scores: hash = { a: 1, b: 2 };
+say(mapValues(scores, double));
+say(mapValues(scores, fn(x: int) -> int { return x + 1; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ['{"a": 2, "b": 4}', '{"a": 2, "b": 3}']
+
+
+def test_map_values_empty_and_no_mutate():
+    result = run_echo(
+        """
+empty: hash = {};
+say(mapValues(empty, fn(x: int) -> int { return x; }));
+scores: hash = { a: 1, b: 2 };
+out: hash = scores.mapValues(fn(x: int) -> int { return x * 10; });
+say(scores);
+say(out);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["{}", '{"a": 1, "b": 2}', '{"a": 10, "b": 20}']
+
+
+def test_map_values_method_and_keyword_form():
+    result = run_echo(
+        """
+fn triple(x: int) -> int {
+    return x * 3;
+}
+
+scores: hash = { a: 1 };
+say(scores.mapValues(triple));
+say(mapValues(items: scores, f: triple));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ['{"a": 3}', '{"a": 3}']
+
+
+def test_map_values_wrong_callback():
+    not_fn = run_echo("say(mapValues({ a: 1 }, 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "E2844" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+say(mapValues({ a: 1 }, add));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "E2845" in wrong_arity.output
+
+    number = run_echo("say(mapValues(1, fn(x: int) -> int { return x; }));\n")
+    assert number.exit_code == 1
+    assert_no_python_leak(number)
+    assert "mapValues()" in number.output
+    assert "hash" in number.output
+
+
+def test_map_values_callback_abort():
+    result = run_echo(
+        """
+say(mapValues({ a: 1, b: 2 }, fn(x: int) -> int { return fail("mapped"); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "mapped" in result.output
+
+
+def test_hash_filter_keeps_bool_true():
+    result = run_echo(
+        """
+fn positive(x: int) -> bool {
+    return x > 0;
+}
+
+scores: hash = { a: -1, b: 2, c: 0 };
+say(filter(scores, positive));
+say(filter(scores, fn(x: int) -> bool { return x == 0; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ['{"b": 2}', '{"c": 0}']
+
+
+def test_hash_filter_empty_and_no_mutate():
+    result = run_echo(
+        """
+empty: hash = {};
+say(filter(empty, fn(x: int) -> bool { return true; }));
+scores: hash = { a: 1, b: 2 };
+out: hash = scores.filter(fn(x: int) -> bool { return x > 1; });
+say(scores);
+say(out);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["{}", '{"a": 1, "b": 2}', '{"b": 2}']
+
+
+def test_hash_filter_method_and_keyword_and_list_still_works():
+    result = run_echo(
+        """
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+
+scores: hash = { a: 1, b: 2 };
+nums: list = [1, 2, 3, 4];
+say(scores.filter(even));
+say(filter(items: scores, f: even));
+say(filter(nums, even));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ['{"b": 2}', '{"b": 2}', "[2, 4]"]
+
+
+def test_hash_filter_requires_bool_not_int():
+    result = run_echo("say(filter({ a: 1, b: 0 }, fn(x: int) -> int { return x; }));\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2831" in result.output
+    assert "filter()" in result.output
+
+
+def test_hash_filter_callback_abort():
+    result = run_echo(
+        """
+say(filter({ a: 1, b: 2 }, fn(x: int) -> bool { return fail("filtered"); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "filtered" in result.output
+
+
+

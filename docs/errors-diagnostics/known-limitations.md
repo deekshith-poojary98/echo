@@ -17,6 +17,7 @@ As of v0.5.0, Echo already has:
 - List `some` / `every` / `findIndex` (0.6.5)
 - Optional slice bounds `xs[1:]` / `xs[:4]` / `xs[:]` (0.6.6)
 - List `zip` / `unique` (0.6.7)
+- `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, hash `mapValues` / `filter` (0.6.8)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 

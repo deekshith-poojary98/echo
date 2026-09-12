@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.8
+
+Four items in one release: `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. No new keywords. Failure model is unchanged. No function-type defaults or first-class builtins. `0...10` is still not a list value.
+
+- `echo test -run PATTERN` / `--run PATTERN` runs only zero-arg `fn testXxx()` units whose **function names** match a case-sensitive glob (`*` and exact). `*Add*` matches `testAdd`; `testAdd` matches only `testAdd`. Not file names. Non-matching units are skipped (not failed). A file with no matching units is skipped and does not fail (`0 passed, 0 failed` if nothing ran). Directories / `*_test.echo` still apply. `--plain` is unchanged. `echo test.echo` still runs that file
+- `chunk(items: list, size: int) -> list` / `items.chunk(size)` splits into a new list of lists of length `size`; the last chunk may be shorter. Empty list is `[]`. `size` must be an `int` `>= 1` (`E2842`). Input is not mutated. Keyword `items:` / `size:`
+- `rangeList(start, end) -> list` is the same integers as `for i in start...end` (exclusive end, step `1`). `rangeListInclusive(start, end)` matches `start..end` (inclusive end). Empty when the `for` would not iterate. Returns a `list` of `int`. Not `0...10` as a value. Keywords `start:` / `end:`. Bounds that are not convertible to `int` abort (`E2843`)
+- `mapValues(h, f)` / `h.mapValues(f)` returns a new hash with the same keys; `f` is unary `f(value) -> newValue`. Non-function `f` is `E2844`; wrong arity is `E2845`. Empty hash is `{}`. Input is not mutated. Insertion order is preserved (hashes already preserve it)
+- `filter` keeps hash entries where unary `f(value)` is **bool** `true` (not `1`), same rule as lists. Standalone `filter(items, f)` and `items.filter(f)` dispatch on the first argument / receiver: `list` or `hash`. Callback abort still aborts. Codes `E2829`–`E2831` unchanged
+- Playground highlighting tracks `chunk`, `rangeList`, `rangeListInclusive`, and `mapValues`
+
 ## 0.6.7
 
 List `zip` and `unique`. No new keywords. Failure model is unchanged. No function-type defaults or first-class builtins. `unique` was originally queued as 0.6.8 and ships here.

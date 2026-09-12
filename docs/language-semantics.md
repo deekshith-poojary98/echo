@@ -238,7 +238,8 @@ List `map(items, f)` / `filter(items, f)` (and `items.map(f)` / `items.filter(f)
 apply a unary function value or lambda. `map` returns a new list of results.
 `filter` keeps elements where `f` returns `true`; the callback must return
 `bool` (not a truthy `int`). A callback that aborts aborts the whole call.
-Empty list returns empty list. The input list is not mutated. List only.
+Empty list returns empty list. The input list is not mutated. `map` is list
+only. `filter` also accepts a hash (below).
 
 List `reduce(items, init, f)` (and `items.reduce(init, f)`) folds a binary
 function value or lambda over the list. `init` is required. `f` takes
@@ -277,6 +278,27 @@ empty list. The inputs are not mutated. List only.
 List `unique(items)` (and `items.unique()`) returns a new list of first
 occurrences in original order, using Echo `==` (`true` is not `1`). Empty
 list returns empty list. The input is not mutated. List only.
+
+List `chunk(items, size)` (and `items.chunk(size)`) returns a new list of
+lists of length `size`; the last chunk may be shorter. `size` must be an
+`int` `>= 1`. Empty list returns empty list. The input is not mutated.
+
+`rangeList(start, end)` returns the `list` of `int` values that
+`for i in start...end` would visit (exclusive end, step `1`).
+`rangeListInclusive(start, end)` matches `for i in start..end` (inclusive
+end). Empty when that `for` would not iterate. This is a builtin, not
+range-as-a-value syntax; `0...10` is not a list.
+
+`mapValues(h, f)` (and `h.mapValues(f)`) returns a new hash with the same
+keys. Unary `f` is called with each value. Empty hash returns empty hash.
+Hashes preserve insertion order, and so does `mapValues`. The input is
+not mutated.
+
+`filter` on a hash (standalone `filter(h, f)` or `h.filter(f)`) keeps
+entries where unary `f(value)` returns `true` (`bool` only — not a
+truthy `int`). The first argument / receiver selects list vs hash.
+Empty hash returns empty hash. Insertion order is preserved. The input
+is not mutated. A callback that aborts aborts the whole call.
 
 `return` outside a function is a semantic error.
 Functions may recurse.
@@ -447,4 +469,5 @@ v0.6.4 adds list `flatMap` (unary callback must return a list; concatenates one 
 v0.6.5 adds list `some` / `every` / `findIndex` (unary `bool` predicates; `find(value)` stays value search).
 v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted start is `0`, omitted end is `length`).
 v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occurrences in order, Echo `==`).
+v0.6.8 adds `echo test -run` (glob on `testXxx` function names), list `chunk`, `rangeList` / `rangeListInclusive` (same bounds as `...` / `..`), and hash `mapValues` / `filter`.
 See `docs/v0.4-stdlib.md`.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fnmatch
 from dataclasses import dataclass, field
 
 from echo.errors import SourceLocation
@@ -8,6 +9,11 @@ from echo.frontend.ast.nodes import ExportDeclaration, FunctionDeclaration, Prog
 
 def is_test_entry(name: str, parameter_count: int) -> bool:
     return name.startswith("test") and parameter_count == 0
+
+
+def test_unit_matches(name: str, pattern: str) -> bool:
+    """Match a `testXxx` unit name with a glob (`*` / exact), case-sensitive."""
+    return fnmatch.fnmatchcase(name, pattern)
 
 
 @dataclass(frozen=True)

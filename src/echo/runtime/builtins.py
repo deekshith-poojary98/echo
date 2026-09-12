@@ -116,12 +116,16 @@ BUILTIN_NAMES = frozenset(
         "expectEq",
         "expectNeq",
         "fail",
+        "chunk",
         "every",
         "filter",
         "findIndex",
         "flatMap",
         "forEach",
         "map",
+        "mapValues",
+        "rangeList",
+        "rangeListInclusive",
         "reduce",
         "some",
         "unique",
@@ -214,12 +218,16 @@ BUILTIN_PARAMS = {
     "expectEq": ["right", "message"],
     "expectNeq": ["right", "message"],
     "fail": [],
+    "chunk": ["size"],
     "every": ["f"],
     "filter": ["f"],
     "findIndex": ["f"],
     "flatMap": ["f"],
     "forEach": ["f"],
     "map": ["f"],
+    "mapValues": ["f"],
+    "rangeList": ["end"],
+    "rangeListInclusive": ["end"],
     "reduce": ["init", "f"],
     "some": ["f"],
     "unique": [],
@@ -267,12 +275,16 @@ STANDALONE_PARAMS = {
     "expectEq": ["left", "right", "message"],
     "expectNeq": ["left", "right", "message"],
     "fail": ["message"],
+    "chunk": ["items", "size"],
     "every": ["items", "f"],
     "filter": ["items", "f"],
     "findIndex": ["items", "f"],
     "flatMap": ["items", "f"],
     "forEach": ["items", "f"],
     "map": ["items", "f"],
+    "mapValues": ["items", "f"],
+    "rangeList": ["start", "end"],
+    "rangeListInclusive": ["start", "end"],
     "reduce": ["items", "init", "f"],
     "some": ["items", "f"],
     "unique": ["items"],
@@ -352,12 +364,16 @@ STANDALONE_MIN_ARGS = {
     "expectEq": 3,
     "expectNeq": 3,
     "fail": 1,
+    "chunk": 2,
     "every": 2,
     "filter": 2,
     "findIndex": 2,
     "flatMap": 2,
     "forEach": 2,
     "map": 2,
+    "mapValues": 2,
+    "rangeList": 2,
+    "rangeListInclusive": 2,
     "reduce": 3,
     "some": 2,
     "unique": 1,
@@ -512,6 +528,39 @@ def do_unique(value: object, location: SourceLocation | None = None) -> list:
         if not any(echo_equal(seen, item) for seen in result):
             result.append(item)
     return result
+
+
+def do_chunk(value: object, size: object, location: SourceLocation | None = None) -> list:
+    items = require_list(value, "chunk", location)
+    if isinstance(size, bool) or not isinstance(size, int) or size < 1:
+        raise EchoTypeError("chunk() size must be an integer >= 1", location, code="E2842")
+    if not items:
+        return []
+    return [items[index : index + size] for index in range(0, len(items), size)]
+
+
+def _range_bound(value: object, method: str, location: SourceLocation | None = None) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise EchoTypeError(f"{method}() bounds must be convertible to int", location, code="E2843")
+    return int(value)
+
+
+def do_range_list(
+    start: object,
+    end: object,
+    location: SourceLocation | None = None,
+    *,
+    inclusive: bool,
+    method: str,
+) -> list[int]:
+    begin = _range_bound(start, method, location)
+    finish = _range_bound(end, method, location)
+    values: list[int] = []
+    index = begin
+    while index <= finish if inclusive else index < finish:
+        values.append(index)
+        index += 1
+    return values
 
 
 def do_merge(target: object, other: object, location: SourceLocation | None = None) -> object:

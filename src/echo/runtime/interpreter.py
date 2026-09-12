@@ -63,6 +63,7 @@ from echo.runtime.builtins import (
     do_args,
     do_assert,
     do_ceil,
+    do_chunk,
     do_clone,
     do_contains,
     do_copy_file,
@@ -96,6 +97,7 @@ from echo.runtime.builtins import (
     do_path_join,
     do_random,
     do_random_int,
+    do_range_list,
     do_read_file,
     do_read_file_or,
     do_read_line,
@@ -712,10 +714,18 @@ class Interpreter:
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
             return self._map(items, callback, location)
-        if method == "filter":
-            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+        if method == "mapValues":
+            items = require_hash(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
-            return self._filter(items, callback, location)
+            return self._mapValues(items, callback, location)
+        if method == "filter":
+            items = target if target is not None else _nth(args, 0, method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            if isinstance(items, list):
+                return self._filter(items, callback, location)
+            if isinstance(items, dict):
+                return self._filter_hash(items, callback, location)
+            raise EchoTypeError("filter() can only be called on lists or hashes", location, code="E2401")
         if method == "flatMap":
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
@@ -747,6 +757,18 @@ class Interpreter:
             return do_zip(left, right, location)
         if method == "unique":
             return do_unique(target if target is not None else _first(args, method, location), location)
+        if method == "chunk":
+            items = target if target is not None else _nth(args, 0, method, location)
+            size = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_chunk(items, size, location)
+        if method == "rangeList":
+            start = target if target is not None else _nth(args, 0, method, location)
+            end = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_range_list(start, end, location, inclusive=False, method=method)
+        if method == "rangeListInclusive":
+            start = target if target is not None else _nth(args, 0, method, location)
+            end = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_range_list(start, end, location, inclusive=True, method=method)
         if method == "copyFile":
             src = target if target is not None else _nth(args, 0, method, location)
             dest = args[0] if target is not None else _nth(args, 1, method, location)
@@ -851,6 +873,10 @@ class Interpreter:
         function = self._require_unary_callback("map", callback, location)
         return [self.call_function_with_values(function, [item], location) for item in list(items)]
 
+    def _mapValues(self, items: dict, callback: object, location: SourceLocation) -> dict:
+        function = self._require_callback("mapValues", callback, location, 1, "E2844", "E2845")
+        return {key: self.call_function_with_values(function, [value], location) for key, value in items.items()}
+
     def _filter(self, items: list, callback: object, location: SourceLocation) -> list:
         function = self._require_unary_callback("filter", callback, location)
         kept: list[object] = []
@@ -864,6 +890,21 @@ class Interpreter:
                 )
             if keep is True:
                 kept.append(item)
+        return kept
+
+    def _filter_hash(self, items: dict, callback: object, location: SourceLocation) -> dict:
+        function = self._require_unary_callback("filter", callback, location)
+        kept: dict = {}
+        for key, value in items.items():
+            keep = self.call_function_with_values(function, [value], location)
+            if not isinstance(keep, bool):
+                raise EchoTypeError(
+                    f"filter() callback '{function.declaration.name}' must return bool",
+                    location,
+                    code="E2831",
+                )
+            if keep is True:
+                kept[key] = value
         return kept
 
     def _flatMap(self, items: list, callback: object, location: SourceLocation) -> list:

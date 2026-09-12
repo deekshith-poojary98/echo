@@ -39,6 +39,10 @@ say(every([1, 2, 3], fn(x: int) -> bool { return x > 0; }));
 say(findIndex([1, 2, 3], fn(x: int) -> bool { return x == 3; }));
 say(zip([1, 2], [10, 20]));
 say(unique([1, 2, 1, true, 1]));
+say(chunk([1, 2, 3, 4, 5], 2));
+say(rangeList(0, 5));
+say(rangeListInclusive(0, 5));
+say(mapValues({ a: 1, b: 2 }, double));
 ```
 
 Defaults and a trailing variadic:

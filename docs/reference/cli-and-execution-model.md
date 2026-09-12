@@ -60,11 +60,15 @@ echo test program.echo
 echo test path/foo_test.echo
 echo test tests/
 echo test program.echo --plain
+echo test tests/ --run '*Add*'
+echo test path/foo_test.echo -run testAdd --plain
 ```
 
 Runs Echo tests. A directory argument recursively runs `*_test.echo` files. An explicit file path always runs, even if it is not named `*_test.echo`. `echo test` with no path prints help and exits 2.
 
 Each discovered file is a test file. If it defines top-level zero-argument `fn testXxx()` functions, the runner calls each as a separate unit after running the remaining top-level statements once as setup. If there are no such functions, the file itself is one unit.
+
+`-run PATTERN` / `--run PATTERN` keeps only those `testXxx` **function** units whose names match a case-sensitive glob (`*` and exact names). `*Add*` matches `testAdd`; `testAdd` matches only `testAdd`. It does not filter file names. Non-matching units are skipped, not failed. A file with no matching units is skipped (setup does not run) and does not fail. Quote globs in the shell (`--run '*Add*'`). Without `-run`, every unit runs as before.
 
 `expect(cond, message)`, `expectEq(left, right, message)`, and `expectNeq(left, right, message)` record a failure and continue under this runner (codes E2826 / E2827 / E2828). Outside `echo test` they abort like `assert`. `assert` / `fail` still abort the current unit; later units still run. Parse and load errors fail that file as a unit.
 

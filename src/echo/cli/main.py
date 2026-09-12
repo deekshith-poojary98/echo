@@ -430,6 +430,13 @@ def _main_lint(argv: list[str]) -> int:
 def _main_test(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="echo test", description="Run Echo tests")
     parser.add_argument("paths", nargs="*", help="Test files or directories of *_test.echo files")
+    parser.add_argument(
+        "-run",
+        "--run",
+        metavar="PATTERN",
+        dest="run",
+        help="Run only testXxx units whose names match glob PATTERN (e.g. testAdd or *Add*)",
+    )
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     args = parser.parse_args(argv)
     if not args.paths:
@@ -437,7 +444,7 @@ def _main_test(argv: list[str]) -> int:
         return 2
     from echo.cli.test_runner import print_summary, run_tests
 
-    code, results = run_tests(args.paths, plain=args.plain)
+    code, results = run_tests(args.paths, plain=args.plain, run=args.run)
     if not results and code != 0:
         return code
     print_summary(results)

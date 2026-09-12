@@ -107,7 +107,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
 | Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
 | Destructuring | Usability | Missing | Later | Later |
-| Collection operations | Usability | Partial (`zip` / `unique` 0.6.7) | Usability now | 0.6.7 |
+| Collection operations | Usability | Partial (`chunk` / `rangeList` / hash `mapValues` 0.6.8) | Usability now | 0.6.8 |
 | String utilities | Usability | Partial | Usability now | v0.4 candidate |
 | Date / time | Usability | Missing | Later | Later (library) |
 | Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
@@ -119,7 +119,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Package manager | Ecosystem | Missing | Tooling | Tooling track |
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
 | Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
-| Native test runner | Ecosystem | Implemented (0.5.6) | Tooling | 0.5.6 |
+| Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8) | Tooling | 0.6.8 |
 | Debugger | Ecosystem | Partial | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
 | IDE support | Ecosystem | Partial (0.5.7), Check workspace (0.5.9) | Tooling | 0.5.9 |
@@ -831,7 +831,7 @@ taste than `try/catch`.
 
 ### Collection operations
 
-**What it means.** Slice, map, filter, reduce, forEach, flatMap, some, every, findIndex, zip, unique, contains, without handwritten loops.
+**What it means.** Slice, map, filter, reduce, forEach, flatMap, some, every, findIndex, zip, unique, chunk, rangeList, mapValues, contains, without handwritten loops.
 
 **Why languages need it.** Real scripts spend most of their time on collections.
 
@@ -841,11 +841,13 @@ Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
 `contains`, `slice()`, slice syntax `xs[1:4]` with optional bounds `xs[1:]` /
 `xs[:4]` / `xs[:]` (0.6.6), list `map` / `filter` (0.6.1),
 list `reduce` (0.6.2), list `forEach` (0.6.3), list `flatMap` (0.6.4),
-list `some` / `every` / `findIndex` (0.6.5), and list `zip` / `unique` (0.6.7).
+list `some` / `every` / `findIndex` (0.6.5), list `zip` / `unique` (0.6.7),
+list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` /
+`filter` (0.6.8).
 
 **Priority.** Remaining higher-order collection helpers later.
 
-**Possible version.** `zip` / `unique` shipped in 0.6.7.
+**Possible version.** `chunk` / `rangeList` / hash `mapValues` / `filter` shipped in 0.6.8.
 
 ---
 
@@ -1039,13 +1041,13 @@ It does not re-run typechecking. Unused parameters are `unused-local`.
 
 **Status.** Implemented (0.5.6) as tooling. No new keywords.
 
-`echo test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit.
+`echo test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit. **0.6.8** adds `-run` / `--run` glob filter on those function unit names (not file names).
 
 There is no `test "name" { }` syntax. That stays vision / held.
 
 **Priority.** Tooling / vision. Shipped as a library-plus-CLI.
 
-**Possible version.** 0.5.6.
+**Possible version.** 0.6.8 (`-run`).
 
 ---
 
@@ -1279,7 +1281,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. Failure handling is still design only.
 
 ---
 

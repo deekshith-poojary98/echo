@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.8
+
+- Version tracks Echo v0.6.8.
+- Builtin highlighting includes `chunk`, `rangeList`, `rangeListInclusive`, and `mapValues`.
+
 ## 0.6.7
 
 - Version tracks Echo v0.6.7.

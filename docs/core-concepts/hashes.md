@@ -30,6 +30,8 @@ say(user.keys());
 - Runtime indexing requires a string key.
 - `ensure()` is useful for bucket-building and counters.
 - `take()` and `take_last()` mutate the hash.
+- `mapValues(f)` returns a new hash with the same keys. `filter(f)` keeps entries where `f(value)` is `true`.
+- Hash iteration order is insertion order; `mapValues` / `filter` preserve it.
 
 ## Common Mistakes
 - Using non-string keys in runtime indexing

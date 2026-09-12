@@ -39,6 +39,8 @@ say(nums);
 - `some(f)` / `every(f)` / `findIndex(f)` take a `bool` callback. Empty `some` is `false`; empty `every` is `true`; empty `findIndex` is `-1`. `find(value)` stays value search.
 - `zip(other)` pairs two lists into `[a, b]` pairs up to the shorter length.
 - `unique()` returns first occurrences in order using Echo `==`.
+- `chunk(size)` splits into new sublists of length `size` (last may be shorter).
+- `rangeList(start, end)` / `rangeListInclusive(start, end)` build a `list` of `int` matching `...` / `..` `for` ranges.
 
 ## Common Mistakes
 - Calling list methods on non-list values
