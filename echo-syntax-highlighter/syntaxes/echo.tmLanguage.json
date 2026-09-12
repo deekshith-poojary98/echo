@@ -166,7 +166,7 @@
     },
     "builtins": {
       "name": "support.function.builtin.echo",
-      "match": "\\b(abs|args|asBool|asFloat|asFloatOr|asInt|asIntOr|ask|assert|asString|ceil|clone|contains|copyFile|countOf|cwd|default|empty|endsWith|ensure|env|envOr|eprint|every|exit|expect|expectEq|expectNeq|fail|fileExists|filter|find|findIndex|flatMap|floor|forEach|format|has|indexOf|insertAt|isDir|join|keys|lastIndexOf|length|listFiles|lowerCase|map|max|merge|min|mkdir|now|order|padEnd|padStart|pairs|parseJson|parseJsonOr|pathJoin|pull|push|random|randomInt|readFile|readFileOr|readLine|reduce|removeFile|removeValue|repeat|replace|replaceFirst|reverse|run|say|slice|some|split|startsWith|take|take_last|trim|type|upperCase|values|wait|wipe|writeFile|writeJson)\\s*(?=\\()"
+      "match": "\\b(abs|args|asBool|asFloat|asFloatOr|asInt|asIntOr|ask|assert|asString|ceil|clone|contains|copyFile|countOf|cwd|default|empty|endsWith|ensure|env|envOr|eprint|every|exit|expect|expectEq|expectNeq|fail|fileExists|filter|find|findIndex|flatMap|floor|forEach|format|has|indexOf|insertAt|isDir|join|keys|lastIndexOf|length|listFiles|lowerCase|map|max|merge|min|mkdir|now|order|padEnd|padStart|pairs|parseJson|parseJsonOr|pathJoin|pull|push|random|randomInt|readFile|readFileOr|readLine|reduce|removeFile|removeValue|repeat|replace|replaceFirst|reverse|run|say|slice|some|split|startsWith|take|take_last|trim|type|unique|upperCase|values|wait|wipe|writeFile|writeJson|zip)\\s*(?=\\()"
     },
     "function-calls": {
       "name": "entity.name.function.echo",

@@ -37,6 +37,8 @@ say(flatMap([1, 2], fn(x: int) -> list { return [x, x]; }));
 say(some([1, 2, 3], fn(x: int) -> bool { return x == 2; }));
 say(every([1, 2, 3], fn(x: int) -> bool { return x > 0; }));
 say(findIndex([1, 2, 3], fn(x: int) -> bool { return x == 3; }));
+say(zip([1, 2], [10, 20]));
+say(unique([1, 2, 1, true, 1]));
 ```
 
 Defaults and a trailing variadic:

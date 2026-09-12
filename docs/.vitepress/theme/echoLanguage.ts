@@ -114,12 +114,14 @@ const BUILTINS = new Set([
   'take_last',
   'trim',
   'type',
+  'unique',
   'upperCase',
   'values',
   'wait',
   'wipe',
   'writeFile',
   'writeJson',
+  'zip',
 ])
 
 const NUMBER_RE = /^(?:\.[0-9]+|[0-9]+(?:\.[0-9]+)?)(?:[eE][+-]?[0-9]+)?/

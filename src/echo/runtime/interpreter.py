@@ -108,9 +108,11 @@ from echo.runtime.builtins import (
     do_slice,
     do_split,
     do_starts_with,
+    do_unique,
     do_wait,
     do_write_file,
     do_write_json,
+    do_zip,
     resolve_builtin_args,
 )
 from echo.runtime.host import Host
@@ -739,6 +741,12 @@ class Interpreter:
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
             return self._findIndex(items, callback, location)
+        if method == "zip":
+            left = target if target is not None else _nth(args, 0, method, location)
+            right = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_zip(left, right, location)
+        if method == "unique":
+            return do_unique(target if target is not None else _first(args, method, location), location)
         if method == "copyFile":
             src = target if target is not None else _nth(args, 0, method, location)
             dest = args[0] if target is not None else _nth(args, 1, method, location)

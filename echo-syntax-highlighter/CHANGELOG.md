@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.7
+
+- Version tracks Echo v0.6.7.
+- Builtin highlighting includes `zip` and `unique`.
+
 ## 0.6.6
 
 - Version tracks Echo v0.6.6.

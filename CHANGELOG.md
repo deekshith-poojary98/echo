@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.7
+
+List `zip` and `unique`. No new keywords. Failure model is unchanged. No function-type defaults or first-class builtins. `unique` was originally queued as 0.6.8 and ships here.
+
+- `zip(left: list, right: list) -> list` returns a new list of 2-element lists `[left[i], right[i]]`. Length is `min(len(left), len(right))`; unequal lengths are not an error. Empty either side is `[]`. Inputs are not mutated
+- Method form: `left.zip(right)`. Keywords `left:` / `right:` on the standalone call. List only. No N-way zip and no zipper callback
+- `unique(items: list) -> list` returns a new list of first occurrences in original order, using Echo `==` (`true` is not `1`). Empty list is `[]`. Input is not mutated
+- Method form: `items.unique()`. Keyword `items:` on the standalone call. List only
+- `zip` / `unique` are calls, not assignable values
+- Playground highlighting tracks `zip` and `unique`
+
 ## 0.6.6
 
 Optional slice bounds on the `xs[1:4]` syntax from 0.6.0. Same abort rules as `slice()`. No step form. Failure model is unchanged. No zip, unique, or first-class builtins.

@@ -269,6 +269,15 @@ stays value search and is not overloaded. `some` and `findIndex` stop on
 the first `true`; `every` stops on the first `false`. A callback that
 aborts aborts the whole call. The input list is not mutated. List only.
 
+List `zip(left, right)` (and `left.zip(right)`) pairs two lists into a new
+list of 2-element lists `[left[i], right[i]]`. Length is the shorter of
+the two; unequal lengths are not an error. Empty either side returns
+empty list. The inputs are not mutated. List only.
+
+List `unique(items)` (and `items.unique()`) returns a new list of first
+occurrences in original order, using Echo `==` (`true` is not `1`). Empty
+list returns empty list. The input is not mutated. List only.
+
 `return` outside a function is a semantic error.
 Functions may recurse.
 
@@ -437,4 +446,5 @@ v0.6.3 adds list `forEach` (unary callback; return discarded; yields `null`).
 v0.6.4 adds list `flatMap` (unary callback must return a list; concatenates one level).
 v0.6.5 adds list `some` / `every` / `findIndex` (unary `bool` predicates; `find(value)` stays value search).
 v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted start is `0`, omitted end is `length`).
+v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occurrences in order, Echo `==`).
 See `docs/v0.4-stdlib.md`.

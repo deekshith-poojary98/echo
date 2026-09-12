@@ -124,6 +124,8 @@ BUILTIN_NAMES = frozenset(
         "map",
         "reduce",
         "some",
+        "unique",
+        "zip",
         "run",
         "now",
         "random",
@@ -220,6 +222,8 @@ BUILTIN_PARAMS = {
     "map": ["f"],
     "reduce": ["init", "f"],
     "some": ["f"],
+    "unique": [],
+    "zip": ["right"],
     "run": ["args"],
     "now": [],
     "random": [],
@@ -271,6 +275,8 @@ STANDALONE_PARAMS = {
     "map": ["items", "f"],
     "reduce": ["items", "init", "f"],
     "some": ["items", "f"],
+    "unique": ["items"],
+    "zip": ["left", "right"],
     "run": ["command", "args"],
     "randomInt": ["min", "max"],
 }
@@ -354,6 +360,8 @@ STANDALONE_MIN_ARGS = {
     "map": 2,
     "reduce": 3,
     "some": 2,
+    "unique": 1,
+    "zip": 2,
     "run": 2,
     "now": 0,
     "random": 0,
@@ -488,6 +496,22 @@ def do_clone(value: object, location: SourceLocation | None = None) -> object:
     if isinstance(value, dict):
         return value.copy()
     raise EchoTypeError("clone() can only be called on lists or hashes", location, code="E2609")
+
+
+def do_zip(left: object, right: object, location: SourceLocation | None = None) -> list:
+    left_list = require_list(left, "zip", location)
+    right_list = require_list(right, "zip", location)
+    length = min(len(left_list), len(right_list))
+    return [[left_list[index], right_list[index]] for index in range(length)]
+
+
+def do_unique(value: object, location: SourceLocation | None = None) -> list:
+    items = require_list(value, "unique", location)
+    result: list = []
+    for item in items:
+        if not any(echo_equal(seen, item) for seen in result):
+            result.append(item)
+    return result
 
 
 def do_merge(target: object, other: object, location: SourceLocation | None = None) -> object:

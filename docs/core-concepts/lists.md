@@ -37,6 +37,8 @@ say(nums);
 - `forEach(f)` calls unary `f` for each element and returns `null`. Empty list is a no-op.
 - `flatMap(f)` applies unary `f` that returns a list and concatenates one level into a new list. Empty list returns `[]`.
 - `some(f)` / `every(f)` / `findIndex(f)` take a `bool` callback. Empty `some` is `false`; empty `every` is `true`; empty `findIndex` is `-1`. `find(value)` stays value search.
+- `zip(other)` pairs two lists into `[a, b]` pairs up to the shorter length.
+- `unique()` returns first occurrences in order using Echo `==`.
 
 ## Common Mistakes
 - Calling list methods on non-list values

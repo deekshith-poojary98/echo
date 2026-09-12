@@ -30,6 +30,7 @@ say(items.countOf(3));
 - `reduce(init, f)` folds from required `init`; empty list returns `init`.
 - `flatMap(f)` concatenates callback lists one level into a new list.
 - `some(f)` / `every(f)` / `findIndex(f)` are bool predicates; `find(value)` stays value search.
+- `zip(other)` pairs two lists to the shorter length. `unique()` keeps first occurrences in order.
 
 ## See Also
 - [Lists](/core-concepts/lists)

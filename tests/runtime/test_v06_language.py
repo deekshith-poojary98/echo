@@ -1015,3 +1015,125 @@ say(findIndex([1, 2, 3], fn(x: int) -> bool { return fail("findIndex aborted"); 
     assert "findIndex aborted" in find_abort.output
 
 
+def test_zip_equal_and_unequal_lengths():
+    result = run_echo(
+        """
+say(zip([1, 2], [10, 20]));
+say(zip([1, 2, 3], [10, 20]));
+say(zip([1], [10, 20, 30]));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[1, 10], [2, 20]]", "[[1, 10], [2, 20]]", "[[1, 10]]"]
+
+
+def test_zip_empty_either_side():
+    result = run_echo(
+        """
+empty: list = [];
+say(zip(empty, [1, 2]));
+say(zip([1, 2], empty));
+say(zip(empty, empty));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[]", "[]", "[]"]
+
+
+def test_zip_does_not_mutate_input():
+    result = run_echo(
+        """
+left: list = [1, 2];
+right: list = [10, 20];
+paired: list = zip(left, right);
+paired.push([9, 9]);
+say(left);
+say(right);
+say(paired);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2]", "[10, 20]", "[[1, 10], [2, 20], [9, 9]]"]
+
+
+def test_zip_method_and_keyword_form():
+    result = run_echo(
+        """
+left: list = [1, 2];
+right: list = [10, 20];
+say(left.zip(right));
+say(zip(left: left, right: right));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[1, 10], [2, 20]]", "[[1, 10], [2, 20]]"]
+
+
+def test_zip_rejects_non_list():
+    left = run_echo("say(zip(1, [1]));\n")
+    assert left.exit_code == 1
+    assert_no_python_leak(left)
+    assert "zip()" in left.output
+    assert "list" in left.output
+
+    right = run_echo('say(zip([1], "x"));\n')
+    assert right.exit_code == 1
+    assert_no_python_leak(right)
+    assert "zip()" in right.output
+    assert "list" in right.output
+
+
+def test_unique_first_occurrences_in_order():
+    result = run_echo(
+        """
+say(unique([1, 2, 1, 3, 2]));
+say(unique([true, 1, true, 1]));
+say(unique(["a", "b", "a"]));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "[true, 1]", '["a", "b"]']
+
+
+def test_unique_empty_and_no_mutate():
+    result = run_echo(
+        """
+empty: list = [];
+say(unique(empty));
+nums: list = [1, 1, 2];
+out: list = nums.unique();
+out.push(9);
+say(nums);
+say(out);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[]", "[1, 1, 2]", "[1, 2, 9]"]
+
+
+def test_unique_method_and_keyword_form():
+    result = run_echo(
+        """
+nums: list = [2, 2, 3];
+say(nums.unique());
+say(unique(items: nums));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[2, 3]", "[2, 3]"]
+
+
+def test_unique_rejects_non_list():
+    number = run_echo("say(unique(1));\n")
+    assert number.exit_code == 1
+    assert_no_python_leak(number)
+    assert "unique()" in number.output
+    assert "list" in number.output
+
+    text = run_echo('say("ab".unique());\n')
+    assert text.exit_code == 1
+    assert_no_python_leak(text)
+    assert "unique()" in text.output
+    assert "list" in text.output
+
+

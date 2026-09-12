@@ -801,6 +801,41 @@ say(findIndex(items: nums, f: even));
 
 ---
 
+### `zip(right)`
+Pairs this list with `right` into a **new** list of 2-element lists `[left[i], right[i]]`. Length is `min(len(left), len(right))` — unequal lengths are not an error. Empty either side returns `[]`. Does not mutate the inputs. List only. No N-way zip and no zipper callback.
+
+```echo
+left: list = [1, 2, 3];
+right: list = [10, 20];
+say(left.zip(right));    // [[1, 10], [2, 20]]
+say(zip([1], []));       // []
+```
+
+Standalone keyword form:
+
+```echo
+say(zip(left: left, right: right));
+```
+
+---
+
+### `unique()`
+Returns a **new** list of first occurrences in original order, using Echo `==` (`true` is not `1`). Empty list returns `[]`. Does not mutate the input. List only.
+
+```echo
+nums: list = [1, 2, 1, 3, 2];
+say(nums.unique());    // [1, 2, 3]
+say(unique([true, 1, true, 1]));    // [true, 1]
+```
+
+Standalone keyword form:
+
+```echo
+say(unique(items: nums));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -939,7 +974,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `some(...)`, `every(...)`, and `findIndex(...)` calls, use `items:` for the collection argument.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `some(...)`, `every(...)`, `findIndex(...)`, and `unique(...)` calls, use `items:` for the collection argument. For standalone `zip(...)`, use `left:` and `right:`.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -954,6 +989,7 @@ say(copy["name"]);        // Echo
 - Calling `forEach` with a callback that is not exactly one parameter, or expecting it to return a list
 - Calling `flatMap` with a callback that does not return a list, or expecting nested lists to flatten more than one level
 - Assuming `some` / `every` / `findIndex` keep truthy `int` values such as `1`, or treating `findIndex(f)` as `find(value)`
+- Treating unequal `zip` lengths as an error, or expecting `unique` to treat `true` as `1`
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

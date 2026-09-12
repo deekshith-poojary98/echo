@@ -16,6 +16,7 @@ As of v0.5.0, Echo already has:
 - List `flatMap` (0.6.4)
 - List `some` / `every` / `findIndex` (0.6.5)
 - Optional slice bounds `xs[1:]` / `xs[:4]` / `xs[:]` (0.6.6)
+- List `zip` / `unique` (0.6.7)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 
