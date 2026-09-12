@@ -25,7 +25,7 @@ say(nums);
 ```
 
 ## Notes
-- Lists are mutable.
+- Lists are mutable unless bound with `const` (the list value is then frozen).
 - Indexing requires an `int`.
 - Nested indexing and nested assignment are supported.
 - Slice syntax `xs[1:4]`, `xs[1:]`, `xs[:4]`, and `xs[:]` matches `slice()`.

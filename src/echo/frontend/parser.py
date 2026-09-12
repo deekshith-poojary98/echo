@@ -79,6 +79,8 @@ class Parser:
             return self.parse_import()
         if token.type == TokenType.EXPORT:
             return self.parse_export()
+        if token.type == TokenType.CONST:
+            return self.parse_const()
         if token.type == TokenType.USE:
             return self.parse_use()
         if token.type == TokenType.WATCH:
@@ -107,7 +109,7 @@ class Parser:
             self._expect(TokenType.EQUAL, "=")
             value = self.parse_expression()
             self._expect(TokenType.SEMICOLON, ";")
-            return VariableDeclaration(name_token.location, name_token.lexeme, declared_type, value)
+            return VariableDeclaration(name_token.location, name_token.lexeme, declared_type, value, False)
 
         if self._is_name(self._peek()) and self._check_offset(1, TokenType.EQUAL):
             name_token = self._advance()
@@ -255,6 +257,9 @@ class Parser:
         if self._check(TokenType.FN):
             declaration = self.parse_function()
             return ExportDeclaration(token.location, declaration.name, declaration)
+        if self._check(TokenType.CONST):
+            declaration = self.parse_const()
+            return ExportDeclaration(token.location, declaration.name, declaration)
         name_token = self._expect_name_token("exported name")
         if self._match(TokenType.COLON):
             declared_type = self._parse_type()
@@ -267,6 +272,23 @@ class Parser:
             return ExportDeclaration(token.location, name_token.lexeme, declaration)
         self._expect(TokenType.SEMICOLON, ";")
         return ExportDeclaration(token.location, name_token.lexeme)
+
+    def parse_const(self) -> VariableDeclaration:
+        token = self._expect(TokenType.CONST, "const")
+        name_token = self._expect_name_token("variable name")
+        self._expect(TokenType.COLON, ":")
+        declared_type = self._parse_type()
+        if isinstance(declared_type, TypeName) and declared_type.name == "void":
+            raise ParseError("Cannot use 'void' as a variable type", name_token.location)
+        if not self._match(TokenType.EQUAL):
+            raise ParseError(
+                f"const binding '{name_token.lexeme}' must be initialized",
+                name_token.location,
+                help_text="Write const name: T = expr; — a value is required.",
+            )
+        value = self.parse_expression()
+        self._expect(TokenType.SEMICOLON, ";")
+        return VariableDeclaration(token.location, name_token.lexeme, declared_type, value, True)
 
     def parse_use(self) -> UseStatement:
         token = self._expect(TokenType.USE, "use")

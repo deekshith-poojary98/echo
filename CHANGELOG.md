@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0
+
+`const` bindings. First 0.7 language increment. Failure model is unchanged. No destructuring, exact objects, unions, `switch`, builtins-as-values, or range-as-value.
+
+- Spelling is `const name: T = expr;`. Type annotation is required, same as ordinary `name: T =`. The binding must be initialized (`const x: int;` is a parse error)
+- Reassignment (`x =`, `x +=`, and the other compound assigns) is a semantic error **E3201**
+- In-place mutation through that name (`push`, `xs[i] =`, hash field set, and other mutating builtins) is a semantic error **E3202**
+- The bound list or hash is **frozen**. Passing it into a function that mutates it, or aliasing it to a mutable name and mutating, aborts **E3203**. Reading, iterating, and helpers that return a new value (`map`, `unique`, `clone`) are fine
+- `export const name: T = expr;` is supported. Ordinary (non-const) exports keep Model A shared mutable identity
+- `use mut` on a const binding is **E3204**. `watch` on a const name is legal and will not fire from that binding
+- Function parameters stay mutable. `const` on parameters is not in 0.7.0
+- Nested collections reached through a different mutable name are not deep-frozen
+- Playground and highlighter treat `const` as a keyword
+
 ## 0.6.9
 
 Four items in one release: function types honor trailing defaults, list `flatten`, list `partition`, and `echo test --json`. Last 0.6.x slice. No new keywords. Failure model is unchanged. No first-class builtins, `const`, or destructuring.

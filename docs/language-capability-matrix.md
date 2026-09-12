@@ -171,30 +171,39 @@ in the same scope is an error. Child blocks may shadow.
 
 **Why languages need it.** Stops accidental overwrites. Makes APIs safer.
 
-**Echo status.** Partial.
+**Echo status.** Supported (0.7.0).
 
-Echo has no `const` declaration. Bindings are mutable in the declaring
-scope. Reassignment can be blocked in two other places:
+`const name: T = expr;` is declaration-site immutability. Types are required.
+The binding must be initialized. Reassignment is **E3201**. Mutation through
+that name is **E3202**. The bound list or hash is frozen (**E3203** if mutated
+through another name or a parameter). `export const` is supported. Parameters
+stay mutable (no param `const` in 0.7.0). Nested collections via a different
+mutable name are not deep-frozen.
+
+Other immutability remains:
 
 - `use name;` inside a function is read-only
-- imported module bindings are immutable (v0.3 Model A)
+- imported module bindings cannot be rebound (v0.3 Model A); ordinary imported
+  collections stay mutable in place
 
 **Current syntax.**
 
 ```echo
+const count: int = 0;
+export const pi: int = 3;
+
 fn read_only() {
     use count;
     // count = 1;   // mutation error
 }
 ```
 
-**Limitations.** You cannot declare a module-level constant. Immutability
-is a scope/import property, not a declaration form.
+**Limitations.** No `const` on function parameters in 0.7.0. Nested values
+inside a frozen collection are not recursively frozen.
 
-**Priority.** Later. Not a fundamentals hole.
+**Priority.** Done for 0.7.0.
 
-**Possible version.** v0.4+ if a `const` form is wanted. Do not invent one
-just to fill this cell.
+**Possible version.** 0.7.0.
 
 ---
 
@@ -1290,7 +1299,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. Failure handling is still design only.
 
 ---
 

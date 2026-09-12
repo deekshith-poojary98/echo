@@ -16,6 +16,7 @@ class Environment:
         self.mutable_imports: set[str] = set()
         self.readonly_imports: set[str] = set()
         self.watched: set[str] = set()
+        self.const: dict[str, bool] = {}
         self.function_name: str | None = None
 
     def enclosing_function(self) -> Environment | None:
@@ -41,9 +42,11 @@ class Environment:
         var_type: TypeAnnotation | str | None = None,
         *,
         mutable: bool = True,
+        const: bool = False,
     ) -> None:
         self.values[name] = value
-        self.mutability[name] = mutable
+        self.const[name] = const
+        self.mutability[name] = mutable and not const
         if var_type is not None:
             self.types[name] = var_type
 
@@ -75,6 +78,13 @@ class Environment:
         target = self._find_binding(name)
         if target is None:
             raise EchoNameError(f"Variable '{name}' is not defined", location, code="E2002")
+        if target.const.get(name, False):
+            raise MutationError(
+                f"Cannot mutate const binding '{name}'",
+                location,
+                help_text=f"'{name}' is declared with const and cannot be changed in place.",
+                code="E3202",
+            )
         if not target.mutability.get(name, True):
             return
         function = self.enclosing_function()
@@ -91,6 +101,13 @@ class Environment:
         target = self._find_binding(name)
         if target is None:
             raise EchoNameError(f"Variable '{name}' is not declared", location, code="E2011")
+        if target.const.get(name, False):
+            raise MutationError(
+                f"Cannot reassign const binding '{name}'",
+                location,
+                help_text=f"'{name}' is declared with const.",
+                code="E3201",
+            )
         if not target.mutability.get(name, True):
             raise MutationError(
                 f"Cannot rebind imported name '{name}'",

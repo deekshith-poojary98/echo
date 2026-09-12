@@ -32,6 +32,7 @@ say(user.keys());
 - `take()` and `take_last()` mutate the hash.
 - `mapValues(f)` returns a new hash with the same keys. `filter(f)` keeps entries where `f(value)` is `true`.
 - Hash iteration order is insertion order; `mapValues` / `filter` preserve it.
+- A hash bound with `const` is frozen; field assignment and mutating methods abort.
 
 ## Common Mistakes
 - Using non-string keys in runtime indexing

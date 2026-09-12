@@ -27,3 +27,4 @@ class Symbol:
     variadic: bool = False
     builtin: bool = False
     imported: bool = False
+    const: bool = False

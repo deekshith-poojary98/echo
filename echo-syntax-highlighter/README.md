@@ -4,7 +4,7 @@ TextMate grammar plus **editor tasks** for **Echo** (`.echo` files) in VS Code a
 
 This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`echolang check` / `lint` / `test`) through tasks and problem matchers.
 
-It tracks Echo **v0.6.9**.
+It tracks Echo **v0.7.0**.
 
 ## Install
 
@@ -72,7 +72,7 @@ To copy tasks into a workspace instead of using the provider, see `templates/tas
 
 | Category | Examples |
 | --- | --- |
-| Keywords | `fn`, `if`, `else`, `while`, `for`, `foreach`, `return`, `break`, `continue`, `in`, `by`, `use`, `mut`, `watch`, `type`, `import`, `export`, `from` |
+| Keywords | `fn`, `if`, `else`, `while`, `for`, `foreach`, `return`, `break`, `continue`, `in`, `by`, `use`, `mut`, `watch`, `const`, `type`, `import`, `export`, `from` |
 | Types | `int`, `float`, `str`, `bool`, `list`, `hash`, `dynamic`, `void` |
 | Literals | `true`, `false`, `null` |
 | Builtins | Distinct from user functions: `say`, `assert`, `expect` / `expectEq` / `expectNeq`, `fail`, `*Or` twins, host/stdlib names from 0.4–0.5.x |

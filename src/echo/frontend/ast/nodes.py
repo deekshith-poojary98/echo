@@ -157,6 +157,7 @@ class VariableDeclaration(Statement):
     name: str
     declared_type: TypeAnnotation
     initializer: Expression
+    const: bool = False
 
 
 @dataclass

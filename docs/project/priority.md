@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.6.8**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter`; **0.6.2** adds list `reduce`; **0.6.3** adds list `forEach`; **0.6.4** adds list `flatMap`; **0.6.5** adds list `some` / `every` / `findIndex`; **0.6.6** adds optional slice bounds; **0.6.7** adds list `zip` / `unique`; **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`; **0.6.9** adds function types honoring trailing defaults, list `flatten` / `partition`, and `echo test --json`. **The 0.6.x series is complete.** **0.7 is next.** `const` / destructuring stay **0.7**, not late 0.6.
+Current tagged version is **v0.6.9**. **0.7.0** (`const` bindings) is implemented and untagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language. **Policy: 0.7 starts after 0.6.9.** Current tag is **v0.6.8**. **0.6.9** is implemented (four items, same rhythm as 0.5.4–0.6.8). **0.6.x is complete.**
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.6.9**. **0.6.x is complete.** **0.7.0** (`const`) is implemented. **0.7.1** is next.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -134,7 +134,7 @@ Failure model is unchanged through 0.6.9: callbacks or default expressions that 
 
 Already shipped, so **not** re-proposed: `args` / `env` / files / JSON / `fmt` / `lint` / `test` / `check` / `map` / `filter` / `reduce` / `forEach` / `flatMap` / `some` / `every` / `findIndex` / `zip` / `unique` / `chunk` / `rangeList` / `mapValues` / hash `filter` / `echo test -run` / `echo test --json` / `flatten` / `partition` / function-type trailing defaults / `slice()` / `xs[1:4]` / optional slice bounds / lambdas / defaults / variadics / `order(comparator)` / `find(value)` / `reverse` / `contains`.
 
-Held items below stay held for 0.7+ (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring are **0.7**, not late 0.6.
+Held items below stay held through 0.7 (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring / exact objects / builtins-as-values / range-as-value are the **0.7** spine, not leftovers.
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -223,19 +223,116 @@ Closes the 0.6.0 caveat: types still spell **`fn(int) -> int`** (no default mark
 
 `echo test --json` writes a machine-readable JSON report to stdout. Totals include passed / failed / skipped (from `-run`). Each unit has name, pass/fail, and failure message + location when present. Composes with `-run` / `--run` and `--plain`. Human summary is off. Exit codes stay 0 / 1 / 2. `echo test.echo` still runs that file.
 
-### After 0.6.9 (0.7 — next)
+## 0.7.x
 
-0.6.x is complete. Next is **0.7**. Not dummy versions:
+**0.6.x is complete.** **0.7 is the big-gun language series.** Policy: one language-scale increment per version — syntax, type system, or value-model. Not `chunk` / `zip`-sized stdlib. Not another higher-order-function drip.
 
-- `const` / destructuring (held for 0.7; not stretched into late 0.6)
-- Builtins as assignable values (`say` / `map` as function values)
-- Exact object types (reject extra fields)
-- Range as a value (`0...10` producing a list; loop ranges already exist; `rangeList` shipped in 0.6.8)
-- String `map` / `filter` over graphemes (awkward; skipped)
+Spine (reserved for 0.7, not late 0.6): `const`, destructuring, exact object types, builtins as values, range as a value. Two more language items fit the same series: union types, then `switch` on values. String `map` / `filter` over graphemes stays skipped.
+
+Failure model is unchanged through 0.7: abort by default; recovery is inquiry and the 0.5.3 `*Or` twins. No `try` / `catch`. No `Result` / `Option`. No `?`. `switch` is value dispatch, not error handling ([failure model](/failure-model)).
+
+Already shipped, so **not** re-proposed: everything in 0.5.x and 0.6.x (including `rangeList` / `rangeListInclusive`, function values for **user** `fn` / lambdas, open object aliases).
+
+Held items below stay held through 0.7. Do not pull VM/JIT, classes, generics, async, packages, overloading, LSP, dates/HTTP/regex, `mkdir -p`, or a test DSL into this series.
+
+Working spellings below are the plan of record so each version can be implemented without a second design pass. Open questions at the end of this section are the only knobs; changing one does not reorder the series.
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 0.7.0 | `const` bindings | implemented (0.7.0) |
+| 0.7.1 | Destructuring | pending |
+| 0.7.2 | Exact object types | pending |
+| 0.7.3 | Builtins as values | pending |
+| 0.7.4 | Range as a value | pending |
+| 0.7.5 | Union types | pending |
+| 0.7.6 | `switch` on values | pending |
+
+### 0.7.0 — `const` bindings
+
+Declaration-site immutability. Completes Echo's mutability story: `use` / `use mut` are capture; imports are Model A; **`const` is the declaring-scope form**.
+
+**Implemented spelling:** **`const name: T = expr;`**. `export const name: T = expr;` is allowed. Types stay required (same as ordinary `name: T =`). The binding must be initialized. Reassignment of that name is a semantic error (**E3201**). `use mut name;` of a `const` binding is a semantic error (**E3204**). In-place collection mutation through that name (`push`, `xs[i] = v`, and other mutating methods) is rejected (**E3202**) — aligned with `use`, not JavaScript `const`.
+
+The bound list or hash is **frozen**. Mutating that value through another name or a function parameter aborts (**E3203**). Reading / iterating / `map` (new list) is fine. Nested collections reached through a *different* mutable name are not deep-frozen. Function parameters stay mutable; `const` on parameters is not in 0.7.0.
+
+Does not add a new runtime type. Ordinary (non-const) imported collections keep Model A identity. `watch` on a `const` name is legal and will simply never fire from that binding.
+
+### 0.7.1 — destructuring
+
+Unpack lists and hashes into names in one binding. This is new declaration / assignment syntax, not a stdlib helper.
+
+Working spelling: **`[a: int, b: int] = pair;`** and **`{ id: int, name: str } = user;`**. Types are required on a fresh declaration (Echo does not infer). Rest is last: **`[head: int, rest: int...] = xs`** binds `rest` as a `list` of `T`. Nested patterns are allowed. Compose with `const`: **`const [a: int, b: int] = pair;`**. Reassignment to already-declared names omits types: **`[a, b] = pair;`**. Same patterns in function parameters: **`fn f([a: int, b: int]) { }`**.
+
+Hash patterns bind listed keys; missing keys abort (same family as `user["x"]`). Extra keys are ignored unless the source is an exact object type (0.7.2). Length mismatch on a list pattern without rest aborts. A callback or initializer that aborts still aborts.
+
+Default: the field name is the binding name. Rename spelling is an open question; do not invent a second form in 0.7.1 if rename is still undecided — ship same-name first.
+
+### 0.7.2 — exact object types
+
+Closed hash shapes. Today `type User = { id: int, name: str }` requires those fields and **allows extras**. Exact types reject extras. This is the type-system counterpart of hashes-as-records, not structs or classes.
+
+Working spelling: **`exact { id: int, name: str }`** as a type constructor, in aliases and inline (`fn f(user: exact { id: int })`). Open `{ id: int, name: str }` stays open — **not a breaking change**. Aliases remain names, not nominal runtime types. Extra fields on an exact type are a type error at the same checkpoints as today (declaration, assignment, argument, return, `foreach` binding).
+
+Does not add methods on aliases. Does not add classes. `dynamic` still accepts any hash.
+
+### 0.7.3 — builtins as values
+
+Closes the 0.6 function-value hole. Named **user** functions are already values; **`say` / `map` / `filter` and the other standalone builtins** become assignable, passable, returnable function values with `fn(...)` types.
+
+`f: fn(list, fn(dynamic) -> dynamic) -> list = map;` is legal. Calls through that value are ordinary calls. Variadic builtins (`say`, `eprint`, `format`, `pathJoin`) keep variadic types (`fn(dynamic...) -> null` for `say`). Dispatch builtins (`filter` on list vs hash) keep runtime dispatch on the first argument / receiver. Host-denied builtins remain values; **calling** them still aborts `E2801`. Methods stay method syntax; this slice is the standalone names.
+
+Not overloading. Not a new `Callable` type. Function types still spell parameter types only (0.6.9 defaults rules unchanged).
+
+### 0.7.4 — range as a value
+
+`start...end` and `start..end` become expressions that produce a `list` of `int`, same bounds as `for` / `rangeList` / `rangeListInclusive`. **`0...10` is `[0, 1, ..., 9]`**; **`0..10` is `[0, 1, ..., 10]`**. Optional **`by step`** in expression position: `0...10 by 2`. Eager list; no `Range` type. Empty when that `for` would not iterate. Non-numeric bounds and `by 0` abort as they do in `for`.
+
+`for i: int in 0...10` stays the dedicated numeric loop (does not allocate a list). `foreach i: int in 0...10` iterates the list value. Keep `rangeList` / `rangeListInclusive`; they are the same values as the exclusive / inclusive expressions. Slice syntax stays colon (`xs[1:4]`); `xs[0...10]` is indexing with a list and is a type error.
+
+### 0.7.5 — union types
+
+Runtime-checked unions as a typed alternative to `dynamic`. Working spelling: **`int | str`** in type position (`||` stays boolean or). Flatten duplicates (`int | str | int` is `int | str`). `int` is assignable to `int | str`; `int | str` is not assignable to `int`. `str | null` is a union of two values, **not** `Option` — no `?`, no unwrap, no `Result`. Object types, function types, and `exact { ... }` may be members. Lists stay untyped sequences (`list`); a binding may be `list | hash`.
+
+Does not add generics, tagged enums, or exhaustiveness at compile time. Exhaustiveness belongs to `switch` (0.7.6) as a runtime/analyzer check on finite unions, not a new type-theory layer.
+
+### 0.7.6 — `switch` on values
+
+Value dispatch. This is control flow for literals, unions, and destructuring patterns — **not** error handling. Keyword is **`switch`**, not `match`, so `match` stays associated with the held `Result` / `Option` revision.
+
+Working spelling (statement form; Echo is statement-based):
+
+```echo
+switch x {
+    0 { say("zero"); }
+    1 { say("one"); }
+    else { say("other"); }
+}
+```
+
+Arms: literal equality, union member narrowing, and 0.7.1 destructuring patterns. `else` is required unless the arms cover a finite union of literals / union members. A failed pattern does not abort the `switch`; it tries the next arm. No `try`. Aborting inside an arm still aborts. No expression-form `switch` in 0.7.6.
+
+### 0.7 open questions
+
+These are spelling / tightness knobs. They do not add versions and they do not reopen Held.
+
+| Topic | Working assumption | Alternatives |
+| --- | --- | --- |
+| `const` keyword | `const name: T = expr;` (locked in 0.7.0) | type-side `name: const T = expr;` |
+| `const` vs mutation | no reassignment **and** freeze of the bound list/hash (locked in 0.7.0); nested values via another name are not deep-frozen; no param `const` | reassignment-only (JS-like); recursive deep freeze |
+| Destructure types | types on fresh names; omitted on reassignment | always repeat types |
+| Hash rename | same-name only in 0.7.1 | `{ id: int as userId }` or `{ id as userId: int }` |
+| List rest | `[head: int, rest: int...]` | a `..rest` token |
+| Exact objects | opt-in `exact { ... }`; open `{ ... }` unchanged | `#{ ... }`; `{ ... }!`; closed-by-default + `...` rest (breaking) |
+| Builtin function types | real `fn(...)` types, including variadics | `dynamic` callable with no signature |
+| Range `by` | `0...10 by 2` as an expression | step only in `for`; value form always step `1` |
+| Union bar | `int \| str` | a `or` type keyword |
+| `str \| null` | allowed as a union | forbid `null` members to keep distance from `Option` |
+| Switch keyword | `switch` | `match` (rejected: failure-model collision) |
+| Switch narrowing | arm `int { }` / `int n { }` on a union | literals + `else` only |
 
 ## Held (do not implement)
 
-Do not move these into a late 0.6. `const` / destructuring stay **0.7** (after 0.6.9).
+Do not move these into 0.7. The 0.7 spine and the two extras are in the **0.7.x** table above, not here.
 
 | Item | Status |
 | --- | --- |
@@ -246,6 +343,7 @@ Do not move these into a late 0.6. `const` / destructuring stay **0.7** (after 0
 | Packages | held |
 | `try` / `catch` | held |
 | `Result` / `Option` | held |
+| `match` (error / `Result` form) | held — 0.7.6 is `switch` on values |
 | User-level failure recovery | designed ([failure model](/failure-model)) — syntax held; `*Or` stdlib implemented (0.5.3) |
 | Overloading | held |
 | Formatter / `echo fmt` | implemented (0.5.4) |
@@ -257,4 +355,4 @@ Do not move these into a late 0.6. `const` / destructuring stay **0.7** (after 0
 | Dates, HTTP, regex | held |
 | `mkdir -p` / recursive delete | held |
 | Test DSL (`test "name" { }`) | held |
-| `const` / destructuring | held (0.7, after 0.6.9) |
+| String `map` / `filter` over graphemes | skipped (awkward) |

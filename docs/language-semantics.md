@@ -168,6 +168,24 @@ Nested functions capture that enclosing environment.
 
 Variables are mutable in the scope that declared them.
 
+`const name: T = expr;` declares an immutable binding. The type is required,
+same as an ordinary declaration, and the initializer is required.
+
+- Reassignment of that name (`x =`, `x +=`, and the other compound assigns)
+  is a semantic error (**E3201**).
+- Collection mutation through that name (`push`, `xs[i] = v`, hash field set,
+  and other mutating methods) is a semantic error (**E3202**).
+- The bound list or hash is frozen. Mutating that value through another name
+  or a function parameter aborts (**E3203**). Reading, iterating, and helpers
+  that return a new collection (`map`, `unique`, `clone`) are allowed.
+- Nested collections reached through a *different* mutable name are not
+  deep-frozen.
+- `export const name: T = expr;` is allowed. Ordinary exports stay Model A:
+  imported non-const collections keep shared mutable identity.
+- `use mut name;` of a const binding is a semantic error (**E3204**).
+- `watch` on a const name is legal and will not fire from that binding.
+- Function parameters stay mutable. `const` on parameters is not in 0.7.0.
+
 Inside a function:
 
 - **Reads** of outer names are allowed (lexical).
@@ -488,4 +506,5 @@ v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted st
 v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occurrences in order, Echo `==`).
 v0.6.8 adds `echo test -run` (glob on `testXxx` function names), list `chunk`, `rangeList` / `rangeListInclusive` (same bounds as `...` / `..`), and hash `mapValues` / `filter`.
 v0.6.9 adds function-type assignability for trailing defaults, list `flatten` / `partition`, and `echo test --json`. This is the last 0.6.x slice.
+v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Function parameters stay mutable. No destructuring, exact objects, unions, `switch`, builtins-as-values, or range-as-value.
 See `docs/v0.4-stdlib.md`.

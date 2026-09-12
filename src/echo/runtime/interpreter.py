@@ -120,6 +120,7 @@ from echo.runtime.builtins import (
 )
 from echo.runtime.host import Host
 from echo.runtime.context import Environment
+from echo.runtime.freeze import freeze, require_unfrozen
 from echo.runtime.testing import TestSession
 from echo.runtime.functions import BreakSignal, ContinueSignal, EchoFunction, ReturnValue, bind_arguments, check_return, undefined_function
 from echo.runtime.operators import binary_op, unary_op
@@ -158,7 +159,15 @@ class Interpreter:
             validate_type(statement.name, value, statement.declared_type, statement.location)
             if env.is_watched(statement.name):
                 self._watch(statement.name, value, env)
-            env.define(statement.name, value, statement.declared_type)
+            if statement.const:
+                freeze(value)
+            env.define(
+                statement.name,
+                value,
+                statement.declared_type,
+                mutable=not statement.const,
+                const=statement.const,
+            )
             return
         if isinstance(statement, AssignmentStatement):
             value = self.evaluate(statement.value, env)
@@ -470,6 +479,10 @@ class Interpreter:
                 env.require_mutable(target_expr.name, location)
 
         evaluated = [self.evaluate(arg.value, env) for arg in args]
+        collection = target if target is not None else (evaluated[0] if evaluated else None)
+        if method in MUTATING_METHODS:
+            if method != "reverse" or isinstance(collection, list):
+                require_unfrozen(collection, location)
         result = self._dispatch_builtin(method, target, evaluated, env, location)
 
         if method in MUTATING_METHODS and isinstance(target_expr, VariableExpression) and env.is_watched(target_expr.name):
@@ -998,6 +1011,7 @@ class Interpreter:
         return int(value)
 
     def _index_assign(self, target: object, index: object, value: object, location: SourceLocation) -> None:
+        require_unfrozen(target, location)
         if isinstance(target, dict):
             if not isinstance(index, str):
                 raise EchoTypeError(f"Hash key must be a string, got {echo_type_name(index)}", location, code="E2710")

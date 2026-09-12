@@ -265,7 +265,9 @@ def _repl_bind_imports(program: Program, loader: ModuleLoader, env: Environment,
         value = _repl_export_value(loaded[statement.module], statement.name)
         if isinstance(value, EchoFunction):
             env.define_function(statement.name, value)
-        env.define(statement.name, value, mutable=False)
+        module_env = loaded[statement.module].env
+        is_const = bool(module_env.const.get(statement.name, False)) if module_env is not None else False
+        env.define(statement.name, value, mutable=False, const=is_const)
 
 
 def _repl_export_value(module: Module, name: str) -> object:

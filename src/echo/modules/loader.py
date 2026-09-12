@@ -168,7 +168,8 @@ class ModuleLoader:
             value = self._export_value(dependency, name)
             if isinstance(value, EchoFunction):
                 env.define_function(name, value)
-            env.define(name, value, mutable=False)
+            is_const = bool(dependency.env.const.get(name, False)) if dependency.env is not None else False
+            env.define(name, value, mutable=False, const=is_const)
 
     def _export_value(self, module: Module, name: str) -> object:
         env = module.env

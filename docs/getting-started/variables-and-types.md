@@ -10,6 +10,7 @@ count: int = 1;
 price: float = 2.5;
 ok: bool = true;
 value: dynamic = null;
+const title: str = "Echo";
 ```
 
 ## Example
@@ -42,6 +43,8 @@ Use this form after declaration:
 ```echo
 name = expression;
 ```
+
+`const name: T = expression;` cannot be reassigned. The bound list or hash is frozen.
 
 ### Built-in types
 - `int`: whole numbers

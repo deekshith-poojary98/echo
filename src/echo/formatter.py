@@ -104,8 +104,9 @@ class _Printer:
 
     def _statement(self, statement: Statement) -> None:
         if isinstance(statement, VariableDeclaration):
+            prefix = "const " if statement.const else ""
             self._line(
-                f"{statement.name}: {self._type(statement.declared_type)} = {self._expr(statement.initializer)};"
+                f"{prefix}{statement.name}: {self._type(statement.declared_type)} = {self._expr(statement.initializer)};"
             )
             return
         if isinstance(statement, AssignmentStatement):

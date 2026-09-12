@@ -22,6 +22,7 @@ const KEYWORDS = new Set([
   'import',
   'export',
   'from',
+  'const',
 ])
 
 const TYPES = new Set(['int', 'float', 'str', 'bool', 'list', 'hash', 'dynamic', 'void'])

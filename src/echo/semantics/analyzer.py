@@ -44,7 +44,13 @@ from echo.frontend.ast.nodes import (
     WatchStatement,
     WhileStatement,
 )
-from echo.runtime.builtins import builtin_names, builtin_param_count, resolve_builtin_args, standalone_min_args
+from echo.runtime.builtins import (
+    MUTATING_METHODS,
+    builtin_names,
+    builtin_param_count,
+    resolve_builtin_args,
+    standalone_min_args,
+)
 from echo.runtime.functions import bind_arguments
 from echo.runtime.values import format_type, function_signature_assignable
 from echo.semantics.modules import ModuleSymbols
@@ -144,7 +150,14 @@ class SemanticAnalyzer:
                     statement.location,
                     statement.name,
                 )
-            symbol = Symbol(statement.name, SymbolKind.VARIABLE, statement.location, statement.declared_type)
+            symbol = Symbol(
+                statement.name,
+                SymbolKind.VARIABLE,
+                statement.location,
+                statement.declared_type,
+                mutable=not statement.const,
+                const=statement.const,
+            )
             scope.define(symbol)
             if scope.parent is None:
                 self._record(symbol)
@@ -165,6 +178,7 @@ class SemanticAnalyzer:
             self._require_assignable(statement.name, statement, scope)
         elif isinstance(statement, IndexAssignment):
             self._require_variable(statement.name, statement, scope)
+            self._require_not_const_mutation(statement.name, statement, scope)
             for index in statement.indices:
                 self._expression(index, scope)
             self._expression(statement.value, scope)
@@ -234,6 +248,13 @@ class SemanticAnalyzer:
                 if symbol is None:
                     raise SemanticError(f"Cannot import undefined variable '{name}'", statement.location, code="E1006")
                 if statement.mutable and not symbol.mutable:
+                    if symbol.const:
+                        raise SemanticError(
+                            f"Cannot use mut on const binding '{name}'",
+                            statement.location,
+                            help_text=f"'{name}' is declared with const.",
+                            code="E3204",
+                        )
                     raise SemanticError(
                         f"Cannot use mut on '{name}' because it is not a mutable binding",
                         statement.location,
@@ -345,6 +366,7 @@ class SemanticAnalyzer:
                 self._expression(expression.callee.object, scope)
             else:
                 self._expression(expression.callee, scope)
+            self._check_const_mutation_call(expression, scope)
             for argument in expression.arguments:
                 self._expression(argument.value, scope)
         elif isinstance(expression, MemberExpression):
@@ -584,7 +606,14 @@ class SemanticAnalyzer:
         )
 
     def _variable_symbol(self, statement: VariableDeclaration) -> Symbol:
-        return Symbol(statement.name, SymbolKind.VARIABLE, statement.location, statement.declared_type)
+        return Symbol(
+            statement.name,
+            SymbolKind.VARIABLE,
+            statement.location,
+            statement.declared_type,
+            mutable=not statement.const,
+            const=statement.const,
+        )
 
     def _imported_symbol(self, exported: Symbol, statement: ImportDeclaration) -> Symbol:
         return Symbol(
@@ -599,6 +628,7 @@ class SemanticAnalyzer:
             param_defaults=exported.param_defaults,
             variadic=exported.variadic,
             imported=True,
+            const=exported.const,
         )
 
     def _record(self, symbol: Symbol, *, exported: bool = False) -> None:
@@ -676,6 +706,13 @@ class SemanticAnalyzer:
 
     def _require_assignable(self, name: str, statement: Statement, scope: Scope) -> None:
         symbol = scope.resolve(name)
+        if symbol is not None and symbol.const:
+            raise SemanticError(
+                f"Cannot reassign const binding '{name}'",
+                statement.location,
+                help_text=f"'{name}' is declared with const.",
+                code="E3201",
+            )
         if symbol is not None and not symbol.mutable:
             raise SemanticError(
                 f"Cannot rebind imported name '{name}'",
@@ -683,6 +720,37 @@ class SemanticAnalyzer:
                 code="E3106",
             )
         self._require_variable(name, statement, scope)
+
+    def _require_not_const_mutation(self, name: str, node: Statement | Expression, scope: Scope) -> None:
+        symbol = scope.resolve(name)
+        if symbol is not None and symbol.const:
+            raise SemanticError(
+                f"Cannot mutate const binding '{name}'",
+                node.location,
+                help_text=f"'{name}' is declared with const and cannot be changed in place.",
+                code="E3202",
+            )
+
+    def _check_const_mutation_call(self, expression: CallExpression, scope: Scope) -> None:
+        callee = expression.callee
+        method: str | None = None
+        target_name: str | None = None
+        if isinstance(callee, MemberExpression) and callee.name in MUTATING_METHODS:
+            method = callee.name
+            if isinstance(callee.object, VariableExpression):
+                target_name = callee.object.name
+        elif isinstance(callee, VariableExpression) and callee.name in MUTATING_METHODS:
+            method = callee.name
+            if expression.arguments:
+                argument = expression.arguments[0]
+                if argument.name is None and isinstance(argument.value, VariableExpression):
+                    target_name = argument.value.name
+        if method is None or target_name is None:
+            return
+        symbol = scope.resolve(target_name)
+        if symbol is not None and method == "reverse" and isinstance(symbol.declared_type, TypeName) and symbol.declared_type.name == "str":
+            return
+        self._require_not_const_mutation(target_name, expression, scope)
 
     def _require_variable(self, name: str, statement: Statement, scope: Scope) -> None:
         symbol = scope.resolve(name)

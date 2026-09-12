@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.0
+
+- Version tracks Echo v0.7.0.
+- `const` is highlighted as a keyword (`storage.modifier`).
+
 ## 0.6.9
 
 - Version tracks Echo v0.6.9.
