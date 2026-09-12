@@ -247,6 +247,11 @@ accumulator. Empty list returns `init` and does not call `f`. Each callback
 result must match `init`'s type. A callback that aborts aborts the whole
 call. The input list is not mutated. List only. No `fold` twin.
 
+List `forEach(items, f)` (and `items.forEach(f)`) calls a unary function
+value or lambda on each element and discards the return value. The builtin
+returns `null`. Empty list does not call `f` and returns `null`. A callback
+that aborts aborts the whole call. The input list is not mutated. List only.
+
 `return` outside a function is a semantic error.
 Functions may recurse.
 
@@ -409,4 +414,5 @@ v0.5.9 makes `echo check [paths...]` recurse directories like `fmt` / `lint` / `
 v0.6.0 adds first-class functions including lambdas (`fn(x: int) -> int { ... }`, type `fn(int) -> int`), slice syntax `xs[1:4]`, and user `fn` default plus variadic parameters.
 v0.6.1 adds list `map` / `filter` on those function values.
 v0.6.2 adds list `reduce` (`init` required; empty list returns `init`).
+v0.6.3 adds list `forEach` (unary callback; return discarded; yields `null`).
 See `docs/v0.4-stdlib.md`.

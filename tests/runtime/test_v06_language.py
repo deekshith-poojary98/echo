@@ -501,3 +501,124 @@ say(reduce([1, 2, 3], 0, fn(acc: int, x: int) -> int { return fail("reduced"); }
     assert_no_python_leak(result)
     assert "reduced" in result.output
 
+
+def test_foreach_named_fn_and_lambda_side_effects():
+    result = run_echo(
+        """
+seen: list = [];
+count: int = 0;
+fn collect(x: int) -> int {
+    use mut seen;
+    seen.push(x);
+    return x * 10;
+}
+say(forEach([1, 2, 3], collect));
+say(seen);
+[10, 20].forEach(fn(x: int) {
+    use mut count;
+    count = count + 1;
+});
+say(count);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["null", "[1, 2, 3]", "2"]
+
+
+def test_foreach_empty_list_returns_null_without_calling_f():
+    result = run_echo(
+        """
+fn boom(x: int) -> int {
+    return fail("called");
+}
+empty: list = [];
+say(forEach(empty, boom));
+say(forEach(empty, fn(x: int) -> int { return fail("called"); }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["null", "null"]
+
+
+def test_foreach_do_not_mutate_input():
+    result = run_echo(
+        """
+nums: list = [1, 2, 3];
+say(nums.forEach(fn(x: int) {}));
+say(nums);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["null", "[1, 2, 3]"]
+
+
+def test_foreach_method_and_keyword_form():
+    result = run_echo(
+        """
+seen: list = [];
+fn collect(x: int) {
+    use mut seen;
+    seen.push(x);
+}
+nums: list = [1, 2, 3];
+say(nums.forEach(collect));
+say(seen);
+more: list = [];
+fn keep(x: int) {
+    use mut more;
+    more.push(x);
+}
+say(forEach(items: nums, f: keep));
+say(more);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["null", "[1, 2, 3]", "null", "[1, 2, 3]"]
+
+
+def test_foreach_wrong_callback_type():
+    not_fn = run_echo("say(forEach([1, 2], 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "forEach()" in not_fn.output
+    assert "function" in not_fn.output
+    assert "E2835" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+say(forEach([1, 2], add));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "forEach()" in wrong_arity.output
+    assert "one argument" in wrong_arity.output
+    assert "E2836" in wrong_arity.output
+
+    extra_default = run_echo(
+        """
+fn collect(x: int, extra: int = 0) {
+    say(x);
+}
+say(forEach([1, 2], collect));
+"""
+    )
+    assert extra_default.exit_code == 1
+    assert_no_python_leak(extra_default)
+    assert "one argument" in extra_default.output
+    assert "E2836" in extra_default.output
+
+
+def test_foreach_callback_abort():
+    result = run_echo(
+        """
+say(forEach([1, 2, 3], fn(x: int) -> int { return fail("each"); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "each" in result.output
+

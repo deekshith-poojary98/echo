@@ -689,6 +689,30 @@ say(reduce(items: nums, init: 0, f: add));
 
 ---
 
+### `forEach(f)`
+Calls unary function value `f` on each element and discards the return value. Returns `null`. Does not mutate the input. Empty list does not call `f` and returns `null`. A callback that aborts aborts the call.
+
+```echo
+seen: list = [];
+fn collect(x: int) {
+    use mut seen;
+    seen.push(x);
+}
+
+nums: list = [1, 2, 3];
+say(nums.forEach(collect));    // null
+say(seen);                     // [1, 2, 3]
+say(forEach(nums, fn(x: int) { say(x); }));    // prints 1 2 3, then null
+```
+
+Standalone keyword form:
+
+```echo
+say(forEach(items: nums, f: collect));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -827,7 +851,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, and `reduce(...)` calls, use `items:` for the collection argument.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, and `forEach(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -839,6 +863,7 @@ say(copy["name"]);        // Echo
 - Assuming `order()` accepts more than one comparator
 - Assuming `filter` keeps truthy `int` values such as `1`
 - Calling `reduce` without `init`, or with a callback that is not exactly two parameters
+- Calling `forEach` with a callback that is not exactly one parameter, or expecting it to return a list
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

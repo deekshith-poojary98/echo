@@ -32,6 +32,7 @@ double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 say(double(21));
 say(map([1, 2, 3], double));
 say(reduce([1, 2, 3], 0, fn(acc: int, x: int) -> int { return acc + x; }));
+forEach([1, 2, 3], fn(x: int) { say(x); });
 ```
 
 Defaults and a trailing variadic:

@@ -47,11 +47,11 @@ Echo offers:
 ### Built-in Methods
 - I/O: `say()`, `ask()`, `wait()`
 - String manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`, `reverse()`
-- Collection operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`
+- Collection operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`
 - Type checking: `type()`
 
 ### Collection Methods
-- List operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`
+- List operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`
 - Hash operations: `keys()`, `values()`, `wipe()`, `clone()`, `pairs()`, `take()`, `take_last()`, `ensure()`, `merge()`
 
 ## Quick Example

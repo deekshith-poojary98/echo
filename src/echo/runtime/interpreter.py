@@ -711,6 +711,10 @@ class Interpreter:
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
             return self._filter(items, callback, location)
+        if method == "forEach":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._forEach(items, callback, location)
         if method == "reduce":
             items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             init = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
@@ -834,6 +838,12 @@ class Interpreter:
             if keep is True:
                 kept.append(item)
         return kept
+
+    def _forEach(self, items: list, callback: object, location: SourceLocation) -> None:
+        function = self._require_callback("forEach", callback, location, 1, "E2835", "E2836")
+        for item in list(items):
+            self.call_function_with_values(function, [item], location)
+        return None
 
     def _reduce(self, items: list, init: object, callback: object, location: SourceLocation) -> object:
         function = self._require_callback("reduce", callback, location, 2, "E2832", "E2833")

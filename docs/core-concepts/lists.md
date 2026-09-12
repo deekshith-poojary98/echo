@@ -33,6 +33,7 @@ say(nums);
 - `order(cmpFn)` uses a comparator function that returns `int`.
 - `map(f)` / `filter(f)` return a new list. `filter` requires a `bool` callback.
 - `reduce(init, f)` folds the list from required `init`. Empty list returns `init`.
+- `forEach(f)` calls unary `f` for each element and returns `null`. Empty list is a no-op.
 
 ## Common Mistakes
 - Calling list methods on non-list values

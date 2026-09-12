@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.3
+
+- Version tracks Echo v0.6.3.
+- Builtin highlighting includes `forEach`.
+
 ## 0.6.2
 
 - Version tracks Echo v0.6.2.

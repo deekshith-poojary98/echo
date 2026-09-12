@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.3
+
+List `forEach` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No flatMap, some/every, or first-class builtins.
+
+- `forEach(items: list, f: fn(T) -> _) -> null` calls unary `f` on each element and discards the return value
+- Method form: `items.forEach(f)`. List only. Empty list does not call `f` and returns `null`. Input is not mutated
+- `f` is a function value (named `fn` or lambda) with **exactly one** parameter. Defaults and extra variadics do not count toward that arity. Not a name string
+- Wrong callback type is `E2835`; wrong arity is `E2836`
+- `forEach` is a call, not an assignable value
+
 ## 0.6.2
 
 List `reduce` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No forEach, flatMap, fold twin, or first-class builtins.
