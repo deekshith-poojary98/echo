@@ -121,9 +121,11 @@ BUILTIN_NAMES = frozenset(
         "filter",
         "findIndex",
         "flatMap",
+        "flatten",
         "forEach",
         "map",
         "mapValues",
+        "partition",
         "rangeList",
         "rangeListInclusive",
         "reduce",
@@ -223,9 +225,11 @@ BUILTIN_PARAMS = {
     "filter": ["f"],
     "findIndex": ["f"],
     "flatMap": ["f"],
+    "flatten": [],
     "forEach": ["f"],
     "map": ["f"],
     "mapValues": ["f"],
+    "partition": ["f"],
     "rangeList": ["end"],
     "rangeListInclusive": ["end"],
     "reduce": ["init", "f"],
@@ -280,9 +284,11 @@ STANDALONE_PARAMS = {
     "filter": ["items", "f"],
     "findIndex": ["items", "f"],
     "flatMap": ["items", "f"],
+    "flatten": ["items"],
     "forEach": ["items", "f"],
     "map": ["items", "f"],
     "mapValues": ["items", "f"],
+    "partition": ["items", "f"],
     "rangeList": ["start", "end"],
     "rangeListInclusive": ["start", "end"],
     "reduce": ["items", "init", "f"],
@@ -369,9 +375,11 @@ STANDALONE_MIN_ARGS = {
     "filter": 2,
     "findIndex": 2,
     "flatMap": 2,
+    "flatten": 1,
     "forEach": 2,
     "map": 2,
     "mapValues": 2,
+    "partition": 2,
     "rangeList": 2,
     "rangeListInclusive": 2,
     "reduce": 3,
@@ -537,6 +545,16 @@ def do_chunk(value: object, size: object, location: SourceLocation | None = None
     if not items:
         return []
     return [items[index : index + size] for index in range(0, len(items), size)]
+
+
+def do_flatten(value: object, location: SourceLocation | None = None) -> list:
+    items = require_list(value, "flatten", location)
+    result: list = []
+    for item in items:
+        if not isinstance(item, list):
+            raise EchoTypeError("flatten() elements must be lists", location, code="E2846")
+        result.extend(item)
+    return result
 
 
 def _range_bound(value: object, method: str, location: SourceLocation | None = None) -> int:

@@ -18,6 +18,7 @@ As of v0.5.0, Echo already has:
 - Optional slice bounds `xs[1:]` / `xs[:4]` / `xs[:]` (0.6.6)
 - List `zip` / `unique` (0.6.7)
 - `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, hash `mapValues` / `filter` (0.6.8)
+- Function types honor trailing defaults, list `flatten` / `partition`, `echo test --json` (0.6.9)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 

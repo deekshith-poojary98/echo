@@ -227,7 +227,14 @@ fn square(x: int) -> int => x * x;
 - No overloads.
 
 Function values use the type `fn(int) -> int` (parameter types only, then
-a required return type). Lambdas are `fn(x: int) -> int { ... }` or the
+a required return type; no `?` or default markers). A function whose
+trailing parameters have defaults is assignable to that full-arity type
+and to a narrower type that omits those defaulted parameters:
+`fn(x: int, y: int = 0) -> int` matches `fn(int, int) -> int` and
+`fn(int) -> int`, not `fn() -> int`. Calls through the narrower type pass
+only the provided arguments; defaults are filled at call time. Required
+parameters and variadics still have to match the type (`...` is not
+treated as optional). Lambdas are `fn(x: int) -> int { ... }` or the
 inline `fn(x: int) -> int => x * 2`. Named functions are values: assign,
 pass, return, and call through a function-typed or `dynamic` variable.
 
@@ -282,6 +289,16 @@ list returns empty list. The input is not mutated. List only.
 List `chunk(items, size)` (and `items.chunk(size)`) returns a new list of
 lists of length `size`; the last chunk may be shorter. `size` must be an
 `int` `>= 1`. Empty list returns empty list. The input is not mutated.
+
+List `flatten(items)` (and `items.flatten()`) concatenates **one** level
+of nested lists into a new list. Empty list returns empty list. A
+top-level element that is not a list is a type error. Nested lists inside
+those elements stay nested. The input is not mutated. List only.
+
+List `partition(items, f)` (and `items.partition(f)`) returns a two-element
+list `[matches, rest]`. Unary `f` must return `bool` (same rule as
+`filter`: not a truthy `int`). Empty list returns `[[], []]`. A callback
+that aborts aborts the whole call. The input is not mutated. List only.
 
 `rangeList(start, end)` returns the `list` of `int` values that
 `for i in start...end` would visit (exclusive end, step `1`).
@@ -470,4 +487,5 @@ v0.6.5 adds list `some` / `every` / `findIndex` (unary `bool` predicates; `find(
 v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted start is `0`, omitted end is `length`).
 v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occurrences in order, Echo `==`).
 v0.6.8 adds `echo test -run` (glob on `testXxx` function names), list `chunk`, `rangeList` / `rangeListInclusive` (same bounds as `...` / `..`), and hash `mapValues` / `filter`.
+v0.6.9 adds function-type assignability for trailing defaults, list `flatten` / `partition`, and `echo test --json`. This is the last 0.6.x slice.
 See `docs/v0.4-stdlib.md`.

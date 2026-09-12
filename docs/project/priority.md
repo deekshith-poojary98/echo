@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.6.7**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter`; **0.6.2** adds list `reduce`; **0.6.3** adds list `forEach`; **0.6.4** adds list `flatMap`; **0.6.5** adds list `some` / `every` / `findIndex`; **0.6.6** adds optional slice bounds; **0.6.7** adds list `zip` / `unique`; **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6 continues through 0.6.9** — one pending increment below. **0.7 starts only after 0.6.9 has shipped.** `const` / destructuring stay **0.7**, not late 0.6.
+Current tagged version is **v0.6.8**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter`; **0.6.2** adds list `reduce`; **0.6.3** adds list `forEach`; **0.6.4** adds list `flatMap`; **0.6.5** adds list `some` / `every` / `findIndex`; **0.6.6** adds optional slice bounds; **0.6.7** adds list `zip` / `unique`; **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`; **0.6.9** adds function types honoring trailing defaults, list `flatten` / `partition`, and `echo test --json`. **The 0.6.x series is complete.** **0.7 is next.** `const` / destructuring stay **0.7**, not late 0.6.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language. **Policy: do not start 0.7 until Echo has shipped through 0.6.9.** Current tag is **v0.6.7**. **0.6.9** is the remaining shippable increment (same rhythm as 0.5.4–0.6.8): function/collection/language ergonomics plus small stdlib that needs 0.6.0 function values.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language. **Policy: 0.7 starts after 0.6.9.** Current tag is **v0.6.8**. **0.6.9** is implemented (four items, same rhythm as 0.5.4–0.6.8). **0.6.x is complete.**
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -128,11 +128,13 @@ Last 0.5.x tooling slice. No new language syntax.
 
 **0.6.8** ships four items: `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`.
 
+**0.6.9** ships four items: function types honor trailing defaults, list `flatten`, list `partition`, and `echo test --json`. Last 0.6.x slice.
+
 Failure model is unchanged through 0.6.9: callbacks or default expressions that abort still abort. No `try` / `catch`. No `Result` / `Option`. No extra `*Or` twins in this stretch — the 0.5.3 set still covers the designed recovery cases.
 
-Already shipped, so **not** re-proposed: `args` / `env` / files / JSON / `fmt` / `lint` / `test` / `check` / `map` / `filter` / `reduce` / `forEach` / `flatMap` / `some` / `every` / `findIndex` / `zip` / `unique` / `chunk` / `rangeList` / `mapValues` / hash `filter` / `echo test -run` / `slice()` / `xs[1:4]` / optional slice bounds / lambdas / defaults / variadics / `order(comparator)` / `find(value)` / `reverse` / `contains`.
+Already shipped, so **not** re-proposed: `args` / `env` / files / JSON / `fmt` / `lint` / `test` / `check` / `map` / `filter` / `reduce` / `forEach` / `flatMap` / `some` / `every` / `findIndex` / `zip` / `unique` / `chunk` / `rangeList` / `mapValues` / hash `filter` / `echo test -run` / `echo test --json` / `flatten` / `partition` / function-type trailing defaults / `slice()` / `xs[1:4]` / optional slice bounds / lambdas / defaults / variadics / `order(comparator)` / `find(value)` / `reverse` / `contains`.
 
-Held items below stay held for the whole 0.6.8–0.6.9 stretch (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring are **0.7**, not 0.6.8/0.6.9.
+Held items below stay held for 0.7+ (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring are **0.7**, not late 0.6.
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -150,7 +152,10 @@ Held items below stay held for the whole 0.6.8–0.6.9 stretch (VM/JIT, classes,
 | 0.6.8 | `chunk` | implemented (0.6.8) |
 | 0.6.8 | `rangeList` / `rangeListInclusive` | implemented (0.6.8) |
 | 0.6.8 | hash `mapValues` / `filter` | implemented (0.6.8) |
-| 0.6.9 | Function types honor defaults | pending |
+| 0.6.9 | Function types honor defaults | implemented (0.6.9) |
+| 0.6.9 | `flatten` | implemented (0.6.9) |
+| 0.6.9 | `partition` | implemented (0.6.9) |
+| 0.6.9 | `echo test --json` | implemented (0.6.9) |
 
 ### 0.6.0 — first-class functions (including lambdas)
 
@@ -162,7 +167,7 @@ Spelling: **`xs[1:4]`** (colon, not `..`). 0.6.0 required both bounds. **0.6.6**
 
 ### 0.6.0 — default and variadic user `fn` args
 
-User `fn` default arguments and variadic arguments ship **together**. Spelling: **`punct: str = "!"`** and **`parts: int...`** (variadic last, rest is a `list` of `T`). Defaults come before the variadic and are evaluated at call time. Overloading stays held. Function types still spell parameter types only (`fn(int, str) -> int`) and do not yet treat defaulted parameters as optional when assigning (that is **0.6.9**).
+User `fn` default arguments and variadic arguments ship **together**. Spelling: **`punct: str = "!"`** and **`parts: int...`** (variadic last, rest is a `list` of `T`). Defaults come before the variadic and are evaluated at call time. Overloading stays held. Function types still spell parameter types only (`fn(int, str) -> int`). **0.6.9** treats defaulted trailing parameters as optional when assigning.
 
 ### 0.6.1 — `map` / `filter`
 
@@ -206,24 +211,31 @@ Four items in one release. No new keywords. Failure model is unchanged.
 
 `mapValues(h, f)` / `h.mapValues(f)` returns a new hash with the same keys. Unary `f(value) -> newValue`. `filter` on a hash uses the same name as list `filter` and dispatches on the first argument / receiver type. `f(value)` must return **bool** `true` (not `1`). Empty hash is empty hash. Insertion order is preserved. Callback abort still aborts. Does not mutate the input.
 
-### 0.6.9 — function types honor defaults
+### 0.6.9 — function types honor defaults, `flatten`, `partition`, `echo test --json`
+
+Four items in one release. Last 0.6.x slice. No new keywords. Failure model is unchanged.
 
 Closes the 0.6.0 caveat: types still spell **`fn(int) -> int`** (no default markers, no `?`). A function whose trailing parameters have defaults is assignable to a function type that **omits** those parameters, and still to the full-arity type. `fn(x: int, y: int = 0) -> int` matches `fn(int) -> int` and `fn(int, int) -> int`, not `fn() -> int`. Calls through the narrower type pass only those args; the implementation fills defaults at call time. Required parameters and variadics still have to match the type. Not builtins-as-values.
 
-### After 0.6.9 (0.7 — do not start yet)
+`flatten(items)` / `items.flatten()` concatenates **one** level of nested lists into a new list. Empty → `[]`. A top-level non-list element is a type error. Does not mutate the input. Keyword `items:`.
 
-Not scheduled as 0.6.x, not dummy versions:
+`partition(items, f)` / `items.partition(f)` returns `[matches, rest]`. Unary `f: fn(T) -> bool` (same bool rule as `filter`: `1` is not ok). Empty → `[[], []]`. Callback abort still aborts. Does not mutate the input. Keywords `items:` / `f:`.
 
-- `const` / destructuring (held for 0.7; not stretched into 0.6.8/0.6.9)
-- Builtins as assignable values (`say` / `map` as function values — too big for this stretch)
+`echo test --json` writes a machine-readable JSON report to stdout. Totals include passed / failed / skipped (from `-run`). Each unit has name, pass/fail, and failure message + location when present. Composes with `-run` / `--run` and `--plain`. Human summary is off. Exit codes stay 0 / 1 / 2. `echo test.echo` still runs that file.
+
+### After 0.6.9 (0.7 — next)
+
+0.6.x is complete. Next is **0.7**. Not dummy versions:
+
+- `const` / destructuring (held for 0.7; not stretched into late 0.6)
+- Builtins as assignable values (`say` / `map` as function values)
 - Exact object types (reject extra fields)
 - Range as a value (`0...10` producing a list; loop ranges already exist; `rangeList` shipped in 0.6.8)
-- JSON reporter for `echo test` (no test DSL; `-run` shipped in 0.6.8)
 - String `map` / `filter` over graphemes (awkward; skipped)
 
 ## Held (do not implement)
 
-Do not move these into 0.6.8–0.6.9. `const` / destructuring stay **0.7** (after 0.6.9), not late 0.6.
+Do not move these into a late 0.6. `const` / destructuring stay **0.7** (after 0.6.9).
 
 | Item | Status |
 | --- | --- |

@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.9
+
+- Version tracks Echo v0.6.9.
+- Builtin highlighting includes `flatten` and `partition`.
+
 ## 0.6.8
 
 - Version tracks Echo v0.6.8.

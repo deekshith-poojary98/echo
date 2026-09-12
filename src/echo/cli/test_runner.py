@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -20,6 +21,9 @@ class TestUnitResult:
     name: str
     passed: bool
     details: list[str] = field(default_factory=list)
+    skipped: bool = False
+    message: str | None = None
+    location: str | None = None
 
 
 def collect_test_files(source_path: str) -> list[Path] | str:
@@ -31,7 +35,13 @@ def collect_test_files(source_path: str) -> list[Path] | str:
     return f"source file not found: {path}"
 
 
-def run_tests(paths: list[str], *, plain: bool, run: str | None = None) -> tuple[int, list[TestUnitResult]]:
+def run_tests(
+    paths: list[str],
+    *,
+    plain: bool,
+    run: str | None = None,
+    json_output: bool = False,
+) -> tuple[int, list[TestUnitResult]]:
     _ = plain
     files: list[Path] = []
     seen: set[Path] = set()
@@ -49,9 +59,11 @@ def run_tests(paths: list[str], *, plain: bool, run: str | None = None) -> tuple
     results: list[TestUnitResult] = []
     for file_path in files:
         for result in run_test_file(file_path, run=run):
-            print_unit(result)
+            if not json_output and not result.skipped:
+                print_unit(result)
             results.append(result)
-    return (0 if all(result.passed for result in results) else 1), results
+    ran = [result for result in results if not result.skipped]
+    return (0 if all(result.passed for result in ran) else 1), results
 
 
 def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]:
@@ -67,7 +79,9 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
         if run is not None:
             discovered = discover_test_functions(program)
             if not any(test_unit_matches(declaration.name, run) for declaration in discovered):
-                return []
+                if discovered:
+                    return [_skipped_unit(f"{display}::{declaration.name}") for declaration in discovered]
+                return [_skipped_unit(display)]
         if _has_imports(program):
             module = ModuleLoader().load(path, host=interpreter.host, interpreter=interpreter)
             program = module.ast
@@ -82,10 +96,13 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
         return [_result_from_finish(display, session.take(), abort=exc, exit_code=None, source=source)]
 
     test_fns = discover_test_functions(program)
+    all_test_fns = test_fns
     if run is not None:
         test_fns = [declaration for declaration in test_fns if test_unit_matches(declaration.name, run)]
         if not test_fns:
-            return []
+            if all_test_fns:
+                return [_skipped_unit(f"{display}::{declaration.name}") for declaration in all_test_fns]
+            return [_skipped_unit(display)]
     setup_failures = session.take()
     if not test_fns:
         return [_result_from_finish(display, setup_failures, abort=None, exit_code=None, source=source)]
@@ -94,8 +111,16 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
     if setup_failures:
         results.append(_result_from_finish(display, setup_failures, abort=None, exit_code=None, source=source))
 
-    for declaration in test_fns:
+    skipped_names = {
+        declaration.name
+        for declaration in all_test_fns
+        if run is not None and not test_unit_matches(declaration.name, run)
+    }
+    for declaration in all_test_fns:
         name = f"{display}::{declaration.name}"
+        if declaration.name in skipped_names:
+            results.append(_skipped_unit(name))
+            continue
         function = env.resolve_function(declaration.name)
         if not isinstance(function, EchoFunction):
             results.append(
@@ -103,6 +128,7 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
                     name=name,
                     passed=False,
                     details=[f"Error: test function '{declaration.name}' is not defined"],
+                    message=f"Error: test function '{declaration.name}' is not defined",
                 )
             )
             continue
@@ -132,9 +158,45 @@ def print_unit(result: TestUnitResult) -> None:
 
 
 def print_summary(results: list[TestUnitResult]) -> None:
-    passed = sum(1 for result in results if result.passed)
-    failed = len(results) - passed
+    ran = [result for result in results if not result.skipped]
+    passed = sum(1 for result in ran if result.passed)
+    failed = len(ran) - passed
     print(f"{passed} passed, {failed} failed")
+
+
+def format_json_report(results: list[TestUnitResult]) -> dict:
+    units: list[dict] = []
+    passed = failed = skipped = 0
+    for result in results:
+        entry: dict = {"name": result.name}
+        if result.skipped:
+            entry["skipped"] = True
+            skipped += 1
+        else:
+            entry["passed"] = result.passed
+            if result.passed:
+                passed += 1
+            else:
+                failed += 1
+                if result.message is not None:
+                    entry["message"] = result.message
+                if result.location is not None:
+                    entry["location"] = result.location
+        units.append(entry)
+    return {
+        "passed": passed,
+        "failed": failed,
+        "skipped": skipped,
+        "units": units,
+    }
+
+
+def print_json_report(results: list[TestUnitResult]) -> None:
+    print(json.dumps(format_json_report(results), ensure_ascii=False))
+
+
+def _skipped_unit(name: str) -> TestUnitResult:
+    return TestUnitResult(name=name, passed=True, skipped=True)
 
 
 def _result_from_finish(
@@ -153,7 +215,34 @@ def _result_from_finish(
     elif exit_code is not None and exit_code != 0:
         details.append(f"exit code {exit_code}")
     passed = abort is None and (exit_code is None or exit_code == 0) and not failures
-    return TestUnitResult(name=name, passed=passed, details=details)
+    message, location = _failure_fields(failures, abort=abort, exit_code=exit_code)
+    return TestUnitResult(
+        name=name,
+        passed=passed,
+        details=details,
+        message=message,
+        location=location,
+    )
+
+
+def _failure_fields(
+    failures: list[ExpectFailure],
+    *,
+    abort: EchoError | None,
+    exit_code: int | None,
+) -> tuple[str | None, str | None]:
+    if abort is not None:
+        message = f"Error[{abort.code}]: {abort.message}" if abort.code else abort.message
+        location = str(abort.location) if abort.location is not None else None
+        return message, location
+    if failures:
+        first = failures[0]
+        message = f"Error[{first.code}]: {first.message}"
+        location = str(first.location) if first.location is not None else None
+        return message, location
+    if exit_code is not None and exit_code != 0:
+        return f"exit code {exit_code}", None
+    return None, None
 
 
 def _expect_lines(failure: ExpectFailure) -> list[str]:

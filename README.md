@@ -47,11 +47,11 @@ Echo offers:
 ### Built-in Methods
 - I/O: `say()`, `ask()`, `wait()`
 - String manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`, `reverse()`
-- Collection operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`, `flatMap()`, `some()`, `every()`, `findIndex()`, `zip()`, `unique()`, `chunk()`, `mapValues()`, `rangeList()`, `rangeListInclusive()`
+- Collection operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`, `flatMap()`, `flatten()`, `some()`, `every()`, `findIndex()`, `zip()`, `unique()`, `chunk()`, `partition()`, `mapValues()`, `rangeList()`, `rangeListInclusive()`
 - Type checking: `type()`
 
 ### Collection Methods
-- List operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`, `flatMap()`, `some()`, `every()`, `findIndex()`, `zip()`, `unique()`, `chunk()`
+- List operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`, `flatMap()`, `flatten()`, `some()`, `every()`, `findIndex()`, `zip()`, `unique()`, `chunk()`, `partition()`
 - Hash operations: `keys()`, `values()`, `wipe()`, `clone()`, `pairs()`, `take()`, `take_last()`, `ensure()`, `merge()`, `mapValues()`, `filter()`
 
 ## Quick Example

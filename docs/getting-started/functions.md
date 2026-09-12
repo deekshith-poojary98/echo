@@ -40,6 +40,8 @@ say(findIndex([1, 2, 3], fn(x: int) -> bool { return x == 3; }));
 say(zip([1, 2], [10, 20]));
 say(unique([1, 2, 1, true, 1]));
 say(chunk([1, 2, 3, 4, 5], 2));
+say(flatten([[1, 2], [3]]));
+say(partition([1, 2, 3, 4], fn(x: int) -> bool { return x % 2 == 0; }));
 say(rangeList(0, 5));
 say(rangeListInclusive(0, 5));
 say(mapValues({ a: 1, b: 2 }, double));
@@ -54,6 +56,18 @@ fn join(punct: str = ",", parts: str...) {
 
 join(parts: ["a", "b"]);
 join(" | ", "a", "b", "c");
+```
+
+A function with trailing defaults is assignable to the full-arity type and to a narrower type that omits those defaulted parameters:
+
+```echo
+fn add(x: int, y: int = 0) -> int {
+    return x + y;
+}
+full: fn(int, int) -> int = add;
+narrow: fn(int) -> int = add;
+say(full(2, 3));
+say(narrow(2));
 ```
 
 ## Output

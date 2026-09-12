@@ -1400,4 +1400,316 @@ say(filter({ a: 1, b: 2 }, fn(x: int) -> bool { return fail("filtered"); }));
     assert "filtered" in result.output
 
 
+def test_function_type_trailing_defaults_assign_and_call():
+    result = run_echo(
+        """
+fn add(x: int, y: int = 0) -> int {
+    return x + y;
+}
+full: fn(int, int) -> int = add;
+narrow: fn(int) -> int = add;
+say(full(2, 3));
+say(narrow(2));
+say(add(2));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["5", "2", "2"]
+
+
+def test_function_type_lambda_trailing_defaults():
+    result = run_echo(
+        """
+narrow: fn(int) -> int = fn(x: int, y: int = 1) -> int { return x + y; };
+full: fn(int, int) -> int = fn(x: int, y: int = 1) -> int { return x * y; };
+say(narrow(4));
+say(full(4, 3));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["5", "12"]
+
+
+def test_function_type_defaults_as_callback():
+    result = run_echo(
+        """
+fn apply(cb: fn(int) -> int, x: int) -> int {
+    return cb(x);
+}
+fn applyFull(cb: fn(int, int) -> int, x: int, y: int) -> int {
+    return cb(x, y);
+}
+fn add(x: int, y: int = 10) -> int {
+    return x + y;
+}
+say(apply(add, 5));
+say(applyFull(add, 5, 2));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["15", "7"]
+
+
+def test_function_type_cannot_drop_required_parameter():
+    result = run_echo(
+        """
+fn add(x: int, y: int = 0) -> int {
+    return x + y;
+}
+tooNarrow: fn() -> int = add;
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2001" in result.output
+    assert "fn() -> int" in result.output
+
+
+def test_function_type_required_params_must_match():
+    missing = run_echo(
+        """
+fn add(x: int, y: int) -> int {
+    return x + y;
+}
+narrow: fn(int) -> int = add;
+"""
+    )
+    assert missing.exit_code == 1
+    assert_no_python_leak(missing)
+    assert "E2001" in missing.output
+
+    wrong_type = run_echo(
+        """
+fn add(x: int, y: int = 0) -> int {
+    return x + y;
+}
+asStr: fn(str) -> int = add;
+"""
+    )
+    assert wrong_type.exit_code == 1
+    assert_no_python_leak(wrong_type)
+    assert "E2001" in wrong_type.output
+
+
+def test_function_type_variadic_must_match():
+    dropped = run_echo(
+        """
+fn total(x: int, rest: int...) -> int {
+    return x;
+}
+narrow: fn(int) -> int = total;
+"""
+    )
+    assert dropped.exit_code == 1
+    assert_no_python_leak(dropped)
+    assert "E2001" in dropped.output
+
+    matched = run_echo(
+        """
+fn total(x: int, rest: int...) -> int {
+    sum: int = x;
+    foreach n: int in rest {
+        sum = sum + n;
+    }
+    return sum;
+}
+op: fn(int, int...) -> int = total;
+say(op(1, 2, 3));
+"""
+    )
+    assert matched.exit_code == 0
+    assert matched.output.strip() == "6"
+
+    default_before_variadic = run_echo(
+        """
+fn total(x: int, y: int = 0, rest: int...) -> int {
+    sum: int = x + y;
+    foreach n: int in rest {
+        sum = sum + n;
+    }
+    return sum;
+}
+narrow: fn(int, int...) -> int = total;
+full: fn(int, int, int...) -> int = total;
+say(narrow(1, 2, 3));
+say(full(1, 4, 5));
+"""
+    )
+    assert default_before_variadic.exit_code == 0
+    assert default_before_variadic.lines == ["6", "10"]
+
+
+def test_function_type_call_arity_follows_declared_type():
+    extra = run_echo(
+        """
+fn add(x: int, y: int = 0) -> int {
+    return x + y;
+}
+narrow: fn(int) -> int = add;
+say(narrow(1, 2));
+"""
+    )
+    assert extra.exit_code == 1
+    assert "Semantic Error" in extra.output
+    assert "expected at most 1" in extra.output
+
+    missing = run_echo(
+        """
+fn add(x: int, y: int = 0) -> int {
+    return x + y;
+}
+full: fn(int, int) -> int = add;
+say(full(1));
+"""
+    )
+    assert missing.exit_code == 1
+    assert "Semantic Error" in missing.output
+    assert "expected 2" in missing.output
+
+
+def test_flatten_one_level():
+    result = run_echo(
+        """
+say(flatten([[1, 2], [3], []]));
+say(flatten([[[1, 2]], [3]]));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "[[1, 2], 3]"]
+
+
+def test_flatten_empty_and_no_mutate():
+    result = run_echo(
+        """
+empty: list = [];
+say(flatten(empty));
+nums: list = [[1], [2, 3]];
+out: list = nums.flatten();
+out.push(9);
+say(nums);
+say(out);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[]", "[[1], [2, 3]]", "[1, 2, 3, 9]"]
+
+
+def test_flatten_method_and_keyword_form():
+    result = run_echo(
+        """
+nums: list = [[1, 2], [3]];
+say(nums.flatten());
+say(flatten(items: nums));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "[1, 2, 3]"]
+
+
+def test_flatten_rejects_top_level_non_list():
+    mixed = run_echo("say(flatten([1, [2]]));\n")
+    assert mixed.exit_code == 1
+    assert_no_python_leak(mixed)
+    assert "E2846" in mixed.output
+    assert "flatten()" in mixed.output
+
+    number = run_echo("say(flatten(1));\n")
+    assert number.exit_code == 1
+    assert_no_python_leak(number)
+    assert "flatten()" in number.output
+    assert "list" in number.output
+
+
+def test_partition_matches_and_rest():
+    result = run_echo(
+        """
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+say(partition([1, 2, 3, 4], even));
+say(partition([1, 2, 3, 4], fn(x: int) -> bool { return x > 2; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[2, 4], [1, 3]]", "[[3, 4], [1, 2]]"]
+
+
+def test_partition_empty_and_no_mutate():
+    result = run_echo(
+        """
+empty: list = [];
+say(partition(empty, fn(x: int) -> bool { return true; }));
+nums: list = [1, 2, 3];
+out: list = nums.partition(fn(x: int) -> bool { return x > 1; });
+out[0].push(9);
+say(nums);
+say(out);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[], []]", "[1, 2, 3]", "[[2, 3, 9], [1]]"]
+
+
+def test_partition_method_and_keyword_form():
+    result = run_echo(
+        """
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+nums: list = [1, 2, 3];
+say(nums.partition(even));
+say(partition(items: nums, f: even));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[[2], [1, 3]]", "[[2], [1, 3]]"]
+
+
+def test_partition_requires_bool_not_int():
+    result = run_echo(
+        """
+say(partition([1, 0, 2], fn(x: int) -> int { return x; }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "partition()" in result.output
+    assert "bool" in result.output
+    assert "E2831" in result.output
+
+
+def test_partition_wrong_callback():
+    not_fn = run_echo("say(partition([1, 2], 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "partition()" in not_fn.output
+    assert "function" in not_fn.output
+    assert "E2847" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn add(a: int, b: int) -> bool {
+    return a == b;
+}
+say(partition([1, 2], add));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "partition()" in wrong_arity.output
+    assert "one argument" in wrong_arity.output
+    assert "E2848" in wrong_arity.output
+
+
+def test_partition_callback_abort():
+    result = run_echo(
+        """
+say(partition([1, 2], fn(x: int) -> bool { return fail("split"); }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "split" in result.output
+
+
 

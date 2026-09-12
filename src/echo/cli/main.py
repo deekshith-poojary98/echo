@@ -437,14 +437,24 @@ def _main_test(argv: list[str]) -> int:
         dest="run",
         help="Run only testXxx units whose names match glob PATTERN (e.g. testAdd or *Add*)",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Write a machine-readable JSON report to stdout instead of the human summary",
+    )
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     args = parser.parse_args(argv)
     if not args.paths:
         parser.print_help()
         return 2
-    from echo.cli.test_runner import print_summary, run_tests
+    from echo.cli.test_runner import print_json_report, print_summary, run_tests
 
-    code, results = run_tests(args.paths, plain=args.plain, run=args.run)
+    code, results = run_tests(args.paths, plain=args.plain, run=args.run, json_output=args.json)
+    if args.json:
+        if not results and code != 0:
+            return code
+        print_json_report(results)
+        return code
     if not results and code != 0:
         return code
     print_summary(results)

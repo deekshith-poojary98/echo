@@ -46,6 +46,7 @@ from echo.frontend.ast.nodes import (
 )
 from echo.runtime.builtins import builtin_names, builtin_param_count, resolve_builtin_args, standalone_min_args
 from echo.runtime.functions import bind_arguments
+from echo.runtime.values import format_type, function_signature_assignable
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
 from echo.semantics.symbols import Symbol, SymbolKind
@@ -135,6 +136,14 @@ class SemanticAnalyzer:
         elif isinstance(statement, VariableDeclaration):
             self._expression(statement.initializer, scope)
             statement.declared_type = self._resolve_type(statement.declared_type, scope)
+            if isinstance(statement.declared_type, FunctionType):
+                self._check_function_value_assignable(
+                    statement.initializer,
+                    statement.declared_type,
+                    scope,
+                    statement.location,
+                    statement.name,
+                )
             symbol = Symbol(statement.name, SymbolKind.VARIABLE, statement.location, statement.declared_type)
             scope.define(symbol)
             if scope.parent is None:
@@ -142,6 +151,15 @@ class SemanticAnalyzer:
         elif isinstance(statement, AssignmentStatement):
             self._expression(statement.value, scope)
             self._require_assignable(statement.name, statement, scope)
+            target = scope.resolve(statement.name)
+            if target is not None and isinstance(target.declared_type, FunctionType):
+                self._check_function_value_assignable(
+                    statement.value,
+                    target.declared_type,
+                    scope,
+                    statement.location,
+                    statement.name,
+                )
         elif isinstance(statement, CompoundAssignment):
             self._expression(statement.value, scope)
             self._require_assignable(statement.name, statement, scope)
@@ -240,6 +258,11 @@ class SemanticAnalyzer:
             statement.name,
             scope,
         )
+        symbol = scope.resolve(statement.name)
+        if symbol is not None and symbol.kind == SymbolKind.FUNCTION:
+            symbol.param_types = [parameter.type for parameter in statement.parameters]
+            symbol.param_defaults = [parameter.default is not None for parameter in statement.parameters]
+            symbol.declared_type = statement.return_type
 
     def _analyze_callable(
         self,
@@ -301,7 +324,7 @@ class SemanticAnalyzer:
                         code="E1010",
                     )
                 if symbol.kind == SymbolKind.FUNCTION:
-                    self._check_call_arity(symbol, expression)
+                    self._check_call_arity(symbol, expression, scope)
                 elif symbol.kind == SymbolKind.VARIABLE:
                     declared = symbol.declared_type
                     if isinstance(declared, FunctionType):
@@ -360,7 +383,7 @@ class SemanticAnalyzer:
         elif isinstance(expression, (LiteralExpression, StringLiteralExpression)):
             return
 
-    def _check_call_arity(self, symbol: Symbol, expression: CallExpression) -> None:
+    def _check_call_arity(self, symbol: Symbol, expression: CallExpression, scope: Scope) -> None:
         if symbol.builtin:
             self._check_builtin_call(symbol, expression)
             return
@@ -368,9 +391,22 @@ class SemanticAnalyzer:
             return
         parameters = self._parameters_from_symbol(symbol)
         try:
-            bind_arguments(symbol.name, parameters, expression.arguments, expression.location)
+            bound = bind_arguments(symbol.name, parameters, expression.arguments, expression.location)
         except ArgumentError as exc:
             raise SemanticError(exc.message, expression.location, help_text=exc.help_text, code=exc.code) from exc
+        types = symbol.param_types or []
+        for index, name in enumerate(symbol.param_names):
+            if index >= len(types):
+                break
+            expected = types[index]
+            if isinstance(expected, FunctionType) and name in bound:
+                self._check_function_value_assignable(
+                    bound[name],
+                    expected,
+                    scope,
+                    expression.location,
+                    name,
+                )
 
     def _check_function_type_arity(self, function_type: FunctionType, expression: CallExpression) -> None:
         if any(argument.name for argument in expression.arguments):
@@ -399,6 +435,50 @@ class SemanticAnalyzer:
                 expression.location,
                 code="E2205",
             )
+
+    def _check_function_value_assignable(
+        self,
+        expression: Expression,
+        expected: FunctionType,
+        scope: Scope,
+        location: SourceLocation,
+        name: str,
+    ) -> None:
+        signature = self._function_signature_of(expression, scope)
+        if signature is None:
+            return
+        param_types, param_defaults, variadic, return_type = signature
+        if function_signature_assignable(param_types, param_defaults, variadic, return_type, expected):
+            return
+        raise SemanticError(
+            f"Cannot assign fn to {format_type(expected)} variable '{name}'",
+            location,
+            code="E2001",
+        )
+
+    def _function_signature_of(
+        self,
+        expression: Expression,
+        scope: Scope,
+    ) -> tuple[list[TypeAnnotation], list[bool], bool, TypeAnnotation | None] | None:
+        if isinstance(expression, LambdaExpression):
+            return (
+                [parameter.type for parameter in expression.parameters],
+                [parameter.default is not None for parameter in expression.parameters],
+                any(parameter.variadic for parameter in expression.parameters),
+                expression.return_type,
+            )
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is None or symbol.kind != SymbolKind.FUNCTION or symbol.builtin:
+                return None
+            return (
+                symbol.param_types or [],
+                symbol.param_defaults or [False] * len(symbol.param_names or []),
+                symbol.variadic,
+                symbol.declared_type,
+            )
+        return None
 
     def _parameters_from_symbol(self, symbol: Symbol) -> list[Parameter]:
         names = symbol.param_names or []
@@ -498,6 +578,7 @@ class SemanticAnalyzer:
             statement.return_type,
             param_count=len(statement.parameters),
             param_names=[parameter.name for parameter in statement.parameters],
+            param_types=[parameter.type for parameter in statement.parameters],
             param_defaults=[parameter.default is not None for parameter in statement.parameters],
             variadic=any(parameter.variadic for parameter in statement.parameters),
         )
@@ -514,6 +595,7 @@ class SemanticAnalyzer:
             mutable=False,
             param_count=exported.param_count,
             param_names=exported.param_names,
+            param_types=exported.param_types,
             param_defaults=exported.param_defaults,
             variadic=exported.variadic,
             imported=True,

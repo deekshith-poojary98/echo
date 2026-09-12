@@ -77,6 +77,7 @@ from echo.runtime.builtins import (
     do_expect_neq,
     do_fail,
     do_file_exists,
+    do_flatten,
     do_floor,
     do_has,
     do_index_of,
@@ -757,6 +758,12 @@ class Interpreter:
             return do_zip(left, right, location)
         if method == "unique":
             return do_unique(target if target is not None else _first(args, method, location), location)
+        if method == "flatten":
+            return do_flatten(target if target is not None else _first(args, method, location), location)
+        if method == "partition":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._partition(items, callback, location)
         if method == "chunk":
             items = target if target is not None else _nth(args, 0, method, location)
             size = args[0] if target is not None else _nth(args, 1, method, location)
@@ -957,6 +964,17 @@ class Interpreter:
             if self._bool_predicate("findIndex", function, item, location) is True:
                 return index
         return -1
+
+    def _partition(self, items: list, callback: object, location: SourceLocation) -> list:
+        function = self._require_callback("partition", callback, location, 1, "E2847", "E2848")
+        matches: list[object] = []
+        rest: list[object] = []
+        for item in list(items):
+            if self._bool_predicate("partition", function, item, location) is True:
+                matches.append(item)
+            else:
+                rest.append(item)
+        return [matches, rest]
 
     def _reduce(self, items: list, init: object, callback: object, location: SourceLocation) -> object:
         function = self._require_callback("reduce", callback, location, 2, "E2832", "E2833")

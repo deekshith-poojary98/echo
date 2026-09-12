@@ -858,6 +858,39 @@ say(chunk(items: nums, size: 2));
 
 ---
 
+### `flatten()`
+Concatenates **one** level of nested lists into a **new** list. Empty list returns `[]`. A top-level element that is not a list is a type error (**E2846**). Does not mutate the input. List only.
+
+```echo
+nums: list = [[1, 2], [3], []];
+say(nums.flatten());    // [1, 2, 3]
+say(flatten([[[1]], [2]]));    // [[1], 2]
+```
+
+Standalone keyword form:
+
+```echo
+say(flatten(items: nums));
+```
+
+---
+
+### `partition(f)`
+Returns a **new** two-element list `[matches, rest]`. Unary `f` must return `bool` (`true` keeps the element in `matches`; `1` is not kept). Empty list returns `[[], []]`. A callback that aborts aborts the whole call. Does not mutate the input. List only.
+
+```echo
+nums: list = [1, 2, 3, 4];
+say(nums.partition(fn(x: int) -> bool { return x % 2 == 0; }));    // [[2, 4], [1, 3]]
+```
+
+Standalone keyword form:
+
+```echo
+say(partition(items: nums, f: even));
+```
+
+---
+
 ### `rangeList(start, end)`
 Returns a **new** `list` of `int` with the same values as `for i in start...end` (exclusive end, step `1`). Empty when that loop would not iterate (`rangeList(0, 0)` is `[]`). Not range-as-a-value syntax: `0...10` is not a list. Method form is not required.
 
@@ -1049,7 +1082,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `some(...)`, `every(...)`, `findIndex(...)`, `unique(...)`, `chunk(...)`, and `mapValues(...)` calls, use `items:` for the collection argument. For standalone `zip(...)`, use `left:` and `right:`. For `rangeList(...)` / `rangeListInclusive(...)`, use `start:` and `end:`. For `chunk(...)`, also use `size:`.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `flatten(...)`, `some(...)`, `every(...)`, `findIndex(...)`, `unique(...)`, `chunk(...)`, `partition(...)`, and `mapValues(...)` calls, use `items:` for the collection argument. For standalone `zip(...)`, use `left:` and `right:`. For `rangeList(...)` / `rangeListInclusive(...)`, use `start:` and `end:`. For `chunk(...)`, also use `size:`. For `partition(...)`, also use `f:`.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -1063,6 +1096,8 @@ say(copy["name"]);        // Echo
 - Calling `reduce` without `init`, or with a callback that is not exactly two parameters
 - Calling `forEach` with a callback that is not exactly one parameter, or expecting it to return a list
 - Calling `flatMap` with a callback that does not return a list, or expecting nested lists to flatten more than one level
+- Calling `flatten` on a list whose top-level elements are not all lists, or expecting more than one flatten level
+- Assuming `partition` keeps truthy `int` values such as `1`, or that it mutates the input
 - Assuming `some` / `every` / `findIndex` keep truthy `int` values such as `1`, or treating `findIndex(f)` as `find(value)`
 - Treating unequal `zip` lengths as an error, or expecting `unique` to treat `true` as `1`
 - Calling `chunk` with `size` `0`, a `bool`, or a float

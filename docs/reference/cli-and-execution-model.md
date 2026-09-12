@@ -62,6 +62,8 @@ echo test tests/
 echo test program.echo --plain
 echo test tests/ --run '*Add*'
 echo test path/foo_test.echo -run testAdd --plain
+echo test tests/ --json
+echo test tests/ --run '*Add*' --json --plain
 ```
 
 Runs Echo tests. A directory argument recursively runs `*_test.echo` files. An explicit file path always runs, even if it is not named `*_test.echo`. `echo test` with no path prints help and exits 2.
@@ -69,6 +71,8 @@ Runs Echo tests. A directory argument recursively runs `*_test.echo` files. An e
 Each discovered file is a test file. If it defines top-level zero-argument `fn testXxx()` functions, the runner calls each as a separate unit after running the remaining top-level statements once as setup. If there are no such functions, the file itself is one unit.
 
 `-run PATTERN` / `--run PATTERN` keeps only those `testXxx` **function** units whose names match a case-sensitive glob (`*` and exact names). `*Add*` matches `testAdd`; `testAdd` matches only `testAdd`. It does not filter file names. Non-matching units are skipped, not failed. A file with no matching units is skipped (setup does not run) and does not fail. Quote globs in the shell (`--run '*Add*'`). Without `-run`, every unit runs as before.
+
+`--json` writes one JSON object to stdout instead of the human `ok` / `FAIL` lines and the `N passed, M failed` summary. It composes with `-run` / `--run` and `--plain` (JSON has no color). The object has `passed`, `failed`, `skipped` counts and a `units` array. Each unit has `name`, `passed` (when the unit ran), `skipped` (when `-run` filtered it out), and on failure `message` plus `location` when present. Exit codes stay 0 / 1 / 2.
 
 `expect(cond, message)`, `expectEq(left, right, message)`, and `expectNeq(left, right, message)` record a failure and continue under this runner (codes E2826 / E2827 / E2828). Outside `echo test` they abort like `assert`. `assert` / `fail` still abort the current unit; later units still run. Parse and load errors fail that file as a unit.
 
@@ -82,6 +86,25 @@ FAIL path/foo_test.echo::testSub
      Error[E2827]: sub
      expected 3, got 4
 2 passed, 1 failed
+```
+
+`--json` emits a single object instead of that human report:
+
+```json
+{
+  "passed": 2,
+  "failed": 1,
+  "skipped": 0,
+  "units": [
+    {"name": "path/foo_test.echo::testAdd", "passed": true},
+    {
+      "name": "path/foo_test.echo::testSub",
+      "passed": false,
+      "message": "Error[E2827]: sub",
+      "location": "path/foo_test.echo:4:5"
+    }
+  ]
+}
 ```
 
 Program `say` output is shown. There is no `test "name" { }` syntax. The first argument must be the word `test`; `echo test.echo` still runs a file named `test.echo`. The editor extension can run `echo test --plain` as a task and match location-bearing failures.

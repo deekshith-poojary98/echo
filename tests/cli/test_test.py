@@ -1,5 +1,6 @@
 from contextlib import redirect_stdout
 from io import StringIO
+import json
 
 from echo.cli.main import main
 from helpers import ExecutionResult, assert_no_python_leak
@@ -317,4 +318,126 @@ fn testMul() {
     assert "mul_test.echo" not in output
     assert "1 passed, 0 failed" in output
     assert "FAIL" not in output
+
+
+def test_json_report_pass_fail_and_no_human_summary(tmp_path):
+    app = tmp_path / "units_test.echo"
+    app.write_text(
+        """
+fn testOk() {
+    expect(true, "ok");
+}
+
+fn testFail() {
+    expect(false, "nope");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(app), "--json"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "ok   " not in output
+    assert "FAIL " not in output
+    assert " passed, " not in output
+    report = json.loads(output)
+    assert report["passed"] == 1
+    assert report["failed"] == 1
+    assert report["skipped"] == 0
+    units = {unit["name"].rsplit("::", 1)[-1]: unit for unit in report["units"]}
+    assert units["testOk"]["passed"] is True
+    assert "message" not in units["testOk"]
+    assert units["testFail"]["passed"] is False
+    assert units["testFail"]["message"] == "Error[E2826]: nope"
+    assert "location" in units["testFail"]
+    assert "units_test.echo" in units["testFail"]["location"]
+    assert ":5:" in units["testFail"]["location"] or units["testFail"]["location"].count(":") >= 2
+
+
+def test_json_composes_with_run_and_plain(tmp_path):
+    app = tmp_path / "units_test.echo"
+    app.write_text(
+        """
+fn testAdd() {
+    expectEq(1 + 1, 2, "add");
+}
+
+fn testMul() {
+    expectEq(2 * 3, 6, "mul");
+}
+
+fn testAdder() {
+    fail("should-not-run");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(app), "-run", "*Add*", "--json", "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "ok   " not in output
+    assert "FAIL " not in output
+    assert " passed, " not in output
+    report = json.loads(output)
+    assert report["passed"] == 1
+    assert report["failed"] == 1
+    assert report["skipped"] == 1
+    by_name = {unit["name"].rsplit("::", 1)[-1]: unit for unit in report["units"]}
+    assert by_name["testAdd"]["passed"] is True
+    assert by_name["testAdder"]["passed"] is False
+    assert "should-not-run" in by_name["testAdder"]["message"]
+    assert "location" in by_name["testAdder"]
+    assert by_name["testMul"]["skipped"] is True
+    assert "passed" not in by_name["testMul"]
+
+
+def test_json_skipped_file_with_no_matching_units(tmp_path):
+    app = tmp_path / "units_test.echo"
+    app.write_text(
+        """
+fn testAdd() {
+    fail("add");
+}
+
+fn testMul() {
+    fail("mul");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(app), "--run", "testNone", "--json"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 0
+    report = json.loads(output)
+    assert report["passed"] == 0
+    assert report["failed"] == 0
+    assert report["skipped"] == 2
+    names = {unit["name"].rsplit("::", 1)[-1] for unit in report["units"]}
+    assert names == {"testAdd", "testMul"}
+    assert all(unit.get("skipped") is True for unit in report["units"])
+
+
+def test_json_exit_codes_unchanged(tmp_path):
+    passing = tmp_path / "ok_test.echo"
+    failing = tmp_path / "bad_test.echo"
+    passing.write_text("fn testOk() {\n    expect(true, \"ok\");\n}\n", encoding="utf-8")
+    failing.write_text('expect(false, "nope");\n', encoding="utf-8")
+    code, output = _run_main(["test", str(passing), "--json"])
+    assert code == 0
+    report = json.loads(output)
+    assert report["passed"] == 1
+    assert report["failed"] == 0
+    code, output = _run_main(["test", str(failing), "--json"])
+    assert code == 1
+    report = json.loads(output)
+    assert report["passed"] == 0
+    assert report["failed"] == 1
+    assert "nope" in report["units"][0]["message"]
+    code, output = _run_main(["test", "--json"])
+    assert code == 2
+    assert "usage" in output.lower()
+
 

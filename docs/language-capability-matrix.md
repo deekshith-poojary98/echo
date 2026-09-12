@@ -107,7 +107,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
 | Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
 | Destructuring | Usability | Missing | Later | Later |
-| Collection operations | Usability | Partial (`chunk` / `rangeList` / hash `mapValues` 0.6.8) | Usability now | 0.6.8 |
+| Collection operations | Usability | Partial (`flatten` / `partition` 0.6.9) | Usability now | 0.6.9 |
 | String utilities | Usability | Partial | Usability now | v0.4 candidate |
 | Date / time | Usability | Missing | Later | Later (library) |
 | Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
@@ -119,7 +119,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Package manager | Ecosystem | Missing | Tooling | Tooling track |
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
 | Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
-| Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8) | Tooling | 0.6.8 |
+| Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8), `--json` (0.6.9) | Tooling | 0.6.9 |
 | Debugger | Ecosystem | Partial | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
 | IDE support | Ecosystem | Partial (0.5.7), Check workspace (0.5.9) | Tooling | 0.5.9 |
@@ -561,14 +561,19 @@ do not inherit `use mut`.
 **Echo status.** Supported (0.6.0).
 
 Named functions are values. Lambdas use `fn(x: int) -> int { ... }`.
-The function type spelling is `fn(int) -> int`. `order(comparator)`
-still accepts a function value, a lambda, or a name string. List
-`map` / `filter` take a unary function value or lambda. List `reduce`
-takes a binary function value or lambda and a required `init`. List
+The function type spelling is `fn(int) -> int` (no default markers).
+As of 0.6.9, a function with trailing defaults is assignable to the
+full-arity type and to a narrower type that omits those defaulted
+parameters. Required parameters and variadics still have to match.
+`order(comparator)` still accepts a function value, a lambda, or a name
+string. List `map` / `filter` take a unary function value or lambda. List
+`reduce` takes a binary function value or lambda and a required `init`. List
 `forEach` takes a unary function value or lambda, discards the callback
 return, and yields `null`. List `flatMap` takes a unary function value or
 lambda that must return a `list`, and concatenates those lists one level.
-List `some` / `every` / `findIndex` take a unary `bool` predicate; `find(value)`
+List `flatten` concatenates one level of nested lists. List `partition`
+splits a list into `[matches, rest]` with a unary `bool` predicate. List
+`some` / `every` / `findIndex` take a unary `bool` predicate; `find(value)`
 stays value search. List `zip` pairs two lists to min length. List `unique`
 keeps first occurrences in order using Echo `==`.
 
@@ -831,7 +836,7 @@ taste than `try/catch`.
 
 ### Collection operations
 
-**What it means.** Slice, map, filter, reduce, forEach, flatMap, some, every, findIndex, zip, unique, chunk, rangeList, mapValues, contains, without handwritten loops.
+**What it means.** Slice, map, filter, reduce, forEach, flatMap, flatten, some, every, findIndex, zip, unique, chunk, partition, rangeList, mapValues, contains, without handwritten loops.
 
 **Why languages need it.** Real scripts spend most of their time on collections.
 
@@ -843,11 +848,11 @@ Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
 list `reduce` (0.6.2), list `forEach` (0.6.3), list `flatMap` (0.6.4),
 list `some` / `every` / `findIndex` (0.6.5), list `zip` / `unique` (0.6.7),
 list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` /
-`filter` (0.6.8).
+`filter` (0.6.8), list `flatten` / `partition` (0.6.9).
 
 **Priority.** Remaining higher-order collection helpers later.
 
-**Possible version.** `chunk` / `rangeList` / hash `mapValues` / `filter` shipped in 0.6.8.
+**Possible version.** `flatten` / `partition` shipped in 0.6.9.
 
 ---
 
@@ -929,6 +934,10 @@ are for the interpreter, not the program.
 User `fn` parameters may have defaults (`punct: str = "!"`) and a
 trailing variadic (`parts: int...`, bound as a list of `T`). Defaults
 come before the variadic and are evaluated at call time when omitted.
+Function types still spell parameter types only (`fn(int, str) -> int`).
+As of 0.6.9 they honor trailing defaults on assignability: a value of
+`fn(x: int, y: int = 0) -> int` matches `fn(int) -> int` and
+`fn(int, int) -> int`, not `fn() -> int`. Variadics still have to match.
 `say` / `eprint` / `format` / `pathJoin` stay variadic builtins.
 Overloading stays held.
 
@@ -1041,13 +1050,13 @@ It does not re-run typechecking. Unused parameters are `unused-local`.
 
 **Status.** Implemented (0.5.6) as tooling. No new keywords.
 
-`echo test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit. **0.6.8** adds `-run` / `--run` glob filter on those function unit names (not file names).
+`echo test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit. **0.6.8** adds `-run` / `--run` glob filter on those function unit names (not file names). **0.6.9** adds `--json` for a machine-readable report (totals, per-unit pass/fail, skipped from `-run`, failure message and location).
 
 There is no `test "name" { }` syntax. That stays vision / held.
 
 **Priority.** Tooling / vision. Shipped as a library-plus-CLI.
 
-**Possible version.** 0.6.8 (`-run`).
+**Possible version.** 0.6.9 (`--json`).
 
 ---
 
@@ -1281,7 +1290,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. Failure handling is still design only.
 
 ---
 

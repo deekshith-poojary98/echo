@@ -69,16 +69,56 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
             return False
         declaration = value.declaration
         params = declaration.parameters
-        if len(params) != len(type_spec.param_types):
-            return False
-        actual_variadic = bool(params) and params[-1].variadic
-        if bool(type_spec.variadic) != actual_variadic:
-            return False
-        for parameter, expected in zip(params, type_spec.param_types):
-            if not _type_compatible(parameter.type, expected):
-                return False
-        return _type_compatible(declaration.return_type, type_spec.return_type)
+        return function_signature_assignable(
+            [parameter.type for parameter in params],
+            [parameter.default is not None for parameter in params],
+            bool(params) and params[-1].variadic,
+            declaration.return_type,
+            type_spec,
+        )
     return False
+
+
+def function_signature_assignable(
+    param_types: list[TypeAnnotation],
+    param_defaults: list[bool],
+    variadic: bool,
+    return_type: TypeAnnotation | None,
+    expected: FunctionType,
+) -> bool:
+    """True when a function value with this signature can be used as `expected`.
+
+    Trailing defaulted parameters may be omitted from the type. Required
+    parameters and variadics must still match. Function types themselves never
+    spell defaults.
+    """
+    if bool(variadic) != bool(expected.variadic):
+        return False
+    if not _type_compatible(return_type, expected.return_type):
+        return False
+
+    actual_types = list(param_types)
+    actual_defaults = list(param_defaults)
+    expected_types = list(expected.param_types)
+    if variadic:
+        if not actual_types or not expected_types:
+            return False
+        if not _type_compatible(actual_types[-1], expected_types[-1]):
+            return False
+        actual_types = actual_types[:-1]
+        actual_defaults = actual_defaults[:-1]
+        expected_types = expected_types[:-1]
+
+    if len(expected_types) > len(actual_types):
+        return False
+    for actual, want in zip(actual_types, expected_types):
+        if not _type_compatible(actual, want):
+            return False
+    for index in range(len(expected_types), len(actual_types)):
+        defaulted = actual_defaults[index] if index < len(actual_defaults) else False
+        if not defaulted:
+            return False
+    return True
 
 
 def format_type(type_spec: TypeAnnotation | str | None) -> str:

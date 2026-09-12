@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.9
+
+Four items in one release: function types honor trailing defaults, list `flatten`, list `partition`, and `echo test --json`. Last 0.6.x slice. No new keywords. Failure model is unchanged. No first-class builtins, `const`, or destructuring.
+
+- A function with trailing defaults is assignable to the full-arity type and to a narrower type that omits those defaulted parameters. Types still spell `fn(int) -> int` (no `?` or default markers). `fn(x: int, y: int = 0) -> int` matches `fn(int) -> int` and `fn(int, int) -> int`, not `fn() -> int`. Calls through the narrower type pass only provided args; defaults apply at call time. Required parameters and variadics still have to match
+- `flatten(items: list) -> list` / `items.flatten()` concatenates **one** level of nested lists into a new list. Empty list is `[]`. A top-level non-list element is `E2846`. Input is not mutated. Keyword `items:`
+- `partition(items: list, f) -> list` / `items.partition(f)` returns `[matches, rest]`. Unary `f` must return `bool` (`1` is not kept; `E2831`). Empty list is `[[], []]`. Callback abort still aborts. Input is not mutated. Non-function `f` is `E2847`; wrong arity is `E2848`. Keywords `items:` / `f:`
+- `echo test --json` writes a machine-readable JSON report to stdout (totals plus per-unit name / pass / fail, with failure message and location when present, and `skipped` from `-run`). Human unit lines and the summary are omitted. Composes with `-run` / `--run` and `--plain`. Exit codes stay 0 / 1 / 2. `echo test.echo` still runs that file
+- Playground highlighting tracks `flatten` and `partition`
+
 ## 0.6.8
 
 Four items in one release: `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. No new keywords. Failure model is unchanged. No function-type defaults or first-class builtins. `0...10` is still not a list value.

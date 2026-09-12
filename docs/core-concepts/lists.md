@@ -40,6 +40,8 @@ say(nums);
 - `zip(other)` pairs two lists into `[a, b]` pairs up to the shorter length.
 - `unique()` returns first occurrences in order using Echo `==`.
 - `chunk(size)` splits into new sublists of length `size` (last may be shorter).
+- `flatten()` concatenates one level of nested lists.
+- `partition(f)` returns `[matches, rest]` from a `bool` callback.
 - `rangeList(start, end)` / `rangeListInclusive(start, end)` build a `list` of `int` matching `...` / `..` `for` ranges.
 
 ## Common Mistakes

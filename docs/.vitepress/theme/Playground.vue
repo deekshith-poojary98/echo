@@ -93,6 +93,8 @@ say("every:", nums.every(fn(x: int) -> bool { return x > 0; }));
 say("findIndex:", nums.findIndex(fn(x: int) -> bool { return x == 4; }));
 say("zip:", zip(nums, [10, 20, 30]));
 say("unique:", [1, 2, 1, true, 1].unique());
+say("flatten:", [[1, 2], [3]].flatten());
+say("partition:", nums.partition(fn(x: int) -> bool { return x % 2 == 0; }));
 
 fn join(punct: str = ",", parts: str...) {
     say(parts.join(punct));
