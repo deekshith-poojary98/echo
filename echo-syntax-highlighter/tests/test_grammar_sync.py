@@ -9,6 +9,7 @@ from echo.runtime.builtins import builtin_names
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 GRAMMAR_PATH = PACKAGE_ROOT / "syntaxes" / "echo.tmLanguage.json"
+PLAYGROUND_PARSER_PATH = PACKAGE_ROOT.parent / "docs" / ".vitepress" / "theme" / "echoLanguage.ts"
 
 # Reserved builtin names that may land after the current interpreter.
 RESERVED_BUILTINS: frozenset[str] = frozenset()
@@ -74,6 +75,30 @@ def test_builtin_calls_cover_runtime() -> None:
     extra = listed - expected
     assert not missing, f"grammar is missing builtins: {sorted(missing)}"
     assert not extra, f"grammar has unknown builtins: {sorted(extra)}"
+
+
+def _ts_string_set(source: str, name: str) -> set[str]:
+    match = re.search(rf"const {name} = new Set\(\[(.*?)\]\)", source, re.S)
+    assert match, f"missing {name} set in playground parser"
+    return set(re.findall(r"'([A-Za-z_][A-Za-z0-9_]*)'", match.group(1)))
+
+
+def test_playground_parser_matches_runtime() -> None:
+    source = PLAYGROUND_PARSER_PATH.read_text(encoding="utf-8")
+    listed = _ts_string_set(source, "BUILTINS")
+    expected = set(builtin_names()) | RESERVED_BUILTINS
+    missing = expected - listed
+    extra = listed - expected
+    assert not missing, f"playground parser is missing builtins: {sorted(missing)}"
+    assert not extra, f"playground parser has unknown builtins: {sorted(extra)}"
+
+    keywords = _ts_string_set(source, "KEYWORDS")
+    language_keywords = set(KEYWORDS) - {"true", "false", "null"}
+    assert keywords == language_keywords
+    assert _ts_string_set(source, "TYPES") == set(TYPE_NAMES)
+    assert r"\.\.\." in source
+    assert "->" in source
+    assert r"[()[\]{},.:;]" in source
 
 
 def test_lexer_surface_is_present() -> None:

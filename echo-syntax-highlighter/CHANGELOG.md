@@ -4,6 +4,7 @@
 
 - Version tracks Echo v0.6.5.
 - Builtin highlighting includes `some`, `every`, and `findIndex`.
+- Grammar sync also checks the playground CodeMirror `BUILTINS` list.
 
 ## 0.6.4
 

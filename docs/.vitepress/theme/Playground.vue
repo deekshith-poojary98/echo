@@ -75,6 +75,29 @@ describe(age: 21, name: "Alice");
 `,
   },
   {
+    id: 'lambdas',
+    label: 'Lambdas & lists',
+    stdin: '',
+    source: `nums: list = [1, 2, 3, 4];
+double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
+
+say("slice:", nums[1:3]);
+say("map:", nums.map(double));
+say("filter:", nums.filter(fn(x: int) -> bool { return x % 2 == 0; }));
+say("reduce:", nums.reduce(0, fn(acc: int, x: int) -> int { return acc + x; }));
+nums.forEach(fn(x: int) { say("each", x); });
+say("flatMap:", nums.flatMap(fn(x: int) -> list { return [x, x]; }));
+say("some:", nums.some(fn(x: int) -> bool { return x == 3; }));
+say("every:", nums.every(fn(x: int) -> bool { return x > 0; }));
+say("findIndex:", nums.findIndex(fn(x: int) -> bool { return x == 4; }));
+
+fn join(punct: str = ",", parts: str...) {
+    say(parts.join(punct));
+}
+join(" | ", "a", "b", "c");
+`,
+  },
+  {
     id: 'fizzbuzz',
     label: 'FizzBuzz',
     stdin: '',

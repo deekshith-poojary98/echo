@@ -105,7 +105,7 @@ Keywords and type names come from `src/echo/frontend/tokens.py` (`KEYWORDS`, `TY
 
 The docs site imports this grammar directly (`docs/.vitepress/config.ts`). Updating the JSON updates markdown Echo fences; you do not copy the file into `docs/`.
 
-The playground editor uses a separate CodeMirror stream parser (`docs/.vitepress/theme/echoLanguage.ts`), not this TextMate file.
+The playground editor uses a separate CodeMirror stream parser (`docs/.vitepress/theme/echoLanguage.ts`), not this TextMate file. Keep its `BUILTINS` set in the same alphabetical order as this grammar.
 
 ## License
 

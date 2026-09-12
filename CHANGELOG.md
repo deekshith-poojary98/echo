@@ -11,6 +11,7 @@ List `some` / `every` / `findIndex` on function values from 0.6.0. Same bool rul
 - `f` is a function value (named `fn` or lambda) with **exactly one** parameter. Defaults and extra variadics do not count toward that arity. Not a name string
 - Non-`bool` callback result reuses `filter`'s `E2831`. Wrong callback type is `E2840`; wrong arity is `E2841`
 - `some` / `every` / `findIndex` are calls, not assignable values
+- Playground highlighting tracks `map` / `filter` / `reduce` / `forEach` / `flatMap` / `some` / `every` / `findIndex`, lambdas, `fn` types, `...` variadics, and `xs[1:4]`
 
 ## 0.6.4
 
