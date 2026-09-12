@@ -31,6 +31,7 @@ say(nums);
 - `clone()` returns a shallow copy.
 - `order()` sorts ascending by default.
 - `order(cmpFn)` uses a comparator function that returns `int`.
+- `map(f)` / `filter(f)` return a new list. `filter` requires a `bool` callback.
 
 ## Common Mistakes
 - Calling list methods on non-list values

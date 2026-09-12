@@ -30,6 +30,7 @@ Lambdas and function types:
 ```echo
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 say(double(21));
+say(map([1, 2, 3], double));
 ```
 
 Defaults and a trailing variadic:
@@ -107,7 +108,6 @@ That raises a runtime type error.
 
 ## Current Limitation
 - No overloads
-- No `map` / `filter` yet
 
 ## See Also
 - [Scope, use, and watch](/core-concepts/scope-use-watch)

@@ -626,6 +626,48 @@ say(nums);    // [3, 2, 1]
 
 ---
 
+### `map(f)`
+Applies function value `f` to each element and returns a **new** list of results. `f` must take one argument. Does not mutate the input. Empty list returns `[]`. A callback that aborts aborts the call.
+
+```echo
+fn double(x: int) -> int {
+    return x * 2;
+}
+
+nums: list = [1, 2, 3];
+say(nums.map(double));    // [2, 4, 6]
+say(map(nums, fn(x: int) -> int { return x + 1; }));    // [2, 3, 4]
+```
+
+Standalone keyword form:
+
+```echo
+say(map(items: nums, f: double));
+```
+
+---
+
+### `filter(f)`
+Returns a **new** list of elements for which `f` returns `true`. `f` must take one argument and return `bool` — `1` is a type error, not a kept element. Does not mutate the input. Empty list returns `[]`. A callback that aborts aborts the call.
+
+```echo
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+
+nums: list = [1, 2, 3, 4];
+say(nums.filter(even));    // [2, 4]
+say(filter(nums, fn(x: int) -> bool { return x > 2; }));    // [3, 4]
+```
+
+Standalone keyword form:
+
+```echo
+say(filter(items: nums, f: even));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -764,7 +806,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)` and `countOf(...)` calls, use `items:` for the collection argument.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, and `filter(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -774,6 +816,7 @@ say(copy["name"]);        // Echo
 - Passing non-string keys to hash indexing or hash methods
 - Calling `pull()` on an empty list
 - Assuming `order()` accepts more than one comparator
+- Assuming `filter` keeps truthy `int` values such as `1`
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

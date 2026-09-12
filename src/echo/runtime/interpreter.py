@@ -703,6 +703,14 @@ class Interpreter:
             return do_expect_neq(left, right, message, location, self.test_session)
         if method == "fail":
             return do_fail(target if target is not None else _first(args, method, location), location)
+        if method == "map":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._map(items, callback, location)
+        if method == "filter":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._filter(items, callback, location)
         if method == "copyFile":
             src = target if target is not None else _nth(args, 0, method, location)
             dest = args[0] if target is not None else _nth(args, 1, method, location)
@@ -779,6 +787,36 @@ class Interpreter:
                 code="E2411",
             ) from exc
         return target
+
+    def _require_unary_callback(self, method: str, callback: object, location: SourceLocation) -> EchoFunction:
+        if not isinstance(callback, EchoFunction):
+            raise EchoTypeError(f"{method}() callback must be a function", location, code="E2829")
+        if len(callback.declaration.parameters) != 1:
+            raise EchoTypeError(
+                f"{method}() callback '{callback.declaration.name}' must take exactly one argument",
+                location,
+                code="E2830",
+            )
+        return callback
+
+    def _map(self, items: list, callback: object, location: SourceLocation) -> list:
+        function = self._require_unary_callback("map", callback, location)
+        return [self.call_function_with_values(function, [item], location) for item in list(items)]
+
+    def _filter(self, items: list, callback: object, location: SourceLocation) -> list:
+        function = self._require_unary_callback("filter", callback, location)
+        kept: list[object] = []
+        for item in list(items):
+            keep = self.call_function_with_values(function, [item], location)
+            if not isinstance(keep, bool):
+                raise EchoTypeError(
+                    f"filter() callback '{function.declaration.name}' must return bool",
+                    location,
+                    code="E2831",
+                )
+            if keep is True:
+                kept.append(item)
+        return kept
 
     def _loop_bound(self, expression: Expression, env: Environment, location: SourceLocation) -> int:
         value = self.evaluate(expression, env)

@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.1
+
+- Version tracks Echo v0.6.1.
+- Builtin highlighting includes `map` and `filter`.
+
 ## 0.6.0
 
 - Version tracks Echo v0.6.0.

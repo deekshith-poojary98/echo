@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current released version is **v0.6.0**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics (see **0.6.x** below).
+Current released version is **v0.6.1**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter` (see **0.6.x** below).
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -112,7 +112,7 @@ Last 0.5.x tooling slice. No new language syntax.
 2. Slice syntax
 3. Default **and** variadic user `fn` args **together**
 
-**0.6.1** (next language increment after 0.6.0): `map` / `filter` (needs function values).
+**0.6.1** ships list `map` / `filter` on the function values from 0.6.0.
 
 Failure model is unchanged: callbacks or default expressions that abort still abort. No `try` / `catch`. No `Result` / `Option`.
 
@@ -121,7 +121,7 @@ Failure model is unchanged: callbacks or default expressions that abort still ab
 | 1 | First-class functions including lambdas | implemented (0.6.0) |
 | 2 | Slice syntax `xs[1:4]` | implemented (0.6.0) |
 | 3 | Default and variadic user `fn` args | implemented (0.6.0) |
-| 4 | `map` / `filter` | pending (0.6.1) |
+| 4 | `map` / `filter` | implemented (0.6.1) |
 
 ### 0.6.0 — first-class functions (including lambdas)
 
@@ -137,7 +137,7 @@ User `fn` default arguments and variadic arguments ship **together**. Spelling: 
 
 ### 0.6.1 — `map` / `filter`
 
-List `map` / `filter` after function values exist. Not part of 0.6.0.
+List `map(items, f)` / `filter(items, f)` and method form `items.map(f)` / `items.filter(f)`. `filter` requires a `bool` return (`1` is not kept). Callbacks that abort abort the call. No string or hash variants; hashes have no map/filter iteration in this cut.
 
 ## Held (do not implement)
 

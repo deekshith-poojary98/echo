@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.1
+
+List `map` / `filter` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No reduce/fold, flatMap, forEach, or first-class builtins.
+
+- `map(items: list, f: fn(T) -> U) -> list` applies `f` to each element and returns a new list
+- `filter(items: list, f: fn(T) -> bool) -> list` keeps elements where `f` returns `true` (`bool` only — not truthy `1`)
+- Method form: `items.map(f)` / `items.filter(f)`. List only. Empty list returns empty list. Input is not mutated
+- Wrong arity or type of `f` is a type/runtime error. `map` / `filter` are calls, not assignable values
+
 ## 0.6.0
 
 Language release: first-class functions including lambdas, slice syntax, and user `fn` defaults plus variadics. Failure model is unchanged — callback or default expressions that abort still abort. No `map` / `filter`, `try` / `catch`, classes, or overloading.

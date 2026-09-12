@@ -243,3 +243,140 @@ apply(fn(x: int) -> int { return x * 2; });
 
     findings = lint_source(formatted, filename="app.echo")
     assert findings == []
+
+
+def test_map_named_fn_and_lambda():
+    result = run_echo(
+        """
+fn double(x: int) -> int {
+    return x * 2;
+}
+nums: list = [1, 2, 3];
+say(map(nums, double));
+say(map(nums, fn(x: int) -> int { return x + 1; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[2, 4, 6]", "[2, 3, 4]"]
+
+
+def test_filter_named_fn_and_lambda():
+    result = run_echo(
+        """
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+nums: list = [1, 2, 3, 4];
+say(filter(nums, even));
+say(filter(nums, fn(x: int) -> bool { return x > 2; }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[2, 4]", "[3, 4]"]
+
+
+def test_map_filter_empty_list():
+    result = run_echo(
+        """
+fn double(x: int) -> int {
+    return x * 2;
+}
+fn keep(x: int) -> bool {
+    return true;
+}
+empty: list = [];
+say(map(empty, double));
+say(filter(empty, keep));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[]", "[]"]
+
+
+def test_map_filter_do_not_mutate_input():
+    result = run_echo(
+        """
+nums: list = [1, 2, 3];
+mapped: list = nums.map(fn(x: int) -> int { return x * 2; });
+filtered: list = nums.filter(fn(x: int) -> bool { return x > 1; });
+say(nums);
+say(mapped);
+say(filtered);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "[2, 4, 6]", "[2, 3]"]
+
+
+def test_map_filter_method_and_keyword_form():
+    result = run_echo(
+        """
+fn triple(x: int) -> int {
+    return x * 3;
+}
+fn odd(x: int) -> bool {
+    return x % 2 == 1;
+}
+nums: list = [1, 2, 3];
+say(nums.map(triple));
+say(map(items: nums, f: triple));
+say(nums.filter(odd));
+say(filter(items: nums, f: odd));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[3, 6, 9]", "[3, 6, 9]", "[1, 3]", "[1, 3]"]
+
+
+def test_filter_requires_bool_not_int():
+    result = run_echo(
+        """
+say(filter([1, 0, 2], fn(x: int) -> int { return x; }));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "filter()" in result.output
+    assert "bool" in result.output
+
+
+def test_map_filter_wrong_callback_type():
+    not_fn = run_echo("say(map([1, 2], 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "map()" in not_fn.output
+    assert "function" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+say(filter([1, 2], add));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "filter()" in wrong_arity.output
+    assert "one argument" in wrong_arity.output
+
+
+def test_map_filter_callback_abort():
+    mapped = run_echo(
+        """
+say(map([1, 2, 3], fn(x: int) -> int { return fail("mapped"); }));
+"""
+    )
+    assert mapped.exit_code == 1
+    assert_no_python_leak(mapped)
+    assert "mapped" in mapped.output
+
+    filtered = run_echo(
+        """
+say(filter([1, 2, 3], fn(x: int) -> bool { return fail("filtered"); }));
+"""
+    )
+    assert filtered.exit_code == 1
+    assert_no_python_leak(filtered)
+    assert "filtered" in filtered.output
+

@@ -234,6 +234,12 @@ pass, return, and call through a function-typed or `dynamic` variable.
 `order(comparator)` accepts a function value, a lambda, or a function name
 string.
 
+List `map(items, f)` / `filter(items, f)` (and `items.map(f)` / `items.filter(f)`)
+apply a unary function value or lambda. `map` returns a new list of results.
+`filter` keeps elements where `f` returns `true`; the callback must return
+`bool` (not a truthy `int`). A callback that aborts aborts the whole call.
+Empty list returns empty list. The input list is not mutated. List only.
+
 `return` outside a function is a semantic error.
 Functions may recurse.
 
@@ -394,4 +400,5 @@ v0.5.7 adds VS Code / Cursor tasks and problem matchers for `echo check` / `fmt`
 v0.5.8 adds `echo lint` rules `test-naming`, `self-assign`, and `unreachable-after-fail`. No new keywords.
 v0.5.9 makes `echo check [paths...]` recurse directories like `fmt` / `lint` / `test`, and adds **Echo: Check workspace**. No new keywords.
 v0.6.0 adds first-class functions including lambdas (`fn(x: int) -> int { ... }`, type `fn(int) -> int`), slice syntax `xs[1:4]`, and user `fn` default plus variadic parameters.
+v0.6.1 adds list `map` / `filter` on those function values.
 See `docs/v0.4-stdlib.md`.
