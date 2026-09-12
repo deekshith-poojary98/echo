@@ -33,6 +33,7 @@ say(user.keys());
 - `mapValues(f)` returns a new hash with the same keys. `filter(f)` keeps entries where `f(value)` is `true`.
 - Hash iteration order is insertion order; `mapValues` / `filter` preserve it.
 - A hash bound with `const` is frozen; field assignment and mutating methods abort.
+- Destructuring unpacks listed keys: `{ id: int, name: str } = user;`. Missing keys abort. Extra keys are ignored.
 
 ## Common Mistakes
 - Using non-string keys in runtime indexing

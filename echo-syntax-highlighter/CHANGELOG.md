@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.1
+
+- Version tracks Echo v0.7.1.
+- Sample highlights list/hash destructuring, rest, and destructuring parameters.
+
 ## 0.7.0
 
 - Version tracks Echo v0.7.0.

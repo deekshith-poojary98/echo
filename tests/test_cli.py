@@ -267,6 +267,24 @@ def test_repl_continues_lambda_and_slice():
     assert "... " in prompts
 
 
+def test_repl_continues_destructure():
+    fake_input, prompts = _repl_input(
+        [
+            "[a: int,",
+            "b: int] = [1, 2];",
+            "say(a, b);",
+            EOFError,
+        ]
+    )
+    stdout = StringIO()
+    with patch("builtins.input", fake_input):
+        with redirect_stdout(stdout):
+            code = main(["--plain"])
+    assert code == 0
+    assert "1 2" in stdout.getvalue()
+    assert prompts[:2] == ["echo> ", "... "]
+
+
 def test_repl_two_statements_on_one_line_run():
     stdout = StringIO()
     with patch("builtins.input", side_effect=["say(1); say(2);", EOFError]):

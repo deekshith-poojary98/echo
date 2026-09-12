@@ -44,12 +44,35 @@ class FunctionType(TypeAnnotation):
 
 
 @dataclass
+class Pattern(Node):
+    pass
+
+
+@dataclass
+class NamePattern(Pattern):
+    name: str
+    declared_type: TypeAnnotation | None = None
+    rest: bool = False
+
+
+@dataclass
+class ListPattern(Pattern):
+    elements: list[Pattern]
+
+
+@dataclass
+class HashPattern(Pattern):
+    fields: list[NamePattern]
+
+
+@dataclass
 class Parameter:
     name: str
     type: TypeAnnotation
     location: SourceLocation
     default: Expression | None = None
     variadic: bool = False
+    pattern: Pattern | None = None
 
 
 @dataclass
@@ -167,6 +190,19 @@ class AssignmentStatement(Statement):
 
 
 @dataclass
+class DestructureDeclaration(Statement):
+    pattern: Pattern
+    initializer: Expression
+    const: bool = False
+
+
+@dataclass
+class DestructureAssignment(Statement):
+    pattern: Pattern
+    value: Expression
+
+
+@dataclass
 class CompoundAssignment(Statement):
     name: str
     operator: Token
@@ -263,3 +299,35 @@ class ImportDeclaration(Statement):
 class ExportDeclaration(Statement):
     name: str
     declaration: FunctionDeclaration | VariableDeclaration | None = None
+
+
+def iter_name_patterns(pattern: Pattern) -> list[NamePattern]:
+    names: list[NamePattern] = []
+    if isinstance(pattern, NamePattern):
+        names.append(pattern)
+    elif isinstance(pattern, ListPattern):
+        for element in pattern.elements:
+            names.extend(iter_name_patterns(element))
+    elif isinstance(pattern, HashPattern):
+        names.extend(pattern.fields)
+    return names
+
+
+def list_pattern_fixed(pattern: ListPattern) -> list[Pattern]:
+    if pattern.elements and isinstance(pattern.elements[-1], NamePattern) and pattern.elements[-1].rest:
+        return pattern.elements[:-1]
+    return pattern.elements
+
+
+def list_pattern_rest(pattern: ListPattern) -> NamePattern | None:
+    if pattern.elements and isinstance(pattern.elements[-1], NamePattern) and pattern.elements[-1].rest:
+        return pattern.elements[-1]
+    return None
+
+
+def pattern_container_type(pattern: Pattern) -> str:
+    if isinstance(pattern, ListPattern):
+        return "list"
+    if isinstance(pattern, HashPattern):
+        return "hash"
+    return "dynamic"

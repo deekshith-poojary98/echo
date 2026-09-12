@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.1
+
+Destructuring. Second 0.7 language increment. Failure model is unchanged. No `as` rename, hash rest, exact objects, unions, `switch`, builtins-as-values, or range-as-value.
+
+- List declare: `[a: int, b: int] = pair;`. Hash declare: `{ id: int, name: str } = user;` (keys match field names)
+- `const [lo: int, hi: int] = bounds;` freezes each bound value the same way as `const`
+- Assignment to already-declared names omits types: `[a, b] = pair;` and `{ id, name } = user;`
+- Function parameters: `fn add([a: int, b: int]) -> int` (one `list` argument) and `fn greet({ name: str }) -> str` (one `hash` argument)
+- List rest is last, Echo variadic style: `[head: int, rest: int...] = xs` binds `rest` as a `list` of `T`. No hash rest
+- Length/shape mismatch aborts (**E3205**), or is a semantic error when the right-hand side is a list/hash literal. Extra list elements without rest abort. Missing hash keys abort (**E2711**, same as `user["x"]`). Extra hash keys are ignored (exact objects are 0.7.2)
+- Wrong container type is **E3206** (expected list) or **E3207** (expected hash)
+- Nested list patterns such as `[[a: int], b: int]` are supported. No `as` rename
+- Playground and highlighter samples include destructuring
+
 ## 0.7.0
 
 `const` bindings. First 0.7 language increment. Failure model is unchanged. No destructuring, exact objects, unions, `switch`, builtins-as-values, or range-as-value.

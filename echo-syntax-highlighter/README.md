@@ -4,7 +4,7 @@ TextMate grammar plus **editor tasks** for **Echo** (`.echo` files) in VS Code a
 
 This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`echolang check` / `lint` / `test`) through tasks and problem matchers.
 
-It tracks Echo **v0.7.0**.
+It tracks Echo **v0.7.1**.
 
 ## Install
 

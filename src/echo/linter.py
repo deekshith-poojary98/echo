@@ -10,6 +10,8 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    DestructureAssignment,
+    DestructureDeclaration,
     ExportDeclaration,
     Expression,
     ExpressionStatement,
@@ -25,6 +27,8 @@ from echo.frontend.ast.nodes import (
     ListLiteral,
     LiteralExpression,
     MemberExpression,
+    Parameter,
+    Pattern,
     Program,
     ReturnStatement,
     SliceExpression,
@@ -38,6 +42,7 @@ from echo.frontend.ast.nodes import (
     VariableExpression,
     WatchStatement,
     WhileStatement,
+    iter_name_patterns,
 )
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
@@ -162,6 +167,13 @@ class _Linter:
             self._shadow(statement.name, statement.location)
             scope.define(_Binding(statement.name, "local", statement.location))
             return
+        if isinstance(statement, DestructureDeclaration):
+            self._expr(statement.initializer, scope)
+            self._define_pattern(statement.pattern, scope)
+            return
+        if isinstance(statement, DestructureAssignment):
+            self._expr(statement.value, scope)
+            return
         if isinstance(statement, AssignmentStatement):
             self._self_assign(statement)
             self._expr(statement.value, scope)
@@ -249,13 +261,24 @@ class _Linter:
         loop.define(_Binding(statement.var, "local", statement.location))
         self._block(statement.body, loop)
 
+    def _bind_parameter(self, parameter: Parameter, scope: _Scope) -> None:
+        if parameter.pattern is not None:
+            self._define_pattern(parameter.pattern, scope)
+            return
+        self._shadow(parameter.name, parameter.location)
+        scope.define(_Binding(parameter.name, "local", parameter.location))
+
+    def _define_pattern(self, pattern: Pattern, scope: _Scope) -> None:
+        for name_pattern in iter_name_patterns(pattern):
+            self._shadow(name_pattern.name, name_pattern.location)
+            scope.define(_Binding(name_pattern.name, "local", name_pattern.location))
+
     def _function_body(self, statement: FunctionDeclaration, scope: _Scope) -> None:
         inner = _Scope(scope)
         for parameter in statement.parameters:
             if parameter.default is not None:
                 self._expr(parameter.default, inner)
-            self._shadow(parameter.name, parameter.location)
-            inner.define(_Binding(parameter.name, "local", parameter.location))
+            self._bind_parameter(parameter, inner)
         if statement.inline:
             assert isinstance(statement.body, Expression)
             self._expr(statement.body, inner)
@@ -320,8 +343,7 @@ class _Linter:
         for parameter in expression.parameters:
             if parameter.default is not None:
                 self._expr(parameter.default, inner)
-            self._shadow(parameter.name, parameter.location)
-            inner.define(_Binding(parameter.name, "local", parameter.location))
+            self._bind_parameter(parameter, inner)
         if expression.inline:
             assert isinstance(expression.body, Expression)
             self._expr(expression.body, inner)

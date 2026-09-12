@@ -11,6 +11,8 @@ price: float = 2.5;
 ok: bool = true;
 value: dynamic = null;
 const title: str = "Echo";
+[a: int, b: int] = [1, 2];
+{ id: int, name: str } = { id: 1, name: title };
 ```
 
 ## Example
@@ -45,6 +47,15 @@ name = expression;
 ```
 
 `const name: T = expression;` cannot be reassigned. The bound list or hash is frozen.
+
+Destructuring unpacks a list or hash into names:
+
+```echo
+[a: int, b: int] = pair;
+[a, b] = pair;
+{ id: int, name: str } = user;
+[head: int, rest: int...] = xs;
+```
 
 ### Built-in types
 - `int`: whole numbers

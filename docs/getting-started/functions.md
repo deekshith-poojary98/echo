@@ -13,6 +13,14 @@ fn add(a: int, b: int) -> int {
     return a + b;
 }
 
+fn addPair([a: int, b: int]) -> int {
+    return a + b;
+}
+
+fn greetUser({ name: str }) -> str {
+    return name;
+}
+
 fn square(x: int) -> int => x * x;
 ```
 

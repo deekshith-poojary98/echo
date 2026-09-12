@@ -9,6 +9,8 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    DestructureAssignment,
+    DestructureDeclaration,
     ExportDeclaration,
     Expression,
     ExpressionStatement,
@@ -18,16 +20,20 @@ from echo.frontend.ast.nodes import (
     FunctionType,
     HashLiteral,
     HashPair,
+    HashPattern,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     LambdaExpression,
     ListLiteral,
+    ListPattern,
     LiteralExpression,
     MemberExpression,
+    NamePattern,
     ObjectType,
     Parameter,
+    Pattern,
     Program,
     ReturnStatement,
     SliceExpression,
@@ -43,6 +49,8 @@ from echo.frontend.ast.nodes import (
     VariableExpression,
     WatchStatement,
     WhileStatement,
+    iter_name_patterns,
+    pattern_container_type,
 )
 from echo.frontend.tokens import COMPOUND_OPS, Token, TokenType
 
@@ -100,6 +108,9 @@ class Parser:
         return self.parse_assignment_or_expr()
 
     def parse_assignment_or_expr(self) -> Statement:
+        if self._check(TokenType.LEFT_BRACKET, TokenType.LEFT_BRACE) and self._pattern_then_equal():
+            return self._parse_destructure_statement(const=False)
+
         if self._is_name(self._peek()) and self._check_offset(1, TokenType.COLON):
             name_token = self._advance()
             self._advance()
@@ -259,6 +270,12 @@ class Parser:
             return ExportDeclaration(token.location, declaration.name, declaration)
         if self._check(TokenType.CONST):
             declaration = self.parse_const()
+            if isinstance(declaration, DestructureDeclaration):
+                raise ParseError(
+                    "export of a destructuring declaration is not supported",
+                    declaration.location,
+                    help_text="Export each name separately after declaring it.",
+                )
             return ExportDeclaration(token.location, declaration.name, declaration)
         name_token = self._expect_name_token("exported name")
         if self._match(TokenType.COLON):
@@ -273,8 +290,10 @@ class Parser:
         self._expect(TokenType.SEMICOLON, ";")
         return ExportDeclaration(token.location, name_token.lexeme)
 
-    def parse_const(self) -> VariableDeclaration:
+    def parse_const(self) -> VariableDeclaration | DestructureDeclaration:
         token = self._expect(TokenType.CONST, "const")
+        if self._check(TokenType.LEFT_BRACKET, TokenType.LEFT_BRACE):
+            return self._parse_destructure_statement(const=True, location=token.location)
         name_token = self._expect_name_token("variable name")
         self._expect(TokenType.COLON, ":")
         declared_type = self._parse_type()
@@ -585,6 +604,32 @@ class Parser:
     def _parse_parameters(self) -> list[Parameter]:
         parameters: list[Parameter] = []
         while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
+            if self._check(TokenType.LEFT_BRACKET, TokenType.LEFT_BRACE):
+                pattern = self._parse_pattern(require_types=True)
+                if self._check(TokenType.DOT_DOT_DOT):
+                    raise ParseError(
+                        "A destructuring parameter cannot itself be variadic; put rest inside a list pattern",
+                        self._peek().location,
+                    )
+                if self._check(TokenType.EQUAL):
+                    raise ParseError(
+                        "Destructuring parameters cannot have defaults",
+                        self._peek().location,
+                    )
+                container = pattern_container_type(pattern)
+                param_type = TypeName(pattern.location, container)
+                parameters.append(
+                    Parameter(
+                        f"#{len(parameters)}",
+                        param_type,
+                        pattern.location,
+                        None,
+                        False,
+                        pattern,
+                    )
+                )
+                self._match(TokenType.COMMA)
+                continue
             param_token = self._expect_name_token("parameter name")
             self._expect(TokenType.COLON, ":")
             param_type = self._parse_type()
@@ -617,6 +662,147 @@ class Parser:
                     parameter.location,
                     help_text="Put default parameters last, immediately before a variadic parameter if there is one.",
                 )
+
+    def _parse_destructure_statement(
+        self,
+        *,
+        const: bool,
+        location: SourceLocation | None = None,
+    ) -> DestructureDeclaration | DestructureAssignment:
+        pattern = self._parse_pattern(require_types=True if const else None)
+        names = iter_name_patterns(pattern)
+        typed = bool(names) and all(name.declared_type is not None for name in names)
+        untyped = all(name.declared_type is None for name in names)
+        if names and not typed and not untyped:
+            raise ParseError(
+                "Destructuring types must be present on every name or omitted on every name",
+                pattern.location,
+                help_text="Write [a: int, b: int] = pair; or [a, b] = pair; — do not mix.",
+            )
+        if const and not typed:
+            raise ParseError(
+                "const destructuring requires types on each name",
+                pattern.location,
+                help_text="Write const [a: int, b: int] = pair;",
+            )
+        if not self._match(TokenType.EQUAL):
+            if const:
+                raise ParseError(
+                    "const destructuring must be initialized",
+                    pattern.location,
+                    help_text="Write const [a: int, b: int] = expr;",
+                )
+            raise ParseError("Expected '=' after destructuring pattern", self._peek().location)
+        value = self.parse_expression()
+        self._expect(TokenType.SEMICOLON, ";")
+        loc = location or pattern.location
+        if const or typed:
+            return DestructureDeclaration(loc, pattern, value, const)
+        return DestructureAssignment(loc, pattern, value)
+
+    def _parse_pattern(self, require_types: bool | None) -> Pattern:
+        if self._check(TokenType.LEFT_BRACKET):
+            return self._parse_list_pattern(require_types)
+        if self._check(TokenType.LEFT_BRACE):
+            return self._parse_hash_pattern(require_types)
+        raise ParseError("Expected a list or hash destructuring pattern", self._peek().location)
+
+    def _parse_list_pattern(self, require_types: bool | None) -> ListPattern:
+        token = self._expect(TokenType.LEFT_BRACKET, "[")
+        elements: list[Pattern] = []
+        while not self._check(TokenType.RIGHT_BRACKET) and not self._check(TokenType.EOF):
+            if self._check(TokenType.SEMICOLON):
+                raise ParseError("Found ';' inside a list pattern — you may be missing a closing ']'.", self._peek().location)
+            element = self._parse_pattern_element(require_types)
+            elements.append(element)
+            self._match(TokenType.COMMA)
+        self._expect(TokenType.RIGHT_BRACKET, "]")
+        for index, element in enumerate(elements):
+            if isinstance(element, NamePattern) and element.rest and index != len(elements) - 1:
+                raise ParseError(
+                    "Rest element must be last in a list pattern",
+                    element.location,
+                    help_text="Write [head: int, rest: int...] = xs;",
+                )
+        return ListPattern(token.location, elements)
+
+    def _parse_hash_pattern(self, require_types: bool | None) -> HashPattern:
+        token = self._expect(TokenType.LEFT_BRACE, "{")
+        fields: list[NamePattern] = []
+        while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            if self._check(TokenType.SEMICOLON):
+                raise ParseError("Found ';' inside a hash pattern — you may be missing a closing '}'.", self._peek().location)
+            field = self._parse_name_pattern(require_types)
+            if field.rest:
+                raise ParseError(
+                    "Hash destructuring does not support rest",
+                    field.location,
+                    help_text="List rest is [head: int, rest: int...]. Hash rest is not in 0.7.1.",
+                )
+            fields.append(field)
+            self._match(TokenType.COMMA)
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return HashPattern(token.location, fields)
+
+    def _parse_pattern_element(self, require_types: bool | None) -> Pattern:
+        if self._check(TokenType.LEFT_BRACKET):
+            return self._parse_list_pattern(require_types)
+        if self._check(TokenType.LEFT_BRACE):
+            return self._parse_hash_pattern(require_types)
+        return self._parse_name_pattern(require_types)
+
+    def _parse_name_pattern(self, require_types: bool | None) -> NamePattern:
+        name_token = self._expect_name_token("destructuring name")
+        declared_type = None
+        if self._match(TokenType.COLON):
+            if require_types is False:
+                raise ParseError(
+                    "Types are not allowed in destructuring assignment",
+                    name_token.location,
+                    help_text="Write [a, b] = pair; after the names are already declared.",
+                )
+            declared_type = self._parse_type()
+            if isinstance(declared_type, TypeName) and declared_type.name == "void":
+                raise ParseError("Cannot use 'void' as a variable type", name_token.location)
+        elif require_types is True:
+            raise ParseError(
+                "Destructuring declarations require a type on each name",
+                name_token.location,
+                help_text="Write [a: int, b: int] = pair;",
+            )
+        rest = bool(self._match(TokenType.DOT_DOT_DOT))
+        return NamePattern(name_token.location, name_token.lexeme, declared_type, rest)
+
+    def _pattern_then_equal(self) -> bool:
+        saved = self.pos
+        brackets = 0
+        braces = 0
+        parens = 0
+        started = False
+        while True:
+            token = self._peek()
+            if token.type == TokenType.EOF:
+                self.pos = saved
+                return False
+            if token.type == TokenType.LEFT_BRACKET:
+                brackets += 1
+            elif token.type == TokenType.RIGHT_BRACKET:
+                brackets -= 1
+            elif token.type == TokenType.LEFT_BRACE:
+                braces += 1
+            elif token.type == TokenType.RIGHT_BRACE:
+                braces -= 1
+            elif token.type == TokenType.LEFT_PAREN:
+                parens += 1
+            elif token.type == TokenType.RIGHT_PAREN:
+                parens -= 1
+            self._advance()
+            started = True
+            if started and brackets <= 0 and braces <= 0 and parens <= 0:
+                break
+        result = self._check(TokenType.EQUAL)
+        self.pos = saved
+        return result
 
     def _parse_object_type(self) -> ObjectType:
         token = self._expect(TokenType.LEFT_BRACE, "{")

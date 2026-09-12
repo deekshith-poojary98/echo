@@ -8,6 +8,8 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    DestructureAssignment,
+    DestructureDeclaration,
     ExportDeclaration,
     Expression,
     ExpressionStatement,
@@ -16,16 +18,20 @@ from echo.frontend.ast.nodes import (
     FunctionDeclaration,
     FunctionType,
     HashLiteral,
+    HashPattern,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     LambdaExpression,
     ListLiteral,
+    ListPattern,
     LiteralExpression,
     MemberExpression,
+    NamePattern,
     ObjectType,
     Parameter,
+    Pattern,
     Program,
     ReturnStatement,
     SliceExpression,
@@ -108,6 +114,15 @@ class _Printer:
             self._line(
                 f"{prefix}{statement.name}: {self._type(statement.declared_type)} = {self._expr(statement.initializer)};"
             )
+            return
+        if isinstance(statement, DestructureDeclaration):
+            prefix = "const " if statement.const else ""
+            self._line(
+                f"{prefix}{self._pattern(statement.pattern)} = {self._expr(statement.initializer)};"
+            )
+            return
+        if isinstance(statement, DestructureAssignment):
+            self._line(f"{self._pattern(statement.pattern)} = {self._expr(statement.value)};")
             return
         if isinstance(statement, AssignmentStatement):
             self._line(f"{statement.name} = {self._expr(statement.value)};")
@@ -286,12 +301,30 @@ class _Printer:
         return value
 
     def _param(self, parameter: Parameter) -> str:
+        if parameter.pattern is not None:
+            return self._pattern(parameter.pattern)
         text = f"{parameter.name}: {self._type(parameter.type)}"
         if parameter.variadic:
             text += "..."
         if parameter.default is not None:
             text += f" = {self._expr(parameter.default)}"
         return text
+
+    def _pattern(self, pattern: Pattern) -> str:
+        if isinstance(pattern, NamePattern):
+            text = pattern.name
+            if pattern.declared_type is not None:
+                text += f": {self._type(pattern.declared_type)}"
+            if pattern.rest:
+                text += "..."
+            return text
+        if isinstance(pattern, ListPattern):
+            inner = ", ".join(self._pattern(element) for element in pattern.elements)
+            return f"[{inner}]"
+        if isinstance(pattern, HashPattern):
+            inner = ", ".join(self._pattern(field) for field in pattern.fields)
+            return f"{{{inner}}}" if inner else "{}"
+        raise TypeError(f"unhandled pattern: {type(pattern).__name__}")
 
     def _lambda(self, expression: LambdaExpression) -> str:
         params = ", ".join(self._param(param) for param in expression.parameters)

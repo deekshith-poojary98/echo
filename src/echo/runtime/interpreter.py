@@ -21,6 +21,8 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    DestructureAssignment,
+    DestructureDeclaration,
     ExportDeclaration,
     Expression,
     ExpressionStatement,
@@ -28,14 +30,18 @@ from echo.frontend.ast.nodes import (
     ForeachStatement,
     FunctionDeclaration,
     HashLiteral,
+    HashPattern,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     LambdaExpression,
     ListLiteral,
+    ListPattern,
     LiteralExpression,
     MemberExpression,
+    NamePattern,
+    Pattern,
     Program,
     ReturnStatement,
     SliceExpression,
@@ -43,12 +49,15 @@ from echo.frontend.ast.nodes import (
     StringInterpolation,
     StringLiteralExpression,
     TypeAliasStatement,
+    TypeName,
     UnaryExpression,
     UseStatement,
     VariableDeclaration,
     VariableExpression,
     WatchStatement,
     WhileStatement,
+    list_pattern_fixed,
+    list_pattern_rest,
 )
 from echo.frontend.tokens import TokenType
 from echo.runtime.builtins import (
@@ -167,6 +176,28 @@ class Interpreter:
                 statement.declared_type,
                 mutable=not statement.const,
                 const=statement.const,
+            )
+            return
+        if isinstance(statement, DestructureDeclaration):
+            value = self.evaluate(statement.initializer, env)
+            self._unpack_pattern(
+                statement.pattern,
+                value,
+                env,
+                declare=True,
+                const=statement.const,
+                location=statement.location,
+            )
+            return
+        if isinstance(statement, DestructureAssignment):
+            value = self.evaluate(statement.value, env)
+            self._unpack_pattern(
+                statement.pattern,
+                value,
+                env,
+                declare=False,
+                const=False,
+                location=statement.location,
             )
             return
         if isinstance(statement, AssignmentStatement):
@@ -415,13 +446,17 @@ class Interpreter:
                             code="E2706",
                         )
             elif not matches_type(value, parameter.type):
+                label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
                 raise EchoTypeError(
-                    f"Argument '{parameter.name}' in function '{declaration.name}' must be of type "
+                    f"Argument {label} in function '{declaration.name}' must be of type "
                     f"{format_type(parameter.type)}, got {echo_type_name(value)}",
                     location,
                     code="E2706",
                 )
-            new_env.define(parameter.name, value, parameter.type)
+            if parameter.pattern is not None:
+                self._unpack_pattern(parameter.pattern, value, new_env, declare=True, const=False, location=location)
+            else:
+                new_env.define(parameter.name, value, parameter.type)
 
         if declaration.inline:
             result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
@@ -446,13 +481,17 @@ class Interpreter:
         new_env.function_name = declaration.name
         for parameter, value in zip(declaration.parameters, values):
             if not matches_type(value, parameter.type):
+                label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
                 raise EchoTypeError(
-                    f"Argument '{parameter.name}' in function '{declaration.name}' must be of type "
+                    f"Argument {label} in function '{declaration.name}' must be of type "
                     f"{format_type(parameter.type)}, got {echo_type_name(value)}",
                     location,
                     code="E2706",
                 )
-            new_env.define(parameter.name, value, parameter.type)
+            if parameter.pattern is not None:
+                self._unpack_pattern(parameter.pattern, value, new_env, declare=True, const=False, location=location)
+            else:
+                new_env.define(parameter.name, value, parameter.type)
         if declaration.inline:
             result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
         else:
@@ -1009,6 +1048,94 @@ class Interpreter:
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise EchoTypeError("for-loop bounds must be convertible to int", location, code="E2702")
         return int(value)
+
+    def _unpack_pattern(
+        self,
+        pattern: Pattern,
+        value: object,
+        env: Environment,
+        *,
+        declare: bool,
+        const: bool,
+        location: SourceLocation,
+    ) -> None:
+        if isinstance(pattern, ListPattern):
+            if not isinstance(value, list):
+                raise EchoTypeError(
+                    f"List destructuring expected a list, got {echo_type_name(value)}",
+                    location,
+                    code="E3206",
+                )
+            fixed = list_pattern_fixed(pattern)
+            rest = list_pattern_rest(pattern)
+            if rest is None:
+                if len(value) != len(fixed):
+                    raise EchoRuntimeError(
+                        f"List destructuring expected {len(fixed)} element(s), got {len(value)}",
+                        location,
+                        code="E3205",
+                    )
+            elif len(value) < len(fixed):
+                raise EchoRuntimeError(
+                    f"List destructuring expected at least {len(fixed)} element(s), got {len(value)}",
+                    location,
+                    code="E3205",
+                )
+            for index, element in enumerate(fixed):
+                self._unpack_pattern(
+                    element,
+                    value[index],
+                    env,
+                    declare=declare,
+                    const=const,
+                    location=location,
+                )
+            if rest is not None:
+                rest_value = list(value[len(fixed) :])
+                if rest.declared_type is not None:
+                    for item in rest_value:
+                        if not matches_type(item, rest.declared_type):
+                            validate_type(rest.name, item, rest.declared_type, location)
+                self._bind_pattern_name(rest, rest_value, env, declare=declare, const=const, location=location)
+            return
+        if isinstance(pattern, HashPattern):
+            if not isinstance(value, dict):
+                raise EchoTypeError(
+                    f"Hash destructuring expected a hash, got {echo_type_name(value)}",
+                    location,
+                    code="E3207",
+                )
+            for field in pattern.fields:
+                if field.name not in value:
+                    raise EchoRuntimeError(f"Key '{field.name}' not found in hash", location, code="E2711")
+                self._bind_pattern_name(field, value[field.name], env, declare=declare, const=const, location=location)
+            return
+        if isinstance(pattern, NamePattern):
+            self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)
+
+    def _bind_pattern_name(
+        self,
+        pattern: NamePattern,
+        value: object,
+        env: Environment,
+        *,
+        declare: bool,
+        const: bool,
+        location: SourceLocation,
+    ) -> None:
+        declared_type = TypeName(pattern.location, "list") if pattern.rest else pattern.declared_type
+        if declare:
+            if declared_type is not None:
+                validate_type(pattern.name, value, declared_type, location)
+            if env.is_watched(pattern.name):
+                self._watch(pattern.name, value, env)
+            if const:
+                freeze(value)
+            env.define(pattern.name, value, declared_type, mutable=not const, const=const)
+            return
+        if env.is_watched(pattern.name):
+            self._watch(pattern.name, value, env)
+        env.assign(pattern.name, value, location)
 
     def _index_assign(self, target: object, index: object, value: object, location: SourceLocation) -> None:
         require_unfrozen(target, location)

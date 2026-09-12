@@ -186,6 +186,15 @@ same as an ordinary declaration, and the initializer is required.
 - `watch` on a const name is legal and will not fire from that binding.
 - Function parameters stay mutable. `const` on parameters is not in 0.7.0.
 
+Destructuring unpacks a list or hash into names in one declaration or assignment.
+
+- Declare: `[a: int, b: int] = pair;` and `{ id: int, name: str } = user;`. Types are required on fresh names.
+- `const [lo: int, hi: int] = bounds;` makes each bound name const.
+- Assignment to already-declared names omits types: `[a, b] = pair;` and `{ id, name } = user;`.
+- Function parameters use the same patterns: `fn add([a: int, b: int]) -> int`. The parameter is a `list` or `hash`.
+- List rest is last: `[head: int, rest: int...] = xs` binds `rest` as a `list` of that element type. No hash rest. No `as` rename.
+- Length mismatch without rest aborts (**E3205**). Missing hash keys abort (**E2711**). Extra hash keys are ignored in 0.7.1. Nested list patterns such as `[[a: int], b: int]` are allowed.
+
 Inside a function:
 
 - **Reads** of outer names are allowed (lexical).
@@ -506,5 +515,6 @@ v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted st
 v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occurrences in order, Echo `==`).
 v0.6.8 adds `echo test -run` (glob on `testXxx` function names), list `chunk`, `rangeList` / `rangeListInclusive` (same bounds as `...` / `..`), and hash `mapValues` / `filter`.
 v0.6.9 adds function-type assignability for trailing defaults, list `flatten` / `partition`, and `echo test --json`. This is the last 0.6.x slice.
-v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Function parameters stay mutable. No destructuring, exact objects, unions, `switch`, builtins-as-values, or range-as-value.
+v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Function parameters stay mutable.
+v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params). No `as` rename, hash rest, exact objects, unions, `switch`, builtins-as-values, or range-as-value.
 See `docs/v0.4-stdlib.md`.

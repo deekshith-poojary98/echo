@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.6.9**. **0.7.0** (`const` bindings) is implemented and untagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.0**. **0.7.1** (destructuring) is implemented. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.6.9**. **0.6.x is complete.** **0.7.0** (`const`) is implemented. **0.7.1** is next.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.0**. **0.6.x is complete.** **0.7.0** (`const`) and **0.7.1** (destructuring) are implemented. **0.7.2** is next.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -240,7 +240,7 @@ Working spellings below are the plan of record so each version can be implemente
 | Version | Item | Status |
 | --- | --- | --- |
 | 0.7.0 | `const` bindings | implemented (0.7.0) |
-| 0.7.1 | Destructuring | pending |
+| 0.7.1 | Destructuring | implemented (0.7.1) |
 | 0.7.2 | Exact object types | pending |
 | 0.7.3 | Builtins as values | pending |
 | 0.7.4 | Range as a value | pending |
@@ -261,11 +261,11 @@ Does not add a new runtime type. Ordinary (non-const) imported collections keep 
 
 Unpack lists and hashes into names in one binding. This is new declaration / assignment syntax, not a stdlib helper.
 
-Working spelling: **`[a: int, b: int] = pair;`** and **`{ id: int, name: str } = user;`**. Types are required on a fresh declaration (Echo does not infer). Rest is last: **`[head: int, rest: int...] = xs`** binds `rest` as a `list` of `T`. Nested patterns are allowed. Compose with `const`: **`const [a: int, b: int] = pair;`**. Reassignment to already-declared names omits types: **`[a, b] = pair;`**. Same patterns in function parameters: **`fn f([a: int, b: int]) { }`**.
+**Implemented spelling:** **`[a: int, b: int] = pair;`** and **`{ id: int, name: str } = user;`**. Types are required on a fresh declaration (Echo does not infer). Rest is last: **`[head: int, rest: int...] = xs`** binds `rest` as a `list` of `T`. Nested list patterns are allowed (`[[a: int], b: int]`). Compose with `const`: **`const [a: int, b: int] = pair;`**. Reassignment to already-declared names omits types: **`[a, b] = pair;`**. Same patterns in function parameters: **`fn f([a: int, b: int]) { }`** (the parameter type is `list` or `hash`).
 
-Hash patterns bind listed keys; missing keys abort (same family as `user["x"]`). Extra keys are ignored unless the source is an exact object type (0.7.2). Length mismatch on a list pattern without rest aborts. A callback or initializer that aborts still aborts.
+Hash patterns bind listed keys; missing keys abort (**E2711**, same as `user["x"]`). Extra keys are ignored unless the source is an exact object type (0.7.2). Length mismatch on a list pattern without rest aborts (**E3205**). Wrong container type is **E3206** / **E3207**. A callback or initializer that aborts still aborts.
 
-Default: the field name is the binding name. Rename spelling is an open question; do not invent a second form in 0.7.1 if rename is still undecided — ship same-name first.
+Default: the field name is the binding name. No `as` rename in 0.7.1. No hash rest.
 
 ### 0.7.2 — exact object types
 

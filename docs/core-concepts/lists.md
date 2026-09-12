@@ -26,6 +26,7 @@ say(nums);
 
 ## Notes
 - Lists are mutable unless bound with `const` (the list value is then frozen).
+- Destructuring unpacks a list: `[a: int, b: int] = nums;` or `[head: int, rest: int...] = nums;`. Length mismatch without rest aborts.
 - Indexing requires an `int`.
 - Nested indexing and nested assignment are supported.
 - Slice syntax `xs[1:4]`, `xs[1:]`, `xs[:4]`, and `xs[:]` matches `slice()`.

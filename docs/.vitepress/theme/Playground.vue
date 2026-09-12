@@ -61,6 +61,10 @@ while i < words.length() {
 }
 
 say(counts);
+
+[first: str, rest: str...] = words;
+{ a: int } = counts;
+say(first, rest, a);
 `,
   },
   {

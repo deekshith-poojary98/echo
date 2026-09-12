@@ -10,6 +10,8 @@ from echo.frontend.ast.nodes import (
     CallExpression,
     CompoundAssignment,
     ContinueStatement,
+    DestructureAssignment,
+    DestructureDeclaration,
     ExportDeclaration,
     Expression,
     ExpressionStatement,
@@ -18,16 +20,20 @@ from echo.frontend.ast.nodes import (
     FunctionDeclaration,
     FunctionType,
     HashLiteral,
+    HashPattern,
     IfStatement,
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
     LambdaExpression,
     ListLiteral,
+    ListPattern,
     LiteralExpression,
     MemberExpression,
+    NamePattern,
     ObjectType,
     Parameter,
+    Pattern,
     Program,
     ReturnStatement,
     SliceExpression,
@@ -43,6 +49,9 @@ from echo.frontend.ast.nodes import (
     VariableExpression,
     WatchStatement,
     WhileStatement,
+    iter_name_patterns,
+    list_pattern_fixed,
+    list_pattern_rest,
 )
 from echo.runtime.builtins import (
     MUTATING_METHODS,
@@ -161,6 +170,15 @@ class SemanticAnalyzer:
             scope.define(symbol)
             if scope.parent is None:
                 self._record(symbol)
+        elif isinstance(statement, DestructureDeclaration):
+            self._expression(statement.initializer, scope)
+            self._resolve_pattern_types(statement.pattern, scope)
+            self._check_pattern_against_value(statement.pattern, statement.initializer, statement.location)
+            self._define_pattern(statement.pattern, scope, const=statement.const, location=statement.location)
+        elif isinstance(statement, DestructureAssignment):
+            self._expression(statement.value, scope)
+            self._assign_pattern(statement.pattern, scope, statement)
+            self._check_pattern_against_value(statement.pattern, statement.value, statement.location)
         elif isinstance(statement, AssignmentStatement):
             self._expression(statement.value, scope)
             self._require_assignable(statement.name, statement, scope)
@@ -311,7 +329,11 @@ class SemanticAnalyzer:
         for parameter in parameters:
             if parameter.default is not None:
                 self._expression(parameter.default, function_scope)
-            function_scope.define(Symbol(parameter.name, SymbolKind.VARIABLE, parameter.location, parameter.type))
+            if parameter.pattern is not None:
+                self._resolve_pattern_types(parameter.pattern, scope)
+                self._define_pattern(parameter.pattern, function_scope, const=False, location=parameter.location)
+            else:
+                function_scope.define(Symbol(parameter.name, SymbolKind.VARIABLE, parameter.location, parameter.type))
 
         if inline:
             assert isinstance(body, Expression)
@@ -572,6 +594,20 @@ class SemanticAnalyzer:
                 add(self._function_symbol(statement), False)
             elif isinstance(statement, VariableDeclaration):
                 add(self._variable_symbol(statement), False)
+            elif isinstance(statement, DestructureDeclaration):
+                for name_pattern in iter_name_patterns(statement.pattern):
+                    declared = TypeName(name_pattern.location, "list") if name_pattern.rest else name_pattern.declared_type
+                    add(
+                        Symbol(
+                            name_pattern.name,
+                            SymbolKind.VARIABLE,
+                            name_pattern.location,
+                            declared,
+                            mutable=not statement.const,
+                            const=statement.const,
+                        ),
+                        False,
+                    )
 
         for statement in pending:
             existing = declared.get(statement.name)
@@ -703,6 +739,103 @@ class SemanticAnalyzer:
                 code="E3101",
             )
         self.module_symbols.exports[name] = symbol
+
+    def _resolve_pattern_types(self, pattern: Pattern, scope: Scope) -> None:
+        if isinstance(pattern, NamePattern):
+            if pattern.declared_type is not None:
+                pattern.declared_type = self._resolve_type(pattern.declared_type, scope)
+            return
+        if isinstance(pattern, ListPattern):
+            for element in pattern.elements:
+                self._resolve_pattern_types(element, scope)
+            return
+        if isinstance(pattern, HashPattern):
+            for field in pattern.fields:
+                self._resolve_pattern_types(field, scope)
+
+    def _binding_type(self, pattern: NamePattern) -> TypeAnnotation:
+        if pattern.rest:
+            return TypeName(pattern.location, "list")
+        assert pattern.declared_type is not None
+        return pattern.declared_type
+
+    def _define_pattern(self, pattern: Pattern, scope: Scope, *, const: bool, location: SourceLocation) -> None:
+        for name_pattern in iter_name_patterns(pattern):
+            declared = self._binding_type(name_pattern)
+            symbol = Symbol(
+                name_pattern.name,
+                SymbolKind.VARIABLE,
+                name_pattern.location,
+                declared,
+                mutable=not const,
+                const=const,
+            )
+            scope.define(symbol)
+            if scope.parent is None:
+                self._record(symbol)
+
+    def _assign_pattern(self, pattern: Pattern, scope: Scope, statement: Statement) -> None:
+        for name_pattern in iter_name_patterns(pattern):
+            self._require_assignable(name_pattern.name, statement, scope)
+
+    def _check_pattern_against_value(self, pattern: Pattern, value: Expression, location: SourceLocation) -> None:
+        if isinstance(pattern, ListPattern):
+            if isinstance(value, HashLiteral) or isinstance(value, StringLiteralExpression):
+                raise SemanticError(
+                    "List destructuring expected a list",
+                    location,
+                    code="E3206",
+                )
+            if isinstance(value, LiteralExpression) and not isinstance(value.value, list):
+                raise SemanticError(
+                    "List destructuring expected a list",
+                    location,
+                    code="E3206",
+                )
+            if not isinstance(value, ListLiteral):
+                return
+            fixed = list_pattern_fixed(pattern)
+            rest = list_pattern_rest(pattern)
+            actual = len(value.elements)
+            if rest is None:
+                if actual != len(fixed):
+                    raise SemanticError(
+                        f"List destructuring expected {len(fixed)} element(s), got {actual}",
+                        location,
+                        code="E3205",
+                    )
+            elif actual < len(fixed):
+                raise SemanticError(
+                    f"List destructuring expected at least {len(fixed)} element(s), got {actual}",
+                    location,
+                    code="E3205",
+                )
+            for element_pattern, element_value in zip(fixed, value.elements):
+                self._check_pattern_against_value(element_pattern, element_value, location)
+            return
+        if isinstance(pattern, HashPattern):
+            if isinstance(value, ListLiteral) or isinstance(value, StringLiteralExpression):
+                raise SemanticError(
+                    "Hash destructuring expected a hash",
+                    location,
+                    code="E3207",
+                )
+            if isinstance(value, LiteralExpression) and not isinstance(value.value, dict):
+                raise SemanticError(
+                    "Hash destructuring expected a hash",
+                    location,
+                    code="E3207",
+                )
+            if not isinstance(value, HashLiteral):
+                return
+            keys = {pair.key for pair in value.pairs}
+            for field in pattern.fields:
+                if field.name not in keys:
+                    raise SemanticError(
+                        f"Key '{field.name}' not found in hash",
+                        location,
+                        code="E2711",
+                    )
 
     def _require_assignable(self, name: str, statement: Statement, scope: Scope) -> None:
         symbol = scope.resolve(name)

@@ -90,8 +90,13 @@ def bind_arguments(
         if parameter.default is not None:
             bound[parameter.name] = parameter.default
             continue
+        label = (
+            "destructuring parameter"
+            if parameter.pattern is not None
+            else f"parameter '{parameter.name}'"
+        )
         raise ArgumentError(
-            f"Missing argument for parameter '{parameter.name}' in function '{function_name}'",
+            f"Missing argument for {label} in function '{function_name}'",
             location,
             code="E2205",
         )
