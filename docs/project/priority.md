@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.6.3**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter`; **0.6.2** adds list `reduce`; **0.6.3** adds list `forEach`; **0.6.4** adds list `flatMap`. **0.6 continues through 0.6.9** — five pending increments below. **0.7 starts only after 0.6.9 has shipped.** `const` / destructuring stay **0.7**, not late 0.6.
+Current tagged version is **v0.6.4**. **0.5.9** closed the 0.5.x tooling arc; **0.6.0** ships first-class functions (including lambdas), slice syntax, and user `fn` defaults/variadics; **0.6.1** adds list `map` / `filter`; **0.6.2** adds list `reduce`; **0.6.3** adds list `forEach`; **0.6.4** adds list `flatMap`; **0.6.5** adds list `some` / `every` / `findIndex`. **0.6 continues through 0.6.9** — four pending increments below. **0.7 starts only after 0.6.9 has shipped.** `const` / destructuring stay **0.7**, not late 0.6.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language. **Policy: do not start 0.7 until Echo has shipped through 0.6.9.** Current tag is **v0.6.3**. Each of **0.6.5–0.6.9** is one shippable increment (same rhythm as 0.5.4–0.6.4): function/collection/language ergonomics plus small stdlib that needs 0.6.0 function values.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opens language. **Policy: do not start 0.7 until Echo has shipped through 0.6.9.** Current tag is **v0.6.4**. Each of **0.6.6–0.6.9** is one shippable increment (same rhythm as 0.5.4–0.6.5): function/collection/language ergonomics plus small stdlib that needs 0.6.0 function values.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -120,11 +120,13 @@ Last 0.5.x tooling slice. No new language syntax.
 
 **0.6.4** ships list `flatMap` on those same function values.
 
+**0.6.5** ships list `some` / `every` / `findIndex` on those same function values.
+
 Failure model is unchanged through 0.6.9: callbacks or default expressions that abort still abort. No `try` / `catch`. No `Result` / `Option`. No extra `*Or` twins in this stretch — the 0.5.3 set still covers the designed recovery cases.
 
-Already shipped, so **not** re-proposed: `args` / `env` / files / JSON / `fmt` / `lint` / `test` / `check` / `map` / `filter` / `reduce` / `forEach` / `flatMap` / `slice()` / `xs[1:4]` / lambdas / defaults / variadics / `order(comparator)` / `find(value)` / `reverse` / `contains`.
+Already shipped, so **not** re-proposed: `args` / `env` / files / JSON / `fmt` / `lint` / `test` / `check` / `map` / `filter` / `reduce` / `forEach` / `flatMap` / `some` / `every` / `findIndex` / `slice()` / `xs[1:4]` / lambdas / defaults / variadics / `order(comparator)` / `find(value)` / `reverse` / `contains`.
 
-Held items below stay held for the whole 0.6.5–0.6.9 stretch (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring are **0.7**, not 0.6.8/0.6.9.
+Held items below stay held for the whole 0.6.6–0.6.9 stretch (VM/JIT, classes, generics, async, packages, try/catch, Result/Option, overloading, LSP, dates/HTTP/regex, `mkdir -p`, test DSL). `const` / destructuring are **0.7**, not 0.6.8/0.6.9.
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -135,7 +137,7 @@ Held items below stay held for the whole 0.6.5–0.6.9 stretch (VM/JIT, classes,
 | 0.6.2 | `reduce` | implemented (0.6.2) |
 | 0.6.3 | `forEach` | implemented (0.6.3) |
 | 0.6.4 | `flatMap` | implemented (0.6.4) |
-| 0.6.5 | `some` / `every` / `findIndex` | pending |
+| 0.6.5 | `some` / `every` / `findIndex` | implemented (0.6.5) |
 | 0.6.6 | Optional slice bounds `xs[1:]` `xs[:4]` `xs[:]` | pending |
 | 0.6.7 | `zip` | pending |
 | 0.6.8 | `unique` | pending |
@@ -171,7 +173,7 @@ List `flatMap(items, f)` / `items.flatMap(f)`. Unary `f` must return a `list`; a
 
 ### 0.6.5 — `some` / `every` / `findIndex`
 
-List predicates on a unary `fn(T) -> bool` (same bool rule as `filter`). `some` is `true` if any element matches (empty → `false`). `every` is `true` if all match (empty → `true`). `findIndex` is the first matching index, or `-1` if none — same sentinel as existing `find(value)`. `find(value)` stays value search; do not overload it. Short-circuit. Method + standalone. List only. Callbacks that abort abort the call.
+List predicates on a unary `fn(T) -> bool` (same bool rule as `filter`). `some` is `true` if any element matches (empty → `false`). `every` is `true` if all match (empty → `true`). `findIndex` is the first matching index, or `-1` if none — same sentinel as existing `find(value)`. `find(value)` stays value search; do not overload it. Short-circuit. Method + standalone. List only. Callbacks that abort abort the call. Codes: non-function `f` **E2840**, wrong arity **E2841**, non-`bool` callback result **E2831** (same as `filter`).
 
 ### 0.6.6 — optional slice bounds
 
@@ -202,7 +204,7 @@ Not scheduled as 0.6.x, not dummy versions:
 
 ## Held (do not implement)
 
-Do not move these into 0.6.5–0.6.9. `const` / destructuring stay **0.7** (after 0.6.9), not late 0.6.
+Do not move these into 0.6.6–0.6.9. `const` / destructuring stay **0.7** (after 0.6.9), not late 0.6.
 
 | Item | Status |
 | --- | --- |

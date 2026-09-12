@@ -734,6 +734,70 @@ say(flatMap(items: nums, f: wrap));
 
 ---
 
+### `some(f)`
+Returns `true` if unary `f` returns `true` for any element. `f` must take one argument and return `bool` — `1` is a type error. Empty list is `false`. Stops on the first `true`. Does not mutate the input. A callback that aborts aborts the call.
+
+```echo
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+
+nums: list = [1, 2, 3];
+say(nums.some(even));    // true
+say(some(nums, fn(x: int) -> bool { return x > 10; }));    // false
+```
+
+Standalone keyword form:
+
+```echo
+say(some(items: nums, f: even));
+```
+
+---
+
+### `every(f)`
+Returns `true` if unary `f` returns `true` for every element. `f` must take one argument and return `bool` — `1` is a type error. Empty list is `true`. Stops on the first `false`. Does not mutate the input. A callback that aborts aborts the call.
+
+```echo
+fn positive(x: int) -> bool {
+    return x > 0;
+}
+
+nums: list = [1, 2, 3];
+say(nums.every(positive));    // true
+say(every(nums, fn(x: int) -> bool { return x % 2 == 0; }));    // false
+```
+
+Standalone keyword form:
+
+```echo
+say(every(items: nums, f: positive));
+```
+
+---
+
+### `findIndex(f)`
+Returns the first index where unary `f` returns `true`, or `-1` if none match. `f` must take one argument and return `bool` — `1` is a type error. Empty list is `-1`. Stops on the first `true`. Does not mutate the input. A callback that aborts aborts the call. Distinct from `find(value)`, which still searches by value.
+
+```echo
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+
+nums: list = [1, 2, 3];
+say(nums.findIndex(even));    // 1
+say(findIndex(nums, fn(x: int) -> bool { return x == 9; }));    // -1
+say(nums.find(2));    // 1
+```
+
+Standalone keyword form:
+
+```echo
+say(findIndex(items: nums, f: even));
+```
+
+---
+
 ### `clone()`
 Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
 
@@ -872,7 +936,7 @@ say(copy["name"]);        // Echo
 
 ## Notes
 - All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, and `flatMap(...)` calls, use `items:` for the collection argument.
+- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `some(...)`, `every(...)`, and `findIndex(...)` calls, use `items:` for the collection argument.
 - Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
 - Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
 - `clone()` is **shallow** for both lists and hashes.
@@ -886,6 +950,7 @@ say(copy["name"]);        // Echo
 - Calling `reduce` without `init`, or with a callback that is not exactly two parameters
 - Calling `forEach` with a callback that is not exactly one parameter, or expecting it to return a list
 - Calling `flatMap` with a callback that does not return a list, or expecting nested lists to flatten more than one level
+- Assuming `some` / `every` / `findIndex` keep truthy `int` values such as `1`, or treating `findIndex(f)` as `find(value)`
 - Expecting `clone()` to deep-copy nested structures
 
 ## See Also

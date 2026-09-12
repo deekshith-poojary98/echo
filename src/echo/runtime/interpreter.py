@@ -724,6 +724,18 @@ class Interpreter:
             init = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
             callback = _nth(args, 1, method, location) if target is not None else _nth(args, 2, method, location)
             return self._reduce(items, init, callback, location)
+        if method == "some":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._some(items, callback, location)
+        if method == "every":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._every(items, callback, location)
+        if method == "findIndex":
+            items = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
+            callback = _nth(args, 0, method, location) if target is not None else _nth(args, 1, method, location)
+            return self._findIndex(items, callback, location)
         if method == "copyFile":
             src = target if target is not None else _nth(args, 0, method, location)
             dest = args[0] if target is not None else _nth(args, 1, method, location)
@@ -862,6 +874,37 @@ class Interpreter:
         for item in list(items):
             self.call_function_with_values(function, [item], location)
         return None
+
+    def _bool_predicate(self, method: str, function: EchoFunction, item: object, location: SourceLocation) -> bool:
+        matched = self.call_function_with_values(function, [item], location)
+        if not isinstance(matched, bool):
+            raise EchoTypeError(
+                f"{method}() callback '{function.declaration.name}' must return bool",
+                location,
+                code="E2831",
+            )
+        return matched
+
+    def _some(self, items: list, callback: object, location: SourceLocation) -> bool:
+        function = self._require_callback("some", callback, location, 1, "E2840", "E2841")
+        for item in list(items):
+            if self._bool_predicate("some", function, item, location) is True:
+                return True
+        return False
+
+    def _every(self, items: list, callback: object, location: SourceLocation) -> bool:
+        function = self._require_callback("every", callback, location, 1, "E2840", "E2841")
+        for item in list(items):
+            if self._bool_predicate("every", function, item, location) is not True:
+                return False
+        return True
+
+    def _findIndex(self, items: list, callback: object, location: SourceLocation) -> int:
+        function = self._require_callback("findIndex", callback, location, 1, "E2840", "E2841")
+        for index, item in enumerate(list(items)):
+            if self._bool_predicate("findIndex", function, item, location) is True:
+                return index
+        return -1
 
     def _reduce(self, items: list, init: object, callback: object, location: SourceLocation) -> object:
         function = self._require_callback("reduce", callback, location, 2, "E2832", "E2833")

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.5
+
+List `some` / `every` / `findIndex` on function values from 0.6.0. Same bool rule as `filter`. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. `find(value)` stays value search. No zip, optional slice bounds, or first-class builtins.
+
+- `some(items: list, f: fn(T) -> bool) -> bool` is `true` if any element matches (`bool` only — not truthy `1`). Empty list is `false`
+- `every(items: list, f: fn(T) -> bool) -> bool` is `true` if all elements match. Empty list is `true`
+- `findIndex(items: list, f: fn(T) -> bool) -> int` is the first matching index, or `-1` if none
+- Method form: `items.some(f)` / `items.every(f)` / `items.findIndex(f)`. List only. Input is not mutated. Short-circuit: `some` and `findIndex` stop on the first `true`; `every` stops on the first `false`
+- `f` is a function value (named `fn` or lambda) with **exactly one** parameter. Defaults and extra variadics do not count toward that arity. Not a name string
+- Non-`bool` callback result reuses `filter`'s `E2831`. Wrong callback type is `E2840`; wrong arity is `E2841`
+- `some` / `every` / `findIndex` are calls, not assignable values
+
 ## 0.6.4
 
 List `flatMap` on function values from 0.6.0. No new keywords. Failure model is unchanged — a callback that aborts still aborts the whole call. No some/every, findIndex, or first-class builtins.

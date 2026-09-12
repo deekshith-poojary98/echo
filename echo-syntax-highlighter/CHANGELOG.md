@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.6.5
+
+- Version tracks Echo v0.6.5.
+- Builtin highlighting includes `some`, `every`, and `findIndex`.
+
 ## 0.6.4
 
 - Version tracks Echo v0.6.4.

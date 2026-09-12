@@ -34,6 +34,9 @@ say(map([1, 2, 3], double));
 say(reduce([1, 2, 3], 0, fn(acc: int, x: int) -> int { return acc + x; }));
 forEach([1, 2, 3], fn(x: int) { say(x); });
 say(flatMap([1, 2], fn(x: int) -> list { return [x, x]; }));
+say(some([1, 2, 3], fn(x: int) -> bool { return x == 2; }));
+say(every([1, 2, 3], fn(x: int) -> bool { return x > 0; }));
+say(findIndex([1, 2, 3], fn(x: int) -> bool { return x == 3; }));
 ```
 
 Defaults and a trailing variadic:

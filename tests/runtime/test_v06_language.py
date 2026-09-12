@@ -744,3 +744,225 @@ say(flatMap([1, 2, 3], fn(x: int) -> list { return fail("flattened"); }));
     assert "flattened" in result.output
 
 
+def test_some_every_findindex_named_fn_and_lambda():
+    result = run_echo(
+        """
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+fn odd(x: int) -> bool {
+    return x % 2 == 1;
+}
+nums: list = [1, 2, 3, 4];
+say(some(nums, even));
+say(some(nums, fn(x: int) -> bool { return x > 10; }));
+say(every(nums, odd));
+say(every(nums, fn(x: int) -> bool { return x > 0; }));
+say(findIndex(nums, even));
+say(findIndex(nums, fn(x: int) -> bool { return x == 3; }));
+say(find(nums, 3));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["true", "false", "false", "true", "1", "2", "2"]
+
+
+def test_some_every_findindex_empty_list():
+    result = run_echo(
+        """
+fn boom(x: int) -> bool {
+    return fail("called");
+}
+empty: list = [];
+say(some(empty, boom));
+say(every(empty, boom));
+say(findIndex(empty, boom));
+say(some(empty, fn(x: int) -> bool { return fail("called"); }));
+say(every(empty, fn(x: int) -> bool { return fail("called"); }));
+say(findIndex(empty, fn(x: int) -> bool { return fail("called"); }));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["false", "true", "-1", "false", "true", "-1"]
+
+
+def test_some_every_findindex_short_circuit():
+    some_hit = run_echo(
+        """
+say(some([1, 2, 3], fn(x: int) -> bool {
+    if x == 1 {
+        return true;
+    }
+    return fail("some continued");
+}));
+"""
+    )
+    assert some_hit.exit_code == 0
+    assert some_hit.lines == ["true"]
+
+    every_miss = run_echo(
+        """
+say(every([1, 2, 3], fn(x: int) -> bool {
+    if x == 1 {
+        return false;
+    }
+    return fail("every continued");
+}));
+"""
+    )
+    assert every_miss.exit_code == 0
+    assert every_miss.lines == ["false"]
+
+    find_hit = run_echo(
+        """
+say(findIndex([1, 2, 3], fn(x: int) -> bool {
+    if x == 1 {
+        return true;
+    }
+    return fail("findIndex continued");
+}));
+"""
+    )
+    assert find_hit.exit_code == 0
+    assert find_hit.lines == ["0"]
+
+
+def test_some_every_findindex_do_not_mutate_input():
+    result = run_echo(
+        """
+nums: list = [1, 2, 3];
+has_even: bool = nums.some(fn(x: int) -> bool { return x % 2 == 0; });
+all_positive: bool = nums.every(fn(x: int) -> bool { return x > 0; });
+idx: int = nums.findIndex(fn(x: int) -> bool { return x == 2; });
+say(nums);
+say(has_even);
+say(all_positive);
+say(idx);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["[1, 2, 3]", "true", "true", "1"]
+
+
+def test_some_every_findindex_method_and_keyword_form():
+    result = run_echo(
+        """
+fn even(x: int) -> bool {
+    return x % 2 == 0;
+}
+fn positive(x: int) -> bool {
+    return x > 0;
+}
+nums: list = [1, 2, 3];
+say(nums.some(even));
+say(some(items: nums, f: even));
+say(nums.every(positive));
+say(every(items: nums, f: positive));
+say(nums.findIndex(even));
+say(findIndex(items: nums, f: even));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["true", "true", "true", "true", "1", "1"]
+
+
+def test_some_every_findindex_requires_bool_not_int():
+    some_int = run_echo(
+        """
+say(some([1, 0, 2], fn(x: int) -> int { return x; }));
+"""
+    )
+    assert some_int.exit_code == 1
+    assert_no_python_leak(some_int)
+    assert "some()" in some_int.output
+    assert "bool" in some_int.output
+    assert "E2831" in some_int.output
+
+    every_int = run_echo(
+        """
+say(every([1, 0, 2], fn(x: int) -> int { return x; }));
+"""
+    )
+    assert every_int.exit_code == 1
+    assert_no_python_leak(every_int)
+    assert "every()" in every_int.output
+    assert "bool" in every_int.output
+    assert "E2831" in every_int.output
+
+    find_int = run_echo(
+        """
+say(findIndex([1, 0, 2], fn(x: int) -> int { return x; }));
+"""
+    )
+    assert find_int.exit_code == 1
+    assert_no_python_leak(find_int)
+    assert "findIndex()" in find_int.output
+    assert "bool" in find_int.output
+    assert "E2831" in find_int.output
+
+
+def test_some_every_findindex_wrong_callback_type():
+    not_fn = run_echo("say(some([1, 2], 1));\n")
+    assert not_fn.exit_code == 1
+    assert_no_python_leak(not_fn)
+    assert "some()" in not_fn.output
+    assert "function" in not_fn.output
+    assert "E2840" in not_fn.output
+
+    wrong_arity = run_echo(
+        """
+fn add(a: int, b: int) -> bool {
+    return a == b;
+}
+say(every([1, 2], add));
+"""
+    )
+    assert wrong_arity.exit_code == 1
+    assert_no_python_leak(wrong_arity)
+    assert "every()" in wrong_arity.output
+    assert "one argument" in wrong_arity.output
+    assert "E2841" in wrong_arity.output
+
+    extra_default = run_echo(
+        """
+fn even(x: int, extra: int = 0) -> bool {
+    return x % 2 == 0;
+}
+say(findIndex([1, 2], even));
+"""
+    )
+    assert extra_default.exit_code == 1
+    assert_no_python_leak(extra_default)
+    assert "one argument" in extra_default.output
+    assert "E2841" in extra_default.output
+
+
+def test_some_every_findindex_callback_abort():
+    some_abort = run_echo(
+        """
+say(some([1, 2, 3], fn(x: int) -> bool { return fail("some aborted"); }));
+"""
+    )
+    assert some_abort.exit_code == 1
+    assert_no_python_leak(some_abort)
+    assert "some aborted" in some_abort.output
+
+    every_abort = run_echo(
+        """
+say(every([1, 2, 3], fn(x: int) -> bool { return fail("every aborted"); }));
+"""
+    )
+    assert every_abort.exit_code == 1
+    assert_no_python_leak(every_abort)
+    assert "every aborted" in every_abort.output
+
+    find_abort = run_echo(
+        """
+say(findIndex([1, 2, 3], fn(x: int) -> bool { return fail("findIndex aborted"); }));
+"""
+    )
+    assert find_abort.exit_code == 1
+    assert_no_python_leak(find_abort)
+    assert "findIndex aborted" in find_abort.output
+
+

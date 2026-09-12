@@ -259,6 +259,16 @@ result stay nested. Empty list returns empty list and does not call `f`.
 A callback that aborts aborts the whole call. The input list is not mutated.
 List only.
 
+List `some(items, f)` / `every(items, f)` / `findIndex(items, f)` (and
+`items.some(f)` / `items.every(f)` / `items.findIndex(f)`) apply a unary
+function value or lambda that must return `bool` (same rule as `filter`:
+not a truthy `int`). `some` is `true` if any element matches; empty list
+is `false`. `every` is `true` if all match; empty list is `true`.
+`findIndex` is the first matching index, or `-1` if none. `find(value)`
+stays value search and is not overloaded. `some` and `findIndex` stop on
+the first `true`; `every` stops on the first `false`. A callback that
+aborts aborts the whole call. The input list is not mutated. List only.
+
 `return` outside a function is a semantic error.
 Functions may recurse.
 
@@ -423,4 +433,5 @@ v0.6.1 adds list `map` / `filter` on those function values.
 v0.6.2 adds list `reduce` (`init` required; empty list returns `init`).
 v0.6.3 adds list `forEach` (unary callback; return discarded; yields `null`).
 v0.6.4 adds list `flatMap` (unary callback must return a list; concatenates one level).
+v0.6.5 adds list `some` / `every` / `findIndex` (unary `bool` predicates; `find(value)` stays value search).
 See `docs/v0.4-stdlib.md`.

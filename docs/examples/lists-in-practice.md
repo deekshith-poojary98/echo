@@ -29,6 +29,7 @@ say(items.countOf(3));
 - `map(f)` / `filter(f)` return a new list from a function value or lambda.
 - `reduce(init, f)` folds from required `init`; empty list returns `init`.
 - `flatMap(f)` concatenates callback lists one level into a new list.
+- `some(f)` / `every(f)` / `findIndex(f)` are bool predicates; `find(value)` stays value search.
 
 ## See Also
 - [Lists](/core-concepts/lists)
