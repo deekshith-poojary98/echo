@@ -30,13 +30,29 @@ class BoundBuiltin:
         return self.name == other.name and self.receiver is other.receiver
 
 
+@dataclass
+class BoundMethod:
+    function: EchoFunction
+    receiver: object
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BoundMethod):
+            return NotImplemented
+        return (
+            self.function.declaration.name == other.function.declaration.name
+            and self.receiver is other.receiver
+        )
+
+
 def is_echo_callable(value: object) -> bool:
-    return isinstance(value, (EchoFunction, EchoBuiltin, BoundBuiltin))
+    return isinstance(value, (EchoFunction, EchoBuiltin, BoundBuiltin, BoundMethod))
 
 
 def callable_name(value: object) -> str:
     if isinstance(value, EchoFunction):
         return value.declaration.name
+    if isinstance(value, BoundMethod):
+        return value.function.declaration.name
     if isinstance(value, (EchoBuiltin, BoundBuiltin)):
         return value.name
     return "<fn>"

@@ -11,16 +11,16 @@ Already in the language or CLI:
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
-- Nominal `class` + construction (0.8.0)
+- Nominal `class` + construction (0.8.0); methods + `this` (0.8.1)
 
 ## Next
 
-**0.8.0 shipped (unreleased tag).** Next: methods + `this` (0.8.1), then `interface` (0.8.2).
+**0.8.1 shipped (unreleased tag).** Next: `interface` (0.8.2).
 
 | Version | Item | Status |
 | --- | --- | --- |
 | 0.8.0 | Nominal `class` + construction | implemented (0.8.0) |
-| 0.8.1 | Methods + `this` | held (draft) |
+| 0.8.1 | Methods + `this` | implemented (0.8.1) |
 | 0.8.2 | `interface` (no inheritance) | held (draft) |
 
 Details and spellings: [Priority — 0.8.x](/project/priority).

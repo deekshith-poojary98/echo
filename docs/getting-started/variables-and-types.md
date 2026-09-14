@@ -92,7 +92,7 @@ p.x = 10;
 say(type(p)); // "Point"
 ```
 
-`Point` is a nominal type — not the same as `exact { x: int, y: int }`. Construction requires every field and rejects extras. Methods arrive in a later release.
+`Point` is a nominal type — not the same as `exact { x: int, y: int }`. Construction requires every field and rejects extras. Methods use an explicit `this` receiver: `fn length(this) -> int { ... }`, call `p.length()`, and `p.length` is a bound function value.
 
 ### Runtime type checking
 ```echo

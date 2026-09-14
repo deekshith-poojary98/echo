@@ -19,9 +19,14 @@ for i: int in 0..10 { ... }
 foreach item: str in items { ... }
 fn greet(name: str) { ... }
 fn lock(const xs: list) { ... }
-class Point { x: int; y: int; }
+class Point {
+    x: int;
+    y: int;
+    fn length(this) -> int { return this.x * this.x + this.y * this.y; }
+}
 p: Point = Point { x: 3, y: 4 };
 p.x = 10;
+say(p.length());
 return;
 break;
 continue;

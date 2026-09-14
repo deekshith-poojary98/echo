@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.1
+
+- Version tracks Echo v0.8.1.
+
 ## 0.8.0
 
 - Version tracks Echo v0.8.0.

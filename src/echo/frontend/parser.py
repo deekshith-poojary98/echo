@@ -453,15 +453,37 @@ class Parser:
             raise ParseError(f"Cannot redefine built-in type '{name_token.lexeme}'", name_token.location)
         self._expect(TokenType.LEFT_BRACE, "{")
         fields: list[ClassField] = []
-        seen: set[str] = set()
+        methods: list[FunctionDeclaration] = []
+        seen_fields: set[str] = set()
+        seen_methods: set[str] = set()
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            if self._check(TokenType.FN):
+                method = self._parse_method(name_token.lexeme)
+                if method.name in seen_methods:
+                    raise ParseError(
+                        f"Duplicate method '{method.name}' in class '{name_token.lexeme}'",
+                        method.location,
+                    )
+                if method.name in seen_fields:
+                    raise ParseError(
+                        f"Method '{method.name}' conflicts with a field in class '{name_token.lexeme}'",
+                        method.location,
+                    )
+                seen_methods.add(method.name)
+                methods.append(method)
+                continue
             field_token = self._expect_name_token("class field name")
-            if field_token.lexeme in seen:
+            if field_token.lexeme in seen_fields:
                 raise ParseError(
                     f"Duplicate field '{field_token.lexeme}' in class '{name_token.lexeme}'",
                     field_token.location,
                 )
-            seen.add(field_token.lexeme)
+            if field_token.lexeme in seen_methods:
+                raise ParseError(
+                    f"Field '{field_token.lexeme}' conflicts with a method in class '{name_token.lexeme}'",
+                    field_token.location,
+                )
+            seen_fields.add(field_token.lexeme)
             self._expect(TokenType.COLON, ":")
             field_type = self._parse_type()
             if isinstance(field_type, TypeName) and field_type.name == "void":
@@ -469,7 +491,25 @@ class Parser:
             self._expect(TokenType.SEMICOLON, ";")
             fields.append(ClassField(field_token.lexeme, field_type, field_token.location))
         self._expect(TokenType.RIGHT_BRACE, "}")
-        return ClassDeclaration(token.location, name_token.lexeme, fields)
+        return ClassDeclaration(token.location, name_token.lexeme, fields, methods)
+
+    def _parse_method(self, class_name: str) -> FunctionDeclaration:
+        fn_token = self._expect(TokenType.FN, "fn")
+        name = self._expect_name("method name")
+        self._expect(TokenType.LEFT_PAREN, "(")
+        parameters = self._parse_parameters(receiver_class=class_name)
+        self._expect(TokenType.RIGHT_PAREN, ")")
+        return_type = None
+        if self._match(TokenType.ARROW):
+            return_type = self._parse_type()
+        if self._match(TokenType.FAT_ARROW):
+            body_expr = self.parse_expression()
+            self._expect(TokenType.SEMICOLON, ";")
+            return FunctionDeclaration(fn_token.location, name, parameters, body_expr, True, return_type)
+        self._expect(TokenType.LEFT_BRACE, "{")
+        body = self._parse_block_body()
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return FunctionDeclaration(fn_token.location, name, parameters, body, False, return_type)
 
     def parse_expression(self) -> Expression:
         return self.parse_logical_or()
@@ -817,11 +857,17 @@ class Parser:
         self._expect(TokenType.RIGHT_BRACE, "}")
         return LambdaExpression(fn_token.location, parameters, body, False, return_type)
 
-    def _parse_parameters(self) -> list[Parameter]:
+    def _parse_parameters(self, *, receiver_class: str | None = None) -> list[Parameter]:
         parameters: list[Parameter] = []
         while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
             is_const = bool(self._match(TokenType.CONST))
             if self._check(TokenType.LEFT_BRACKET, TokenType.LEFT_BRACE):
+                if receiver_class is not None and not parameters:
+                    raise ParseError(
+                        "Class methods must start with an untyped 'this' parameter",
+                        self._peek().location,
+                        help_text="Write fn name(this, ...) { ... }.",
+                    )
                 pattern = self._parse_pattern(require_types=True)
                 if self._check(TokenType.DOT_DOT_DOT):
                     raise ParseError(
@@ -849,6 +895,37 @@ class Parser:
                 self._match(TokenType.COMMA)
                 continue
             param_token = self._expect_name_token("parameter name")
+            if receiver_class is not None and not parameters:
+                if is_const:
+                    raise ParseError(
+                        "Receiver parameter 'this' cannot be const",
+                        param_token.location,
+                    )
+                if param_token.lexeme != "this":
+                    raise ParseError(
+                        "Class methods must start with an untyped 'this' parameter",
+                        param_token.location,
+                        help_text="Write fn name(this, ...) { ... }.",
+                    )
+                if self._check(TokenType.COLON):
+                    raise ParseError(
+                        "Do not annotate 'this'; it is implicitly the enclosing class",
+                        self._peek().location,
+                        help_text=f"Write fn name(this, ...) not fn name(this: {receiver_class}, ...).",
+                    )
+                if self._check(TokenType.DOT_DOT_DOT):
+                    raise ParseError("Receiver parameter 'this' cannot be variadic", self._peek().location)
+                if self._check(TokenType.EQUAL):
+                    raise ParseError("Receiver parameter 'this' cannot have a default", self._peek().location)
+                parameters.append(
+                    Parameter(
+                        "this",
+                        TypeName(param_token.location, receiver_class),
+                        param_token.location,
+                    )
+                )
+                self._match(TokenType.COMMA)
+                continue
             self._expect(TokenType.COLON, ":")
             param_type = self._parse_type()
             variadic = bool(self._match(TokenType.DOT_DOT_DOT))
@@ -872,6 +949,12 @@ class Parser:
                 )
             )
             self._match(TokenType.COMMA)
+        if receiver_class is not None and (not parameters or parameters[0].name != "this"):
+            raise ParseError(
+                "Class methods must start with an untyped 'this' parameter",
+                self._peek().location,
+                help_text="Write fn name(this, ...) { ... }.",
+            )
         self._validate_parameters(parameters)
         return parameters
 

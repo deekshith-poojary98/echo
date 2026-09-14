@@ -87,6 +87,16 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
             from echo.runtime.builtin_types import builtin_method_fn_type
 
             return builtin_fn_assignable(builtin_method_fn_type(value.name), type_spec)
+        if cls == "BoundMethod":
+            declaration = value.function.declaration
+            params = declaration.parameters[1:]
+            return function_signature_assignable(
+                [parameter.type for parameter in params],
+                [parameter.default is not None for parameter in params],
+                bool(params) and params[-1].variadic,
+                declaration.return_type,
+                type_spec,
+            )
         if not _is_echo_function(value):
             return False
         declaration = value.declaration
@@ -344,12 +354,15 @@ def stringify(value: object, nested: bool = False) -> str:
         if cls == "EchoFunction":
             name = value.declaration.name
             return "<fn>" if name == "<lambda>" else f"<fn {name}>"
+        if cls == "BoundMethod":
+            name = value.function.declaration.name
+            return f"<fn {name}>"
         return f"<fn {value.name}>"
     return str(value)
 
 
 def _is_echo_function(value: object) -> bool:
-    return value.__class__.__name__ in {"EchoFunction", "EchoBuiltin", "BoundBuiltin"}
+    return value.__class__.__name__ in {"EchoFunction", "EchoBuiltin", "BoundBuiltin", "BoundMethod"}
 
 
 def _builtin_param_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:

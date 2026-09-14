@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from echo.errors import SourceLocation
 from echo.frontend.tokens import Token
@@ -39,10 +39,11 @@ class ObjectType(TypeAnnotation):
 
 @dataclass
 class ClassType(TypeAnnotation):
-    """Nominal class type. Fields are an exact shape."""
+    """Nominal class type. Fields are an exact shape; methods are bound fn types (no `this`)."""
 
     name: str
     fields: dict[str, TypeAnnotation]
+    methods: dict[str, FunctionType] = field(default_factory=dict)
 
 
 @dataclass
@@ -360,6 +361,7 @@ class ClassField:
 class ClassDeclaration(Statement):
     name: str
     fields: list[ClassField]
+    methods: list[FunctionDeclaration] = field(default_factory=list)
 
 
 @dataclass

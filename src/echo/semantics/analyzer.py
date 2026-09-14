@@ -413,6 +413,23 @@ class SemanticAnalyzer:
                 return self._resolve_type(symbol.declared_type, scope)
         return None
 
+    def _expression_class_type(self, expression: Expression, scope: Scope) -> ClassType | None:
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is None or symbol.declared_type is None:
+                return None
+            resolved = self._resolve_type(symbol.declared_type, scope)
+            return resolved if isinstance(resolved, ClassType) else None
+        if isinstance(expression, ClassConstruction):
+            return scope.classes.get(expression.class_name)
+        return None
+
+    def _class_method_type(self, expression: MemberExpression, scope: Scope) -> FunctionType | None:
+        class_type = self._expression_class_type(expression.object, scope)
+        if class_type is None:
+            return None
+        return class_type.methods.get(expression.name)
+
     def _function_body(self, statement: FunctionDeclaration, scope: Scope) -> None:
         self._analyze_callable(
             statement.parameters,
@@ -543,6 +560,9 @@ class SemanticAnalyzer:
                     )
             elif isinstance(expression.callee, MemberExpression):
                 self._expression(expression.callee.object, scope)
+                method_type = self._class_method_type(expression.callee, scope)
+                if method_type is not None:
+                    self._check_function_type_arity(method_type, expression)
             else:
                 self._expression(expression.callee, scope)
             self._check_const_mutation_call(expression, scope)
@@ -762,16 +782,26 @@ class SemanticAnalyzer:
                 expression.return_type,
                 False,
             )
-        if isinstance(expression, MemberExpression) and expression.name in builtin_names():
-            signature = builtin_method_fn_type(expression.name)
-            param_types = list(signature.param_types)
-            return (
-                param_types,
-                [False] * len(param_types),
-                signature.variadic,
-                signature.return_type,
-                True,
-            )
+        if isinstance(expression, MemberExpression):
+            method_type = self._class_method_type(expression, scope)
+            if method_type is not None:
+                return (
+                    list(method_type.param_types),
+                    [False] * len(method_type.param_types),
+                    method_type.variadic,
+                    method_type.return_type,
+                    False,
+                )
+            if expression.name in builtin_names():
+                signature = builtin_method_fn_type(expression.name)
+                param_types = list(signature.param_types)
+                return (
+                    param_types,
+                    [False] * len(param_types),
+                    signature.variadic,
+                    signature.return_type,
+                    True,
+                )
         if isinstance(expression, VariableExpression):
             symbol = scope.resolve(expression.name)
             if symbol is None or symbol.kind != SymbolKind.FUNCTION:
@@ -917,10 +947,21 @@ class SemanticAnalyzer:
         )
 
     def _class_type(self, statement: ClassDeclaration) -> ClassType:
+        methods: dict[str, FunctionType] = {}
+        for method in statement.methods:
+            rest = method.parameters[1:]
+            return_type = method.return_type or TypeName(method.location, "void")
+            methods[method.name] = FunctionType(
+                method.location,
+                [parameter.type for parameter in rest],
+                return_type,
+                any(parameter.variadic for parameter in rest),
+            )
         return ClassType(
             statement.location,
             statement.name,
             {field.name: field.type for field in statement.fields},
+            methods,
         )
 
     def _imported_symbol(self, exported: Symbol, statement: ImportDeclaration) -> Symbol:
@@ -1386,8 +1427,42 @@ class SemanticAnalyzer:
         for field in statement.fields:
             fields[field.name] = self._resolve_type(field.type, scope)
             field.type = fields[field.name]
-        class_type = ClassType(statement.location, statement.name, fields)
+        class_type = ClassType(statement.location, statement.name, fields, {})
         scope.classes[statement.name] = class_type
+        methods: dict[str, FunctionType] = {}
+        for method in statement.methods:
+            if not method.parameters or method.parameters[0].name != "this":
+                raise SemanticError(
+                    f"Method '{method.name}' must start with an untyped 'this' parameter",
+                    method.location,
+                    code="E3212",
+                )
+            this_param = method.parameters[0]
+            this_param.type = class_type
+            for parameter in method.parameters[1:]:
+                if parameter.pattern is None:
+                    parameter.type = self._resolve_type(parameter.type, scope)
+            if method.return_type is not None:
+                method.return_type = self._resolve_type(method.return_type, scope)
+            rest = method.parameters[1:]
+            return_type = method.return_type or TypeName(method.location, "void")
+            methods[method.name] = FunctionType(
+                method.location,
+                [parameter.type for parameter in rest],
+                return_type,
+                any(parameter.variadic for parameter in rest),
+            )
+        class_type.methods = methods
+        for method in statement.methods:
+            self._analyze_callable(
+                method.parameters,
+                method.body,
+                method.inline,
+                method.return_type,
+                method.location,
+                method.name,
+                scope,
+            )
         if exported:
             self.module_symbols.classes[statement.name] = class_type
 
@@ -1406,17 +1481,25 @@ class SemanticAnalyzer:
             }
             return ObjectType(type_annotation.location, fields, type_annotation.exact)
         if isinstance(type_annotation, ClassType):
+            existing = scope.classes.get(type_annotation.name)
+            if existing is not None:
+                return existing
             fields = {
                 name: self._resolve_type(field_type, scope)
                 for name, field_type in type_annotation.fields.items()
             }
-            return ClassType(type_annotation.location, type_annotation.name, fields)
+            methods: dict[str, FunctionType] = {}
+            for name, method_type in type_annotation.methods.items():
+                resolved = self._resolve_type(method_type, scope)
+                if isinstance(resolved, FunctionType):
+                    methods[name] = resolved
+            return ClassType(type_annotation.location, type_annotation.name, fields, methods)
         if isinstance(type_annotation, TypeName):
             if type_annotation.name in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
                 return type_annotation
             class_type = scope.classes.get(type_annotation.name)
             if class_type is not None:
-                return self._resolve_type(class_type, scope)
+                return class_type
             alias = scope.type_aliases.get(type_annotation.name)
             if alias is None:
                 raise SemanticError(

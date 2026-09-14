@@ -145,6 +145,7 @@ from echo.runtime.freeze import freeze, require_unfrozen
 from echo.runtime.testing import TestSession
 from echo.runtime.functions import (
     BoundBuiltin,
+    BoundMethod,
     BreakSignal,
     ContinueSignal,
     EchoBuiltin,
@@ -173,6 +174,7 @@ class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
+        self._class_methods: dict[str, dict[str, EchoFunction]] = {}
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -183,6 +185,11 @@ class Interpreter:
         if isinstance(statement, TypeAliasStatement):
             return
         if isinstance(statement, ClassDeclaration):
+            methods = {
+                method.name: EchoFunction(method, env)
+                for method in statement.methods
+            }
+            self._class_methods[statement.name] = methods
             return
         if isinstance(statement, ImportDeclaration):
             return
@@ -435,13 +442,16 @@ class Interpreter:
         if isinstance(expression, MemberExpression):
             target = self.evaluate(expression.object, env)
             if isinstance(target, ClassInstance):
-                if expression.name not in target.fields:
-                    raise EchoRuntimeError(
-                        f"Unknown field '{expression.name}' on {target.class_name}",
-                        expression.location,
-                        code="E2704",
-                    )
-                return target.fields[expression.name]
+                if expression.name in target.fields:
+                    return target.fields[expression.name]
+                method = self._class_methods.get(target.class_name, {}).get(expression.name)
+                if method is not None:
+                    return BoundMethod(method, target)
+                raise EchoRuntimeError(
+                    f"Unknown field '{expression.name}' on {target.class_name}",
+                    expression.location,
+                    code="E2704",
+                )
             if expression.name in BUILTIN_NAMES:
                 return BoundBuiltin(expression.name, target)
             raise EchoRuntimeError(
@@ -460,6 +470,23 @@ class Interpreter:
         callee = expression.callee
         if isinstance(callee, MemberExpression):
             target = self.evaluate(callee.object, env)
+            if isinstance(target, ClassInstance):
+                method = self._class_methods.get(target.class_name, {}).get(callee.name)
+                if method is not None:
+                    return self._call_method(method, target, expression.arguments, env, expression.location)
+                if callee.name in target.fields:
+                    return self._call_value(
+                        target.fields[callee.name],
+                        expression.arguments,
+                        env,
+                        expression.location,
+                        callee.name,
+                    )
+                raise EchoRuntimeError(
+                    f"Unknown method '{callee.name}' on {target.class_name}",
+                    expression.location,
+                    code="E2704",
+                )
             return self._call_builtin(callee.name, expression.arguments, env, target, expression.location, callee.object)
         if isinstance(callee, VariableExpression):
             function = env.resolve_function(callee.name)
@@ -488,6 +515,8 @@ class Interpreter:
             return self._call_builtin(value.name, raw_args, env, None, location, None)
         if isinstance(value, BoundBuiltin):
             return self._call_builtin(value.name, raw_args, env, value.receiver, location, None)
+        if isinstance(value, BoundMethod):
+            return self._call_method(value.function, value.receiver, raw_args, env, location)
         if name is not None:
             raise EchoTypeError(
                 f"Cannot call '{name}' because it is not a function",
@@ -572,11 +601,169 @@ class Interpreter:
         check_return(declaration.name, result, declaration.return_type, location)
         return result
 
+    def _call_method(
+        self,
+        function: EchoFunction,
+        receiver: object,
+        raw_args,
+        env: Environment,
+        location: SourceLocation,
+    ) -> object:
+        declaration = function.declaration
+        if not declaration.parameters or declaration.parameters[0].name != "this":
+            raise EchoRuntimeError(
+                f"Method '{declaration.name}' is missing a 'this' parameter",
+                location,
+                code="E3212",
+            )
+        rest = declaration.parameters[1:]
+        bound = bind_arguments(declaration.name, rest, raw_args, location)
+        new_env = Environment(parent=function.closure, is_function=True)
+        new_env.function_name = declaration.name
+        this_param = declaration.parameters[0]
+        raise_exact_shape_error(receiver, this_param.type, location)
+        if not matches_type(receiver, this_param.type):
+            raise EchoTypeError(
+                f"Argument 'this' in method '{declaration.name}' must be of type "
+                f"{format_type(this_param.type)}, got {echo_type_name(receiver)}",
+                location,
+                code="E2706",
+            )
+        new_env.define("this", receiver, this_param.type, mutable=True, const=False)
+        for parameter in rest:
+            value = self.evaluate(bound[parameter.name], new_env if parameter.default is bound[parameter.name] else env)
+            if parameter.variadic:
+                if not isinstance(value, list):
+                    raise EchoTypeError(
+                        f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                        f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                        location,
+                        code="E2706",
+                    )
+                for item in value:
+                    raise_exact_shape_error(item, parameter.type, location)
+                    if not matches_type(item, parameter.type):
+                        raise EchoTypeError(
+                            f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                            f"{format_type(parameter.type)}, got list",
+                            location,
+                            code="E2706",
+                        )
+            else:
+                raise_exact_shape_error(value, parameter.type, location)
+                if not matches_type(value, parameter.type):
+                    label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
+                    raise EchoTypeError(
+                        f"Argument {label} in function '{declaration.name}' must be of type "
+                        f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                        location,
+                        code="E2706",
+                    )
+            if parameter.pattern is not None:
+                self._unpack_pattern(
+                    parameter.pattern,
+                    value,
+                    new_env,
+                    declare=True,
+                    const=parameter.const,
+                    location=location,
+                )
+            else:
+                if parameter.const:
+                    freeze(value)
+                new_env.define(
+                    parameter.name,
+                    value,
+                    parameter.type if not parameter.variadic else TypeName(parameter.location, "list"),
+                    mutable=not parameter.const,
+                    const=parameter.const,
+                )
+
+        if declaration.inline:
+            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
+        else:
+            try:
+                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
+                result = None
+            except ReturnValue as returned:
+                result = returned.value
+        check_return(declaration.name, result, declaration.return_type, location)
+        return result
+
+    def _call_method_values(
+        self,
+        function: EchoFunction,
+        receiver: object,
+        values: list[object],
+        location: SourceLocation | None,
+    ) -> object:
+        declaration = function.declaration
+        rest = declaration.parameters[1:]
+        if len(values) != len(rest):
+            raise ArgumentError(
+                f"Function '{declaration.name}' expected {len(rest)} arguments, got {len(values)}",
+                location,
+                code="E2707",
+            )
+        new_env = Environment(parent=function.closure, is_function=True)
+        new_env.function_name = declaration.name
+        this_param = declaration.parameters[0]
+        raise_exact_shape_error(receiver, this_param.type, location)
+        if not matches_type(receiver, this_param.type):
+            raise EchoTypeError(
+                f"Argument 'this' in method '{declaration.name}' must be of type "
+                f"{format_type(this_param.type)}, got {echo_type_name(receiver)}",
+                location,
+                code="E2706",
+            )
+        new_env.define("this", receiver, this_param.type, mutable=True, const=False)
+        for parameter, value in zip(rest, values):
+            raise_exact_shape_error(value, parameter.type, location)
+            if not matches_type(value, parameter.type):
+                label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
+                raise EchoTypeError(
+                    f"Argument {label} in function '{declaration.name}' must be of type "
+                    f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                    location,
+                    code="E2706",
+                )
+            if parameter.pattern is not None:
+                self._unpack_pattern(
+                    parameter.pattern,
+                    value,
+                    new_env,
+                    declare=True,
+                    const=parameter.const,
+                    location=location,
+                )
+            else:
+                if parameter.const:
+                    freeze(value)
+                new_env.define(
+                    parameter.name,
+                    value,
+                    parameter.type,
+                    mutable=not parameter.const,
+                    const=parameter.const,
+                )
+        if declaration.inline:
+            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
+        else:
+            try:
+                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
+                result = None
+            except ReturnValue as returned:
+                result = returned.value
+        check_return(declaration.name, result, declaration.return_type, location)
+        return result
+
     def call_function_with_values(self, function: object, values: list[object], location: SourceLocation | None = None) -> object:
         if isinstance(function, EchoBuiltin):
             return self._invoke_builtin_values(function.name, None, values, location)
         if isinstance(function, BoundBuiltin):
             return self._invoke_builtin_values(function.name, function.receiver, values, location)
+        if isinstance(function, BoundMethod):
+            return self._call_method_values(function.function, function.receiver, values, location)
         if not isinstance(function, EchoFunction):
             raise EchoTypeError("Expected a function value", location, code="E2705")
         declaration = function.declaration

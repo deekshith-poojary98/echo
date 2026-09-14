@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.1
+
+Methods + `this`. Second 0.8 language increment. Failure model unchanged. No `interface` yet (0.8.2).
+
+- Spelling: **`fn length(this) -> T { ... }`** inside a class (inline `=>` allowed)
+- First parameter must be untyped **`this`** (implicitly the enclosing class); do not write `this: Point`
+- Call: **`p.length()`** / **`p.move(1, 1)`** — receiver bound as `this`
+- Method as value: **`p.length`** is a bound `fn` (same idea as `xs.map`)
+- Methods may read/write fields through `this`; unknown method **E2704**
+- No static methods, no unbound `Point.length`, no overloading
+
 ## 0.8.0
 
 Nominal `class` + construction. First 0.8 language increment — opens the OOP series. Failure model unchanged. No methods / `this` (0.8.1). No `interface` (0.8.2).

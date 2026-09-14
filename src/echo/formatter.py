@@ -181,6 +181,8 @@ class _Printer:
             self._indent += 1
             for field in statement.fields:
                 self._line(f"{field.name}: {self._type(field.type)};")
+            for method in statement.methods:
+                self._function(method)
             self._indent -= 1
             self._write("}")
             self._newline()
@@ -363,6 +365,8 @@ class _Printer:
         if parameter.pattern is not None:
             text = self._pattern(parameter.pattern)
             return f"const {text}" if parameter.const else text
+        if parameter.name == "this":
+            return "this"
         text = f"{parameter.name}: {self._type(parameter.type)}"
         if parameter.variadic:
             text += "..."
