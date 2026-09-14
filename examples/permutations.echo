@@ -25,11 +25,10 @@ fn backtrack(nums: list, used: list, current: list, result: list) -> dynamic {
 fn permute(nums: list) -> list {
     result: list = [];
     used: list = [];
-    i: int = 0;
-    while i < nums.length() {
-        used.push(false);
-        i = i + 1;
-    }
+    (0...nums.length()).forEach(fn(i: int) {
+        use mut used;
+        used.insertAt(i, false);
+    });
     backtrack(nums, used, [], result);
     return result;
 }

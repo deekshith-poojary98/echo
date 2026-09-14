@@ -16,16 +16,8 @@ fn merge_two_sorted_lists(list1: list, list2: list) -> list {
         }
     }
 
-    while i < list1.length() {
-        merged.push(list1[i]);
-        i = i + 1;
-    }
-
-    while j < list2.length() {
-        merged.push(list2[j]);
-        j = j + 1;
-    }
-
+    merged.merge(list1[i:]);
+    merged.merge(list2[j:]);
     return merged;
 }
 

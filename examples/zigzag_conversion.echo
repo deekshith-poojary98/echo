@@ -6,11 +6,10 @@ fn convert_zigzag(s: str, num_rows: int) -> str {
     }
 
     rows: list = [];
-    i: int = 0;
-    while i < num_rows {
-        rows.push("");
-        i = i + 1;
-    }
+    (0...num_rows).forEach(fn(i: int) {
+        use mut rows;
+        rows.insertAt(i, "");
+    });
 
     current_row: int = 0;
     direction: int = 1;
@@ -29,14 +28,7 @@ fn convert_zigzag(s: str, num_rows: int) -> str {
         index = index + 1;
     }
 
-    result: str = "";
-    row_index: int = 0;
-    while row_index < rows.length() {
-        result = result + rows[row_index];
-        row_index = row_index + 1;
-    }
-
-    return result;
+    return rows.join("");
 }
 
 say(convert_zigzag("PAYPALISHIRING", 3));

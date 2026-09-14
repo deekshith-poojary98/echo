@@ -1,46 +1,33 @@
 // LeetCode 17: Letter Combinations of a Phone Number
 
-fn letters_for_digit(d: str) -> str {
-    if d == "2" {
-        return "abc";
-    } else if d == "3" {
-        return "def";
-    } else if d == "4" {
-        return "ghi";
-    } else if d == "5" {
-        return "jkl";
-    } else if d == "6" {
-        return "mno";
-    } else if d == "7" {
-        return "pqrs";
-    } else if d == "8" {
-        return "tuv";
-    }
-    return "wxyz";
-}
-
-fn backtrack(digits: str, index: int, current: str, result: list) -> void {
-    if index == digits.length() {
-        result.push(current);
-        return;
-    }
-
-    letters: str = letters_for_digit(digits[index]);
-    i: int = 0;
-    while i < letters.length() {
-        backtrack(digits, index + 1, current + letters[i], result);
-        i = i + 1;
-    }
-}
+const keypad: hash = {
+    "2": "abc",
+    "3": "def",
+    "4": "ghi",
+    "5": "jkl",
+    "6": "mno",
+    "7": "pqrs",
+    "8": "tuv",
+    "9": "wxyz"
+};
 
 fn letter_combinations(digits: str) -> list {
-    result: list = [];
-
     if digits.length() == 0 {
-        return result;
+        return [];
     }
 
-    backtrack(digits, 0, "", result);
+    result: list = [""];
+    i: int = 0;
+    while i < digits.length() {
+        letters: str = keypad[digits[i]];
+        result = result.flatMap(fn(prefix: str) -> list {
+            return (0...letters.length()).map(fn(j: int) -> str {
+                return prefix + letters[j];
+            });
+        });
+        i = i + 1;
+    }
+
     return result;
 }
 

@@ -1,16 +1,6 @@
 // LeetCode 30: Substring with Concatenation of All Words
 // Sliding window over each offset modulo word length.
 
-fn piece(s: str, start: int, len: int) -> str {
-    out: str = "";
-    i: int = 0;
-    while i < len {
-        out = out + s[start + i];
-        i = i + 1;
-    }
-    return out;
-}
-
 fn find_substring(s: str, words: list) -> list {
     result: list = [];
     if words.length() == 0 {
@@ -41,7 +31,7 @@ fn find_substring(s: str, words: list) -> list {
         window: hash = {};
 
         while right + word_len <= s.length() {
-            word: str = piece(s, right, word_len);
+            word: str = s[right:right + word_len];
             right = right + word_len;
             need: int = target.ensure(word, 0);
 
@@ -54,7 +44,7 @@ fn find_substring(s: str, words: list) -> list {
                 used = used + 1;
 
                 while window[word] > need {
-                    left_word: str = piece(s, left, word_len);
+                    left_word: str = s[left:left + word_len];
                     window[left_word] = window[left_word] - 1;
                     used = used - 1;
                     left = left + word_len;
@@ -63,7 +53,7 @@ fn find_substring(s: str, words: list) -> list {
                 if used == word_count {
                     result.push(left);
 
-                    left_word: str = piece(s, left, word_len);
+                    left_word: str = s[left:left + word_len];
                     window[left_word] = window[left_word] - 1;
                     used = used - 1;
                     left = left + word_len;

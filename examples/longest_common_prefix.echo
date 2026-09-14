@@ -10,24 +10,11 @@ fn longest_common_prefix(strs: list) -> str {
 
     while i < first.length() {
         ch: str = first[i];
-        j: int = 1;
-
-        while j < strs.length() {
-            current: str = strs[j];
-
-            if i >= current.length() || current[i] != ch {
-                prefix: str = "";
-                k: int = 0;
-                while k < i {
-                    prefix = prefix + first[k];
-                    k = k + 1;
-                }
-                return prefix;
-            }
-
-            j = j + 1;
+        if !strs.every(fn(s: str) -> bool {
+            return i < s.length() && s[i] == ch;
+        }) {
+            return first[:i];
         }
-
         i = i + 1;
     }
 

@@ -16,16 +16,8 @@ fn merge_two(a: list, b: list) -> list {
         }
     }
 
-    while i < a.length() {
-        merged.push(a[i]);
-        i = i + 1;
-    }
-
-    while j < b.length() {
-        merged.push(b[j]);
-        j = j + 1;
-    }
-
+    merged.merge(a[i:]);
+    merged.merge(b[j:]);
     return merged;
 }
 
@@ -34,14 +26,7 @@ fn merge_k_lists(lists: list) -> list {
         return [];
     }
 
-    merged: list = [];
-    i: int = 0;
-    while i < lists.length() {
-        merged = merge_two(merged, lists[i]);
-        i = i + 1;
-    }
-
-    return merged;
+    return lists.reduce([], merge_two);
 }
 
 say(merge_k_lists([[1, 4, 5], [1, 3, 4], [2, 6]]));

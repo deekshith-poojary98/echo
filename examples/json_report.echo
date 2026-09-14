@@ -14,20 +14,13 @@ if flags.length() > 0 {
 data: dynamic = parseJson(readFile(input_path));
 jobs: list = data["jobs"];
 
-passed: int = 0;
-failed: int = 0;
-total_ms: int = 0;
-
-foreach job: hash in jobs {
-    status: str = job["status"];
-    ms: int = job["ms"];
-    total_ms = total_ms + ms;
-    if status == "pass" {
-        passed = passed + 1;
-    } else {
-        failed = failed + 1;
-    }
-}
+passed: int = jobs.filter(fn(job: hash) -> bool {
+    return job["status"] == "pass";
+}).length();
+failed: int = jobs.length() - passed;
+total_ms: int = jobs.reduce(0, fn(acc: int, job: hash) -> int {
+    return acc + job["ms"];
+});
 
 summary: hash = {
     suite: data["suite"],
