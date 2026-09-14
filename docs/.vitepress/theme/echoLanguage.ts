@@ -9,6 +9,7 @@ const KEYWORDS = new Set([
   'while',
   'for',
   'foreach',
+  'switch',
   'return',
   'break',
   'continue',

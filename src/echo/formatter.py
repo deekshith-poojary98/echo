@@ -27,6 +27,7 @@ from echo.frontend.ast.nodes import (
     ListLiteral,
     ListPattern,
     LiteralExpression,
+    LiteralPattern,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -39,9 +40,11 @@ from echo.frontend.ast.nodes import (
     Statement,
     StringInterpolation,
     StringLiteralExpression,
+    SwitchStatement,
     TypeAliasStatement,
     TypeAnnotation,
     TypeName,
+    TypePattern,
     UnaryExpression,
     UnionType,
     UseStatement,
@@ -178,6 +181,9 @@ class _Printer:
         if isinstance(statement, IfStatement):
             self._if_statement(statement, leading="if")
             return
+        if isinstance(statement, SwitchStatement):
+            self._switch_statement(statement)
+            return
         if isinstance(statement, WhileStatement):
             self._write(f"while {self._expr(statement.condition)} ")
             self._block(statement.body)
@@ -227,6 +233,21 @@ class _Printer:
             return
         self._write(" else ")
         self._block(statement.else_branch)
+
+    def _switch_statement(self, statement: SwitchStatement) -> None:
+        self._write(f"switch {self._expr(statement.discriminant)} ")
+        self._write("{")
+        self._newline()
+        self._indent += 1
+        for arm in statement.arms:
+            if arm.pattern is None:
+                self._write("else ")
+            else:
+                self._write(f"{self._pattern(arm.pattern)} ")
+            self._block(arm.body)
+        self._indent -= 1
+        self._write("}")
+        self._newline()
 
     def _block(self, statements: list[Statement], *, newline_after: bool = True) -> None:
         self._write("{")
@@ -326,6 +347,15 @@ class _Printer:
         return text
 
     def _pattern(self, pattern: Pattern) -> str:
+        if isinstance(pattern, LiteralPattern):
+            if isinstance(pattern.value, str):
+                return self._wrap_string(pattern.value)
+            return self._literal(pattern.value)
+        if isinstance(pattern, TypePattern):
+            text = self._type(pattern.type)
+            if pattern.binding is not None:
+                text += f" {pattern.binding}"
+            return text
         if isinstance(pattern, NamePattern):
             text = pattern.name
             if pattern.declared_type is not None:

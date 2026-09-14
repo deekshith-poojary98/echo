@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.6
+
+- Version tracks Echo v0.7.6.
+- `switch` highlights as a control keyword.
+
 ## 0.7.5
 
 - Version tracks Echo v0.7.5.

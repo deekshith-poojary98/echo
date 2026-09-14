@@ -74,7 +74,7 @@ fn show(x: int | str) -> str {
 }
 ```
 
-A value matches a union if it matches any member. Unions are not Option — Echo has no `null` type, so write `str | void` when `null` is allowed.
+A value matches a union if it matches any member. Unions are not Option — Echo has no `null` type, so write `str | void` when `null` is allowed. Use `switch` type arms to dispatch on members.
 
 ### Runtime type checking
 ```echo

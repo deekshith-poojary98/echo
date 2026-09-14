@@ -124,7 +124,7 @@
       "patterns": [
         {
           "name": "keyword.control.echo",
-          "match": "\\b(if|else|while|for|foreach|return|break|continue)\\b"
+          "match": "\\b(if|else|while|for|foreach|switch|return|break|continue)\\b"
         },
         {
           "name": "keyword.control.loop.echo",

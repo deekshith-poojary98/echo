@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.4**. **0.7.5** (union types) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.5**. **0.7.6** (`switch`) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.4**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), **0.7.3** (builtins as values), **0.7.4** (range as a value), and **0.7.5** (union types) are implemented. **0.7.6** (`switch`) is next.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.5**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), **0.7.3** (builtins as values), **0.7.4** (range as a value), **0.7.5** (union types), and **0.7.6** (`switch`) are implemented.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -245,7 +245,7 @@ Working spellings below are the plan of record so each version can be implemente
 | 0.7.3 | Builtins as values | implemented (0.7.3) |
 | 0.7.4 | Range as a value | implemented (0.7.4) |
 | 0.7.5 | Union types | implemented (0.7.5) |
-| 0.7.6 | `switch` on values | pending |
+| 0.7.6 | `switch` on values | implemented (0.7.6) |
 
 ### 0.7.0 — `const` bindings
 
@@ -303,7 +303,7 @@ Does not add generics, tagged enums, or exhaustiveness at compile time. Exhausti
 
 Value dispatch. This is control flow for literals, unions, and destructuring patterns — **not** error handling. Keyword is **`switch`**, not `match`, so `match` stays associated with the held `Result` / `Option` revision.
 
-Working spelling (statement form; Echo is statement-based):
+**Implemented spelling** (statement form; Echo is statement-based):
 
 ```echo
 switch x {
@@ -313,7 +313,7 @@ switch x {
 }
 ```
 
-Arms: literal equality, union member narrowing, and 0.7.1 destructuring patterns. `else` is required unless the arms cover a finite union of literals / union members. A failed pattern does not abort the `switch`; it tries the next arm. No `try`. Aborting inside an arm still aborts. No expression-form `switch` in 0.7.6.
+Arms: literal equality, type patterns (`int { }` / `int n { }`), and 0.7.1 destructuring patterns. `else` is required unless the arms cover a typed `bool` (`true` and `false`) or every member of a typed union via type patterns (**E3210**). A failed pattern does not abort the `switch`; it tries the next arm. No `try`. Aborting inside an arm still aborts. No expression-form `switch` in 0.7.6.
 
 ### 0.7 open questions
 

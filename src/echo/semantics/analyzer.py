@@ -29,6 +29,7 @@ from echo.frontend.ast.nodes import (
     ListLiteral,
     ListPattern,
     LiteralExpression,
+    LiteralPattern,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -41,9 +42,11 @@ from echo.frontend.ast.nodes import (
     Statement,
     StringInterpolation,
     StringLiteralExpression,
+    SwitchStatement,
     TypeAliasStatement,
     TypeAnnotation,
     TypeName,
+    TypePattern,
     UnaryExpression,
     UnionType,
     UseStatement,
@@ -65,6 +68,7 @@ from echo.runtime.builtin_types import builtin_fn_type, builtin_method_fn_type
 from echo.runtime.functions import bind_arguments
 from echo.runtime.values import (
     builtin_fn_assignable,
+    flatten_union_members,
     format_type,
     function_signature_assignable,
     make_union,
@@ -223,6 +227,8 @@ class SemanticAnalyzer:
             self._statements(statement.then_branch, Scope(scope))
             if statement.else_branch:
                 self._statements(statement.else_branch, Scope(scope))
+        elif isinstance(statement, SwitchStatement):
+            self._switch(statement, scope)
         elif isinstance(statement, WhileStatement):
             self._expression(statement.condition, scope)
             self._statements(statement.body, Scope(scope, is_loop=True))
@@ -322,6 +328,77 @@ class SemanticAnalyzer:
             for name in statement.names:
                 if scope.resolve(name) is None:
                     raise SemanticError(f"Cannot watch undefined variable '{name}'", statement.location, code="E1007")
+
+    def _switch(self, statement: SwitchStatement, scope: Scope) -> None:
+        self._expression(statement.discriminant, scope)
+        has_else = False
+        for arm in statement.arms:
+            arm_scope = Scope(scope)
+            if arm.pattern is None:
+                has_else = True
+            else:
+                self._analyze_switch_pattern(arm.pattern, arm_scope)
+            self._statements(arm.body, arm_scope)
+        if not has_else and not self._switch_is_exhaustive(statement, scope):
+            raise SemanticError(
+                "switch needs an else arm (or arms that cover every member of the discriminant's type)",
+                statement.location,
+                code="E3210",
+                help_text="Add else { ... }, or cover each union member / both true and false for bool.",
+            )
+
+    def _analyze_switch_pattern(self, pattern: Pattern, scope: Scope) -> None:
+        if isinstance(pattern, LiteralPattern):
+            return
+        if isinstance(pattern, TypePattern):
+            pattern.type = self._resolve_type(pattern.type, scope)
+            if pattern.binding is not None:
+                scope.define(
+                    Symbol(
+                        pattern.binding,
+                        SymbolKind.VARIABLE,
+                        pattern.location,
+                        pattern.type,
+                        mutable=True,
+                        const=False,
+                    )
+                )
+            return
+        self._resolve_pattern_types(pattern, scope)
+        self._define_pattern(pattern, scope, const=False, location=pattern.location)
+
+    def _switch_is_exhaustive(self, statement: SwitchStatement, scope: Scope) -> bool:
+        discriminant_type = self._discriminant_type(statement.discriminant, scope)
+        if discriminant_type is None:
+            return False
+        if isinstance(discriminant_type, TypeName) and discriminant_type.name == "bool":
+            seen = {
+                arm.pattern.value
+                for arm in statement.arms
+                if isinstance(arm.pattern, LiteralPattern) and isinstance(arm.pattern.value, bool)
+            }
+            return True in seen and False in seen
+        if isinstance(discriminant_type, UnionType):
+            members = flatten_union_members(discriminant_type.members)
+            type_arms = [
+                arm.pattern.type
+                for arm in statement.arms
+                if isinstance(arm.pattern, TypePattern)
+            ]
+            if not type_arms:
+                return False
+            return all(
+                any(type_assignable(member, arm_type) for arm_type in type_arms)
+                for member in members
+            )
+        return False
+
+    def _discriminant_type(self, expression: Expression, scope: Scope) -> TypeAnnotation | None:
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is not None and symbol.declared_type is not None:
+                return self._resolve_type(symbol.declared_type, scope)
+        return None
 
     def _function_body(self, statement: FunctionDeclaration, scope: Scope) -> None:
         self._analyze_callable(

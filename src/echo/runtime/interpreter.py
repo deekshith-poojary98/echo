@@ -39,6 +39,7 @@ from echo.frontend.ast.nodes import (
     ListLiteral,
     ListPattern,
     LiteralExpression,
+    LiteralPattern,
     MemberExpression,
     NamePattern,
     Pattern,
@@ -49,8 +50,10 @@ from echo.frontend.ast.nodes import (
     Statement,
     StringInterpolation,
     StringLiteralExpression,
+    SwitchStatement,
     TypeAliasStatement,
     TypeName,
+    TypePattern,
     UnaryExpression,
     UseStatement,
     VariableDeclaration,
@@ -258,6 +261,16 @@ class Interpreter:
                 self._execute_block(statement.then_branch, Environment(env))
             elif statement.else_branch:
                 self._execute_block(statement.else_branch, Environment(env))
+            return
+        if isinstance(statement, SwitchStatement):
+            discriminant = self.evaluate(statement.discriminant, env)
+            for arm in statement.arms:
+                arm_env = Environment(env)
+                if arm.pattern is None or self._try_match_switch_pattern(
+                    arm.pattern, discriminant, arm_env, statement.location
+                ):
+                    self._execute_block(arm.body, arm_env)
+                    return
             return
         if isinstance(statement, WhileStatement):
             try:
@@ -1128,6 +1141,68 @@ class Interpreter:
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise EchoTypeError("for-loop bounds must be convertible to int", location, code="E2702")
         return int(value)
+
+    def _try_match_switch_pattern(
+        self,
+        pattern: Pattern,
+        value: object,
+        env: Environment,
+        location: SourceLocation,
+    ) -> bool:
+        if isinstance(pattern, LiteralPattern):
+            return echo_equal(value, pattern.value)
+        if isinstance(pattern, TypePattern):
+            if not matches_type(value, pattern.type):
+                return False
+            if pattern.binding is not None:
+                env.define(pattern.binding, value, pattern.type)
+            return True
+        return self._try_unpack_pattern(pattern, value, env, location)
+
+    def _try_unpack_pattern(
+        self,
+        pattern: Pattern,
+        value: object,
+        env: Environment,
+        location: SourceLocation,
+    ) -> bool:
+        if isinstance(pattern, ListPattern):
+            if not isinstance(value, list):
+                return False
+            fixed = list_pattern_fixed(pattern)
+            rest = list_pattern_rest(pattern)
+            if rest is None:
+                if len(value) != len(fixed):
+                    return False
+            elif len(value) < len(fixed):
+                return False
+            for index, element in enumerate(fixed):
+                if not self._try_unpack_pattern(element, value[index], env, location):
+                    return False
+            if rest is not None:
+                rest_value = list(value[len(fixed) :])
+                if rest.declared_type is not None:
+                    for item in rest_value:
+                        if not matches_type(item, rest.declared_type):
+                            return False
+                self._bind_pattern_name(rest, rest_value, env, declare=True, const=False, location=location)
+            return True
+        if isinstance(pattern, HashPattern):
+            if not isinstance(value, dict):
+                return False
+            for field in pattern.fields:
+                if field.name not in value:
+                    return False
+                if field.declared_type is not None and not matches_type(value[field.name], field.declared_type):
+                    return False
+                self._bind_pattern_name(field, value[field.name], env, declare=True, const=False, location=location)
+            return True
+        if isinstance(pattern, NamePattern):
+            if pattern.declared_type is not None and not matches_type(value, pattern.declared_type):
+                return False
+            self._bind_pattern_name(pattern, value, env, declare=True, const=False, location=location)
+            return True
+        return False
 
     def _unpack_pattern(
         self,

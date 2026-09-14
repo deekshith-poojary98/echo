@@ -23,7 +23,9 @@ Already in:
 - Exact object types (`exact { id: int, name: str }`) (0.7.2)
 - Builtins as values (`say`, `map`, bound `xs.map`, …) (0.7.3)
 - Range expressions `0...10` / `0..10` (optional `by`) as `list` values (0.7.4)
-- Union types `int | str` (0.7.5); not Option; no `null` type member; no narrowing yet
+- Union types `int | str` (0.7.5); not Option; no `null` type member
+- `switch` on values (0.7.6); no expression-form `switch`; no `match` / `Result` form
+- No control-flow narrowing via `if type(x) == "..."` yet (type arms on `switch` cover the main case)
 
 Still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 

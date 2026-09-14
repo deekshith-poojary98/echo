@@ -31,6 +31,7 @@ Runtime failures that still abort as Echo errors:
 - `const` reassignment / mutation (`E3201`–`E3204`)
 - Destructuring length / shape (`E3205`–`E3207`); missing hash keys reuse **E2711**
 - Exact object shape: extra field **E3208**, missing field **E3209**
+- Non-exhaustive `switch` without `else` (**E3210**)
 
 ## Codes worth knowing
 

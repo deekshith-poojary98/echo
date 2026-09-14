@@ -37,6 +37,7 @@ class TokenType(Enum):
     FROM = auto()
     CONST = auto()
     EXACT = auto()
+    SWITCH = auto()
 
     PLUS = auto()
     MINUS = auto()
@@ -103,6 +104,7 @@ KEYWORDS: dict[str, TokenType] = {
     "from": TokenType.FROM,
     "const": TokenType.CONST,
     "exact": TokenType.EXACT,
+    "switch": TokenType.SWITCH,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "null": TokenType.NULL,

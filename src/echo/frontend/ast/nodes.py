@@ -74,6 +74,29 @@ class HashPattern(Pattern):
 
 
 @dataclass
+class LiteralPattern(Pattern):
+    value: object
+
+
+@dataclass
+class TypePattern(Pattern):
+    type: TypeAnnotation
+    binding: str | None = None
+
+
+@dataclass
+class SwitchArm(Node):
+    pattern: Pattern | None
+    body: list[Statement]
+
+
+@dataclass
+class SwitchStatement(Statement):
+    discriminant: Expression
+    arms: list[SwitchArm]
+
+
+@dataclass
 class Parameter:
     name: str
     type: TypeAnnotation
@@ -326,6 +349,8 @@ def iter_name_patterns(pattern: Pattern) -> list[NamePattern]:
             names.extend(iter_name_patterns(element))
     elif isinstance(pattern, HashPattern):
         names.extend(pattern.fields)
+    elif isinstance(pattern, TypePattern) and pattern.binding is not None:
+        names.append(NamePattern(pattern.location, pattern.binding, pattern.type))
     return names
 
 

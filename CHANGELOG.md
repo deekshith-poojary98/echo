@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.6
+
+`switch` on values. Seventh 0.7 language increment. Statement-form value dispatch for literals, union member types, and 0.7.1 destructuring. Keyword is **`switch`**, not `match` (`match` stays reserved for a held error/`Result` form). Failure model is unchanged — a failed pattern tries the next arm; abort inside an arm still aborts. No expression-form `switch`.
+
+- Spelling: `switch x { 0 { ... } 1 { ... } else { ... } }`
+- Arms: literal equality (`0`, `"ok"`, `true`, `null`), type patterns (`int { }`, `int n { }`), list/hash destructuring (`[a: int, b: int] { }`, `{ id: int } { }`)
+- `else` required unless arms exhaust a typed bool (`true` and `false`) or every member of a typed union via type patterns (**E3210** otherwise)
+- Soft match: wrong length/key/type on a pattern does not abort the `switch`; the next arm runs. Aborting inside a chosen arm still aborts
+- Formatter prints `switch`. Highlighter treats `switch` as a control keyword
+
 ## 0.7.5
 
 Union types. Sixth 0.7 language increment. `T | U` is a typed alternative to `dynamic`. Failure model is unchanged — unions are not `Option` / `Result`, and there is no error recovery. No `switch` (0.7.6). No control-flow narrowing yet (`if type(x) == "int"` does not narrow).

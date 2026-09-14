@@ -1,7 +1,7 @@
 # Echo Language Capability Matrix
 
 **Status:** Living audit against `src/echo/` and tests. Not a language contract.
-**Aligned through:** v0.7.5 (unions). Earlier rows for const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
+**Aligned through:** v0.7.6 (`switch`). Earlier rows for unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
 **Contracts win:** `docs/language-semantics.md`, `docs/module-semantics.md`, `docs/failure-model.md`.
 **v0.4 boundary:** Frozen in `docs/v0.4-language-vs-stdlib.md` (host + stdlib). 0.5–0.7 added syntax and tooling on top of that cut.
 
@@ -23,9 +23,9 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 
 ---
 
-## Snapshot (through v0.7.5)
+## Snapshot (through v0.7.6)
 
-Fundamentals are in: typed bindings, control flow, loops, functions/lambdas,
+Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
 `const`, destructuring, exact object types, unions, range expressions as
 lists, lexical scope, closures, collections, strings (including multiline),
 `use` / `use mut`, `watch`, sibling-file modules, Echo-owned errors.
@@ -39,7 +39,7 @@ inquiry and `*Or`, not exceptions.
 
 | Bucket | Verdict |
 | --- | --- |
-| Language fundamentals | Supported through 0.7.5 surface |
+| Language fundamentals | Supported through 0.7.6 surface |
 | Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
 | Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
 | Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
@@ -254,7 +254,7 @@ narrower type requires every member to be assignable. Echo has no `null` type
 member — prefer `str | void` when a binding may hold `null`.
 
 **Limitations.** No nominal types and no methods on aliases. No control-flow
-narrowing on unions yet (`switch` is 0.7.6).
+narrowing on unions via `if type(x) == "..."` yet (`switch` type arms ship in 0.7.6).
 
 **Priority.** Frozen.
 
@@ -405,13 +405,15 @@ Out-of-range and missing keys are Echo errors. Indexed assignment follows
 
 **Echo status.** Supported.
 
-`if`, `else`, `else if`. Conditions use truthiness. Blocks are scoped.
+`if`, `else`, `else if`, `switch`. Conditions use truthiness. Blocks are scoped.
+`switch` is statement-form value dispatch (literals, type arms, destructuring);
+failed patterns fall through; **E3210** when `else` is required and missing.
 
-**Limitations.** No `switch` / `match`. Not a fundamentals hole.
+**Limitations.** No expression-form `switch`. No `match` (held for error/`Result` form).
 
 **Priority.** Frozen.
 
-**Possible version.** Done.
+**Possible version.** `switch` in 0.7.6.
 
 ---
 
@@ -1157,7 +1159,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | Ownership / borrow checker | Out of scope |
 | `Result` / `Option` | Not types; `*Or` + inquiry cover absence |
 | Traits / generics | Don’t touch |
-| Pattern matching | Destructuring shipped; no `switch` yet (0.7.6) |
+| Pattern matching | Destructuring + `switch` (0.7.6); no `match` / `Result` form |
 | Cargo | Missing |
 
 ---
@@ -1169,7 +1171,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Date / time library (beyond `now` / `wait`)
 2. Package manager / non-sibling module paths
 3. Language server / richer editor support
-4. Optional sugar still held (`switch`, param `const`, hash rest, …)
+4. Optional sugar still held (param `const`, hash rest, …)
 
 ### Shipped that used to be holes
 
@@ -1201,7 +1203,7 @@ Do not treat empty cells as a queue. Do not add a VM, generics, classes, or
 This file is not a contract — semantics, modules, and the failure model win.
 
 v0.4 was host + stdlib (`docs/v0.4-language-vs-stdlib.md`). Later releases
-added syntax and tooling; see `CHANGELOG.md` through **0.7.5**.
+added syntax and tooling; see `CHANGELOG.md` through **0.7.6**.
 
 ---
 

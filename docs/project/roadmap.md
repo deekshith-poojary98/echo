@@ -10,13 +10,13 @@ Already in the language or CLI:
 - REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
-- `const`, destructuring, builtins as values, range-as-value, unions (`int | str`) through 0.7.5
+- `const`, destructuring, builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.6
 
 ## Next
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 0.7.6 | `switch` on values | pending |
+| — | 0.7 spine extras closed through 0.7.6 | — |
 
 Details and spellings: [Priority — 0.7.x](/project/priority).
 

@@ -1,6 +1,6 @@
 # Echo Language Semantics
 
-Language contract (v0.2 base; additive notes through 0.7.5 in Execution model).
+Language contract (v0.2 base; additive notes through 0.7.6 in Execution model).
 Implementation and tests must match it.
 If code and this document disagree, change the document only after an explicit language decision.
 
@@ -68,7 +68,8 @@ assignable to a compatible open type; an open type is not assignable to an exact
 Union types (`int | str`) accept a value assignable to any member. A union is
 assignable to another type only when every member is. Echo has no `null` type;
 `null` stays a `dynamic` value, so prefer `str | void` when a binding may be null.
-Unions are not Option — no `?`, no unwrap. Control-flow narrowing is not in 0.7.5.
+Unions are not Option — no `?`, no unwrap. `switch` type arms (0.7.6) dispatch on
+union members; `if type(x) == "..."` does not narrow bindings.
 
 ### Runtime checks
 
@@ -551,4 +552,5 @@ v0.7.2 adds `exact { ... }` object types. Extra exact fields are **E3208** and m
 v0.7.3 makes standalone builtins first-class `fn` values (`say`, `map`, …), including bound methods such as `xs.map`. Variadic builtins are `fn(dynamic...) -> void` or `fn(dynamic...) -> str`. No range-as-value, unions, or `switch`.
 v0.7.4 makes `start...end` / `start..end` (optional `by step`) expressions that yield a `list` of `int`. `for` stays non-allocating. `rangeList` / `rangeListInclusive` remain. No unions or `switch`.
 v0.7.5 adds union types (`int | str`). Flattened members; assignability is any-branch for values and every-member when a union is the source. No `null` type member (`str | void` for nullability). No control-flow narrowing. No `switch`.
+v0.7.6 adds statement-form `switch` on values (literals, type arms with optional binding, destructuring). Soft pattern match (failed arm tries the next). `else` required unless typed `bool` or union members are covered (**E3210**). No expression-form `switch`; no `match`.
 See `docs/v0.4-stdlib.md`.

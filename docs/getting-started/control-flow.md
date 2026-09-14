@@ -1,12 +1,18 @@
 # Control Flow
 
-`if` / `while` / `for` / `foreach`, plus `break` and `continue`. Conditions use Echo truthiness.
+`if` / `switch` / `while` / `for` / `foreach`, plus `break` and `continue`. Conditions use Echo truthiness. `switch` is value dispatch (literals, type arms, destructuring) — not error handling.
 
 ```echo
 if condition {
     say("yes");
 } else {
     say("no");
+}
+
+switch x {
+    0 { say("zero"); }
+    1 { say("one"); }
+    else { say("other"); }
 }
 
 while condition {

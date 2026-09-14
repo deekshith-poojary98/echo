@@ -29,6 +29,7 @@ from echo.frontend.ast.nodes import (
     ListLiteral,
     ListPattern,
     LiteralExpression,
+    LiteralPattern,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -41,9 +42,12 @@ from echo.frontend.ast.nodes import (
     Statement,
     StringInterpolation,
     StringLiteralExpression,
+    SwitchArm,
+    SwitchStatement,
     TypeAliasStatement,
     TypeAnnotation,
     TypeName,
+    TypePattern,
     UnaryExpression,
     UnionType,
     UseStatement,
@@ -73,6 +77,8 @@ class Parser:
         token = self._peek()
         if token.type == TokenType.IF:
             return self.parse_if()
+        if token.type == TokenType.SWITCH:
+            return self.parse_switch()
         if token.type == TokenType.WHILE:
             return self.parse_while()
         if token.type == TokenType.FOR:
@@ -191,6 +197,71 @@ class Parser:
                 else_branch = self._parse_block_body()
                 self._expect(TokenType.RIGHT_BRACE, "}")
         return IfStatement(token.location, condition, then_branch, else_branch)
+
+    def parse_switch(self) -> SwitchStatement:
+        token = self._expect(TokenType.SWITCH, "switch")
+        discriminant = self.parse_expression()
+        self._expect(TokenType.LEFT_BRACE, "{")
+        arms: list[SwitchArm] = []
+        seen_else = False
+        while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            arm_location = self._peek().location
+            if self._match(TokenType.ELSE):
+                if seen_else:
+                    raise ParseError("switch already has an else arm", arm_location)
+                seen_else = True
+                self._expect(TokenType.LEFT_BRACE, "{")
+                body = self._parse_block_body()
+                self._expect(TokenType.RIGHT_BRACE, "}")
+                arms.append(SwitchArm(arm_location, None, body))
+                continue
+            if seen_else:
+                raise ParseError("else must be the last switch arm", arm_location)
+            pattern = self._parse_switch_pattern()
+            self._expect(TokenType.LEFT_BRACE, "{")
+            body = self._parse_block_body()
+            self._expect(TokenType.RIGHT_BRACE, "}")
+            arms.append(SwitchArm(pattern.location, pattern, body))
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        if not arms:
+            raise ParseError("switch requires at least one arm", token.location)
+        return SwitchStatement(token.location, discriminant, arms)
+
+    def _parse_switch_pattern(self) -> Pattern:
+        token = self._peek()
+        if token.type == TokenType.LEFT_BRACKET:
+            return self._parse_list_pattern(require_types=True)
+        if token.type == TokenType.LEFT_BRACE:
+            return self._parse_hash_pattern(require_types=True)
+        if token.type in (TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.INTEGER, TokenType.FLOAT, TokenType.STRING):
+            self._advance()
+            if token.type == TokenType.TRUE:
+                value: object = True
+            elif token.type == TokenType.FALSE:
+                value = False
+            elif token.type == TokenType.NULL:
+                value = None
+            elif token.type == TokenType.INTEGER:
+                value = int(token.lexeme)
+            elif token.type == TokenType.FLOAT:
+                value = float(token.lexeme)
+            else:
+                value = token.lexeme
+            return LiteralPattern(token.location, value)
+        if (
+            token.type in (TokenType.TYPE, TokenType.FN, TokenType.EXACT)
+            or self._is_name(token)
+        ):
+            type_annotation = self._parse_type()
+            binding = None
+            if self._is_name(self._peek()) and self._check_offset(1, TokenType.LEFT_BRACE):
+                binding = self._expect_name("switch binding name")
+            return TypePattern(type_annotation.location, type_annotation, binding)
+        raise ParseError(
+            "Expected a switch pattern (literal, type, or destructuring)",
+            token.location,
+            help_text='Write 0 { ... }, int n { ... }, or [a: int, b: int] { ... }.',
+        )
 
     def parse_while(self) -> WhileStatement:
         token = self._expect(TokenType.WHILE, "while")

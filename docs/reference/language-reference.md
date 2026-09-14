@@ -11,6 +11,7 @@ name = "Echo 2";
 [a: int, b: int] = pair;
 { id: int, name: str } = user;
 if cond { ... }
+switch x { 0 { ... } else { ... } }
 while cond { ... }
 for i: int in 0..10 { ... }
 foreach item: str in items { ... }
