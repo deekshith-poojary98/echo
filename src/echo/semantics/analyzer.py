@@ -1038,7 +1038,7 @@ class SemanticAnalyzer:
                 if isinstance(source_type, ObjectType):
                     for field in pattern.fields:
                         expected = field.declared_type
-                        actual = source_type.fields.get(field.name)
+                        actual = source_type.fields.get(field.source_key())
                         if (
                             expected is not None
                             and actual is not None
@@ -1056,13 +1056,14 @@ class SemanticAnalyzer:
             keys = {pair.key for pair in value.pairs}
             pairs = {pair.key: pair.value for pair in value.pairs}
             for field in pattern.fields:
-                if field.name not in keys:
+                source_key = field.source_key()
+                if source_key not in keys:
                     raise SemanticError(
-                        f"Key '{field.name}' not found in hash",
+                        f"Key '{source_key}' not found in hash",
                         location,
                         code="E2711",
                     )
-                self._check_pattern_field_type(field, pairs[field.name], location, scope)
+                self._check_pattern_field_type(field, pairs[source_key], location, scope)
             return
         if isinstance(pattern, NamePattern):
             self._check_pattern_field_type(pattern, value, location, scope)

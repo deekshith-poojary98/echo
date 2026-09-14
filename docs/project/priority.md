@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.5**. **0.7.6** (`switch`) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.6**. **0.7.7** (hash destructure rename) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 is drafted below (OOP) and stays held until explicitly started.** Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.5**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), **0.7.3** (builtins as values), **0.7.4** (range as a value), **0.7.5** (union types), and **0.7.6** (`switch`) are implemented.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.6**. **0.6.x is complete.** **0.7.0**–**0.7.7** are implemented (0.7.7 not yet tagged). **0.8 OOP** is drafted in this file and remains held until you say start.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -246,6 +246,9 @@ Working spellings below are the plan of record so each version can be implemente
 | 0.7.4 | Range as a value | implemented (0.7.4) |
 | 0.7.5 | Union types | implemented (0.7.5) |
 | 0.7.6 | `switch` on values | implemented (0.7.6) |
+| 0.7.7 | Hash destructure rename | implemented (0.7.7) |
+| 0.7.8 | Hash rest (optional polish) | pending |
+| 0.7.9 | Param `const` (optional polish) | pending |
 
 ### 0.7.0 — `const` bindings
 
@@ -265,7 +268,7 @@ Unpack lists and hashes into names in one binding. This is new declaration / ass
 
 Hash patterns bind listed keys; missing keys abort (**E2711**, same as `user["x"]`). Extra keys are ignored unless the source is an exact object type (0.7.2). Length mismatch on a list pattern without rest aborts (**E3205**). Wrong container type is **E3206** / **E3207**. A callback or initializer that aborts still aborts.
 
-Default: the field name is the binding name. No `as` rename in 0.7.1. No hash rest.
+Default: the field name is the binding name. **0.7.7** adds rename: **`{ id as userId: int }`**. No hash rest (0.7.8 candidate).
 
 ### 0.7.2 — exact object types
 
@@ -315,6 +318,19 @@ switch x {
 
 Arms: literal equality, type patterns (`int { }` / `int n { }`), and 0.7.1 destructuring patterns. `else` is required unless the arms cover a typed `bool` (`true` and `false`) or every member of a typed union via type patterns (**E3210**). A failed pattern does not abort the `switch`; it tries the next arm. No `try`. Aborting inside an arm still aborts. No expression-form `switch` in 0.7.6.
 
+### 0.7.7 — hash destructure rename
+
+Bind a hash key to a different local name. Completes a 0.7.1 open question; does not add hash rest.
+
+**Implemented spelling:** **`{ id as userId: int }`**. Key is `id`; binding is `userId`. Same-name stays `{ id: int }`. Assignment omits types: **`{ id as userId } = user;`**. Works in declarations, assignment, function parameters, and `switch` hash arms. Keyword **`as`**. `{ id: int as userId }` is **not** the spelling.
+
+### 0.7.8 / 0.7.9 — optional polish (pending)
+
+Candidates only — not required before 0.8:
+
+- **0.7.8** hash rest (e.g. `{ id: int, rest: dynamic... }`)
+- **0.7.9** param `const` (`fn f(const xs: list)`)
+
 ### 0.7 open questions
 
 These are spelling / tightness knobs. They do not add versions and they do not reopen Held.
@@ -324,7 +340,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 | `const` keyword | `const name: T = expr;` (locked in 0.7.0) | type-side `name: const T = expr;` |
 | `const` vs mutation | no reassignment **and** freeze of the bound list/hash (locked in 0.7.0); nested values via another name are not deep-frozen; no param `const` | reassignment-only (JS-like); recursive deep freeze |
 | Destructure types | types on fresh names; omitted on reassignment | always repeat types |
-| Hash rename | same-name only in 0.7.1 | `{ id: int as userId }` or `{ id as userId: int }` |
+| Hash rename | `{ id as userId: int }` (locked in 0.7.7) | `{ id: int as userId }` |
 | List rest | `[head: int, rest: int...]` | a `..rest` token |
 | Exact objects | opt-in `exact { ... }`; open `{ ... }` unchanged | `#{ ... }`; `{ ... }!`; closed-by-default + `...` rest (breaking) |
 | Builtin function types | real `fn(...)` types, including variadics | `dynamic` callable with no signature |
@@ -334,13 +350,166 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 | Switch keyword | `switch` | `match` (rejected: failure-model collision) |
 | Switch narrowing | arm `int { }` / `int n { }` on a union | literals + `else` only |
 
+## 0.8.x — OOP (draft / held)
+
+**Status: held.** Do not implement until explicitly started (`start 0.8.0`). This is the plan of record so 0.8 is not a design free-for-all.
+
+**0.7 is closed for its spine** (through 0.7.6); optional polish is 0.7.7–0.7.9. Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
+
+Shape: **structs with methods**, Echo-flavored.
+
+- Nominal `class` names (runtime identity, not structural)
+- Fields are an **exact** shape (extras rejected)
+- Methods use the existing call form `obj.method(args)` (same surface as list/hash builtins)
+- Failure model unchanged: abort + `*Or`; no exceptions from methods
+- Open `{ ... }` hashes and `exact { ... }` keep working; classes do not replace them
+- Generics, overloading, async, packages, VM stay held outside this spine
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 0.8.0 | Nominal `class` + construction | held (draft) |
+| 0.8.1 | Methods + `this` | held (draft) |
+| 0.8.2 | `interface` (no inheritance) | held (draft) |
+
+### 0.8.0 — nominal `class` + construction
+
+Introduce a nominal type distinct from `type Alias = exact { ... }`.
+
+Working spelling:
+
+```echo
+class Point {
+    x: int;
+    y: int;
+}
+
+p: Point = Point { x: 3, y: 4 };
+say(p.x);
+p.x = 10;
+```
+
+Rules:
+
+- `class Name { field: T; ... }` declares a nominal type `Name`
+- Field list is **exact**: every field required; extras abort (same family as **E3208** / **E3209**, or class-specific codes in the E32xx range)
+- Construct with **`Name { field: expr, ... }`** (named fields only; order free). No positional `Point(3, 4)` in 0.8.0
+- `export class Name { ... }` allowed, same as other top-level declarations
+- Nested classes: **no** in 0.8.0 (top-level only)
+- Empty field list allowed (`class Marker { }`) for nominal tags
+- `type(p)` returns the class name string (e.g. `"Point"`), not `"hash"`
+- Assignability: `Point` is only assignable to `Point` (and `dynamic`). A compatible `exact { x: int, y: int }` hash is **not** a `Point`. `Point` is not assignable to that exact type either — nominal, not structural
+- `Point` may appear in unions (`Point | str`) and in `switch` type arms (`Point { }` / `Point p { }`)
+- Field read/write: `p.x` and `p.x = v` (typed). Unknown field → existing member error family (**E2704** or class-specific)
+- `const p: Point = ...` freezes the instance like a frozen hash (**E3203** on mutation)
+- Destructuring: `{ x: int, y: int } = p` works if we treat instances as hash-shaped for destructure **or** we add class patterns in a later polish — working assumption: **destructure by field names works** (same keys as the class fields)
+- Equality: field-wise Echo `==` (like hashes), not identity. Open question below
+- No methods, no `this`, no inheritance, no `private` in 0.8.0
+
+Does not add a separate `struct` keyword. `class` is the keyword; behavior is struct-like.
+
+### 0.8.1 — methods + `this`
+
+Attach functions to a class. Receiver is explicit as the first parameter named **`this`**.
+
+Working spelling:
+
+```echo
+class Point {
+    x: int;
+    y: int;
+
+    fn length(this) -> float {
+        return ((this.x * this.x + this.y * this.y).asFloat()).sqrt();
+    }
+
+    fn move(this, dx: int, dy: int) -> void {
+        this.x = this.x + dx;
+        this.y = this.y + dy;
+    }
+}
+
+p: Point = Point { x: 3, y: 4 };
+say(p.length());
+p.move(1, 1);
+bound: fn() -> float = p.length;
+say(bound());
+```
+
+Rules:
+
+- Methods are declared inside the class body as `fn name(this, ...) -> T { ... }` (or `=>` inline)
+- First parameter **must** be named `this` and has type `Name` implicitly (do not write `this: Point`)
+- Call form: `p.length()` — `this` is bound to `p`. Same surface as `xs.map(f)`
+- Method as value: `p.length` is a bound `fn` (0.7.3 style). Standalone `Point.length` as an unbound function is **not** required in 0.8.1 (open question)
+- Methods may read/write fields through `this`
+- No static methods in 0.8.1 (`Point.origin()` held)
+- No method overloading (held globally)
+- Abort inside a method aborts the caller
+- Analyzer: unknown method → member error; wrong arity → existing call errors
+
+### 0.8.2 — `interface` (no class inheritance)
+
+Capability types without single-parent inheritance.
+
+Working spelling:
+
+```echo
+interface Named {
+    fn name(this) -> str;
+}
+
+class User {
+    id: int;
+    label: str;
+
+    fn name(this) -> str {
+        return this.label;
+    }
+}
+
+fn show(n: Named) {
+    say(n.name());
+}
+
+u: User = User { id: 1, label: "Ada" };
+show(u);
+```
+
+Rules:
+
+- `interface Name { fn method(this, ...) -> T; ... }` — method signatures only, no fields in 0.8.2
+- A class **implements** an interface by defining every method with a compatible signature (structural match on the class’s methods). No `implements` clause required in 0.8.2 (inferred). Open question: require `class User implements Named`
+- Assignability: class instance assignable to interface if it provides the methods. Interface to interface if the target’s methods are a subset
+- `switch` on interfaces: not exhaustive by class list; `else` still required unless other finite rules apply
+- **No** `extends` / class inheritance in 0.8. Shared behavior = interfaces + composition (store another instance as a field)
+- No default method bodies in 0.8.2
+
+### 0.8 open questions
+
+| Topic | Working assumption | Alternatives |
+| --- | --- | --- |
+| Keyword | `class` (struct-like) | `struct`; keep `class` for later inheritance |
+| Construction | `Point { x: 3, y: 4 }` | `Point.new(3, 4)`; positional `Point(3, 4)` |
+| Receiver name | `this` | `self` |
+| Equality | field-wise `==` | identity / `===` later |
+| Unbound methods | not in 0.8.1 | `Point.length(p)` |
+| Static methods | held | `fn origin() -> Point` on the class |
+| Visibility | all fields/methods public | `priv` / module-private later |
+| `implements` clause | inferred | required `implements Named` |
+| Inheritance | never in 0.8; interfaces only | single `extends` in a later 0.8.x |
+| Class vs exact hash | strictly nominal | allow explicit convert helpers |
+
+### Out of 0.8 (still held globally)
+
+Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, and `match` / `Result` remain outside this spine.
+
 ## Held (do not implement)
 
-Do not move these into 0.7. The 0.7 spine and the two extras are in the **0.7.x** table above, not here.
+Do not move global holds into 0.7. **Classes are drafted as 0.8.x above** — still held until `start 0.8.0`. The closed 0.7 spine is in the **0.7.x** table, not here.
 
 | Item | Status |
 | --- | --- |
-| Classes | held |
+| Classes / OOP | held — drafted as **0.8.0–0.8.2** |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

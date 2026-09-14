@@ -1,6 +1,6 @@
 # Echo Language Semantics
 
-Language contract (v0.2 base; additive notes through 0.7.6 in Execution model).
+Language contract (v0.2 base; additive notes through 0.7.7 in Execution model).
 Implementation and tests must match it.
 If code and this document disagree, change the document only after an explicit language decision.
 
@@ -203,7 +203,7 @@ Destructuring unpacks a list or hash into names in one declaration or assignment
 - `const [lo: int, hi: int] = bounds;` makes each bound name const.
 - Assignment to already-declared names omits types: `[a, b] = pair;` and `{ id, name } = user;`.
 - Function parameters use the same patterns: `fn add([a: int, b: int]) -> int`. The parameter is a `list` or `hash`.
-- List rest is last: `[head: int, rest: int...] = xs` binds `rest` as a `list` of that element type. No hash rest. No `as` rename.
+- List rest is last: `[head: int, rest: int...] = xs` binds `rest` as a `list` of that element type. No hash rest. Hash rename: `{ id as userId: int }` (0.7.7).
 - Length mismatch without rest aborts (**E3205**). Missing hash keys abort (**E2711**). Extra hash keys in patterns are ignored. Nested list patterns such as `[[a: int], b: int]` are allowed.
 
 Inside a function:
@@ -553,4 +553,5 @@ v0.7.3 makes standalone builtins first-class `fn` values (`say`, `map`, …), in
 v0.7.4 makes `start...end` / `start..end` (optional `by step`) expressions that yield a `list` of `int`. `for` stays non-allocating. `rangeList` / `rangeListInclusive` remain. No unions or `switch`.
 v0.7.5 adds union types (`int | str`). Flattened members; assignability is any-branch for values and every-member when a union is the source. No `null` type member (`str | void` for nullability). No control-flow narrowing. No `switch`.
 v0.7.6 adds statement-form `switch` on values (literals, type arms with optional binding, destructuring). Soft pattern match (failed arm tries the next). `else` required unless typed `bool` or union members are covered (**E3210**). No expression-form `switch`; no `match`.
+v0.7.7 adds hash destructure rename (`{ id as userId: int }`). Keyword `as`. No hash rest.
 See `docs/v0.4-stdlib.md`.

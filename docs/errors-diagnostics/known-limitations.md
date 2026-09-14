@@ -25,6 +25,7 @@ Already in:
 - Range expressions `0...10` / `0..10` (optional `by`) as `list` values (0.7.4)
 - Union types `int | str` (0.7.5); not Option; no `null` type member
 - `switch` on values (0.7.6); no expression-form `switch`; no `match` / `Result` form
+- Hash destructure rename `{ id as userId: int }` (0.7.7); no hash rest yet
 - No control-flow narrowing via `if type(x) == "..."` yet (type arms on `switch` cover the main case)
 
 Still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
@@ -37,7 +38,7 @@ Still out of scope. Classes, `try`/`catch`, and the other frozen holds are not i
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
 - `const` does not apply to function parameters in 0.7.0 (parameters stay mutable unless a later version adds param `const`)
 - Nested collections inside a frozen list/hash are not recursively frozen; a nested value reached through a different mutable name can still be mutated
-- Destructuring has no `as` rename and no hash rest
+- Destructuring has no hash rest (rename ships in 0.7.7)
 - Open object type aliases accept extra fields; use `exact { ... }` to reject them
 - Union types do not narrow in `if type(x) == "..."`; `switch` is 0.7.6. `null` is not a type — use `str | void` when needed
 - Hash runtime indexing only supports string keys

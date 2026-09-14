@@ -11,6 +11,7 @@ value: dynamic = null;
 const title: str = "Echo";
 [a: int, b: int] = [1, 2];
 { id: int, name: str } = { id: 1, name: title };
+{ id as userId: int } = { id: 1 };
 ```
 
 ```echo

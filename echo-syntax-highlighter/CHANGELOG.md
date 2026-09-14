@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.7
+
+- Version tracks Echo v0.7.7.
+- `as` highlights as a control keyword (hash destructure rename).
+
 ## 0.7.6
 
 - Version tracks Echo v0.7.6.

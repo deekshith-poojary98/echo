@@ -128,7 +128,7 @@
         },
         {
           "name": "keyword.control.loop.echo",
-          "match": "\\b(in|by)\\b"
+          "match": "\\b(in|by|as)\\b"
         },
         {
           "name": "keyword.control.import.echo",

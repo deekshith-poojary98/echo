@@ -1191,11 +1191,12 @@ class Interpreter:
             if not isinstance(value, dict):
                 return False
             for field in pattern.fields:
-                if field.name not in value:
+                source_key = field.source_key()
+                if source_key not in value:
                     return False
-                if field.declared_type is not None and not matches_type(value[field.name], field.declared_type):
+                if field.declared_type is not None and not matches_type(value[source_key], field.declared_type):
                     return False
-                self._bind_pattern_name(field, value[field.name], env, declare=True, const=False, location=location)
+                self._bind_pattern_name(field, value[source_key], env, declare=True, const=False, location=location)
             return True
         if isinstance(pattern, NamePattern):
             if pattern.declared_type is not None and not matches_type(value, pattern.declared_type):
@@ -1261,9 +1262,12 @@ class Interpreter:
                     code="E3207",
                 )
             for field in pattern.fields:
-                if field.name not in value:
-                    raise EchoRuntimeError(f"Key '{field.name}' not found in hash", location, code="E2711")
-                self._bind_pattern_name(field, value[field.name], env, declare=declare, const=const, location=location)
+                source_key = field.source_key()
+                if source_key not in value:
+                    raise EchoRuntimeError(f"Key '{source_key}' not found in hash", location, code="E2711")
+                self._bind_pattern_name(
+                    field, value[source_key], env, declare=declare, const=const, location=location
+                )
             return
         if isinstance(pattern, NamePattern):
             self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)

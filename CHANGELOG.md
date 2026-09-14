@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.7
+
+Hash destructure rename. Eighth 0.7 language increment — polish on 0.7.1. Failure model unchanged. No hash rest (still later). No classes.
+
+- Spelling: **`{ id as userId: int }`** — key stays `id`, binding is `userId`. Same-name stays `{ id: int }`
+- Assignment omits types: **`{ id as userId } = user;`**
+- Works in declarations, assignment, function parameters, and `switch` hash arms
+- Keyword **`as`** (exact token; `asInt` and other identifiers stay valid)
+- Formatter prints `id as userId: int`. Highlighter treats `as` like `in` / `by`
+
 ## 0.7.6
 
 `switch` on values. Seventh 0.7 language increment. Statement-form value dispatch for literals, union member types, and 0.7.1 destructuring. Keyword is **`switch`**, not `match` (`match` stays reserved for a held error/`Result` form). Failure model is unchanged — a failed pattern tries the next arm; abort inside an arm still aborts. No expression-form `switch`.

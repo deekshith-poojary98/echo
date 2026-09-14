@@ -358,6 +358,8 @@ class _Printer:
             return text
         if isinstance(pattern, NamePattern):
             text = pattern.name
+            if pattern.key is not None:
+                text = f"{pattern.key} as {pattern.name}"
             if pattern.declared_type is not None:
                 text += f": {self._type(pattern.declared_type)}"
             if pattern.rest:

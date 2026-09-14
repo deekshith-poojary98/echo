@@ -838,7 +838,7 @@ class Parser:
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
             if self._check(TokenType.SEMICOLON):
                 raise ParseError("Found ';' inside a hash pattern — you may be missing a closing '}'.", self._peek().location)
-            field = self._parse_name_pattern(require_types)
+            field = self._parse_hash_field_pattern(require_types)
             if field.rest:
                 raise ParseError(
                     "Hash destructuring does not support rest",
@@ -849,6 +849,33 @@ class Parser:
             self._match(TokenType.COMMA)
         self._expect(TokenType.RIGHT_BRACE, "}")
         return HashPattern(token.location, fields)
+
+    def _parse_hash_field_pattern(self, require_types: bool | None) -> NamePattern:
+        key_token = self._expect_name_token("hash key")
+        key = key_token.lexeme
+        binding = key
+        if self._match(TokenType.AS):
+            binding = self._expect_name("binding name")
+        declared_type = None
+        if self._match(TokenType.COLON):
+            if require_types is False:
+                raise ParseError(
+                    "Types are not allowed in destructuring assignment",
+                    key_token.location,
+                    help_text="Write { id as userId } = user; after the names are already declared.",
+                )
+            declared_type = self._parse_type()
+            if isinstance(declared_type, TypeName) and declared_type.name == "void":
+                raise ParseError("Cannot use 'void' as a variable type", key_token.location)
+        elif require_types is True:
+            raise ParseError(
+                "Destructuring declarations require a type on each name",
+                key_token.location,
+                help_text="Write { id as userId: int } = user;",
+            )
+        rest = bool(self._match(TokenType.DOT_DOT_DOT))
+        rename_key = None if binding == key else key
+        return NamePattern(key_token.location, binding, declared_type, rest, rename_key)
 
     def _parse_pattern_element(self, require_types: bool | None) -> Pattern:
         if self._check(TokenType.LEFT_BRACKET):

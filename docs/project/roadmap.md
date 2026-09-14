@@ -10,26 +10,31 @@ Already in the language or CLI:
 - REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
-- `const`, destructuring, builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.6
+- `const`, destructuring (hash `as` rename in 0.7.7), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.7
 
 ## Next
 
+Optional 0.7 polish, then held 0.8 OOP:
+
 | Version | Item | Status |
 | --- | --- | --- |
-| — | 0.7 spine extras closed through 0.7.6 | — |
+| 0.7.8 | Hash rest | pending |
+| 0.7.9 | Param `const` | pending |
+| 0.8.0–0.8.2 | OOP (`class` / methods / `interface`) | held (draft) |
 
-Details and spellings: [Priority — 0.7.x](/project/priority).
+Details and spellings: [Priority — 0.8.x](/project/priority).
 
 ## Held
 
-Not near-term. Do not treat these as upcoming releases:
+Not near-term. Do not treat these as upcoming releases unless a draft series exists above:
 
-- Classes, generics, async, VM / JIT, packages
+- Generics, async, VM / JIT, packages
 - `try` / `catch`, `Result` / `Option`, user-level recovery syntax
 - Overloading, LSP
 - Dates / HTTP / regex builtins
 - `mkdir -p` / recursive delete
 - Test DSL (`test "name" { }`)
+- Class inheritance (out of 0.8; interfaces only in the draft)
 
 See [Known Limitations](/errors-diagnostics/known-limitations) and [failure model](/failure-model).
 

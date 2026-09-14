@@ -2,7 +2,7 @@ import { StreamLanguage } from '@codemirror/language'
 import type { StreamParser } from '@codemirror/language'
 
 // Keywords and type names: src/echo/frontend/tokens.py (KEYWORDS, TYPE_NAMES).
-// `as` is not a keyword. `true` / `false` / `null` are literals, not keywords.
+// `true` / `false` / `null` are literals, not keywords.
 const KEYWORDS = new Set([
   'if',
   'else',
@@ -15,6 +15,7 @@ const KEYWORDS = new Set([
   'continue',
   'in',
   'by',
+  'as',
   'fn',
   'watch',
   'type',

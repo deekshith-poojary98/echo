@@ -61,6 +61,10 @@ class NamePattern(Pattern):
     name: str
     declared_type: TypeAnnotation | None = None
     rest: bool = False
+    key: str | None = None  # hash source key when renamed; None means key == name
+
+    def source_key(self) -> str:
+        return self.key if self.key is not None else self.name
 
 
 @dataclass

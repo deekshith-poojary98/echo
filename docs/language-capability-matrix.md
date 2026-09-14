@@ -1,7 +1,7 @@
 # Echo Language Capability Matrix
 
 **Status:** Living audit against `src/echo/` and tests. Not a language contract.
-**Aligned through:** v0.7.6 (`switch`). Earlier rows for unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
+**Aligned through:** v0.7.7 (hash destructure rename). Earlier rows for `switch`, unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
 **Contracts win:** `docs/language-semantics.md`, `docs/module-semantics.md`, `docs/failure-model.md`.
 **v0.4 boundary:** Frozen in `docs/v0.4-language-vs-stdlib.md` (host + stdlib). 0.5–0.7 added syntax and tooling on top of that cut.
 
@@ -23,10 +23,10 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 
 ---
 
-## Snapshot (through v0.7.6)
+## Snapshot (through v0.7.7)
 
 Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
-`const`, destructuring, exact object types, unions, range expressions as
+`const`, destructuring (including hash `as` rename), exact object types, unions, range expressions as
 lists, lexical scope, closures, collections, strings (including multiline),
 `use` / `use mut`, `watch`, sibling-file modules, Echo-owned errors.
 
@@ -39,7 +39,7 @@ inquiry and `*Or`, not exceptions.
 
 | Bucket | Verdict |
 | --- | --- |
-| Language fundamentals | Supported through 0.7.6 surface |
+| Language fundamentals | Supported through 0.7.7 surface |
 | Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
 | Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
 | Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
@@ -771,7 +771,7 @@ Python/JS `try` / `catch`.
 
 **Echo status.** Supported (0.7.1).
 
-`[a: int, b: int] = pair;` and `{ id: int, name: str } = user;` unpack into names. Types are required on a fresh declaration. `[a, b] = pair;` assigns to existing names. List rest is last: `[head: int, rest: int...] = xs`. Same patterns in `fn` parameters. Missing hash keys abort. Extra hash keys in patterns are ignored. No `as` rename and no hash rest in 0.7.1.
+`[a: int, b: int] = pair;` and `{ id: int, name: str } = user;` unpack into names. Types are required on a fresh declaration. `[a, b] = pair;` assigns to existing names. List rest is last: `[head: int, rest: int...] = xs`. Hash rename: `{ id as userId: int }` (0.7.7). Same patterns in `fn` parameters. Missing hash keys abort. Extra hash keys in patterns are ignored. No hash rest yet.
 
 **Current syntax.**
 
@@ -785,7 +785,7 @@ fn add([a: int, b: int]) -> int {
 }
 ```
 
-**Limitations.** No field rename (`as`). No hash rest. Nested hash patterns are not a dedicated form; nested list patterns work.
+**Limitations.** No hash rest. Nested hash patterns are not a dedicated form; nested list patterns work.
 
 **Priority.** Done for 0.7.1.
 
@@ -1203,7 +1203,7 @@ Do not treat empty cells as a queue. Do not add a VM, generics, classes, or
 This file is not a contract — semantics, modules, and the failure model win.
 
 v0.4 was host + stdlib (`docs/v0.4-language-vs-stdlib.md`). Later releases
-added syntax and tooling; see `CHANGELOG.md` through **0.7.6**.
+added syntax and tooling; see `CHANGELOG.md` through **0.7.7**.
 
 ---
 

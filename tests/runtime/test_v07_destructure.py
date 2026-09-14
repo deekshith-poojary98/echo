@@ -222,14 +222,6 @@ def test_hash_rest_is_parse_error():
         assert "rest" in str(exc).lower()
 
 
-def test_rename_as_is_not_parsed():
-    try:
-        parse_source("{ id as userId: int } = user;")
-        assert False, "expected ParseError"
-    except ParseError:
-        pass
-
-
 def test_parse_declare_assign_and_fn_params():
     declared = parse_source("[a: int, b: int] = pair;").statements[0]
     assert isinstance(declared, DestructureDeclaration)

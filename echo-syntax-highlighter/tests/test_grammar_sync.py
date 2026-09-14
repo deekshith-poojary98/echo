@@ -55,7 +55,6 @@ def test_keywords_and_types_match_the_language() -> None:
     language_keywords = set(KEYWORDS) - {"true", "false", "null"}
     missing = language_keywords - keyword_names
     assert not missing, f"grammar is missing keywords: {sorted(missing)}"
-    assert "as" not in keyword_names
 
     type_names = _alternation_names(*_collect_strings(repo["types"]))
     assert type_names == set(TYPE_NAMES)
