@@ -109,6 +109,7 @@ class Parameter:
     default: Expression | None = None
     variadic: bool = False
     pattern: Pattern | None = None
+    const: bool = False
 
 
 @dataclass

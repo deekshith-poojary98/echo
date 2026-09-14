@@ -294,14 +294,6 @@ def test_const_requires_type_annotation():
         pass
 
 
-def test_param_const_is_not_parsed():
-    try:
-        parse_source("fn f(const x: int) { say(x); }")
-        assert False, "expected ParseError"
-    except ParseError:
-        pass
-
-
 def test_const_keyword_token():
     tokens = Lexer().tokenize("const n: int = 1;")
     types = [token.type for token in tokens if token.type != TokenType.EOF]

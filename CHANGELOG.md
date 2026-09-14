@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.9
+
+Param `const`. Tenth 0.7 language increment — closes the 0.7.0 gap where parameters stayed mutable. Failure model unchanged. **0.7 polish is complete.** No classes (0.8).
+
+- Spelling: **`fn f(const xs: list) { ... }`** and lambdas **`fn(const xs: list) { ... }`**
+- Same rules as binding `const`: no reassignment (**E3201**), no in-place mutation through that name (**E3202**), `use mut` rejected (**E3204**)
+- Bound list/hash is **frozen** (shared identity — caller's value is frozen too; later mutation via another name aborts **E3203**)
+- Works with defaults, variadics (`const xs: int...`), and destructuring params (`const [a: int, b: int]`)
+- Formatter prints `const` before the parameter
+
 ## 0.7.8
 
 Hash destructure rest. Ninth 0.7 language increment — polish on 0.7.1. Failure model unchanged. No param `const` yet (0.7.9). No classes.

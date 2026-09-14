@@ -1,6 +1,6 @@
 # Echo Language Semantics
 
-Language contract (v0.2 base; additive notes through 0.7.8 in Execution model).
+Language contract (v0.2 base; additive notes through 0.7.9 in Execution model).
 Implementation and tests must match it.
 If code and this document disagree, change the document only after an explicit language decision.
 
@@ -195,7 +195,7 @@ same as an ordinary declaration, and the initializer is required.
   imported non-const collections keep shared mutable identity.
 - `use mut name;` of a const binding is a semantic error (**E3204**).
 - `watch` on a const name is legal and will not fire from that binding.
-- Function parameters stay mutable. `const` on parameters is not in 0.7.0.
+- Function parameters may be `const` (`fn f(const xs: list)`) as of 0.7.9 — same freeze / no-reassign rules as binding `const`.
 
 Destructuring unpacks a list or hash into names in one declaration or assignment.
 
@@ -546,7 +546,7 @@ v0.6.6 allows omitting slice bounds: `xs[1:]`, `xs[:4]`, and `xs[:]` (omitted st
 v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occurrences in order, Echo `==`).
 v0.6.8 adds `echo test -run` (glob on `testXxx` function names), list `chunk`, `rangeList` / `rangeListInclusive` (same bounds as `...` / `..`), and hash `mapValues` / `filter`.
 v0.6.9 adds function-type assignability for trailing defaults, list `flatten` / `partition`, and `echo test --json`. This is the last 0.6.x slice.
-v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Function parameters stay mutable.
+v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Param `const` arrives in 0.7.9.
 v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params).
 v0.7.2 adds `exact { ... }` object types. Extra exact fields are **E3208** and missing exact fields are **E3209**. No `as` rename, hash rest, unions, `switch`, builtins-as-values, or range-as-value.
 v0.7.3 makes standalone builtins first-class `fn` values (`say`, `map`, …), including bound methods such as `xs.map`. Variadic builtins are `fn(dynamic...) -> void` or `fn(dynamic...) -> str`. No range-as-value, unions, or `switch`.
@@ -555,4 +555,5 @@ v0.7.5 adds union types (`int | str`). Flattened members; assignability is any-b
 v0.7.6 adds statement-form `switch` on values (literals, type arms with optional binding, destructuring). Soft pattern match (failed arm tries the next). `else` required unless typed `bool` or union members are covered (**E3210**). No expression-form `switch`; no `match`.
 v0.7.7 adds hash destructure rename (`{ id as userId: int }`). Keyword `as`. No hash rest.
 v0.7.8 adds hash destructure rest (`{ id: int, rest: dynamic... }`). Leftovers bind as a `hash`; `T...` is the value type. Rest last; no `as` on rest.
+v0.7.9 adds param `const` (`fn f(const xs: list)`, lambdas, defaults, variadics, destructuring params). Same freeze / E3201–E3204 rules as binding `const`.
 See `docs/v0.4-stdlib.md`.

@@ -515,9 +515,24 @@ class Interpreter:
                         code="E2706",
                     )
             if parameter.pattern is not None:
-                self._unpack_pattern(parameter.pattern, value, new_env, declare=True, const=False, location=location)
+                self._unpack_pattern(
+                    parameter.pattern,
+                    value,
+                    new_env,
+                    declare=True,
+                    const=parameter.const,
+                    location=location,
+                )
             else:
-                new_env.define(parameter.name, value, parameter.type)
+                if parameter.const:
+                    freeze(value)
+                new_env.define(
+                    parameter.name,
+                    value,
+                    parameter.type,
+                    mutable=not parameter.const,
+                    const=parameter.const,
+                )
 
         if declaration.inline:
             result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
@@ -557,9 +572,24 @@ class Interpreter:
                     code="E2706",
                 )
             if parameter.pattern is not None:
-                self._unpack_pattern(parameter.pattern, value, new_env, declare=True, const=False, location=location)
+                self._unpack_pattern(
+                    parameter.pattern,
+                    value,
+                    new_env,
+                    declare=True,
+                    const=parameter.const,
+                    location=location,
+                )
             else:
-                new_env.define(parameter.name, value, parameter.type)
+                if parameter.const:
+                    freeze(value)
+                new_env.define(
+                    parameter.name,
+                    value,
+                    parameter.type,
+                    mutable=not parameter.const,
+                    const=parameter.const,
+                )
         if declaration.inline:
             result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
         else:

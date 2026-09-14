@@ -710,6 +710,7 @@ class Parser:
     def _parse_parameters(self) -> list[Parameter]:
         parameters: list[Parameter] = []
         while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
+            is_const = bool(self._match(TokenType.CONST))
             if self._check(TokenType.LEFT_BRACKET, TokenType.LEFT_BRACE):
                 pattern = self._parse_pattern(require_types=True)
                 if self._check(TokenType.DOT_DOT_DOT):
@@ -732,6 +733,7 @@ class Parser:
                         None,
                         False,
                         pattern,
+                        is_const,
                     )
                 )
                 self._match(TokenType.COMMA)
@@ -748,7 +750,17 @@ class Parser:
                         param_token.location,
                     )
                 default = self.parse_expression()
-            parameters.append(Parameter(param_token.lexeme, param_type, param_token.location, default, variadic))
+            parameters.append(
+                Parameter(
+                    param_token.lexeme,
+                    param_type,
+                    param_token.location,
+                    default,
+                    variadic,
+                    None,
+                    is_const,
+                )
+            )
             self._match(TokenType.COMMA)
         self._validate_parameters(parameters)
         return parameters

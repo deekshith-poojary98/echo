@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.7**. **0.7.8** (hash destructure rest) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 is drafted below (OOP) and stays held until explicitly started.** Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.8**. **0.7.9** (param `const`) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 is drafted below (OOP) and stays held until explicitly started.** Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.7**. **0.6.x is complete.** **0.7.0**–**0.7.8** are implemented (0.7.8 not yet tagged). **0.8 OOP** is drafted in this file and remains held until you say start.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.8**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented (0.7.9 not yet tagged). **0.8 OOP** is drafted in this file and remains held until you say start.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -248,7 +248,7 @@ Working spellings below are the plan of record so each version can be implemente
 | 0.7.6 | `switch` on values | implemented (0.7.6) |
 | 0.7.7 | Hash destructure rename | implemented (0.7.7) |
 | 0.7.8 | Hash destructure rest | implemented (0.7.8) |
-| 0.7.9 | Param `const` (optional polish) | pending |
+| 0.7.9 | Param `const` | implemented (0.7.9) |
 
 ### 0.7.0 — `const` bindings
 
@@ -256,7 +256,7 @@ Declaration-site immutability. Completes Echo's mutability story: `use` / `use m
 
 **Implemented spelling:** **`const name: T = expr;`**. `export const name: T = expr;` is allowed. Types stay required (same as ordinary `name: T =`). The binding must be initialized. Reassignment of that name is a semantic error (**E3201**). `use mut name;` of a `const` binding is a semantic error (**E3204**). In-place collection mutation through that name (`push`, `xs[i] = v`, and other mutating methods) is rejected (**E3202**) — aligned with `use`, not JavaScript `const`.
 
-The bound list or hash is **frozen**. Mutating that value through another name or a function parameter aborts (**E3203**). Reading / iterating / `map` (new list) is fine. Nested collections reached through a *different* mutable name are not deep-frozen. Function parameters stay mutable; `const` on parameters is not in 0.7.0.
+The bound list or hash is **frozen**. Mutating that value through another name or a function parameter aborts (**E3203**). Reading / iterating / `map` (new list) is fine. Nested collections reached through a *different* mutable name are not deep-frozen. **0.7.9** adds `const` on parameters (`fn f(const xs: list)`).
 
 Does not add a new runtime type. Ordinary (non-const) imported collections keep Model A identity. `watch` on a `const` name is legal and will simply never fire from that binding.
 
@@ -330,11 +330,11 @@ Collect leftover keys into a hash binding. Completes the other 0.7.1 open gap be
 
 **Implemented spelling:** **`{ id: int, rest: dynamic... }`**. Fixed fields bind as usual; remaining keys bind as a **`hash`** named `rest`. `T...` is the value type for each leftover entry; the binding’s type is always `hash`. Rest must be last. No `as` on the rest field. Assignment: **`{ id, rest... } = user;`**. Empty leftovers are `{}`. Compose with rename: `{ id as userId: int, rest: dynamic... }`.
 
-### 0.7.9 — optional polish (pending)
+### 0.7.9 — param `const`
 
-Candidate only — not required before 0.8:
+Declaration-site immutability for parameters. Same rules as binding `const`.
 
-- **0.7.9** param `const` (`fn f(const xs: list)`)
+**Implemented spelling:** **`fn f(const xs: list) { ... }`**, including lambdas, defaults, variadics (`const xs: int...`), and destructuring params (`const [a: int, b: int]`). Reassignment is **E3201**. In-place mutation through that name is **E3202**. `use mut` on a const param is **E3204**. The bound list/hash is frozen (shared identity with the argument).
 
 ### 0.7 open questions
 
@@ -343,7 +343,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 | Topic | Working assumption | Alternatives |
 | --- | --- | --- |
 | `const` keyword | `const name: T = expr;` (locked in 0.7.0) | type-side `name: const T = expr;` |
-| `const` vs mutation | no reassignment **and** freeze of the bound list/hash (locked in 0.7.0); nested values via another name are not deep-frozen; no param `const` | reassignment-only (JS-like); recursive deep freeze |
+| `const` vs mutation | no reassignment **and** freeze of the bound list/hash (locked in 0.7.0); nested values via another name are not deep-frozen; param `const` locked in 0.7.9 | reassignment-only (JS-like); recursive deep freeze |
 | Destructure types | types on fresh names; omitted on reassignment | always repeat types |
 | Hash rename | `{ id as userId: int }` (locked in 0.7.7) | `{ id: int as userId }` |
 | List rest | `[head: int, rest: int...]` | a `..rest` token |
@@ -360,7 +360,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 
 **Status: held.** Do not implement until explicitly started (`start 0.8.0`). This is the plan of record so 0.8 is not a design free-for-all.
 
-**0.7 is closed for its spine** (through 0.7.6); optional polish is 0.7.7–0.7.9. Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
+**0.7 is closed** (spine through 0.7.6; polish through 0.7.9). Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
 
 Shape: **structs with methods**, Echo-flavored.
 

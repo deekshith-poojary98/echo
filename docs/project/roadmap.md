@@ -10,16 +10,17 @@ Already in the language or CLI:
 - REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
-- `const`, destructuring (hash `as` rename 0.7.7, hash rest 0.7.8), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.8
+- `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
 
 ## Next
 
-Optional 0.7 polish, then held 0.8 OOP:
+**0.7 is complete.** Next series is held 0.8 OOP until explicitly started.
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 0.7.9 | Param `const` | pending |
-| 0.8.0–0.8.2 | OOP (`class` / methods / `interface`) | held (draft) |
+| 0.8.0 | Nominal `class` + construction | held (draft) |
+| 0.8.1 | Methods + `this` | held (draft) |
+| 0.8.2 | `interface` (no inheritance) | held (draft) |
 
 Details and spellings: [Priority — 0.8.x](/project/priority).
 

@@ -27,6 +27,7 @@ Already in:
 - `switch` on values (0.7.6); no expression-form `switch`; no `match` / `Result` form
 - Hash destructure rename `{ id as userId: int }` (0.7.7)
 - Hash destructure rest `{ id: int, rest: dynamic... }` (0.7.8)
+- Param `const` (`fn f(const xs: list)`) (0.7.9)
 - No control-flow narrowing via `if type(x) == "..."` yet (type arms on `switch` cover the main case)
 
 Still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
@@ -37,7 +38,6 @@ Still out of scope. Classes, `try`/`catch`, and the other frozen holds are not i
 - No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
 - No overloads
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
-- `const` does not apply to function parameters in 0.7.0 (parameters stay mutable unless a later version adds param `const`)
 - Nested collections inside a frozen list/hash are not recursively frozen; a nested value reached through a different mutable name can still be mutated
 - Destructuring rename and hash rest ship in 0.7.7 / 0.7.8
 - Open object type aliases accept extra fields; use `exact { ... }` to reject them

@@ -338,12 +338,15 @@ class _Printer:
 
     def _param(self, parameter: Parameter) -> str:
         if parameter.pattern is not None:
-            return self._pattern(parameter.pattern)
+            text = self._pattern(parameter.pattern)
+            return f"const {text}" if parameter.const else text
         text = f"{parameter.name}: {self._type(parameter.type)}"
         if parameter.variadic:
             text += "..."
         if parameter.default is not None:
             text += f" = {self._expr(parameter.default)}"
+        if parameter.const:
+            text = f"const {text}"
         return text
 
     def _pattern(self, pattern: Pattern) -> str:

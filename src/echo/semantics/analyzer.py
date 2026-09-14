@@ -446,9 +446,23 @@ class SemanticAnalyzer:
                 self._expression(parameter.default, function_scope)
             if parameter.pattern is not None:
                 self._resolve_pattern_types(parameter.pattern, scope)
-                self._define_pattern(parameter.pattern, function_scope, const=False, location=parameter.location)
+                self._define_pattern(
+                    parameter.pattern,
+                    function_scope,
+                    const=parameter.const,
+                    location=parameter.location,
+                )
             else:
-                function_scope.define(Symbol(parameter.name, SymbolKind.VARIABLE, parameter.location, parameter.type))
+                function_scope.define(
+                    Symbol(
+                        parameter.name,
+                        SymbolKind.VARIABLE,
+                        parameter.location,
+                        parameter.type,
+                        mutable=not parameter.const,
+                        const=parameter.const,
+                    )
+                )
 
         self._return_types.append(return_type)
         try:

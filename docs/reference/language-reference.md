@@ -18,6 +18,7 @@ while cond { ... }
 for i: int in 0..10 { ... }
 foreach item: str in items { ... }
 fn greet(name: str) { ... }
+fn lock(const xs: list) { ... }
 return;
 break;
 continue;
