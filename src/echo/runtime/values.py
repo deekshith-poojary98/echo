@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from echo.errors import EchoTypeError, SourceLocation
-from echo.frontend.ast.nodes import FunctionType, ObjectType, TypeAnnotation, TypeName, UnionType
+from echo.frontend.ast.nodes import ClassType, FunctionType, ObjectType, TypeAnnotation, TypeName, UnionType
+from echo.runtime.instances import ClassInstance
 
 
 def echo_type_name(value: object) -> str:
@@ -17,6 +18,8 @@ def echo_type_name(value: object) -> str:
         return "str"
     if isinstance(value, list):
         return "list"
+    if isinstance(value, ClassInstance):
+        return value.class_name
     if isinstance(value, dict):
         return "hash"
     if _is_echo_function(value):
@@ -57,7 +60,11 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
         return is_echo_type(value, type_spec.name)
     if isinstance(type_spec, UnionType):
         return any(matches_type(value, member) for member in type_spec.members)
+    if isinstance(type_spec, ClassType):
+        return isinstance(value, ClassInstance) and value.class_name == type_spec.name
     if isinstance(type_spec, ObjectType):
+        if isinstance(value, ClassInstance):
+            return False
         if not isinstance(value, dict):
             return False
         for field_name, field_type in type_spec.fields.items():
@@ -199,6 +206,8 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
         fields = ", ".join(f"{name}: {format_type(field)}" for name, field in type_spec.fields.items())
         inner = "{ " + fields + " }"
         return f"exact {inner}" if type_spec.exact else inner
+    if isinstance(type_spec, ClassType):
+        return type_spec.name
     if isinstance(type_spec, FunctionType):
         params = []
         for index, param_type in enumerate(type_spec.param_types):
@@ -229,6 +238,27 @@ def raise_exact_shape_error(
     reports the ordinary type mismatch (E2001) via ``matches_type``.
     """
     if isinstance(expected, UnionType):
+        return
+    if isinstance(expected, ClassType) and isinstance(value, ClassInstance):
+        if value.class_name != expected.name:
+            return
+        for field_name in expected.fields:
+            if field_name not in value.fields:
+                raise EchoTypeError(
+                    f"Class '{expected.name}' is missing required field '{field_name}'",
+                    location,
+                    help_text="Class instances require every declared field.",
+                    code="E3209",
+                )
+            raise_exact_shape_error(value.fields[field_name], expected.fields[field_name], location)
+        for key in value.fields:
+            if key not in expected.fields:
+                raise EchoTypeError(
+                    f"Class '{expected.name}' does not allow extra field '{key}'",
+                    location,
+                    help_text="Remove extra fields.",
+                    code="E3208",
+                )
         return
     if not isinstance(expected, ObjectType) or not isinstance(value, dict):
         return
@@ -263,6 +293,8 @@ def is_truthy(value: object) -> bool:
         return value != 0
     if isinstance(value, (str, list, dict)):
         return len(value) != 0
+    if isinstance(value, ClassInstance):
+        return True
     return True
 
 
@@ -304,6 +336,9 @@ def stringify(value: object, nested: bool = False) -> str:
     if isinstance(value, dict):
         parts = [f"{stringify(key, True)}: {stringify(item, True)}" for key, item in value.items()]
         return "{" + ", ".join(parts) + "}"
+    if isinstance(value, ClassInstance):
+        parts = [f"{key}: {stringify(item, True)}" for key, item in value.fields.items()]
+        return f"{value.class_name} {{{', '.join(parts)}}}"
     if _is_echo_function(value):
         cls = value.__class__.__name__
         if cls == "EchoFunction":
@@ -361,6 +396,8 @@ def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> boo
         if left.fields.keys() != right.fields.keys():
             return False
         return all(_same_type(left.fields[name], right.fields[name]) for name in left.fields)
+    if isinstance(left, ClassType) and isinstance(right, ClassType):
+        return left.name == right.name
     if isinstance(left, FunctionType) and isinstance(right, FunctionType):
         if left.variadic != right.variadic or len(left.param_types) != len(right.param_types):
             return False
@@ -435,6 +472,9 @@ def type_assignable(actual: TypeAnnotation | None, expected: TypeAnnotation | No
 
     if isinstance(actual, ObjectType) and isinstance(expected, ObjectType):
         return object_type_assignable(actual, expected)
+
+    if isinstance(actual, ClassType) and isinstance(expected, ClassType):
+        return actual.name == expected.name
 
     if isinstance(actual, FunctionType) and isinstance(expected, FunctionType):
         return function_signature_assignable(

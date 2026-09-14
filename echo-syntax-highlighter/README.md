@@ -84,7 +84,7 @@ To copy tasks into a workspace instead of using the provider, see `templates/tas
 
 Snippets cover `fn testName()`, `expect` / `expectEq`, and `fail`.
 
-The grammar does **not** invent syntax Echo does not have (`try`/`catch`, classes, `as` as a keyword, hex/binary literals).
+The grammar does **not** invent syntax Echo does not have (`try`/`catch`, hex/binary literals).
 
 ## Keep the builtin list in sync
 

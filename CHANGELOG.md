@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.0
+
+Nominal `class` + construction. First 0.8 language increment — opens the OOP series. Failure model unchanged. No methods / `this` (0.8.1). No `interface` (0.8.2).
+
+- Spelling: **`class Point { x: int; y: int; }`** and construction **`Point { x: 3, y: 4 }`**
+- Nominal type: `Point` is not interchangeable with a compatible `exact { ... }` hash (either direction)
+- Exact fields on construct (**E3208** extras / **E3209** missing), same family as exact object types
+- `type(p)` returns the class name (`"Point"`); field get/set via `.`; unknown field **E2704**
+- `const` freezes the instance (**E3202** through the const name; **E3203** via another name)
+- Destructure as hash-shaped; equality is field-wise; usable in unions and `switch` type arms
+- `export class` / `import` binds the type (no runtime value for the class name itself)
+- Empty classes allowed (`class Marker { }`)
+
 ## 0.7.9
 
 Param `const`. Tenth 0.7 language increment — closes the 0.7.0 gap where parameters stayed mutable. Failure model unchanged. **0.7 polish is complete.** No classes (0.8).

@@ -38,6 +38,14 @@ class ObjectType(TypeAnnotation):
 
 
 @dataclass
+class ClassType(TypeAnnotation):
+    """Nominal class type. Fields are an exact shape."""
+
+    name: str
+    fields: dict[str, TypeAnnotation]
+
+
+@dataclass
 class FunctionType(TypeAnnotation):
     param_types: list[TypeAnnotation]
     return_type: TypeAnnotation
@@ -235,6 +243,13 @@ class AssignmentStatement(Statement):
 
 
 @dataclass
+class MemberAssignment(Statement):
+    object: Expression
+    name: str
+    value: Expression
+
+
+@dataclass
 class DestructureDeclaration(Statement):
     pattern: Pattern
     initializer: Expression
@@ -335,6 +350,25 @@ class TypeAliasStatement(Statement):
 
 
 @dataclass
+class ClassField:
+    name: str
+    type: TypeAnnotation
+    location: SourceLocation
+
+
+@dataclass
+class ClassDeclaration(Statement):
+    name: str
+    fields: list[ClassField]
+
+
+@dataclass
+class ClassConstruction(Expression):
+    class_name: str
+    fields: list[tuple[str, Expression]]
+
+
+@dataclass
 class ImportDeclaration(Statement):
     name: str
     module: str
@@ -343,7 +377,7 @@ class ImportDeclaration(Statement):
 @dataclass
 class ExportDeclaration(Statement):
     name: str
-    declaration: FunctionDeclaration | VariableDeclaration | None = None
+    declaration: FunctionDeclaration | VariableDeclaration | ClassDeclaration | None = None
 
 
 def iter_name_patterns(pattern: Pattern) -> list[NamePattern]:

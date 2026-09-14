@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.8.0
+
+- Version tracks Echo v0.8.0.
+- `class` highlights as a keyword.
+
 ## 0.7.9
 
 - Version tracks Echo v0.7.9.

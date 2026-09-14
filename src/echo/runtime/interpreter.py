@@ -20,6 +20,8 @@ from echo.frontend.ast.nodes import (
     BreakStatement,
     CallExpression,
     CompoundAssignment,
+    ClassConstruction,
+    ClassDeclaration,
     ContinueStatement,
     DestructureAssignment,
     DestructureDeclaration,
@@ -40,6 +42,7 @@ from echo.frontend.ast.nodes import (
     ListPattern,
     LiteralExpression,
     LiteralPattern,
+    MemberAssignment,
     MemberExpression,
     NamePattern,
     Pattern,
@@ -66,6 +69,7 @@ from echo.frontend.ast.nodes import (
     hash_pattern_rest,
 )
 from echo.frontend.tokens import TokenType
+from echo.runtime.instances import ClassInstance
 from echo.runtime.builtins import (
     BUILTIN_NAMES,
     MUTATING_METHODS,
@@ -178,6 +182,8 @@ class Interpreter:
     def execute_statement(self, statement: Statement, env: Environment) -> None:
         if isinstance(statement, TypeAliasStatement):
             return
+        if isinstance(statement, ClassDeclaration):
+            return
         if isinstance(statement, ImportDeclaration):
             return
         if isinstance(statement, ExportDeclaration):
@@ -254,6 +260,15 @@ class Interpreter:
             self._index_assign(inner, final_key, value, statement.location)
             if env.is_watched(statement.name):
                 self._watch(statement.name, container, env, "modified by index assignment to")
+            return
+        if isinstance(statement, MemberAssignment):
+            target = self.evaluate(statement.object, env)
+            if isinstance(statement.object, VariableExpression):
+                env.require_mutable(statement.object.name, statement.location)
+            value = self.evaluate(statement.value, env)
+            self._member_assign(target, statement.name, value, statement.location)
+            if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
+                self._watch(statement.object.name, target, env, "modified by field assignment to")
             return
         if isinstance(statement, ExpressionStatement):
             self.evaluate(statement.expression, env)
@@ -418,13 +433,25 @@ class Interpreter:
         if isinstance(expression, LambdaExpression):
             return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):
+            target = self.evaluate(expression.object, env)
+            if isinstance(target, ClassInstance):
+                if expression.name not in target.fields:
+                    raise EchoRuntimeError(
+                        f"Unknown field '{expression.name}' on {target.class_name}",
+                        expression.location,
+                        code="E2704",
+                    )
+                return target.fields[expression.name]
             if expression.name in BUILTIN_NAMES:
-                return BoundBuiltin(expression.name, self.evaluate(expression.object, env))
+                return BoundBuiltin(expression.name, target)
             raise EchoRuntimeError(
                 f"Property access '.{expression.name}' is not supported; use method calls or hash indexing",
                 expression.location,
                 code="E2704",
             )
+        if isinstance(expression, ClassConstruction):
+            values = {name: self.evaluate(value, env) for name, value in expression.fields}
+            return ClassInstance(expression.class_name, values)
         if isinstance(expression, CallExpression):
             return self._call(expression, env)
         raise EchoRuntimeError(f"Unknown expression: {type(expression).__name__}", expression.location, code="E2798")
@@ -1220,21 +1247,25 @@ class Interpreter:
                 self._bind_pattern_name(rest, rest_value, env, declare=True, const=False, location=location)
             return True
         if isinstance(pattern, HashPattern):
-            if not isinstance(value, dict):
+            if isinstance(value, ClassInstance):
+                mapping = value.fields
+            elif isinstance(value, dict):
+                mapping = value
+            else:
                 return False
             fixed = hash_pattern_fixed(pattern)
             rest = hash_pattern_rest(pattern)
             taken: set[str] = set()
             for field in fixed:
                 source_key = field.source_key()
-                if source_key not in value:
+                if source_key not in mapping:
                     return False
-                if field.declared_type is not None and not matches_type(value[source_key], field.declared_type):
+                if field.declared_type is not None and not matches_type(mapping[source_key], field.declared_type):
                     return False
-                self._bind_pattern_name(field, value[source_key], env, declare=True, const=False, location=location)
+                self._bind_pattern_name(field, mapping[source_key], env, declare=True, const=False, location=location)
                 taken.add(source_key)
             if rest is not None:
-                rest_value = {key: item for key, item in value.items() if key not in taken}
+                rest_value = {key: item for key, item in mapping.items() if key not in taken}
                 if rest.declared_type is not None:
                     for item in rest_value.values():
                         if not matches_type(item, rest.declared_type):
@@ -1298,7 +1329,11 @@ class Interpreter:
                 self._bind_pattern_name(rest, rest_value, env, declare=declare, const=const, location=location)
             return
         if isinstance(pattern, HashPattern):
-            if not isinstance(value, dict):
+            if isinstance(value, ClassInstance):
+                mapping = value.fields
+            elif isinstance(value, dict):
+                mapping = value
+            else:
                 raise EchoTypeError(
                     f"Hash destructuring expected a hash, got {echo_type_name(value)}",
                     location,
@@ -1309,14 +1344,14 @@ class Interpreter:
             taken: set[str] = set()
             for field in fixed:
                 source_key = field.source_key()
-                if source_key not in value:
+                if source_key not in mapping:
                     raise EchoRuntimeError(f"Key '{source_key}' not found in hash", location, code="E2711")
                 self._bind_pattern_name(
-                    field, value[source_key], env, declare=declare, const=const, location=location
+                    field, mapping[source_key], env, declare=declare, const=const, location=location
                 )
                 taken.add(source_key)
             if rest is not None:
-                rest_value = {key: item for key, item in value.items() if key not in taken}
+                rest_value = {key: item for key, item in mapping.items() if key not in taken}
                 if rest.declared_type is not None:
                     for item in rest_value.values():
                         if not matches_type(item, rest.declared_type):
@@ -1325,6 +1360,22 @@ class Interpreter:
             return
         if isinstance(pattern, NamePattern):
             self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)
+
+    def _member_assign(self, target: object, name: str, value: object, location: SourceLocation) -> None:
+        require_unfrozen(target, location)
+        if not isinstance(target, ClassInstance):
+            raise EchoTypeError(
+                f"Cannot assign field on type {echo_type_name(target)}",
+                location,
+                code="E2704",
+            )
+        if name not in target.fields:
+            raise EchoRuntimeError(
+                f"Unknown field '{name}' on {target.class_name}",
+                location,
+                code="E2704",
+            )
+        target.fields[name] = value
 
     def _bind_pattern_name(
         self,

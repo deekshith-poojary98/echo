@@ -7,6 +7,9 @@ from echo.frontend.ast.nodes import (
     BinaryExpression,
     BreakStatement,
     CallExpression,
+    ClassConstruction,
+    ClassDeclaration,
+    ClassField,
     CompoundAssignment,
     ContinueStatement,
     DestructureAssignment,
@@ -30,6 +33,7 @@ from echo.frontend.ast.nodes import (
     ListPattern,
     LiteralExpression,
     LiteralPattern,
+    MemberAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -65,6 +69,7 @@ class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens
         self.pos = 0
+        self._allow_class_construction = True
 
     def parse(self) -> Program:
         statements: list[Statement] = []
@@ -107,6 +112,8 @@ class Parser:
                 self._expect(TokenType.SEMICOLON, ";")
                 return ExpressionStatement(expr.location, expr)
             return self.parse_type_alias()
+        if token.type == TokenType.CLASS:
+            return self.parse_class()
         if token.type == TokenType.RETURN:
             return self.parse_return()
         if token.type == TokenType.BREAK:
@@ -143,6 +150,23 @@ class Parser:
             value = self.parse_expression()
             self._expect(TokenType.SEMICOLON, ";")
             return CompoundAssignment(name_token.location, name_token.lexeme, operator, value)
+
+        if self._is_name(self._peek()) and self._check_offset(1, TokenType.DOT):
+            saved = self.pos
+            object_token = self._advance()
+            self._advance()
+            if self._is_name(self._peek()) and self._check_offset(1, TokenType.EQUAL):
+                field_token = self._advance()
+                self._advance()
+                value = self.parse_expression()
+                self._expect(TokenType.SEMICOLON, ";")
+                return MemberAssignment(
+                    object_token.location,
+                    VariableExpression(object_token.location, object_token.lexeme),
+                    field_token.lexeme,
+                    value,
+                )
+            self.pos = saved
 
         if self._is_name(self._peek()) and self._check_offset(1, TokenType.LEFT_BRACKET):
             saved = self.pos
@@ -182,9 +206,18 @@ class Parser:
         self._expect(TokenType.RIGHT_BRACE, "}")
         return FunctionDeclaration(fn_token.location, name, parameters, body, False, return_type)
 
+    def _parse_expression_before_block(self) -> Expression:
+        """Parse an expression that is followed by a `{` body (if/while/switch/foreach)."""
+        previous = self._allow_class_construction
+        self._allow_class_construction = False
+        try:
+            return self.parse_expression()
+        finally:
+            self._allow_class_construction = previous
+
     def parse_if(self) -> IfStatement:
         token = self._expect(TokenType.IF, "if")
-        condition = self.parse_expression()
+        condition = self._parse_expression_before_block()
         self._expect(TokenType.LEFT_BRACE, "{")
         then_branch = self._parse_block_body()
         self._expect(TokenType.RIGHT_BRACE, "}")
@@ -200,7 +233,7 @@ class Parser:
 
     def parse_switch(self) -> SwitchStatement:
         token = self._expect(TokenType.SWITCH, "switch")
-        discriminant = self.parse_expression()
+        discriminant = self._parse_expression_before_block()
         self._expect(TokenType.LEFT_BRACE, "{")
         arms: list[SwitchArm] = []
         seen_else = False
@@ -265,7 +298,7 @@ class Parser:
 
     def parse_while(self) -> WhileStatement:
         token = self._expect(TokenType.WHILE, "while")
-        condition = self.parse_expression()
+        condition = self._parse_expression_before_block()
         self._expect(TokenType.LEFT_BRACE, "{")
         body = self._parse_block_body()
         self._expect(TokenType.RIGHT_BRACE, "}")
@@ -300,7 +333,7 @@ class Parser:
         self._expect(TokenType.COLON, ":")
         var_type = self._parse_type()
         self._expect(TokenType.IN, "in")
-        iterable = self.parse_expression()
+        iterable = self._parse_expression_before_block()
         self._expect(TokenType.LEFT_BRACE, "{")
         body = self._parse_block_body()
         self._expect(TokenType.RIGHT_BRACE, "}")
@@ -341,6 +374,9 @@ class Parser:
         token = self._expect(TokenType.EXPORT, "export")
         if self._check(TokenType.FN):
             declaration = self.parse_function()
+            return ExportDeclaration(token.location, declaration.name, declaration)
+        if self._check(TokenType.CLASS):
+            declaration = self.parse_class()
             return ExportDeclaration(token.location, declaration.name, declaration)
         if self._check(TokenType.CONST):
             declaration = self.parse_const()
@@ -410,14 +446,47 @@ class Parser:
             raise ParseError(f"Cannot redefine built-in type '{name_token.lexeme}'", name_token.location)
         return TypeAliasStatement(token.location, name_token.lexeme, target)
 
+    def parse_class(self) -> ClassDeclaration:
+        token = self._expect(TokenType.CLASS, "class")
+        name_token = self._expect_name_token("class name")
+        if name_token.lexeme in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
+            raise ParseError(f"Cannot redefine built-in type '{name_token.lexeme}'", name_token.location)
+        self._expect(TokenType.LEFT_BRACE, "{")
+        fields: list[ClassField] = []
+        seen: set[str] = set()
+        while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            field_token = self._expect_name_token("class field name")
+            if field_token.lexeme in seen:
+                raise ParseError(
+                    f"Duplicate field '{field_token.lexeme}' in class '{name_token.lexeme}'",
+                    field_token.location,
+                )
+            seen.add(field_token.lexeme)
+            self._expect(TokenType.COLON, ":")
+            field_type = self._parse_type()
+            if isinstance(field_type, TypeName) and field_type.name == "void":
+                raise ParseError("Cannot use 'void' as a field type", field_token.location)
+            self._expect(TokenType.SEMICOLON, ";")
+            fields.append(ClassField(field_token.lexeme, field_type, field_token.location))
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return ClassDeclaration(token.location, name_token.lexeme, fields)
+
     def parse_expression(self) -> Expression:
         return self.parse_logical_or()
+
+    def _parse_rhs(self, parser) -> Expression:
+        previous = self._allow_class_construction
+        self._allow_class_construction = False
+        try:
+            return parser()
+        finally:
+            self._allow_class_construction = previous
 
     def parse_logical_or(self) -> Expression:
         expr = self.parse_logical_and()
         while self._check(TokenType.OR_OR):
             operator = self._advance()
-            right = self.parse_logical_and()
+            right = self._parse_rhs(self.parse_logical_and)
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
 
@@ -425,7 +494,7 @@ class Parser:
         expr = self.parse_equality()
         while self._check(TokenType.AND_AND):
             operator = self._advance()
-            right = self.parse_equality()
+            right = self._parse_rhs(self.parse_equality)
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
 
@@ -433,7 +502,7 @@ class Parser:
         expr = self.parse_comparison()
         while self._check(TokenType.EQUAL_EQUAL) or self._check(TokenType.BANG_EQUAL):
             operator = self._advance()
-            right = self.parse_comparison()
+            right = self._parse_rhs(self.parse_comparison)
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
 
@@ -441,7 +510,7 @@ class Parser:
         expr = self.parse_range()
         while self._check(TokenType.LESS, TokenType.GREATER, TokenType.LESS_EQUAL, TokenType.GREATER_EQUAL):
             operator = self._advance()
-            right = self.parse_range()
+            right = self._parse_rhs(self.parse_range)
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
 
@@ -452,9 +521,9 @@ class Parser:
             return expr
         inclusive = range_token.type == TokenType.DOT_DOT
         self._advance()
-        end = self.parse_term()
+        end = self._parse_rhs(self.parse_term)
         if self._match(TokenType.BY):
-            step = self.parse_term()
+            step = self._parse_rhs(self.parse_term)
         else:
             step = LiteralExpression(end.location, 1)
         return RangeExpression(expr.location, expr, end, step, inclusive)
@@ -463,7 +532,7 @@ class Parser:
         expr = self.parse_factor()
         while self._check(TokenType.PLUS, TokenType.MINUS):
             operator = self._advance()
-            right = self.parse_factor()
+            right = self._parse_rhs(self.parse_factor)
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
 
@@ -471,14 +540,14 @@ class Parser:
         expr = self.parse_unary()
         while self._check(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
             operator = self._advance()
-            right = self.parse_unary()
+            right = self._parse_rhs(self.parse_unary)
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
 
     def parse_unary(self) -> Expression:
         if self._check(TokenType.BANG, TokenType.MINUS):
             operator = self._advance()
-            operand = self.parse_unary()
+            operand = self._parse_rhs(self.parse_unary)
             return UnaryExpression(operator.location, operator, operand)
         return self.parse_postfix()
 
@@ -546,6 +615,8 @@ class Parser:
             return self._parse_lambda()
         if self._is_name(token) or token.type == TokenType.TYPE_KW:
             self._advance()
+            if self._check(TokenType.LEFT_BRACE) and self._looks_like_class_construction():
+                return self._parse_class_construction(token.location, token.lexeme)
             return VariableExpression(token.location, token.lexeme)
         if token.type == TokenType.LEFT_PAREN:
             self._advance()
@@ -608,6 +679,45 @@ class Parser:
             self._match(TokenType.COMMA)
         self._expect(TokenType.RIGHT_BRACE, "}")
         return HashLiteral(token.location, pairs)
+
+    def _parse_class_construction(self, location: SourceLocation, class_name: str) -> ClassConstruction:
+        self._expect(TokenType.LEFT_BRACE, "{")
+        fields: list[tuple[str, Expression]] = []
+        seen: set[str] = set()
+        while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            if self._check(TokenType.SEMICOLON):
+                raise ParseError(
+                    "Found ';' inside a class construction — you may be missing a closing '}'.",
+                    self._peek().location,
+                )
+            field_token = self._expect_name_token("class field name")
+            if field_token.lexeme in seen:
+                raise ParseError(
+                    f"Duplicate field '{field_token.lexeme}' in construction of '{class_name}'",
+                    field_token.location,
+                )
+            seen.add(field_token.lexeme)
+            self._expect(TokenType.COLON, ":")
+            value = self.parse_expression()
+            fields.append((field_token.lexeme, value))
+            self._match(TokenType.COMMA)
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return ClassConstruction(location, class_name, fields)
+
+    def _looks_like_class_construction(self) -> bool:
+        """True when `Name { ... }` is field construction, not an `if`/`while`/`foreach` body."""
+        if not self._allow_class_construction or not self._check(TokenType.LEFT_BRACE):
+            return False
+        # Peek inside the braces without consuming.
+        inner = self._peek_offset(1)
+        if inner is None:
+            return False
+        if inner.type == TokenType.RIGHT_BRACE:
+            return True
+        if self._is_name(inner) or inner.type == TokenType.TYPE_KW:
+            colon = self._peek_offset(2)
+            return colon is not None and colon.type == TokenType.COLON
+        return False
 
     def _parse_arg_list(self, context: str) -> list[Argument]:
         args: list[Argument] = []

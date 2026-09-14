@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.8**. **0.7.9** (param `const`) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 is drafted below (OOP) and stays held until explicitly started.** Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.9**. **0.8.0** (nominal `class` + construction) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 OOP is in progress** (0.8.0 done; 0.8.1–0.8.2 still held). Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.8**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented (0.7.9 not yet tagged). **0.8 OOP** is drafted in this file and remains held until you say start.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.9**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0** is implemented (not yet tagged). **0.8.1–0.8.2** remain held until you say start.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -356,9 +356,9 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 | Switch keyword | `switch` | `match` (rejected: failure-model collision) |
 | Switch narrowing | arm `int { }` / `int n { }` on a union | literals + `else` only |
 
-## 0.8.x — OOP (draft / held)
+## 0.8.x — OOP
 
-**Status: held.** Do not implement until explicitly started (`start 0.8.0`). This is the plan of record so 0.8 is not a design free-for-all.
+**Status: 0.8.0 implemented; 0.8.1–0.8.2 held.** Do not start methods or interfaces until explicitly asked.
 
 **0.7 is closed** (spine through 0.7.6; polish through 0.7.9). Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
 
@@ -366,14 +366,14 @@ Shape: **structs with methods**, Echo-flavored.
 
 - Nominal `class` names (runtime identity, not structural)
 - Fields are an **exact** shape (extras rejected)
-- Methods use the existing call form `obj.method(args)` (same surface as list/hash builtins)
+- Methods use the existing call form `obj.method(args)` (same surface as list/hash builtins) — **0.8.1**
 - Failure model unchanged: abort + `*Or`; no exceptions from methods
 - Open `{ ... }` hashes and `exact { ... }` keep working; classes do not replace them
 - Generics, overloading, async, packages, VM stay held outside this spine
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 0.8.0 | Nominal `class` + construction | held (draft) |
+| 0.8.0 | Nominal `class` + construction | implemented (0.8.0) |
 | 0.8.1 | Methods + `this` | held (draft) |
 | 0.8.2 | `interface` (no inheritance) | held (draft) |
 
@@ -381,7 +381,7 @@ Shape: **structs with methods**, Echo-flavored.
 
 Introduce a nominal type distinct from `type Alias = exact { ... }`.
 
-Working spelling:
+**Implemented spelling:**
 
 ```echo
 class Point {
@@ -397,7 +397,7 @@ p.x = 10;
 Rules:
 
 - `class Name { field: T; ... }` declares a nominal type `Name`
-- Field list is **exact**: every field required; extras abort (same family as **E3208** / **E3209**, or class-specific codes in the E32xx range)
+- Field list is **exact**: every field required; extras abort (**E3208** / **E3209**)
 - Construct with **`Name { field: expr, ... }`** (named fields only; order free). No positional `Point(3, 4)` in 0.8.0
 - `export class Name { ... }` allowed, same as other top-level declarations
 - Nested classes: **no** in 0.8.0 (top-level only)
@@ -405,10 +405,10 @@ Rules:
 - `type(p)` returns the class name string (e.g. `"Point"`), not `"hash"`
 - Assignability: `Point` is only assignable to `Point` (and `dynamic`). A compatible `exact { x: int, y: int }` hash is **not** a `Point`. `Point` is not assignable to that exact type either — nominal, not structural
 - `Point` may appear in unions (`Point | str`) and in `switch` type arms (`Point { }` / `Point p { }`)
-- Field read/write: `p.x` and `p.x = v` (typed). Unknown field → existing member error family (**E2704** or class-specific)
-- `const p: Point = ...` freezes the instance like a frozen hash (**E3203** on mutation)
-- Destructuring: `{ x: int, y: int } = p` works if we treat instances as hash-shaped for destructure **or** we add class patterns in a later polish — working assumption: **destructure by field names works** (same keys as the class fields)
-- Equality: field-wise Echo `==` (like hashes), not identity. Open question below
+- Field read/write: `p.x` and `p.x = v` (typed). Unknown field → **E2704**
+- `const p: Point = ...` freezes the instance (**E3202** through that name; **E3203** via another name)
+- Destructuring: `{ x: int, y: int } = p` works (instances are hash-shaped for destructure)
+- Equality: field-wise Echo `==` (like hashes), not identity
 - No methods, no `this`, no inheritance, no `private` in 0.8.0
 
 Does not add a separate `struct` keyword. `class` is the keyword; behavior is struct-like.
@@ -511,11 +511,11 @@ Inheritance trees, abstract classes, generics on classes, operator overloading, 
 
 ## Held (do not implement)
 
-Do not move global holds into 0.7. **Classes are drafted as 0.8.x above** — still held until `start 0.8.0`. The closed 0.7 spine is in the **0.7.x** table, not here.
+Do not move global holds into 0.7. **0.8.0 is implemented**; **0.8.1–0.8.2** stay held until started. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
-| Classes / OOP | held — drafted as **0.8.0–0.8.2** |
+| Classes / OOP | **0.8.0** implemented; **0.8.1–0.8.2** held |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

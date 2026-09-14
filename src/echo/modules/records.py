@@ -21,6 +21,7 @@ class Module:
     imported_bindings: list[tuple[str, Path]] = field(default_factory=list)
     specifiers: dict[str, Path] = field(default_factory=dict)
     exports: set[str] = field(default_factory=set)
+    class_exports: set[str] = field(default_factory=set)
     env: Environment | None = None
     discovered: bool = False
     state: str = NOT_INITIALIZED

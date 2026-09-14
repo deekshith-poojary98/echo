@@ -19,6 +19,9 @@ for i: int in 0..10 { ... }
 foreach item: str in items { ... }
 fn greet(name: str) { ... }
 fn lock(const xs: list) { ... }
+class Point { x: int; y: int; }
+p: Point = Point { x: 3, y: 4 };
+p.x = 10;
 return;
 break;
 continue;
@@ -33,6 +36,7 @@ watch count;
 - `void` — function return annotations only
 - Unions: `int | str` (no `null` type member; prefer `str | void`)
 - Object shapes: `{ id: int }` (open) and `exact { id: int }` (closed)
+- Nominal classes: `class Point { x: int; y: int; }` (construction `Point { x: 3, y: 4 }`)
 - Function types: `fn(int) -> int`
 
 ## Literals

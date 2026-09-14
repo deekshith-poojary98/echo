@@ -128,6 +128,7 @@ class ModuleLoader:
             analyzer = SemanticAnalyzer()
             analyzer.analyze(module.ast, dependencies=dependencies)
             module.exports = set(analyzer.module_symbols.exports)
+            module.class_exports = set(analyzer.module_symbols.classes)
 
     def _initialize(self, module: Module, interpreter: Interpreter) -> None:
         if module.state == INITIALIZED:
@@ -165,6 +166,8 @@ class ModuleLoader:
     def _bind_imports(self, module: Module, env: Environment) -> None:
         for name, dependency_path in module.imported_bindings:
             dependency = self._modules[dependency_path]
+            if name in dependency.class_exports:
+                continue
             value = self._export_value(dependency, name)
             if isinstance(value, EchoFunction):
                 env.define_function(name, value)

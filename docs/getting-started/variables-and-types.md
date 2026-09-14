@@ -78,6 +78,22 @@ fn show(x: int | str) -> str {
 
 A value matches a union if it matches any member. Unions are not Option — Echo has no `null` type, so write `str | void` when `null` is allowed. Use `switch` type arms to dispatch on members.
 
+### Classes (nominal)
+
+```echo
+class Point {
+    x: int;
+    y: int;
+}
+
+p: Point = Point { x: 3, y: 4 };
+say(p.x);
+p.x = 10;
+say(type(p)); // "Point"
+```
+
+`Point` is a nominal type — not the same as `exact { x: int, y: int }`. Construction requires every field and rejects extras. Methods arrive in a later release.
+
 ### Runtime type checking
 ```echo
 count: int = 1;

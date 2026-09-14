@@ -8,6 +8,9 @@ from echo.frontend.ast.nodes import (
     BinaryExpression,
     BreakStatement,
     CallExpression,
+    ClassConstruction,
+    ClassDeclaration,
+    ClassType,
     CompoundAssignment,
     ContinueStatement,
     DestructureAssignment,
@@ -30,6 +33,7 @@ from echo.frontend.ast.nodes import (
     ListPattern,
     LiteralExpression,
     LiteralPattern,
+    MemberAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -171,6 +175,8 @@ class SemanticAnalyzer:
     def _statement(self, statement: Statement, scope: Scope) -> None:
         if isinstance(statement, TypeAliasStatement):
             self._type_alias(statement, scope)
+        elif isinstance(statement, ClassDeclaration):
+            self._class_declaration(statement, scope)
         elif isinstance(statement, VariableDeclaration):
             self._expression(statement.initializer, scope)
             statement.declared_type = self._resolve_type(statement.declared_type, scope)
@@ -222,6 +228,11 @@ class SemanticAnalyzer:
             for index in statement.indices:
                 self._expression(index, scope)
             self._expression(statement.value, scope)
+        elif isinstance(statement, MemberAssignment):
+            self._expression(statement.object, scope)
+            self._expression(statement.value, scope)
+            if isinstance(statement.object, VariableExpression):
+                self._require_not_const_mutation(statement.object.name, statement, scope)
         elif isinstance(statement, ExpressionStatement):
             self._expression(statement.expression, scope)
         elif isinstance(statement, IfStatement):
@@ -539,6 +550,40 @@ class SemanticAnalyzer:
                 self._expression(argument.value, scope)
         elif isinstance(expression, MemberExpression):
             self._expression(expression.object, scope)
+        elif isinstance(expression, ClassConstruction):
+            class_type = scope.classes.get(expression.class_name)
+            if class_type is None:
+                raise SemanticError(
+                    f"Unknown class '{expression.class_name}'",
+                    expression.location,
+                    help_text="Declare the class with 'class Name { ... }' before constructing it.",
+                    code="E3211",
+                )
+            provided = {name for name, _ in expression.fields}
+            for field_name in class_type.fields:
+                if field_name not in provided:
+                    raise SemanticError(
+                        f"Class '{expression.class_name}' is missing required field '{field_name}'",
+                        expression.location,
+                        help_text="Class construction requires every declared field.",
+                        code="E3209",
+                    )
+            for field_name, field_value in expression.fields:
+                if field_name not in class_type.fields:
+                    raise SemanticError(
+                        f"Class '{expression.class_name}' does not allow extra field '{field_name}'",
+                        expression.location,
+                        help_text="Remove extra fields.",
+                        code="E3208",
+                    )
+                self._expression(field_value, scope)
+                self._check_typed_binding(
+                    field_value,
+                    class_type.fields[field_name],
+                    scope,
+                    expression.location,
+                    field_name,
+                )
         elif isinstance(expression, IndexExpression):
             self._expression(expression.target, scope)
             self._expression(expression.index, scope)
@@ -804,12 +849,16 @@ class SemanticAnalyzer:
                     add(self._function_symbol(statement.declaration), True)
                 elif isinstance(statement.declaration, VariableDeclaration):
                     add(self._variable_symbol(statement.declaration), True)
+                elif isinstance(statement.declaration, ClassDeclaration):
+                    symbols.classes[statement.declaration.name] = self._class_type(statement.declaration)
                 else:
                     pending.append(statement)
             elif isinstance(statement, FunctionDeclaration):
                 add(self._function_symbol(statement), False)
             elif isinstance(statement, VariableDeclaration):
                 add(self._variable_symbol(statement), False)
+            elif isinstance(statement, ClassDeclaration):
+                pass
             elif isinstance(statement, DestructureDeclaration):
                 for name_pattern in iter_name_patterns(statement.pattern):
                     declared = TypeName(name_pattern.location, "list") if name_pattern.rest else name_pattern.declared_type
@@ -867,6 +916,13 @@ class SemanticAnalyzer:
             const=statement.const,
         )
 
+    def _class_type(self, statement: ClassDeclaration) -> ClassType:
+        return ClassType(
+            statement.location,
+            statement.name,
+            {field.name: field.type for field in statement.fields},
+        )
+
     def _imported_symbol(self, exported: Symbol, statement: ImportDeclaration) -> Symbol:
         return Symbol(
             exported.name,
@@ -899,6 +955,17 @@ class SemanticAnalyzer:
                 code="E3100",
             )
 
+    def _export_statement(self, statement: ExportDeclaration, scope: Scope) -> None:
+        self._require_module_scope(scope, statement, "export")
+        if isinstance(statement.declaration, VariableDeclaration):
+            self._statement(statement.declaration, scope)
+            self._mark_exported(statement.name, statement)
+            return
+        if isinstance(statement.declaration, ClassDeclaration):
+            self._class_declaration(statement.declaration, scope, exported=True)
+            return
+        self._pending_exports.append(statement)
+
     def _bind_import(self, statement: ImportDeclaration, scope: Scope) -> None:
         self._require_module_scope(scope, statement, "import")
         dependency = self._dependencies.get(statement.module)
@@ -908,6 +975,10 @@ class SemanticAnalyzer:
                 statement.location,
                 code="E3104",
             )
+        class_type = dependency.classes.get(statement.name)
+        if class_type is not None:
+            scope.classes[statement.name] = class_type
+            return
         exported = dependency.exports.get(statement.name)
         if exported is None:
             if statement.name in dependency.private:
@@ -924,14 +995,6 @@ class SemanticAnalyzer:
         bound = self._imported_symbol(exported, statement)
         scope.define(bound)
         self._record(bound)
-
-    def _export_statement(self, statement: ExportDeclaration, scope: Scope) -> None:
-        self._require_module_scope(scope, statement, "export")
-        if isinstance(statement.declaration, VariableDeclaration):
-            self._statement(statement.declaration, scope)
-            self._mark_exported(statement.name, statement)
-            return
-        self._pending_exports.append(statement)
 
     def _resolve_pending_exports(self) -> None:
         for statement in self._pending_exports:
@@ -1299,9 +1362,34 @@ class SemanticAnalyzer:
     def _type_alias(self, statement: TypeAliasStatement, scope: Scope) -> None:
         if statement.name in scope.type_aliases:
             raise SemanticError(f"Type alias '{statement.name}' is already defined", statement.location, code="E1012")
+        if statement.name in scope.classes:
+            raise SemanticError(
+                f"Cannot define type alias '{statement.name}' because a class with that name exists",
+                statement.location,
+                code="E1012",
+            )
         resolved = self._resolve_type(statement.target, scope)
         scope.type_aliases[statement.name] = resolved
         statement.target = resolved
+
+    def _class_declaration(self, statement: ClassDeclaration, scope: Scope, *, exported: bool = False) -> None:
+        self._require_module_scope(scope, statement, "class")
+        if statement.name in scope.classes:
+            raise SemanticError(f"Class '{statement.name}' is already defined", statement.location, code="E1012")
+        if statement.name in scope.type_aliases:
+            raise SemanticError(
+                f"Cannot define class '{statement.name}' because a type alias with that name exists",
+                statement.location,
+                code="E1012",
+            )
+        fields: dict[str, TypeAnnotation] = {}
+        for field in statement.fields:
+            fields[field.name] = self._resolve_type(field.type, scope)
+            field.type = fields[field.name]
+        class_type = ClassType(statement.location, statement.name, fields)
+        scope.classes[statement.name] = class_type
+        if exported:
+            self.module_symbols.classes[statement.name] = class_type
 
     def _resolve_type(self, type_annotation: TypeAnnotation, scope: Scope) -> TypeAnnotation:
         if isinstance(type_annotation, UnionType):
@@ -1317,13 +1405,22 @@ class SemanticAnalyzer:
                 for name, field_type in type_annotation.fields.items()
             }
             return ObjectType(type_annotation.location, fields, type_annotation.exact)
+        if isinstance(type_annotation, ClassType):
+            fields = {
+                name: self._resolve_type(field_type, scope)
+                for name, field_type in type_annotation.fields.items()
+            }
+            return ClassType(type_annotation.location, type_annotation.name, fields)
         if isinstance(type_annotation, TypeName):
             if type_annotation.name in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
                 return type_annotation
+            class_type = scope.classes.get(type_annotation.name)
+            if class_type is not None:
+                return self._resolve_type(class_type, scope)
             alias = scope.type_aliases.get(type_annotation.name)
             if alias is None:
                 raise SemanticError(
-                    f"Unknown type alias '{type_annotation.name}'",
+                    f"Unknown type '{type_annotation.name}'",
                     type_annotation.location,
                     code="E1013",
                 )

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.frontend.tokens import TokenType
+from echo.runtime.instances import ClassInstance
 from echo.runtime.values import is_truthy
 
 
@@ -104,6 +105,16 @@ def echo_equal(left: object, right: object) -> bool:
                 return True
             seen.add(pair)
             return all(eq(a[key], b[key]) for key in a)
+        if isinstance(a, ClassInstance) and isinstance(b, ClassInstance):
+            if a.class_name != b.class_name:
+                return False
+            if a.fields.keys() != b.fields.keys():
+                return False
+            pair = (id(a), id(b))
+            if pair in seen:
+                return True
+            seen.add(pair)
+            return all(eq(a.fields[key], b.fields[key]) for key in a.fields)
         return a == b
 
     return eq(left, right)
