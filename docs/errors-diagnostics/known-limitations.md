@@ -1,14 +1,13 @@
 # Known Limitations
 
-## Overview
-This page lists what Echo still does **not** do. It is not a description of an early pre-module interpreter.
+What Echo still does **not** do. As of recent 0.5–0.7 releases, a lot already shipped — this page is the remainder, not a history of the empty interpreter.
 
-As of v0.5.0, Echo already has:
+Already in:
 
 - Frozen v0.2 language syntax, plus v0.3 file-based modules (`import` / `export`)
 - Multiline `"""` / `'''` strings and `.5` / scientific number literals
-- A host and standard library (`args`, `env`, files, JSON, string/list helpers, numeric helpers, `assert`, `expect` / `expectEq` / `expectNeq`, `fail`, `run`, `now`, `random`)
-- `echo check [paths...]`, a REPL (`echo` with no file), `echo test [paths...]`, `echo fmt`, and `echo lint` (`test-naming`, `self-assign`, `unreachable-after-fail` added in 0.5.8; multi-path `check` in 0.5.9)
+- Host and stdlib (`args`, `env`, files, JSON, string/list helpers, numeric helpers, `assert`, `expect` / `expectEq` / `expectNeq`, `fail`, `run`, `now`, `random`)
+- `echo check [paths...]`, REPL (`echo` with no file), `echo test [paths...]`, `echo fmt`, `echo lint` (`test-naming`, `self-assign`, `unreachable-after-fail` in 0.5.8; multi-path `check` in 0.5.9)
 - First-class functions including lambdas, slice syntax `xs[1:4]`, and user `fn` defaults/variadics (0.6.0)
 - List `map` / `filter` (0.6.1)
 - List `reduce` (0.6.2)
@@ -26,7 +25,7 @@ As of v0.5.0, Echo already has:
 - Range expressions `0...10` / `0..10` (optional `by`) as `list` values (0.7.4)
 - Union types `int | str` (0.7.5); not Option; no `null` type member; no narrowing yet
 
-The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
+Still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 
 ## Current Limitations
 - No classes or user-defined structs
@@ -47,8 +46,10 @@ The items below are still out of scope. Classes, `try`/`catch`, and the other fr
 - No dates, HTTP, or regex builtins
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
 
-## Why This Page Exists
-Echo is still evolving. The docs should not make the language sound more complete than it is, and they should not hide capabilities that already shipped.
+## Why this page exists
 
-## Planned Improvement
-See [Failure model](/failure-model), [Roadmap / Planned Improvements](/project/roadmap), and [priority tracking](/project/priority) for remaining stdlib work versus held syntax.
+So docs do not oversell the language, and so shipped work is not mistaken for missing.
+
+## Where next work is tracked
+
+See [Failure model](/failure-model), [Roadmap](/project/roadmap), and [priority](/project/priority).

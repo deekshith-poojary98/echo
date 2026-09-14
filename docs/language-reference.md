@@ -1,5 +1,5 @@
 # Language Reference
 
-See [language-semantics.md](language-semantics.md) for the v0.2 contract.
+See [language-semantics.md](language-semantics.md) for the language contract.
 
-The VitePress guide pages under `docs/getting-started/` and `docs/reference/` remain the narrative documentation. If they disagree with `language-semantics.md`, the semantics document wins until the guide is updated.
+Narrative docs: `docs/getting-started/` and `docs/reference/`. If a guide disagrees with `language-semantics.md`, the semantics document wins until the guide is updated.

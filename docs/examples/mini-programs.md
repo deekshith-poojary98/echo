@@ -1,19 +1,9 @@
 # Mini Programs
 
-## Overview
-A few short programs that show Echo as a practical scripting language.
+Short scripts. Not a tutorial series.
 
-## Syntax
-```echo
-fn countdown(start: int) {
-    for i: int in start..0 by -1 {
-        say(i);
-    }
-}
-```
-
-## Example
 ### Countdown
+
 ```echo
 fn countdown(start: int) {
     for i: int in start..0 by -1 {
@@ -24,7 +14,6 @@ fn countdown(start: int) {
 countdown(3);
 ```
 
-Output:
 ```text
 3
 2
@@ -32,7 +21,8 @@ Output:
 0
 ```
 
-### Simple frequency counter
+### Frequency counter
+
 ```echo
 words: list = ["a", "b", "a"];
 counts: hash = {};
@@ -47,26 +37,23 @@ while i < words.length() {
 say(counts);
 ```
 
-Output:
 ```text
 {"a": 2, "b": 1}
 ```
 
-### JSON job report (v0.4 host builtins)
+### JSON job report
 
 `examples/json_report.echo` reads a JSON suite, prints a summary, and can write it back out.
 
 ```bash
-echo examples/json_report.echo -- examples/sample_jobs.json
-ECHO_REPORT=report.json echo examples/json_report.echo -- examples/sample_jobs.json
+echolang examples/json_report.echo -- examples/sample_jobs.json
+ECHO_REPORT=report.json echolang examples/json_report.echo -- examples/sample_jobs.json
 ```
 
-It uses `args()`, `envOr()`, `readFile()`, `writeFile()`, `parseJson()`, and `writeJson()`.
-
-## Notes
-These are still small scripts, but they cover the kind of tasks Echo currently handles well.
+Uses `args()`, `envOr()`, `readFile()`, `writeFile()`, `parseJson()`, and `writeJson()`.
 
 ## See Also
+
 - [Control Flow](/getting-started/control-flow)
 - [Lists](/core-concepts/lists)
 - [Hashes](/core-concepts/hashes)

@@ -1,11 +1,7 @@
 # Getting Started
 
-## Overview
-Echo is an interpreted scripting language with explicit variable types, brace-based blocks, and practical built-in methods.
+Echo is interpreted. You declare types on variables and parameters; the runtime checks them when values are bound. Blocks use braces. If you know JavaScript, C, or Python, the surface should look familiar — the failure rules and scope rules will not.
 
-If you know JavaScript, C, or Python, the surface syntax should feel familiar quickly.
-
-## Syntax
 ```echo
 name: str = "Echo";
 version: int = 1;
@@ -18,7 +14,6 @@ greet(name);
 say("Version:", version);
 ```
 
-## Example
 ```echo
 project: str = "Echo";
 count: int = 3;
@@ -33,7 +28,6 @@ repeat_title(project);
 say("Total:", count);
 ```
 
-## Output
 ```text
 Echo
 Echo
@@ -41,11 +35,10 @@ Echo
 Total: 3
 ```
 
-## Notes
-- Echo is interpreted, not compiled.
-- Variable declarations require a type.
-- Function parameter types are required.
-- Function return type annotations are required when a function uses `return`.
+## Facts that matter early
+
+- Not compiled. Files go lexer → parser → analyzer → interpreter.
+- Declarations and parameters need types. A `return` requires a return type annotation on the function.
 - Comments:
 
 ```echo
@@ -56,14 +49,17 @@ multi-line
 */
 ```
 
-## Common Mistakes
-### Forgetting `;`
+## Common mistakes
+
+Missing `;`:
+
 ```echo
 name: str = "Echo"
 say(name);
 ```
 
-### Forgetting braces
+Missing braces (Python-style bare body):
+
 ```echo
 if true
     say("yes");
@@ -78,6 +74,7 @@ if true {
 ```
 
 ## See Also
+
 - [Syntax Basics](/getting-started/syntax-basics)
 - [Control Flow](/getting-started/control-flow)
 - [Functions](/getting-started/functions)

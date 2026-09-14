@@ -1,26 +1,11 @@
 # Echo Language Capability Matrix
 
-**Status:** Design audit after v0.3.0. Not a language contract.
-**Language contracts remain:** `docs/language-semantics.md` (v0.2) and `docs/module-semantics.md` (v0.3, frozen).
-**v0.4 boundary:** Frozen in `docs/v0.4-language-vs-stdlib.md` (host + stdlib, not a syntax release).
-**Date:** 2026-09-05
+**Status:** Living audit against `src/echo/` and tests. Not a language contract.
+**Aligned through:** v0.7.5 (unions). Earlier rows for const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
+**Contracts win:** `docs/language-semantics.md`, `docs/module-semantics.md`, `docs/failure-model.md`.
+**v0.4 boundary:** Frozen in `docs/v0.4-language-vs-stdlib.md` (host + stdlib). 0.5–0.7 added syntax and tooling on top of that cut.
 
-This document is **not** a promise list and **not** a v0.4 specification.
-v0.3 language semantics stay frozen. The v0.4 boundary is a design
-decision, not permission to implement.
-
----
-
-## Why this exists
-
-Echo now has a real pipeline: frontend → semantics → modules → runtime.
-That is the first point where a fundamentals audit is useful.
-
-The question is not “does Python have X?”
-The question is:
-
-> What capability would a usable general-purpose scripting language
-> need, what does Echo actually have, and is a gap a hole or a decision?
+Not a promise list. A gap here is either a hole, a hold, or already closed — check the status column before treating it as work.
 
 ---
 
@@ -32,44 +17,41 @@ The question is:
 | **Supported** | End-to-end: syntax, semantics, runtime, and tests |
 | **Partial** | Present, but incomplete for real programs |
 | **Missing** | Not in the language or stdlib today |
-| **Excluded** | Absent on purpose. The contract or vision rejects it, or confines it to a special case |
+| **Excluded** | Absent on purpose |
 | **Priority** | Whether we should care soon. “Don’t touch” means leave it alone |
-| **Possible version** | A guess, not a commitment |
-
-`Candidate` is a recommendation, not a status.
-A missing capability can be a candidate. An excluded one can be a
-reconsideration. Those are different things.
+| **Possible version** | A guess, or the version that shipped it. Not a commitment for open rows |
 
 ---
 
-## Snapshot after v0.3.0
+## Snapshot (through v0.7.5)
 
-Echo is already a language in the fundamentals sense.
+Fundamentals are in: typed bindings, control flow, loops, functions/lambdas,
+`const`, destructuring, exact object types, unions, range expressions as
+lists, lexical scope, closures, collections, strings (including multiline),
+`use` / `use mut`, `watch`, sibling-file modules, Echo-owned errors.
 
-It has typed bindings, expressions, operators, control flow, loops,
-functions, lexical scope, closures, collections, strings, an explicit
-mutability model, modules with visibility, and Echo-owned errors.
+Host/stdlib and tooling that used to be the main gaps: `args` / `env` / files /
+JSON, inquiry + `*Or` twins, `echo check` / `fmt` / `lint` / `test`, REPL.
 
-It is **not** yet a pleasant host for real automation programs.
-The first interesting gaps are usability: conversion, I/O, program
-arguments, richer collections/strings, and a designed failure story.
-
-It is **not** unfinished because it lacks a VM, generics, or classes.
+Still open or held: richer date/time, package manager, LSP, `try` / `catch`,
+classes, generics, VM. Failure model is frozen — abort by default; recovery is
+inquiry and `*Or`, not exceptions.
 
 | Bucket | Verdict |
 | --- | --- |
-| Language fundamentals | Surprisingly complete for v0.3 |
-| Language usability | First real gaps |
-| Language ecosystem | Thin. Expected at this age |
-| Implementation / runtime maturity | Do not start |
+| Language fundamentals | Supported through 0.7.5 surface |
+| Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
+| Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
+| Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
 
-Distinctive Echo capabilities that are not “missing Python features”:
+Distinctive on purpose:
 
 - `watch` as a language construct
 - `use` / `use mut` instead of implicit outer mutation
 - runtime-checked declarations without a static compiler
 - `import` / `export` kept separate from `use`
 - Model A: imported bindings are immutable; imported collections share identity
+- Abort + inquiry + `*Or` instead of `try` / `catch`
 
 ---
 
@@ -81,16 +63,16 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Immutable bindings | Fundamentals | Supported (0.7.0) | Frozen | 0.7.0 |
 | Primitive types | Fundamentals | Supported | Frozen | Done |
 | Type checking | Fundamentals | Supported | Frozen | Done |
-| Type aliases | Fundamentals | Partial | Later | Later |
+| Type aliases | Fundamentals | Supported (exact 0.7.2, unions 0.7.5) | Frozen | 0.7.5 |
 | Arithmetic | Fundamentals | Supported | Frozen | Done |
 | Comparisons | Fundamentals | Supported | Frozen | Done |
 | Boolean logic | Fundamentals | Supported | Frozen | Done |
-| Strings | Fundamentals | Supported | Frozen | Done |
+| Strings | Fundamentals | Supported (multiline 0.5.0) | Frozen | 0.5.0 |
 | Lists | Fundamentals | Supported | Frozen | Done |
 | Hashes | Fundamentals | Supported | Frozen | Done |
 | Indexing | Fundamentals | Supported | Frozen | Done |
 | Control flow | Fundamentals | Supported | Frozen | Done |
-| Loops | Fundamentals | Supported | Frozen | Done |
+| Loops | Fundamentals | Supported; range-as-value 0.7.4 | Frozen | 0.7.4 |
 | Loop control | Fundamentals | Supported | Frozen | Done |
 | Functions | Fundamentals | Supported | Frozen | Done |
 | Recursion | Fundamentals | Partial | Later | Later |
@@ -100,54 +82,52 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Mutation (`use` / `use mut`) | Fundamentals | Supported | Frozen | Done |
 | Modules | Fundamentals | Supported | Frozen | Done (v0.3) |
 | Visibility | Fundamentals | Supported | Frozen | Done (v0.3) |
-| Language errors | Fundamentals | Partial | Usability now | v0.4 candidate |
+| Language errors | Fundamentals | Partial | Later | Later |
 | `watch` | Fundamentals | Supported | Frozen | Done |
-| Type conversion | Usability | Partial | Usability now | v0.4 candidate |
-| File I/O | Usability | Missing | Usability now | v0.4 candidate (library) |
-| User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
-| Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
+| Type conversion | Usability | Supported (`*Or` 0.5.3) | Frozen | 0.5.3 |
+| File I/O | Usability | Supported (0.4+) | Frozen | Done |
+| User error handling | Usability | Partial (inquiry + `*Or`; no `try`/`catch`) | Design hold | Failure model frozen |
+| Exceptions (`try/catch`) | Usability | Excluded | Design hold | Hold |
 | Destructuring | Usability | Supported (0.7.1) | Frozen | 0.7.1 |
 | Exact object types | Usability | Supported (0.7.2) | Frozen | 0.7.2 |
 | Union types | Usability | Supported (0.7.5) | Frozen | 0.7.5 |
-| Collection operations | Usability | Partial (`flatten` / `partition` 0.6.9) | Usability now | 0.6.9 |
-| String utilities | Usability | Partial | Usability now | v0.4 candidate |
-| Date / time | Usability | Missing | Later | Later (library) |
-| Environment variables | Usability | Missing | Usability now | v0.4 candidate (library) |
-| Program CLI arguments | Usability | Missing | Usability now | v0.4 candidate |
+| Collection operations | Usability | Supported through 0.6.9 HOFs; range expr 0.7.4 | Frozen | 0.7.4 |
+| String utilities | Usability | Supported (0.4+) | Frozen | Done |
+| Date / time | Usability | Missing (`now` / `wait` only) | Later | Later (library) |
+| Environment variables | Usability | Supported (0.4) | Frozen | Done |
+| Program CLI arguments | Usability | Supported (0.4) | Frozen | Done |
 | Default / variadic args | Usability | Supported (0.6.0) | Frozen | 0.6.0 |
 | Function overloading | Usability | Excluded | Design hold | Hold |
-| JSON / interchange | Usability | Missing | Usability now | v0.4 candidate (library) |
-| Multiline strings | Usability | Missing | Later | Later |
+| JSON / interchange | Usability | Supported (0.4); `parseJsonOr` 0.5.3 | Frozen | Done |
+| Multiline strings | Usability | Supported (0.5.0) | Frozen | 0.5.0 |
 | Package manager | Ecosystem | Missing | Tooling | Tooling track |
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
 | Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
 | Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8), `--json` (0.6.9) | Tooling | 0.6.9 |
-| Debugger | Ecosystem | Partial | Tooling | Later |
+| Debugger | Ecosystem | Partial (`watch` only) | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
 | IDE support | Ecosystem | Partial (0.5.7), Check workspace (0.5.9) | Tooling | 0.5.9 |
 | Language server | Ecosystem | Missing | Tooling | Later |
-| REPL | Ecosystem | Missing | Tooling | Later (REPL). `echo check` shipped in 0.4.1 |
-| Playground | Ecosystem | Partial | Tooling | Done enough |
+| REPL | Ecosystem | Supported (0.5.0) | Tooling | Done |
+| Playground | Ecosystem | Partial (browser host; no files/argv) | Tooling | Done enough |
 | Compiler / native exe | Runtime | Missing | Don't touch | Not now |
 | Bytecode / VM | Runtime | Missing | Don't touch | Not now |
 | JIT | Runtime | Missing | Don't touch | Not now |
 | Concurrency / async | Runtime | Missing | Don't touch | Not now |
 | Generics | Runtime | Missing | Don't touch | Not now |
 | Classes / OOP | Runtime | Excluded | Design hold | Hold |
-| Structs / records | Runtime | Partial | Later | Later |
+| Structs / records | Runtime | Partial (aliases / exact) | Later | Later |
 | Garbage collection | Runtime | Partial | Don't touch | Python-owned |
 
 ---
 
 ## 1. Language fundamentals
 
-These decide whether Echo is a language.
+Core surface. Mostly frozen since v0.2–v0.3; 0.6–0.7 fill-ins noted per row.
 
 ### Variables
 
 **What it means.** Introduce a name, give it a type, assign, reassign.
-
-**Why languages need it.** Every program stores values.
 
 **Echo status.** Supported.
 
@@ -170,8 +150,6 @@ in the same scope is an error. Child blocks may shadow.
 ### Immutable bindings
 
 **What it means.** Prevent reassignment of a name.
-
-**Why languages need it.** Stops accidental overwrites. Makes APIs safer.
 
 **Echo status.** Supported (0.7.0).
 
@@ -213,8 +191,6 @@ inside a frozen collection are not recursively frozen.
 
 **What it means.** A small set of first-class values.
 
-**Why languages need it.** Programs need numbers, text, booleans, and absence.
-
 **Echo status.** Supported.
 
 Echo values: `int` (arbitrary precision), `float` (IEEE-754 binary64),
@@ -237,8 +213,6 @@ literals do not include `.5` or `1e3`.
 
 **What it means.** Meaningful type errors when values do not match annotations.
 
-**Why languages need it.** Catches the wrong value at a known boundary.
-
 **Echo status.** Supported.
 
 Echo is **not** statically typed. Checks happen at declaration, assignment,
@@ -260,14 +234,13 @@ for existing types, not new runtime types.
 
 **What it means.** Name an existing type, including a structural object shape.
 
-**Why languages need it.** Lets programs talk about `User` instead of a raw hash.
-
-**Echo status.** Partial.
+**Echo status.** Supported (exact 0.7.2, unions 0.7.5).
 
 ```echo
 type Age = int;
 type User = { id: int, name: str };
 type ExactUser = exact { id: int, name: str };
+type Id = int | str;
 ```
 
 Open object aliases require the listed fields and types and allow extras.
@@ -276,12 +249,12 @@ nests and does not freeze values. Exact objects are assignable to compatible
 open object types; open objects are not assignable to exact types. Aliases are
 not new runtime types.
 
-Union aliases such as `type Id = int | str` are supported (0.7.5). A value
-matches any member; a union assigned to a narrower type requires every member
-to be assignable. Echo has no `null` type member.
+Union aliases accept a value assignable to any member; a union assigned to a
+narrower type requires every member to be assignable. Echo has no `null` type
+member — prefer `str | void` when a binding may hold `null`.
 
-**Limitations.** No nominal types and no methods on aliases. This is the
-closest thing Echo has to records. No control-flow narrowing on unions yet.
+**Limitations.** No nominal types and no methods on aliases. No control-flow
+narrowing on unions yet (`switch` is 0.7.6).
 
 **Priority.** Frozen.
 
@@ -292,8 +265,6 @@ closest thing Echo has to records. No control-flow narrowing on unions yet.
 ### Arithmetic
 
 **What it means.** `+ - * / %` and unary `-`.
-
-**Why languages need it.** Numeric programs.
 
 **Echo status.** Supported.
 
@@ -312,8 +283,6 @@ Mixed `str + int` is a type error, not a Python leak.
 
 **What it means.** `== != < > <= >=`
 
-**Why languages need it.** Conditions and ordering.
-
 **Echo status.** Supported.
 
 `true == 1` is `false`. `null == null` is `true`. Lists and hashes compare
@@ -328,8 +297,6 @@ structurally.
 ### Boolean logic
 
 **What it means.** Conjunction, disjunction, negation, with defined truthiness.
-
-**Why languages need it.** Control flow.
 
 **Echo status.** Supported.
 
@@ -348,19 +315,19 @@ Operators: `&&`, `||`, `!`. They short-circuit. Falsy values: `false`,
 
 **What it means.** Create, concatenate, interpolate.
 
-**Why languages need it.** Almost every script prints or builds text.
+**Echo status.** Supported (multiline 0.5.0).
 
-**Echo status.** Supported.
+Quotes: `"..."`, `'...'`, and triple-quoted `"""` / `'''` (may span lines).
+Interpolation `${expression}` works in all of them. Escapes: `\\`, `\"`,
+`\'`, `\n`, `\t`, `\r`. Number literals also accept `.5` and scientific form
+as of 0.5.0.
 
-Quotes: `"..."` and `'...'`. Interpolation `${expression}` works in both.
-Escapes: `\\`, `\"`, `\'`, `\n`, `\t`, `\r`.
+**Limitations.** No raw-string spelling beyond triples. Interpolation
+tokenization is not fully strict (see known limitations).
 
-**Limitations.** Strings are single-line. A newline inside quotes is a
-lex error. No raw / multiline literal.
+**Priority.** Frozen.
 
-**Priority.** Frozen as a fundamental. Multiline is a usability item.
-
-**Possible version.** Done.
+**Possible version.** Multiline in 0.5.0.
 
 ---
 
@@ -368,14 +335,13 @@ lex error. No raw / multiline literal.
 
 **What it means.** Ordered mutable sequence: create, access, modify.
 
-**Why languages need it.** Sequences are the default data structure.
-
 **Echo status.** Supported.
 
 Built-ins include `push`, `insertAt`, `pull`, `removeValue`, `empty`,
 `find`, `countOf`, `order`, `clone`, `merge`, `reverse`, `length`,
 `map`, `filter`, `reduce`, `forEach`, `flatMap`, `some`, `every`, `findIndex`,
-`zip`, and `unique`.
+`zip`, `unique`, `chunk`, `flatten`, `partition`, plus `rangeList` /
+`rangeListInclusive`.
 
 **Limitations.** `clone()` is shallow. Slice syntax `xs[1:4]` (optional
 bounds `xs[1:]` / `xs[:4]` / `xs[:]` as of 0.6.6) desugars to `slice()`.
@@ -403,12 +369,10 @@ still say it is a no-op.
 
 **What it means.** String-key maps: create, access, modify.
 
-**Why languages need it.** Records, configs, counters, grouped data.
-
 **Echo status.** Supported.
 
 Built-ins include `keys`, `values`, `pairs`, `ensure`, `take`,
-`take_last`, `wipe`, `merge`, `clone`.
+`take_last`, `wipe`, `merge`, `clone`, `mapValues`, `filter`.
 
 **Limitations.** Runtime indexing keys must be `str`. No int keys, no
 nested-path syntax.
@@ -422,8 +386,6 @@ nested-path syntax.
 ### Indexing
 
 **What it means.** `list[0]`, `map["x"]`, nested assignment.
-
-**Why languages need it.** Collections are unused without access.
 
 **Echo status.** Supported.
 
@@ -441,8 +403,6 @@ Out-of-range and missing keys are Echo errors. Indexed assignment follows
 
 **What it means.** Conditional execution.
 
-**Why languages need it.** Programs branch.
-
 **Echo status.** Supported.
 
 `if`, `else`, `else if`. Conditions use truthiness. Blocks are scoped.
@@ -458,8 +418,6 @@ Out-of-range and missing keys are Echo errors. Indexed assignment follows
 ### Loops
 
 **What it means.** Repeat work.
-
-**Why languages need it.** Collections and numeric ranges.
 
 **Echo status.** Supported.
 
@@ -477,15 +435,9 @@ Out-of-range and missing keys are Echo errors. Indexed assignment follows
 
 **Priority.** Frozen.
 
-**Possible version.** Done.
-
----
-
-### Loop control
+**Possible version.** Range-as-value in 0.7.4; loops otherwise since v0.2.
 
 **What it means.** `break` and `continue`.
-
-**Why languages need it.** Exit or skip without extra flags.
 
 **Echo status.** Supported.
 
@@ -498,15 +450,11 @@ not the basic expectation.
 
 **Possible version.** Done.
 
-The earlier “partial” instinct was wrong. The basic capability is present.
-
 ---
 
 ### Functions
 
 **What it means.** Named callable with parameters and return values.
-
-**Why languages need it.** Abstraction.
 
 **Echo status.** Supported.
 
@@ -536,8 +484,6 @@ Default parameters (`name: T = expr`) and a trailing variadic
 
 **What it means.** A function may call itself.
 
-**Why languages need it.** Trees, divide-and-conquer, some algorithms.
-
 **Echo status.** Partial.
 
 The contract allows recursion. `fact(5)` works. The interpreter is a
@@ -558,8 +504,6 @@ recursion limit, and that path is not a documented Echo error.
 
 **What it means.** Nested functions capture the defining environment.
 
-**Why languages need it.** Callbacks, helpers, lexical state.
-
 **Echo status.** Supported.
 
 A call’s parent environment is the definition site, not the call site.
@@ -576,8 +520,6 @@ do not inherit `use mut`.
 ### First-class functions
 
 **What it means.** Functions are values: assign, pass, return, store.
-
-**Why languages need it.** Higher-order APIs, callbacks, `map`/`filter`.
 
 **Echo status.** Supported (0.6.0). Builtins as values in 0.7.3.
 
@@ -624,8 +566,6 @@ print("hi");
 
 **What it means.** Predictable name resolution.
 
-**Why languages need it.** Without this, nothing else is trustworthy.
-
 **Echo status.** Supported.
 
 Lexical scoping. Innermost enclosing declaration at the definition site.
@@ -642,10 +582,7 @@ Function scope parent is the closure. User declarations may shadow builtins.
 
 **What it means.** Outer writes are explicit.
 
-**Why languages need it.** Hidden mutation is how scripting languages
-become undebuggable.
-
-**Echo status.** Supported. This is an Echo differentiator.
+**Echo status.** Supported.
 
 ```echo
 count: int = 0;
@@ -671,9 +608,6 @@ object identity and may be mutated.
 
 **What it means.** Split a program across files with a defined load model.
 
-**Why languages need it.** One file is a sketch. Real programs need
-boundaries.
-
 **Echo status.** Supported, in the small v0.3 form.
 
 ```echo
@@ -697,8 +631,6 @@ executes at most once. Cycles are rejected (E3003). A program with no
 
 **What it means.** Public vs private names.
 
-**Why languages need it.** Accidental API surface is a design bug.
-
 **Echo status.** Supported.
 
 Nothing is exported by default. `export fn` / `export name: T = ...`
@@ -714,33 +646,24 @@ makes a name visible. Private names do not leak.
 
 **What it means.** Failures are Echo diagnostics, not host-language junk.
 
-**Why languages need it.** A language that prints `ValueError` is not
-finished.
-
 **Echo status.** Partial.
 
 Echo owns lex, parse, semantic, type, name, argument, index, mutation,
 runtime, and module errors. Diagnostics include file, line, and column
 when available. Python exceptions must not leak (tested).
 
-What is missing is **user-level** handling: a program cannot catch,
-recover, or return a structured failure. Errors abort.
+User-level recovery for expected absence is inquiry + `*Or` (failure model).
+There is still no catch-and-continue for arbitrary failures.
 
-**Current syntax.** None for the user. Failures come from the language.
+**Priority.** Later polish on messages/codes. Failure form is frozen.
 
-**Priority.** Usability now — but the *form* is a design problem, not
-“add `try/catch`”.
-
-**Possible version.** v0.4 candidate for a designed failure model.
+**Possible version.** Diagnostics since v0.2; `*Or` in 0.5.3.
 
 ---
 
 ### `watch`
 
 **What it means.** Observe a binding as it changes.
-
-**Why languages need it.** Most languages bolt debugging on later.
-Echo can make observability part of the language.
 
 **Echo status.** Supported.
 
@@ -761,31 +684,29 @@ Those are ecosystem / vision items.
 
 ## 2. Language usability
 
-These decide whether writing a real program is pleasant.
-This is where the first interesting gaps are.
+Host, stdlib, and convenience. Most of the original v0.3 gaps shipped in 0.4–0.5;
+0.6–0.7 filled collections and binding sugar. Remaining rows are called out below.
 
 ### Type conversion
 
 **What it means.** Move between `int`, `float`, `str`, `bool` on purpose.
 
-**Why languages need it.** Input is strings. Arithmetic is numbers.
+**Echo status.** Supported (`asIntOr` / `asFloatOr` in 0.5.3).
 
-**Echo status.** Partial.
-
-`asInt`, `asFloat`, `asBool`, `asString`, and `type` exist as methods
-and standalone calls. Failed `asInt` / `asFloat` raise Echo type errors.
-There is no implicit `str + int`.
+`asInt`, `asFloat`, `asBool`, `asString`, and `type` exist as methods and
+standalone calls. Failed `asInt` / `asFloat` abort with Echo type errors.
+`asIntOr` / `asFloatOr` return a fallback for unparseable strings, `null`,
+lists, and hashes. `asInt(true)` / `asFloat(true)` stay type errors — bool has
+no twin. There is no implicit `str + int`.
 
 **Limitations.**
 
-- No `asInt` error that distinguishes “not a number” from overflow
-- `asBool` follows truthiness, including `bool` from `0` / `""` / `[]`
-- `asInt(true)` becomes `1` even though `bool` is not an `int`
-- No parsing options, no base, no locale
+- No parsing options, base, or locale
+- `asBool` follows truthiness
 
-**Priority.** Usability now.
+**Priority.** Frozen.
 
-**Possible version.** v0.4 candidate (tighten rules and errors, not new syntax).
+**Possible version.** Conversion corrected in 0.4; `*Or` in 0.5.3.
 
 ---
 
@@ -793,19 +714,17 @@ There is no implicit `str + int`.
 
 **What it means.** A program can read and write files.
 
-**Why languages need it.** Scripts that cannot touch a file stay demos.
+**Echo status.** Supported (0.4+).
 
-**Echo status.** Missing.
+Builtins: `readFile` / `readFileOr`, `writeFile`, `fileExists`, `isDir`,
+`listFiles`, `mkdir`, `removeFile`, `copyFile`, `cwd`, `pathJoin`. UTF-8 text
+for read/write. Hosts may deny files (`E2801`); the playground does.
 
-The CLI reads a `.echo` source file. Echo programs have no `file.read`
-or `file.write`. Vision says filesystem utilities belong in a library,
-not the parser.
+**Current syntax.** Standalone calls (not `file.read()` namespaces).
 
-**Current syntax.** None.
+**Priority.** Frozen.
 
-**Priority.** Usability now, as a **library**, not new syntax.
-
-**Possible version.** v0.4 candidate.
+**Possible version.** 0.4 (twins in 0.5.3).
 
 ---
 
@@ -813,21 +732,19 @@ not the parser.
 
 **What it means.** A program can represent and recover from expected failure.
 
-**Why languages need it.** Networks fail. Files are missing. Input is bad.
-Abort-only languages force every caller to hope.
+**Echo status.** Partial. Failure model is frozen: abort by default; recovery is
+inquiry (`fileExists`, `has`, `contains`, …) and `*Or` twins
+(`envOr`, `readFileOr`, `parseJsonOr`, `asIntOr`, `asFloatOr`). See
+`docs/failure-model.md`.
 
-**Echo status.** Missing.
+**Current syntax.** No `try` / `catch`, no `Result` / `Option`, no `?`.
 
-**Current syntax.** None.
+**Limitations.** Expected absence is covered. Arbitrary catch-and-continue is
+not. `echo test` continuing after `expect*` is runner-only.
 
-**Limitations.** This is not the same as diagnostics. Echo already explains
-failures well for the *implementers* of Echo. User programs cannot handle
-them.
+**Priority.** Design hold. Do not add exceptions to “finish” this row.
 
-**Priority.** Usability now. Design the model before adding syntax.
-
-**Possible version.** v0.4+. Candidates include explicit result values,
-not necessarily exceptions.
+**Possible version.** Form settled in the failure-model note; `*Or` in 0.5.3.
 
 ---
 
@@ -835,26 +752,20 @@ not necessarily exceptions.
 
 **What it means.** Unwind the stack and resume in a handler.
 
-**Why some languages need it.** It is one failure model. It is not the only one.
+**Echo status.** Excluded.
 
-**Echo status.** Missing.
+Held on purpose. Inquiry + `*Or` is the recovery surface. Do not copy
+Python/JS `try` / `catch`.
 
-There is no written exclusion in the contract, unlike first-class
-functions. There is also no reason to copy Python or JavaScript here.
-Go’s `error` values and Rust’s `Result` are closer to Echo’s “explicit”
-taste than `try/catch`.
+**Priority.** Design hold.
 
-**Priority.** Design hold. Do not add `try/catch` just because the cell is empty.
-
-**Possible version.** Reconsider with user error handling, as one possible form.
+**Possible version.** Hold.
 
 ---
 
 ### Destructuring
 
 **What it means.** Unpack lists/hashes into names in one binding.
-
-**Why languages need it.** Convenience. Rarely a semantic necessity.
 
 **Echo status.** Supported (0.7.1).
 
@@ -884,21 +795,18 @@ fn add([a: int, b: int]) -> int {
 
 **What it means.** Slice, map, filter, reduce, forEach, flatMap, flatten, some, every, findIndex, zip, unique, chunk, partition, rangeList, mapValues, contains, without handwritten loops.
 
-**Why languages need it.** Real scripts spend most of their time on collections.
+**Echo status.** Supported through 0.6.9 HOFs; range expressions as values in 0.7.4.
 
-**Echo status.** Partial.
+Shipped: find, count, order, merge, clone, push/pull, keys/values/pairs,
+`contains`, `slice()` / `xs[1:4]` (optional bounds 0.6.6), list `map` /
+`filter` / `reduce` / `forEach` / `flatMap` / `some` / `every` / `findIndex` /
+`zip` / `unique` / `chunk` / `flatten` / `partition`, `rangeList` /
+`rangeListInclusive`, hash `mapValues` / `filter`, and range expressions
+`0...10` / `0..10` (optional `by`) as `list` values (0.7.4).
 
-Echo already has find, count, order, merge, clone, push/pull, keys/values/pairs,
-`contains`, `slice()`, slice syntax `xs[1:4]` with optional bounds `xs[1:]` /
-`xs[:4]` / `xs[:]` (0.6.6), list `map` / `filter` (0.6.1),
-list `reduce` (0.6.2), list `forEach` (0.6.3), list `flatMap` (0.6.4),
-list `some` / `every` / `findIndex` (0.6.5), list `zip` / `unique` (0.6.7),
-list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` /
-`filter` (0.6.8), list `flatten` / `partition` (0.6.9).
+**Priority.** Frozen for the shipped set. Further helpers are later polish.
 
-**Priority.** Remaining higher-order collection helpers later.
-
-**Possible version.** `flatten` / `partition` shipped in 0.6.9.
+**Possible version.** Through 0.6.9; range-as-value 0.7.4.
 
 ---
 
@@ -906,19 +814,18 @@ list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` /
 
 **What it means.** Split, replace, substring, contains, pad.
 
-**Why languages need it.** Automation is mostly text.
-
-**Echo status.** Partial.
+**Echo status.** Supported (0.4+).
 
 Present: `trim`, `upperCase`, `lowerCase`, `length`, `reverse`, `format`,
-interpolation, indexing.
+interpolation, indexing, `split`, `replace` / `replaceFirst`, `contains`,
+`slice` / slice syntax, `startsWith` / `endsWith`, `indexOf` / `lastIndexOf`,
+`repeat`, `padStart` / `padEnd`, `join`.
 
-Missing: `split`, `replace`, `contains`, substring/slice, starts/ends with,
-character iteration helpers.
+**Limitations.** No regex. `format` is positional placeholders only.
 
-**Priority.** Usability now.
+**Priority.** Frozen.
 
-**Possible version.** v0.4 candidate (stdlib methods, not syntax).
+**Possible version.** 0.4+.
 
 ---
 
@@ -926,11 +833,9 @@ character iteration helpers.
 
 **What it means.** Instants, durations, formatting, clocks.
 
-**Why languages need it.** Logs, schedules, timeouts, timestamps.
+**Echo status.** Missing (`now()` and `wait(seconds)` only).
 
-**Echo status.** Missing.
-
-`wait(seconds)` sleeps. That is not a time library.
+No calendar, formatting, or duration type.
 
 **Priority.** Later. Library, not syntax.
 
@@ -942,13 +847,14 @@ character iteration helpers.
 
 **What it means.** Read process environment.
 
-**Why languages need it.** Secrets, config, CI, automation hosts.
+**Echo status.** Supported (0.4).
 
-**Echo status.** Missing.
+`env(name)` aborts if unset (empty string counts as set). `envOr(name, fallback)`
+returns the fallback when unset.
 
-**Priority.** Usability now. Library.
+**Priority.** Frozen.
 
-**Possible version.** v0.4 candidate.
+**Possible version.** 0.4.
 
 ---
 
@@ -956,24 +862,21 @@ character iteration helpers.
 
 **What it means.** The running program can see `argv` after the source path.
 
-**Why languages need it.** `echo app.echo -- input.txt` is how scripts start.
+**Echo status.** Supported (0.4).
 
-**Echo status.** Missing.
+`args()` returns a new `list` of `str` — program arguments only, not the
+source path and not `--plain`. CLI: interpreter flags, optional `--`, then
+program arguments.
 
-The Echo CLI accepts `source`, `--plain`, and `--version`. Those flags
-are for the interpreter, not the program.
+**Priority.** Frozen.
 
-**Priority.** Usability now.
-
-**Possible version.** v0.4 candidate.
+**Possible version.** 0.4.
 
 ---
 
 ### Default / variadic arguments
 
 **What it means.** Optional parameters and `...rest`.
-
-**Why languages need it.** Convenience at API boundaries.
 
 **Echo status.** Supported (0.6.0).
 
@@ -997,8 +900,6 @@ Overloading stays held.
 
 **What it means.** Same name, different signatures.
 
-**Why some languages need it.** Ad-hoc polymorphism.
-
 **Echo status.** Excluded.
 
 Rejected in the v0.2 contract. Echo already has keyword arguments and
@@ -1014,15 +915,14 @@ explicit types. Overloads would fight that simplicity.
 
 **What it means.** Read and write a common structured format.
 
-**Why languages need it.** Automation talks to other tools.
+**Echo status.** Supported (0.4); `parseJsonOr` in 0.5.3.
 
-**Echo status.** Missing.
+`parseJson` / `writeJson` convert between Echo values and JSON text.
+`parseJsonOr(text, fallback)` returns the fallback on invalid JSON.
 
-Hashes are in-memory only. No `json.parse` / `json.write`.
+**Priority.** Frozen.
 
-**Priority.** Usability now. Library.
-
-**Possible version.** v0.4 candidate.
+**Possible version.** 0.4 / 0.5.3.
 
 ---
 
@@ -1030,23 +930,21 @@ Hashes are in-memory only. No `json.parse` / `json.write`.
 
 **What it means.** Literals that span lines.
 
-**Why languages need it.** Embedded SQL, HTML, long messages, fixtures.
+**Echo status.** Supported (0.5.0).
 
-**Echo status.** Missing.
+Triple-quoted `"""` / `'''` may span lines and still interpolate `${...}`.
+Ordinary single-line quotes still reject a raw newline.
 
-A newline inside quotes is a lex error. You can concatenate or use `\n`.
+**Priority.** Frozen.
 
-**Priority.** Later.
-
-**Possible version.** Later.
+**Possible version.** 0.5.0.
 
 ---
 
 ## 3. Language ecosystem
 
-These are not language features. A language without them still feels
-unfinished quickly. Echo already has a docs site, a playground, a
-TextMate grammar, and pytest for the **implementation**.
+Not language features. fmt / lint / test / check / REPL shipped; package
+manager and LSP have not.
 
 ### Package manager
 
@@ -1166,16 +1064,17 @@ public API.
 
 ### REPL
 
-**Status.** Missing.
+**Status.** Supported (0.5.0).
 
-`echo` without a file prints help and exits. The docs playground runs
-programs in the browser. That is not a REPL.
+`echo` with no source file starts a REPL. Bindings persist for the process.
+Continuation spans braces and unterminated triple-quoted strings. Failed
+submissions return to the prompt. `--plain` works. `import` loads sibling
+`.echo` files from the working directory. `echo check` (0.4.1; multi-path
+0.5.9) is separate analysis tooling.
 
-`echo check` shipped in 0.4.1. A REPL is still later.
+**Priority.** Tooling. Shipped.
 
-**Priority.** Tooling.
-
-**Possible version.** Later.
+**Possible version.** 0.5.0.
 
 ---
 
@@ -1183,9 +1082,8 @@ programs in the browser. That is not a REPL.
 
 **Status.** Partial.
 
-The docs site can run Echo in the browser. It is the closest thing to
-interactive execution. It is not a substitute for a CLI REPL, and it
-is not a full host (no files, no argv).
+Docs-site browser runner. Restricted host (no files, no `run`). Complements
+the CLI REPL; does not replace it.
 
 **Priority.** Tooling. Good enough for now.
 
@@ -1195,12 +1093,12 @@ is not a full host (no files, no argv).
 
 ## 4. Implementation / runtime maturity
 
-Do not touch these because they appear on a checklist.
+Held. Empty cells here are not near-term work.
 
 | Capability | Status | Why not now |
 | --- | --- | --- |
 | Compiler / native executable | Missing | Python tree-walk is a strategic choice |
-| Bytecode / VM | Missing | Current bottleneck is language and usability |
+| Bytecode / VM | Missing | Strategic hold; not the near-term bottleneck |
 | JIT | Missing | Same |
 | Concurrency / async | Missing | Vision mentions orchestration later. Not a v0.4 language hole |
 | Generics | Missing | Premature type-theory |
@@ -1215,128 +1113,95 @@ v0.3 did not add one. That remains correct.
 
 ## Echo vs reference languages
 
-Compared only for **fundamental capabilities**, not ecosystems or speed.
-Echo should not become any of these languages.
+Capability comparison only. Echo is not trying to become these languages.
 
-### Python — simplicity / dynamic language
+### Python
 
-What Python gives you that Echo does not:
-
-| Capability | Hole or decision? |
+| Capability | Status for Echo |
 | --- | --- |
-| First-class functions and lambdas | Decision. Excluded. |
-| Exceptions | Missing failure model. Do not copy blindly. |
-| File / OS / env / argv | Genuine usability hole. |
-| REPL | Ecosystem hole. |
-| Packages (pip) | Ecosystem. Echo modules are sibling files. |
-| Classes | Decision. Keep out of core. |
-| Default args, `*args`, slices, comprehensions | Mix of exclusion and sugar. |
+| First-class functions / lambdas | Shipped (0.6.0); builtins as values (0.7.3) |
+| Exceptions | Excluded; inquiry + `*Or` instead |
+| File / OS / env / argv | Shipped (0.4+) |
+| REPL | Shipped (0.5.0) |
+| Packages (pip) | Missing. Sibling-file modules only |
+| Classes | Excluded |
+| Default args, variadics, slices | Shipped (0.6.x); no comprehensions |
 
-Python lesson: Echo does not need to be more dynamic.
-It needs the **script host** pieces Python users forget are not “language”:
-files, arguments, environment, a way to run interactively.
+### JavaScript
 
-### JavaScript — scripting language
-
-| Capability | Hole or decision? |
+| Capability | Status for Echo |
 | --- | --- |
-| Functions as values | Decision. |
-| `try/catch` | Same as Python. Form undecided. |
-| Promises / async | Runtime. Don’t touch. |
-| JSON | Genuine usability hole (library). |
-| Objects as records | Echo hashes + type aliases already cover the basic need. |
-| Modules | Echo has a smaller, stricter system. Not a hole. |
-| Prototype / class OOP | Decision. Keep out. |
+| Functions as values | Shipped |
+| `try/catch` | Excluded |
+| Promises / async | Don’t touch |
+| JSON | Shipped (0.4+) |
+| Objects as records | Hashes + aliases / exact |
+| Modules | Smaller sibling-file system; shipped |
+| Class / prototype OOP | Excluded |
 
-JavaScript lesson: first-class functions and async are how JS became a
-platform. Echo’s identity is observability and explicit mutation, not
-callback soup.
+### Go
 
-### Go — simple systems language
-
-| Capability | Hole or decision? |
+| Capability | Status for Echo |
 | --- | --- |
-| Compile-time types | Decision. Echo is runtime-checked on purpose. |
-| Structs | Partial via aliases. Not required to copy. |
-| Multiple return / `error` values | Interesting **alternative** to exceptions. |
-| Packages | Echo v0.3 is sibling files only. |
-| `gofmt`, `go test` | Ecosystem lesson. Highest leverage tooling. |
-| Goroutines | Runtime. Don’t touch. |
+| Compile-time types | Decision: runtime-checked |
+| Structs | Partial via aliases / exact |
+| Explicit errors | Closest taste: abort + `*Or` |
+| Packages | Sibling files only |
+| `gofmt` / `go test` | Echo has `fmt` / `test` |
+| Goroutines | Don’t touch |
 
-Go lesson: Echo should steal **taste**, not features. Small language,
-explicit errors, one formatter, an official test command.
+### Rust
 
-### Rust — strong type / system language
-
-| Capability | Hole or decision? |
+| Capability | Status for Echo |
 | --- | --- |
-| Static safety, ownership | Out of scope. Don’t touch. |
-| `Result` / `Option` | Interesting failure/absence model. |
-| Traits / generics | Don’t touch. |
-| Pattern matching | Later sugar, not a fundamental hole. |
-| Cargo | Ecosystem. Same as packages. |
-
-Rust lesson: absence and failure can be values. That fits Echo better
-than stack-unwinding exceptions. It does **not** mean borrow checking.
+| Ownership / borrow checker | Out of scope |
+| `Result` / `Option` | Not types; `*Or` + inquiry cover absence |
+| Traits / generics | Don’t touch |
+| Pattern matching | Destructuring shipped; no `switch` yet (0.7.6) |
+| Cargo | Missing |
 
 ---
 
 ## Genuine holes vs things we do not want
 
-### Genuine holes (usability)
+### Still open (usability / ecosystem)
 
-These block “write a real automation script” without changing Echo’s identity:
+1. Date / time library (beyond `now` / `wait`)
+2. Package manager / non-sibling module paths
+3. Language server / richer editor support
+4. Optional sugar still held (`switch`, param `const`, hash rest, …)
 
-1. Program arguments
-2. Environment variables
-3. File I/O (library)
-4. JSON (library)
-5. String split / replace / contains / slice
-6. Collection contains / slice (not `map`/`filter`)
-7. Tighter type conversion
-8. A designed user-level failure model
+### Shipped that used to be holes
 
-### Ecosystem holes (feel unfinished, not language bugs)
+args, env, files, JSON, string/collection helpers, conversion, failure-model
+`*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
+destructuring, exact objects, unions, range-as-value.
 
-1. Formatter
-2. Official test command (library + CLI first)
-3. REPL
-4. Richer editor support
+### Not holes (held)
 
-### Not holes
-
-- First-class functions
 - Overloading
-- Default / variadic user functions
-- Classes
-- Generics
+- Classes / generics
 - Bytecode, VM, JIT, native compile
 - Concurrency
-- `try/catch` copied from JavaScript
+- `try/catch`
 
-### Echo already has that the references often add later
+### Echo already has that references often add later
 
 - `watch`
-- Explicit outer mutation
-- Honest, categorized diagnostics
+- Explicit outer mutation (`use` / `use mut`)
+- Categorized diagnostics
 - Modules with private-by-default exports
 
 ---
 
 ## What not to do next
 
-Do not open v0.4 by implementing this matrix top to bottom.
-Do not add a VM, generics, classes, or `try/catch` because a cell is empty.
-Do not weaken Model A or the two xfailed Model B tests.
-Do not treat this file as a contract. If it disagrees with
-`docs/language-semantics.md` or `docs/module-semantics.md`, those win.
+Do not treat empty cells as a queue. Do not add a VM, generics, classes, or
+`try/catch` because a checklist looks incomplete. Do not weaken Model A.
+This file is not a contract — semantics, modules, and the failure model win.
 
-The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
-
-Theme: host + standard library. Not a syntax release.
-v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
-first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. **0.7.2** adds exact object types. **0.7.3** adds builtins as values. **0.7.4** adds range as a value (`0...10` / `0..10` / `by`). **0.7.5** adds union types (`int | str`). Failure handling is still design only.
+v0.4 was host + stdlib (`docs/v0.4-language-vs-stdlib.md`). Later releases
+added syntax and tooling; see `CHANGELOG.md` through **0.7.5**.
 
 ---
 
@@ -1346,11 +1211,10 @@ Judged from:
 
 - `docs/language-semantics.md`
 - `docs/module-semantics.md`
+- `docs/failure-model.md`
 - `docs/standard-library/built-in-methods.md`
-- `src/echo/` (frontend, semantics, modules, runtime, CLI)
-- `tests/` including `tests/modules/`
+- `CHANGELOG.md`
+- `src/echo/` and `tests/`
 
-Stale on purpose and **not** used as evidence:
-
-- `Echo-Technical-Audit.md` (pre-architecture snapshot)
-- `docs/reference/cli-and-execution-model.md` still describes the v0.2 single-file CLI
+Ignore as evidence: pre-architecture audits and any doc that still claims
+args/env/files/JSON/REPL are missing.

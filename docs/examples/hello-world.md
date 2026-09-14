@@ -1,30 +1,23 @@
 # Hello World
 
-## Overview
-A minimal Echo program.
-
-## Syntax
 ```echo
 say("Hello, Echo!");
 ```
 
-## Example
-```echo
-say("Hello, Echo!");
-```
-
-## Output
 ```text
 Hello, Echo!
 ```
 
 ## Notes
-- `say(...)` is the standard output helper.
-- Even a one-line program still needs a semicolon.
+
+- `say(...)` writes to stdout.
+- Semicolon is required, even on one-liners.
 
 ## Common Mistakes
-- Forgetting the semicolon
+
+- Missing semicolon
 
 ## See Also
+
 - [Quick Start](/getting-started/quick-start)
 - [Built-in Methods](/standard-library/built-in-methods)

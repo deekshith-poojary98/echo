@@ -1,34 +1,29 @@
 # Echo v0.3 Module Semantics
 
-> **Status:** Frozen language contract
-> **Version:** v0.3
-> **Implementation status:** Implemented
+> **Status:** Frozen language contract (v0.3). Implemented.
 >
-> This document defines the module semantics for Echo v0.3. It is a language contract, not an implementation specification.
+> What `import` / `export` mean. Not an implementation guide.
+> Later releases (0.4–0.7) did not reopen this Model A contract; they added host/stdlib and syntax on top.
 
-`import` is a module-system construct.
-`use` / `use mut` remain the existing function mutability and capture construct.
-
-That distinction is part of the contract. It must not be reinterpreted later as “maybe `use` can also load modules.”
+`import` loads modules.
+`use` / `use mut` stay function mutability and capture.
+Those are different constructs. Do not conflate them.
 
 ---
 
-## 1. Design Goals
+## 1. Goals
 
-Echo v0.3 introduces modules without changing the semantics of existing v0.2.1 programs.
+v0.3 adds modules without changing v0.2.1 program semantics.
 
-The module system must:
+Requirements:
 
-* preserve all existing `use` semantics;
-* introduce a separate `import` construct for cross-file dependencies;
-* give every `.echo` file its own module scope;
-* make exports explicit;
-* prevent private names from leaking across module boundaries;
-* execute each module at most once per process;
-* reject circular dependencies deterministically;
-* keep module loading outside the parser and runtime language semantics.
-
-The smallest useful module system is preferred over a feature-rich one.
+* preserve existing `use` semantics;
+* separate `import` for cross-file dependencies;
+* every `.echo` file is its own module scope;
+* exports are explicit; private names do not leak;
+* each module runs at most once per process;
+* circular dependencies fail deterministically;
+* loading stays outside the parser’s job.
 
 ---
 
@@ -157,9 +152,7 @@ There is no module namespace:
 math.add(...)
 ```
 
-is not supported.
-
-Echo currently has no value field-access mechanism, and v0.3 does not introduce one merely to support modules.
+is not supported. v0.3 does not add dotted module namespaces to make imports look like packages.
 
 ---
 

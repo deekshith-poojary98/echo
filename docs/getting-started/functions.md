@@ -1,9 +1,7 @@
 # Functions
 
-## Overview
-Echo functions are named, typed, and strict about scope.
+Named `fn`s with typed parameters. Outer reassignment needs `use mut`. A `return` requires a return type on the function.
 
-## Syntax
 ```echo
 fn greet(name: str) {
     say("Hello, ${name}!");
@@ -24,7 +22,6 @@ fn greetUser({ name: str }) -> str {
 fn square(x: int) -> int => x * x;
 ```
 
-## Example
 ```echo
 fn describe(name: str, age: int) {
     say(name, "is", age);
@@ -155,7 +152,6 @@ That raises a runtime type error.
 
 ## Current Limitation
 - No overloads
-- Range expressions are not values yet
 
 ## See Also
 - [Scope, use, and watch](/core-concepts/scope-use-watch)

@@ -1,7 +1,6 @@
 # Built-in Methods
 
-## Overview
-Echo exposes built-in functionality through standalone function calls and method-call syntax on values. Most conversion and utility built-ins can be called either way.
+Standalone calls and method form on values. Most conversion and utility builtins work either way.
 
 ```echo
 say("Echo");
@@ -10,16 +9,16 @@ nums.push(1);
 user.ensure("name", "Echo");
 ```
 
-> **Note:** Variadic built-ins (`say`, `eprint`, `format`, `pathJoin`) do not support keyword arguments. All other built-ins accept keyword arguments by parameter name, matching how user-defined functions work.
->
-> **Values (0.7.3):** referring to a builtin without calling it yields a function value (`print: fn(str) -> dynamic = say;`, `xs.map` without `()`). `type(say)` is `"fn"`. Variadic builtins are `fn(dynamic...) -> void` (`say`, `eprint`) or `fn(dynamic...) -> str` (`format`, `pathJoin`). Equality is the same builtin; bound methods also require the same receiver object. Host-denied builtins remain values; calling them still aborts.
+Variadic builtins (`say`, `eprint`, `format`, `pathJoin`) do not take keyword arguments. Other builtins accept kwargs by parameter name, same as user `fn`s.
+
+**Values (0.7.3):** a bare builtin name is a function value (`print: fn(str) -> dynamic = say;`, `xs.map` without `()`). `type(say)` is `"fn"`. Variadics are `fn(dynamic...) -> void` (`say`, `eprint`) or `fn(dynamic...) -> str` (`format`, `pathJoin`). Equality is the same builtin; bound methods also need the same receiver. Host-denied builtins are still values; **calling** them still aborts.
 
 ---
 
 ## I/O
 
 ### `say(...)`
-Prints one or more values to stdout, separated by spaces, followed by a newline. Accepts any type.
+Writes values to stdout, space-separated, with a trailing newline. Any type.
 
 ```echo
 say("Echo", true, null);
@@ -44,7 +43,7 @@ eprint("missing file");
 ---
 
 ### `ask(prompt)`
-Displays `prompt` and reads a line of text from stdin. Returns the input as a `str`.
+Prints `prompt`, reads one stdin line, returns `str`.
 
 ```echo
 name: str = ask("Enter your name: ");
@@ -69,7 +68,7 @@ line: str = readLine();
 ---
 
 ### `wait(seconds)`
-Pauses execution for the given number of seconds. Accepts `int` or `float`.
+Sleeps that many seconds. `int` or `float`.
 
 ```echo
 say("Starting...");
@@ -1011,7 +1010,7 @@ say(user.pairs());    // [[name, Ada], [score, 99]]
 ---
 
 ### `ensure(key, default)`
-If `key` does not exist in the hash, sets it to `default` and returns `default`. If `key` already exists, returns its current value without modifying it. Useful for counters and bucket building.
+If `key` is missing, sets it to `default` and returns `default`. If present, returns the current value unchanged.
 
 ```echo
 counts: hash = {};
@@ -1083,29 +1082,29 @@ say(copy["name"]);        // Echo
 ---
 
 ## Notes
-- All built-ins except `say`, `eprint`, and `format` support keyword arguments by parameter name — the same way user-defined functions do.
-- For standalone `find(...)`, `countOf(...)`, `map(...)`, `filter(...)`, `reduce(...)`, `forEach(...)`, `flatMap(...)`, `flatten(...)`, `some(...)`, `every(...)`, `findIndex(...)`, `unique(...)`, `chunk(...)`, `partition(...)`, and `mapValues(...)` calls, use `items:` for the collection argument. For standalone `zip(...)`, use `left:` and `right:`. For `rangeList(...)` / `rangeListInclusive(...)`, use `start:` and `end:`. For `chunk(...)`, also use `size:`. For `partition(...)`, also use `f:`.
-- Most conversion built-ins (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work as both standalone functions and method calls.
-- Mutating list/hash methods (`push`, `pull`, `order`, `wipe`, etc.) interact with `watch` and function scope rules.
-- `clone()` is **shallow** for both lists and hashes.
+
+- Kwargs: all builtins except the variadics `say`, `eprint`, `format`, `pathJoin` (and note `pathJoin` is also variadic).
+- Standalone collection calls use `items:` for the collection (`find`, `countOf`, `map`, `filter`, `reduce`, `forEach`, `flatMap`, `flatten`, `some`, `every`, `findIndex`, `unique`, `chunk`, `partition`, `mapValues`). `zip` uses `left:` / `right:`. `rangeList` / `rangeListInclusive` use `start:` / `end:`. `chunk` also uses `size:`. `partition` also uses `f:`.
+- Conversions (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work standalone and as methods.
+- Mutating list/hash methods interact with `watch` and `use mut`.
+- `clone()` is shallow for lists and hashes.
 
 ## Common Mistakes
-- Using keyword arguments with built-ins
-- Passing non-string keys to hash indexing or hash methods
-- Calling `pull()` on an empty list
-- Assuming `order()` accepts more than one comparator
-- Assuming `filter` keeps truthy `int` values such as `1`
-- Calling `reduce` without `init`, or with a callback that is not exactly two parameters
-- Calling `forEach` with a callback that is not exactly one parameter, or expecting it to return a list
-- Calling `flatMap` with a callback that does not return a list, or expecting nested lists to flatten more than one level
-- Calling `flatten` on a list whose top-level elements are not all lists, or expecting more than one flatten level
-- Assuming `partition` keeps truthy `int` values such as `1`, or that it mutates the input
-- Assuming `some` / `every` / `findIndex` keep truthy `int` values such as `1`, or treating `findIndex(f)` as `find(value)`
-- Treating unequal `zip` lengths as an error, or expecting `unique` to treat `true` as `1`
-- Calling `chunk` with `size` `0`, a `bool`, or a float
+
+- Keyword args on variadic builtins (`say`, `eprint`, `format`, `pathJoin`)
+- Non-string keys for hash index / hash methods
+- `pull()` on an empty list
+- More than one comparator to `order()`
+- Expecting `filter` / `partition` / `some` / `every` / `findIndex` to keep truthy `1` (need `bool`)
+- `reduce` without `init`, or a non-binary callback
+- `forEach` with a non-unary callback, or expecting a list return
+- `flatMap` callback that does not return a list, or expecting multi-level flatten
+- `flatten` with a non-list top-level element, or expecting multi-level flatten
+- Treating `findIndex(f)` as `find(value)`
+- Treating unequal `zip` lengths as an error, or `unique` equating `true` and `1`
+- `chunk` with `size` `0`, `bool`, or float
 - Treating `rangeList(0, 5)` as inclusive (use `rangeListInclusive` or `0..5`)
-- Assuming hash `filter` / `mapValues` mutate the input, or that `filter` keeps truthy `1` on hash values
-- Expecting `clone()` to deep-copy nested structures
+- Expecting hash `filter` / `mapValues` to mutate, or `clone()` to deep-copy
 
 ## See Also
 - [Lists](/core-concepts/lists)

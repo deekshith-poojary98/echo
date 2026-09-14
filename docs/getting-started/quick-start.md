@@ -1,60 +1,61 @@
 # Quick Start
 
-## Overview
-This page gets you from zero to a running Echo file as quickly as possible.
+Write a file, run it. That is the whole page.
 
-## Syntax
-```echo
-say("Hello, Echo!");
-```
+## Hello
 
-## Example
-Create a file named `hello.echo`:
+Create `hello.echo`:
 
 ```echo
 say("Hello, Echo!");
 ```
 
-Run it:
+From a clone of this repo:
 
 ```bash
 python src/main.py hello.echo
 ```
 
-## Output
+If Echo is installed (`echolang`):
+
+```bash
+echolang hello.echo
+```
+
+Output:
+
 ```text
 Hello, Echo!
 ```
 
-## Notes
-- Echo runs source files through the Python interpreter entry point in `src/main.py`.
-- Add `--plain` if you want plain-text errors and warnings.
+Plain diagnostics (no Rich panels):
 
 ```bash
 python src/main.py hello.echo --plain
 ```
 
-- Statements end with `;`.
-- Blocks use ``{}``.
-- Newlines do not end statements.
+## Rules you hit immediately
 
-## Common Mistakes
-### Forgetting the semicolon
+- Statements end with `;`.
+- Blocks use `{ }`. Newlines do not end statements.
+- Indentation is not syntax (unlike Python).
+
+Wrong:
+
 ```echo
 say("Hello, Echo!")
 ```
 
-Use:
+Right:
 
 ```echo
 say("Hello, Echo!");
 ```
 
-### Expecting Python indentation rules
-Echo does not use indentation to define blocks.
+## Next
 
-## Next Steps
-- [Playground](/playground) — run Echo in the browser
+- [Playground](/playground) — run in the browser
+- [Installation](/getting-started/installation)
 - [Getting Started](/getting-started/getting-started)
 - [Syntax Basics](/getting-started/syntax-basics)
 - [Variables and Types](/getting-started/variables-and-types)

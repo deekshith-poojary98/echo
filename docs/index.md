@@ -5,8 +5,8 @@ title: Echo
 titleTemplate: Official Documentation
 hero:
   name: Echo
-  text: A small scripting language with explicit types and practical built-ins
-  tagline: Clean syntax, runtime type checks, useful collection methods, and honest documentation.
+  text: A small interpreted scripting language
+  tagline: Explicit types checked at runtime. Brace blocks. Abort on failure unless you use inquiry or *Or twins.
   actions:
     - theme: brand
       text: Start Here
@@ -18,12 +18,12 @@ hero:
       text: Language Reference
       link: /reference/language-reference
 features:
-  - title: Explicit by default
-    details: Variables and function parameters are typed, and Echo checks those types at runtime.
-  - title: Small but practical
-    details: Strings, lists, hashes, loops, functions, interpolation, and collection helpers cover real scripting tasks.
-  - title: Honest about limits
-    details: Missing features and incomplete behavior are documented clearly instead of being buried.
+  - title: Typed declarations
+    details: Variables and parameters carry types. Echo checks them when values are bound, not with a separate static checker.
+  - title: Scripting surface
+    details: Strings, lists, hashes, loops, functions, modules, and a stdlib for I/O and collections.
+  - title: Documented limits
+    details: Held items (classes, try/catch, generics) are listed up front. Do not assume a pattern is supported until you see it here.
 ---
 
 ## Quick Example
@@ -54,27 +54,24 @@ Hello, Echo!
 - [Control Flow](/getting-started/control-flow)
 - [Functions](/getting-started/functions)
 
-## What Echo Covers Today
+## What ships today
 
-- Explicit variable declarations with runtime type enforcement
-- Strings, booleans, `null`, lists, and hashes
-- `if`, `while`, `for`, `foreach`, `break`, and `continue`
-- Named functions, inline functions, keyword arguments, and strict function scope
-- Built-in methods for I/O, conversion, formatting, lists, and hashes
+- Typed declarations and runtime type checks (`int`, `float`, `str`, `bool`, `list`, `hash`, `dynamic`, unions, aliases)
+- Control flow: `if`, `while`, `for`, `foreach`, `break`, `continue`
+- Named functions, lambdas, keyword args, `use mut`, file modules (`import` / `export`)
+- CLI: run, REPL, `check`, `test`, `fmt`, `lint`
+- Failure model: abort by default; inquiry and `*Or` twins for expected absence — see [Failure model](/failure-model)
 
-## Current Limitations
+## What does not
 
-Echo is usable today, but it is not a complete general-purpose language yet.
-
-- No module system for Echo source files
 - No classes or user-defined structs
 - No generics
-- No exceptions such as `try/catch`
-- Some behaviors are intentionally strict, especially function scope
+- No `try` / `catch` (held)
+- Outer reassignment from a function still needs `use mut`
 
 Read [Known Limitations](/errors-diagnostics/known-limitations) before treating a pattern as guaranteed.
 
-## Reference Entry Points
+## Reference
 
 - [Built-in Methods](/standard-library/built-in-methods)
 - [Operators](/reference/operators)

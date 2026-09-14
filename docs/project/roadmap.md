@@ -1,22 +1,40 @@
-# Roadmap / Planned Improvements
+# Roadmap
 
-## Overview
-These are the most obvious improvements suggested by the current implementation and documentation.
+Short pointer. The ordered plan lives in [Priority](/project/priority). This page is not a promise list.
 
-## v0.2 status
-See [Language Semantics](/language-semantics) conceptually in the repo at `docs/language-semantics.md`.
-v0.2 focused on architecture and correctness: typed AST, semantic analysis, lexical scope, and Echo errors.
+## Shipped (do not re-list as “later”)
 
-## Later
-- Module/import system
-- Exact object type validation option
-- Richer numeric literals and formatting
-- REPL
-- `echo check` is available as of 0.4.1
+Already in the language or CLI:
 
-## Notes
-This page is intentionally short. It is not a promise list. It reflects the most practical next improvements for Echo as it exists today.
+- File modules: `import` / `export` (v0.3)
+- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`
+- Exact object types: `exact { ... }` (0.7.2)
+- Number literals `.5` / scientific form; multiline strings
+- `const`, destructuring, builtins as values, range-as-value, unions (`int | str`) through 0.7.5
+
+## Next
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 0.7.6 | `switch` on values | pending |
+
+Details and spellings: [Priority — 0.7.x](/project/priority).
+
+## Held
+
+Not near-term. Do not treat these as upcoming releases:
+
+- Classes, generics, async, VM / JIT, packages
+- `try` / `catch`, `Result` / `Option`, user-level recovery syntax
+- Overloading, LSP
+- Dates / HTTP / regex builtins
+- `mkdir -p` / recursive delete
+- Test DSL (`test "name" { }`)
+
+See [Known Limitations](/errors-diagnostics/known-limitations) and [failure model](/failure-model).
 
 ## See Also
+
+- [Priority](/project/priority)
 - [Known Limitations](/errors-diagnostics/known-limitations)
 - [CLI and Execution Model](/reference/cli-and-execution-model)

@@ -1,16 +1,13 @@
 # Strings and Interpolation
 
-## Overview
-Echo strings support quotes, escapes, interpolation, and positional formatting.
+Quotes, escapes, `${...}` interpolation, and positional `format`.
 
-## Syntax
 ```echo
 name: str = "Echo";
 message: str = "Hello, ${name}!";
 formatted: str = "Score: {}".format(42);
 ```
 
-## Example
 ```echo
 name: str = "Echo";
 count: int = 5;
@@ -24,7 +21,6 @@ say("Missing: ${missing}");
 say("Hello, {}!".format(name));
 ```
 
-## Output
 ```text
 Name: Echo
 Count: 5

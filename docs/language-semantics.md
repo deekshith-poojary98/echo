@@ -1,10 +1,11 @@
-# Echo Language Semantics (v0.2)
+# Echo Language Semantics
 
-This document is the contract for Echo v0.2. Implementation and tests must match it.
-If code and this document disagree, the document is wrong only after an explicit language change.
+Language contract (v0.2 base; additive notes through 0.7.5 in Execution model).
+Implementation and tests must match it.
+If code and this document disagree, change the document only after an explicit language decision.
 
-Echo is an **interpreted, statement-based scripting language**.
-Types are **declared explicitly and checked at runtime**. Echo is not statically typed.
+Echo is an interpreted, statement-based scripting language.
+Types are declared explicitly and checked at runtime. Echo is not statically typed.
 
 ---
 
@@ -391,7 +392,7 @@ Functions may recurse.
 - `for i: int in start..end by step { }` — `..` inclusive, `...` exclusive
 - start, end, and step are numeric expressions converted to `int`
 - `bool`, `null`, and non-numeric values are not convertible loop bounds
-- `by 0` is a runtime error
+- `by 0` is a runtime error (**E2702**)
 - Range expressions `start...end` / `start..end` (optional `by step`) evaluate
   to a `list` of `int` with the same bounds. `for` does not allocate that list;
   `foreach` over a range expression does

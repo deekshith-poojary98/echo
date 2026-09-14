@@ -1,28 +1,18 @@
 # Echo v0.3 Module Architecture
 
-> **Status:** Architecture
-> **Version:** v0.3
-> **Implementation status:** Implemented
->
-> This document defines component boundaries for the v0.3 module system.
-> It does not change language semantics. The language contract remains
-> `docs/module-semantics.md`.
+> **Status:** Architecture for the frozen v0.3 module system. Implemented.
+> Language contract: `docs/module-semantics.md`. This file only places responsibilities.
 
-> **`import` is a module-system construct. `use` / `use mut` remain function mutability and capture.**
-
-`use` never enters the resolver, the graph, or the loader.
-A program that contains no `import` never constructs a module graph.
+`import` is module loading. `use` / `use mut` never enter the resolver, graph, or loader.
+A program with no `import` never builds a module graph.
 
 ---
 
 ## 1. Purpose
 
-The architecture exists so implementation cannot invent language behavior.
-
 `module-semantics.md` says what Echo does.
 This document says which component is allowed to do it.
-
-If a behavior cannot be placed in one of the components below, it is not a v0.3 feature.
+If a behavior has nowhere to live below, it is not a v0.3 feature.
 
 ---
 

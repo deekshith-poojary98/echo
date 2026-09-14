@@ -1,16 +1,7 @@
 # Functions in Practice
 
-## Overview
-A small example showing function calls, return values, and keyword arguments.
+Calls, returns, and keyword arguments.
 
-## Syntax
-```echo
-fn add(a: int, b: int) -> int {
-    return a + b;
-}
-```
-
-## Example
 ```echo
 fn add(a: int, b: int) -> int {
     return a + b;
@@ -24,15 +15,16 @@ result: int = add(3, 4);
 describe(score: result, name: "Echo");
 ```
 
-## Output
 ```text
 Echo scored 7
 ```
 
 ## Notes
+
 - Keyword arguments work for user-defined functions.
-- Return types are checked when annotated.
+- Annotated return types are checked.
 
 ## See Also
+
 - [Functions](/getting-started/functions)
 - [Scope, use, and watch](/core-concepts/scope-use-watch)

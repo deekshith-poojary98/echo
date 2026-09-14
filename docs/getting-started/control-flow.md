@@ -1,9 +1,7 @@
 # Control Flow
 
-## Overview
-Echo supports the usual control flow for scripting: branching, loops, and loop control statements.
+`if` / `while` / `for` / `foreach`, plus `break` and `continue`. Conditions use Echo truthiness.
 
-## Syntax
 ```echo
 if condition {
     say("yes");
@@ -24,7 +22,6 @@ foreach item: str in items {
 }
 ```
 
-## Example
 ```echo
 for i: int in 0..5 {
     if i == 2 {
@@ -39,7 +36,6 @@ for i: int in 0..5 {
 }
 ```
 
-## Output
 ```text
 0
 1
@@ -48,7 +44,7 @@ for i: int in 0..5 {
 
 ## Notes
 ### `if`, `else`, and `else if`
-Echo supports the familiar `else if` source form.
+`else if` is supported in source form.
 
 ### `while`
 Runs while the condition stays truthy.
@@ -57,6 +53,7 @@ Runs while the condition stays truthy.
 - `..` means inclusive end
 - `...` means exclusive end
 - `by` sets the step
+- `by 0` aborts (**E2702**)
 - loop variable type must be `int`
 - The same `..` / `...` / `by` spelling is a `list` of `int` in expression position (`xs: list = 0...5;`)
 
@@ -77,8 +74,8 @@ That raises a syntax error.
 ### Forgetting braces
 Echo does not support implicit blocks.
 
-## Current Limitation
-- `for ... by 0` is not guarded and can loop forever.
+### `for ... by 0`
+Aborts (**E2702**). It does not loop forever.
 
 ## See Also
 - [Loops Reference](/reference/loops-reference)

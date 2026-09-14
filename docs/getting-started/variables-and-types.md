@@ -1,9 +1,7 @@
 # Variables and Types
 
-## Overview
-Variables in Echo are declared with explicit types, and those types are enforced at runtime.
+Declare a type. Echo checks it at runtime when the value is bound or reassigned.
 
-## Syntax
 ```echo
 name: str = "Echo";
 count: int = 1;
@@ -15,7 +13,6 @@ const title: str = "Echo";
 { id: int, name: str } = { id: 1, name: title };
 ```
 
-## Example
 ```echo
 title: str = "Echo";
 users: int = 42;
@@ -26,7 +23,6 @@ missing: dynamic = null;
 say(title, users, ratio, enabled, missing);
 ```
 
-## Output
 ```text
 Echo 42 1.5 true null
 ```

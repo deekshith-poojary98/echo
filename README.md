@@ -1,236 +1,76 @@
-# Echo Programming Language
+# Echo
 
-Echo is a small interpreted scripting language with explicit type annotations and runtime type checks. It is designed for readable automation and algorithm scripts. Documentation is [here](https://deekshith-poojary98.github.io/echo/index.html), including a [browser playground](https://deekshith-poojary98.github.io/echo/playground).
+Echo is a small interpreted scripting language. Types are declared explicitly and checked at runtime. Abort is the default failure mode; recovery is inquiry and `*Or` twins, not `try` / `catch`.
 
-## Quick Overview
+Docs: [https://deekshith-poojary98.github.io/echo/](https://deekshith-poojary98.github.io/echo/) — includes a [browser playground](https://deekshith-poojary98.github.io/echo/playground).
 
-Echo offers:
-
-- **Explicit types**: declarations and parameters are annotated; Echo checks them at runtime
-- **Readable syntax**: C-style blocks, method chaining, and string interpolation
-- **Practical builtins**: I/O, conversions, strings, lists, and hashes
-- **Observability**: `watch` reports variable changes
-
-## Key Features
-
-### Core Language Features
-- Runtime type checks with mandatory type annotations on declarations
-- Lexical scoping and closures
-- String interpolation with `${expression}` syntax
-- Method chaining
-- `use mut` for mutating outer variables from functions
-- File-based modules: `export` and `import name from "module"`
-- Variable watching for debugging
-
-### Data Types
-- Basic types: `int` (arbitrary precision), `float`, `str`, `bool`
-- Collections: `list`, `hash`
-- `dynamic` for values that can change type
-- `null` literal
-- Type conversion methods: `asInt()`, `asFloat()`, `asBool()`, `asString()`
-
-### Type System Updates
-- Type aliases are supported via `type Alias = BaseType;`
-- Object type aliases are supported, e.g. `type User = { id: int, username: str, email: str, isAdmin: bool };`
-- Function calls support keyword arguments, e.g. `greet(name: "Alice", age: 21);`
-- Type inference is still limited (explicit declarations are required)
-- Generic types are not yet supported
-
-### Control Flow
-- `for` loops with step control (`by` keyword)
-- `foreach` loops for collection iteration
-- `while` loops
-- `if/else` conditionals
-- `break` and `continue` statements
-- Logical operators: `&&`, `||`, `!`
-
-### Built-in Methods
-- I/O: `say()`, `ask()`, `wait()`
-- String manipulation: `trim()`, `upperCase()`, `lowerCase()`, `length()`, `reverse()`
-- Collection operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`, `flatMap()`, `flatten()`, `some()`, `every()`, `findIndex()`, `zip()`, `unique()`, `chunk()`, `partition()`, `mapValues()`, `rangeList()`, `rangeListInclusive()`
-- Type checking: `type()`
-
-### Collection Methods
-- List operations: `push()`, `empty()`, `clone()`, `countOf()`, `find()`, `insertAt()`, `pull()`, `removeValue()`, `order()`, `merge()`, `map()`, `filter()`, `reduce()`, `forEach()`, `flatMap()`, `flatten()`, `some()`, `every()`, `findIndex()`, `zip()`, `unique()`, `chunk()`, `partition()`
-- Hash operations: `keys()`, `values()`, `wipe()`, `clone()`, `pairs()`, `take()`, `take_last()`, `ensure()`, `merge()`, `mapValues()`, `filter()`
-
-## Quick Example
-
-```c
-// Basic syntax example
+```echo
 name: str = "Echo";
-age: int = 25;
 scores: list = [95, 85, 75];
 
-// Function with type annotations
 fn greet(name: str) -> void {
     say("Hello, ${name}!");
 }
 
-// Method chaining
-result: int = ask("Enter a number:").asInt().toString().length();
+greet(name);
 
-// Loop with step
 for i: int in 0..10 by 2 {
     say("Count:", i);
 }
-
-// Variable watching
-watch counter;
-counter = counter + 1;  // Output: WATCH: counter changed to 1
 ```
 
-## Verified Examples
+## What you get
 
-```c
-// null literal
-x: dynamic = null;
-say(x);  // Output: None
+- Typed declarations and parameters; runtime checks on bind / assign / return
+- `list` and `hash`, string interpolation, method calls, `use mut`, lexical scope
+- File modules: `export` / `import name from "module"`
+- Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
+- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`
 
-// primitive alias
-type Age = int;
-age: Age = 5;
-say(age);  // Output: 5
+## What you do not
 
-// object alias + typed function parameter
-type User = { id: int, username: str, email: str, isAdmin: bool };
+- No classes / structs, no generics, no `try` / `catch`
+- Type inference is limited — you still declare types
+- See [Known Limitations](https://deekshith-poojary98.github.io/echo/errors-diagnostics/known-limitations) and [failure model](https://deekshith-poojary98.github.io/echo/failure-model)
 
-fn greet(user: User) -> void {
-  say("Hello, ${user['username']}!");
-}
+## Install
 
-user: User = {
-  "id": 1,
-  "username": "alice",
-  "email": "alice@example.com",
-  "isAdmin": false
-};
+Python 3.10+. Prefer the command name **`echolang`** — shells often reserve `echo`.
 
-greet(user);  // Output: Hello, alice!
+### pipx
 
-// keyword arguments
-fn describe(name: str, age: int) -> void {
-  say(name, "is", age);
-}
-
-describe(age: 21, name: "Alice");  // Output: Alice is 21
-```
-
-## Project Structure
-
-- `src/echo/` - Language implementation
-  - `frontend/` - lexer, parser, typed AST
-  - `semantics/` - scope, symbols, validation
-  - `modules/` - resolver, graph, loader
-  - `runtime/` - interpreter, values, builtins
-  - `cli/` - command-line entry
-- `docs/language-semantics.md` - v0.2 language contract
-- `docs/module-semantics.md` - v0.3 module contract
-- `docs/` - VitePress documentation site (source + build config)
-- `docs-legacy/` - Legacy static documentation files
-- `*.echo` - Example source files
-
-## Installation
-
-Echo can be installed as a proper CLI command (`echo` / `echolang`) like other language runtimes.
-
-### Prerequisites
-- Python 3.10+
-
-### Option 1: Global install with pipx (recommended)
-`pipx` installs Echo in an isolated environment and exposes global commands.
-
-1. Install `pipx` (if needed):
-
-```powershell
-python -m pip install --user pipx
-python -m pipx ensurepath
-```
-
-2. Install Echo from GitHub:
-
-```powershell
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 pipx install git+https://github.com/deekshith-poojary98/echo.git
+echolang examples/language_feature_smoke.echo
 ```
 
-3. Run Echo:
-
-```powershell
-echolang examples\language_feature_smoke.echo
-```
-
-### Option 2: Install from source with pip
-If you cloned this repo, install it as a package:
+### From a clone
 
 ```bash
 pip install .
-```
-
-Then run:
-
-```bash
-echo examples/language_feature_smoke.echo
-```
-
-On PowerShell, use `echolang` because `echo` is a built-in alias.
-
-### Option 3: Developer editable install
-For contributors who want live code updates without reinstall:
-
-```bash
-pip install -e .
-```
-
-### Commands
-After installation, these commands are available:
-
-```bash
-echo path/to/file.echo
+# or: pip install -e .
 echolang path/to/file.echo
-echolang lint path/to/file.echo
 ```
 
-In Windows PowerShell, prefer `echolang path/to/file.echo`.
-
-### Local development launcher (without install)
-You can still run directly from the repository:
-
-#### Windows
-
-```powershell
-.\echolang.bat examples\language_feature_smoke.echo
-```
-
-#### macOS / Linux
-
-```bash
-chmod +x echolang
-./echolang examples/language_feature_smoke.echo
-```
-
-### Direct Python entrypoint (all platforms)
-You can also run Echo directly with Python:
+### Without installing
 
 ```bash
 python src/main.py examples/language_feature_smoke.echo
-```
-
-Use plain error output (no Rich formatting):
-
-```bash
 python src/main.py examples/language_feature_smoke.echo --plain
 ```
 
-## Getting Started
+Repo launchers: `./echolang` (Unix) or `.\echolang.bat` (Windows).
 
-1. Clone the repository
-2. Check out the [documentation](https://deekshith-poojary98.github.io/echo/index.html)
-3. Try the example files in the repository
+## Layout
 
-## Contributing
+- `src/echo/` — frontend, semantics, modules, runtime, CLI
+- `docs/` — VitePress site (this is the docs source)
+- `docs/language-semantics.md` — language contract (v0.2 base; through 0.7.5)
+- `docs/module-semantics.md` — v0.3 module contract
+- `*.echo` / `examples/` — sample programs
 
-[Contribution guidelines to be added]
+## License / contributing
 
-## License
-
-[License information to be added]
+License and contribution guidelines are not filled in yet.
