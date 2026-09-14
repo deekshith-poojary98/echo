@@ -547,6 +547,15 @@ class Parser:
         token = self._peek()
         if token.type == TokenType.FN:
             return self._parse_function_type()
+        if token.type == TokenType.EXACT:
+            self._advance()
+            if not self._check(TokenType.LEFT_BRACE):
+                raise ParseError(
+                    "Expected '{' after exact",
+                    self._peek().location,
+                    help_text="Write exact { id: int, name: str }.",
+                )
+            return self._parse_object_type(exact=True)
         if token.type == TokenType.LEFT_BRACE:
             return self._parse_object_type()
         if token.type == TokenType.TYPE:
@@ -804,7 +813,7 @@ class Parser:
         self.pos = saved
         return result
 
-    def _parse_object_type(self) -> ObjectType:
+    def _parse_object_type(self, *, exact: bool = False) -> ObjectType:
         token = self._expect(TokenType.LEFT_BRACE, "{")
         fields: dict[str, TypeAnnotation] = {}
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
@@ -813,7 +822,7 @@ class Parser:
             fields[field_token.lexeme] = self._parse_type()
             self._match(TokenType.COMMA)
         self._expect(TokenType.RIGHT_BRACE, "}")
-        return ObjectType(token.location, fields)
+        return ObjectType(token.location, fields, exact)
 
     def _parse_block_body(self) -> list[Statement]:
         body: list[Statement] = []

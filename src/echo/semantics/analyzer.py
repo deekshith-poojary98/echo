@@ -61,7 +61,7 @@ from echo.runtime.builtins import (
     standalone_min_args,
 )
 from echo.runtime.functions import bind_arguments
-from echo.runtime.values import format_type, function_signature_assignable
+from echo.runtime.values import format_type, function_signature_assignable, object_type_assignable
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
 from echo.semantics.symbols import Symbol, SymbolKind
@@ -159,6 +159,13 @@ class SemanticAnalyzer:
                     statement.location,
                     statement.name,
                 )
+            self._check_value_against_type(
+                statement.initializer,
+                statement.declared_type,
+                scope,
+                statement.location,
+                statement.name,
+            )
             symbol = Symbol(
                 statement.name,
                 SymbolKind.VARIABLE,
@@ -173,18 +180,26 @@ class SemanticAnalyzer:
         elif isinstance(statement, DestructureDeclaration):
             self._expression(statement.initializer, scope)
             self._resolve_pattern_types(statement.pattern, scope)
-            self._check_pattern_against_value(statement.pattern, statement.initializer, statement.location)
+            self._check_pattern_against_value(statement.pattern, statement.initializer, statement.location, scope)
             self._define_pattern(statement.pattern, scope, const=statement.const, location=statement.location)
         elif isinstance(statement, DestructureAssignment):
             self._expression(statement.value, scope)
             self._assign_pattern(statement.pattern, scope, statement)
-            self._check_pattern_against_value(statement.pattern, statement.value, statement.location)
+            self._check_pattern_against_value(statement.pattern, statement.value, statement.location, scope)
         elif isinstance(statement, AssignmentStatement):
             self._expression(statement.value, scope)
             self._require_assignable(statement.name, statement, scope)
             target = scope.resolve(statement.name)
             if target is not None and isinstance(target.declared_type, FunctionType):
                 self._check_function_value_assignable(
+                    statement.value,
+                    target.declared_type,
+                    scope,
+                    statement.location,
+                    statement.name,
+                )
+            if target is not None:
+                self._check_value_against_type(
                     statement.value,
                     target.declared_type,
                     scope,
@@ -229,6 +244,15 @@ class SemanticAnalyzer:
             self._expression(statement.iterable, scope)
             loop_scope = Scope(scope, is_loop=True)
             loop_scope.define(Symbol(statement.var, SymbolKind.VARIABLE, statement.location, statement.var_type))
+            if isinstance(statement.iterable, ListLiteral):
+                for item in statement.iterable.elements:
+                    self._check_value_against_type(
+                        item,
+                        statement.var_type,
+                        scope,
+                        statement.location,
+                        statement.var,
+                    )
             self._statements(statement.body, loop_scope)
         elif isinstance(statement, FunctionDeclaration):
             self._function_body(statement, scope)
@@ -443,7 +467,9 @@ class SemanticAnalyzer:
             if index >= len(types):
                 break
             expected = types[index]
-            if isinstance(expected, FunctionType) and name in bound:
+            if name not in bound:
+                continue
+            if isinstance(expected, FunctionType):
                 self._check_function_value_assignable(
                     bound[name],
                     expected,
@@ -451,6 +477,13 @@ class SemanticAnalyzer:
                     expression.location,
                     name,
                 )
+            self._check_value_against_type(
+                bound[name],
+                expected,
+                scope,
+                expression.location,
+                name,
+            )
 
     def _check_function_type_arity(self, function_type: FunctionType, expression: CallExpression) -> None:
         if any(argument.name for argument in expression.arguments):
@@ -778,7 +811,13 @@ class SemanticAnalyzer:
         for name_pattern in iter_name_patterns(pattern):
             self._require_assignable(name_pattern.name, statement, scope)
 
-    def _check_pattern_against_value(self, pattern: Pattern, value: Expression, location: SourceLocation) -> None:
+    def _check_pattern_against_value(
+        self,
+        pattern: Pattern,
+        value: Expression,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
         if isinstance(pattern, ListPattern):
             if isinstance(value, HashLiteral) or isinstance(value, StringLiteralExpression):
                 raise SemanticError(
@@ -811,7 +850,7 @@ class SemanticAnalyzer:
                     code="E3205",
                 )
             for element_pattern, element_value in zip(fixed, value.elements):
-                self._check_pattern_against_value(element_pattern, element_value, location)
+                self._check_pattern_against_value(element_pattern, element_value, location, scope)
             return
         if isinstance(pattern, HashPattern):
             if isinstance(value, ListLiteral) or isinstance(value, StringLiteralExpression):
@@ -827,8 +866,11 @@ class SemanticAnalyzer:
                     code="E3207",
                 )
             if not isinstance(value, HashLiteral):
+                for field in pattern.fields:
+                    self._check_pattern_field_type(field, value, location, scope)
                 return
             keys = {pair.key for pair in value.pairs}
+            pairs = {pair.key: pair.value for pair in value.pairs}
             for field in pattern.fields:
                 if field.name not in keys:
                     raise SemanticError(
@@ -836,6 +878,82 @@ class SemanticAnalyzer:
                         location,
                         code="E2711",
                     )
+                self._check_pattern_field_type(field, pairs[field.name], location, scope)
+            return
+        if isinstance(pattern, NamePattern):
+            self._check_pattern_field_type(pattern, value, location, scope)
+
+    def _check_pattern_field_type(
+        self,
+        field: NamePattern,
+        value: Expression,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
+        expected = field.declared_type
+        if expected is None:
+            symbol = scope.resolve(field.name)
+            expected = symbol.declared_type if symbol is not None else None
+        if expected is None:
+            return
+        self._check_value_against_type(value, expected, scope, location, field.name)
+
+    def _check_value_against_type(
+        self,
+        expression: Expression,
+        expected: TypeAnnotation | None,
+        scope: Scope,
+        location: SourceLocation,
+        name: str,
+    ) -> None:
+        if not isinstance(expected, ObjectType):
+            return
+        if isinstance(expression, HashLiteral):
+            self._check_hash_literal_against_object(expression, expected, scope, location, name)
+            return
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is None or not isinstance(symbol.declared_type, ObjectType):
+                return
+            if object_type_assignable(symbol.declared_type, expected):
+                return
+            raise SemanticError(
+                f"Cannot assign {format_type(symbol.declared_type)} to {format_type(expected)} variable '{name}'",
+                location,
+                help_text="An open hash type is not assignable to an exact type (it might have extra fields).",
+                code="E2001",
+            )
+
+    def _check_hash_literal_against_object(
+        self,
+        expression: HashLiteral,
+        expected: ObjectType,
+        scope: Scope,
+        location: SourceLocation,
+        name: str,
+    ) -> None:
+        keys = {pair.key for pair in expression.pairs}
+        if expected.exact:
+            for field_name in expected.fields:
+                if field_name not in keys:
+                    raise SemanticError(
+                        f"Exact type {format_type(expected)} is missing required field '{field_name}'",
+                        location,
+                        help_text="Exact types require every listed field.",
+                        code="E3209",
+                    )
+            for pair in expression.pairs:
+                if pair.key not in expected.fields:
+                    raise SemanticError(
+                        f"Exact type {format_type(expected)} does not allow extra field '{pair.key}'",
+                        location,
+                        help_text="Remove extra fields, or use an open hash type { ... } if extras are allowed.",
+                        code="E3208",
+                    )
+        for pair in expression.pairs:
+            field_type = expected.fields.get(pair.key)
+            if isinstance(field_type, ObjectType):
+                self._check_value_against_type(pair.value, field_type, scope, location, f"{name}.{pair.key}")
 
     def _require_assignable(self, name: str, statement: Statement, scope: Scope) -> None:
         symbol = scope.resolve(name)
@@ -912,7 +1030,7 @@ class SemanticAnalyzer:
                 name: self._resolve_type(field_type, scope)
                 for name, field_type in type_annotation.fields.items()
             }
-            return ObjectType(type_annotation.location, fields)
+            return ObjectType(type_annotation.location, fields, type_annotation.exact)
         if isinstance(type_annotation, TypeName):
             if type_annotation.name in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
                 return type_annotation

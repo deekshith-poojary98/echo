@@ -36,6 +36,7 @@ class TokenType(Enum):
     EXPORT = auto()
     FROM = auto()
     CONST = auto()
+    EXACT = auto()
 
     PLUS = auto()
     MINUS = auto()
@@ -100,6 +101,7 @@ KEYWORDS: dict[str, TokenType] = {
     "export": TokenType.EXPORT,
     "from": TokenType.FROM,
     "const": TokenType.CONST,
+    "exact": TokenType.EXACT,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "null": TokenType.NULL,

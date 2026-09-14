@@ -34,6 +34,7 @@ class TypeName(TypeAnnotation):
 @dataclass
 class ObjectType(TypeAnnotation):
     fields: dict[str, TypeAnnotation]
+    exact: bool = False
 
 
 @dataclass

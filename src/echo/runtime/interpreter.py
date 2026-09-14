@@ -138,6 +138,7 @@ from echo.runtime.values import (
     format_type,
     is_truthy,
     matches_type,
+    raise_exact_shape_error,
     stringify,
     unescape_string,
     validate_type,
@@ -286,6 +287,7 @@ class Interpreter:
                 )
             try:
                 for item in iterator:
+                    raise_exact_shape_error(item, statement.var_type, statement.location)
                     if not matches_type(item, statement.var_type):
                         raise EchoTypeError(
                             f"Loop variable {statement.var} must be of type {format_type(statement.var_type)}",
@@ -438,6 +440,7 @@ class Interpreter:
                         code="E2706",
                     )
                 for item in value:
+                    raise_exact_shape_error(item, parameter.type, location)
                     if not matches_type(item, parameter.type):
                         raise EchoTypeError(
                             f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
@@ -445,14 +448,16 @@ class Interpreter:
                             location,
                             code="E2706",
                         )
-            elif not matches_type(value, parameter.type):
-                label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
-                raise EchoTypeError(
-                    f"Argument {label} in function '{declaration.name}' must be of type "
-                    f"{format_type(parameter.type)}, got {echo_type_name(value)}",
-                    location,
-                    code="E2706",
-                )
+            else:
+                raise_exact_shape_error(value, parameter.type, location)
+                if not matches_type(value, parameter.type):
+                    label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
+                    raise EchoTypeError(
+                        f"Argument {label} in function '{declaration.name}' must be of type "
+                        f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                        location,
+                        code="E2706",
+                    )
             if parameter.pattern is not None:
                 self._unpack_pattern(parameter.pattern, value, new_env, declare=True, const=False, location=location)
             else:
@@ -480,6 +485,7 @@ class Interpreter:
         new_env = Environment(parent=function.closure, is_function=True)
         new_env.function_name = declaration.name
         for parameter, value in zip(declaration.parameters, values):
+            raise_exact_shape_error(value, parameter.type, location)
             if not matches_type(value, parameter.type):
                 label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
                 raise EchoTypeError(

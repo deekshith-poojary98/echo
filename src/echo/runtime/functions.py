@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from echo.errors import ArgumentError, EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.frontend.ast.nodes import Argument, Expression, FunctionDeclaration, ListLiteral, Parameter, TypeAnnotation
 from echo.runtime.context import Environment
-from echo.runtime.values import format_type, matches_type
+from echo.runtime.values import format_type, matches_type, raise_exact_shape_error
 
 
 @dataclass
@@ -118,6 +118,7 @@ def check_return(name: str, value: object, return_type: TypeAnnotation | None, l
         if value is not None:
             raise EchoTypeError(f"Function '{name}' is declared as void but returns a value", location, code="E2206")
         return
+    raise_exact_shape_error(value, return_type, location)
     if not matches_type(value, return_type):
         raise EchoTypeError(
             f"Function '{name}' must return type {format_type(return_type)}, got {type(value).__name__}",

@@ -63,6 +63,10 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
                 return False
             if not matches_type(value[field_name], field_type):
                 return False
+        if type_spec.exact:
+            for key in value:
+                if key not in type_spec.fields:
+                    return False
         return True
     if isinstance(type_spec, FunctionType):
         if not _is_echo_function(value):
@@ -130,7 +134,8 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
         return type_spec.name
     if isinstance(type_spec, ObjectType):
         fields = ", ".join(f"{name}: {format_type(field)}" for name, field in type_spec.fields.items())
-        return "{ " + fields + " }"
+        inner = "{ " + fields + " }"
+        return f"exact {inner}" if type_spec.exact else inner
     if isinstance(type_spec, FunctionType):
         params = []
         for index, param_type in enumerate(type_spec.param_types):
@@ -141,12 +146,43 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
 
 
 def validate_type(name: str, value: object, expected: TypeAnnotation | str | None, location: SourceLocation | None = None) -> None:
+    raise_exact_shape_error(value, expected, location)
     if not matches_type(value, expected):
         raise EchoTypeError(
             f"Cannot assign {echo_type_name(value)} to {format_type(expected)} variable '{name}'",
             location,
             code="E2001",
         )
+
+
+def raise_exact_shape_error(
+    value: object,
+    expected: TypeAnnotation | str | None,
+    location: SourceLocation | None = None,
+) -> None:
+    """Raise E3208/E3209 when a hash fails an exact object type's shape."""
+    if not isinstance(expected, ObjectType) or not isinstance(value, dict):
+        return
+    for field_name, field_type in expected.fields.items():
+        if field_name not in value:
+            if expected.exact:
+                raise EchoTypeError(
+                    f"Exact type {format_type(expected)} is missing required field '{field_name}'",
+                    location,
+                    help_text="Exact types require every listed field.",
+                    code="E3209",
+                )
+            continue
+        raise_exact_shape_error(value[field_name], field_type, location)
+    if expected.exact:
+        for key in value:
+            if key not in expected.fields:
+                raise EchoTypeError(
+                    f"Exact type {format_type(expected)} does not allow extra field '{key}'",
+                    location,
+                    help_text="Remove extra fields, or use an open hash type { ... } if extras are allowed.",
+                    code="E3208",
+                )
 
 
 def is_truthy(value: object) -> bool:
@@ -215,6 +251,8 @@ def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> boo
     if isinstance(left, TypeName) and isinstance(right, TypeName):
         return left.name == right.name
     if isinstance(left, ObjectType) and isinstance(right, ObjectType):
+        if left.exact != right.exact:
+            return False
         if left.fields.keys() != right.fields.keys():
             return False
         return all(_same_type(left.fields[name], right.fields[name]) for name in left.fields)
@@ -235,3 +273,25 @@ def _type_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | N
     if actual is None:
         return isinstance(expected, TypeName) and expected.name in {"dynamic", "void"}
     return _same_type(actual, expected)
+
+
+def object_type_assignable(actual: ObjectType, expected: ObjectType) -> bool:
+    """True when a value of `actual` can be used where `expected` is required.
+
+    An exact type may be assigned to an open hash with the same or compatible
+    required fields. An open hash is not assignable to an exact type.
+    """
+    if expected.exact and not actual.exact:
+        return False
+    for name, expected_field in expected.fields.items():
+        if name not in actual.fields:
+            return False
+        actual_field = actual.fields[name]
+        if isinstance(actual_field, ObjectType) and isinstance(expected_field, ObjectType):
+            if not object_type_assignable(actual_field, expected_field):
+                return False
+        elif not _type_compatible(actual_field, expected_field):
+            return False
+    if expected.exact and set(actual.fields) != set(expected.fields):
+        return False
+    return True
