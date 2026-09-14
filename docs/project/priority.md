@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.0**. **0.7.1** (destructuring) is implemented. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.1**. **0.7.2** (exact object types) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.0**. **0.6.x is complete.** **0.7.0** (`const`) and **0.7.1** (destructuring) are implemented. **0.7.2** is next.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.1**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), and **0.7.2** (exact object types) are implemented. **0.7.3** is next.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -241,7 +241,7 @@ Working spellings below are the plan of record so each version can be implemente
 | --- | --- | --- |
 | 0.7.0 | `const` bindings | implemented (0.7.0) |
 | 0.7.1 | Destructuring | implemented (0.7.1) |
-| 0.7.2 | Exact object types | pending |
+| 0.7.2 | Exact object types | implemented (0.7.2) |
 | 0.7.3 | Builtins as values | pending |
 | 0.7.4 | Range as a value | pending |
 | 0.7.5 | Union types | pending |
@@ -271,7 +271,7 @@ Default: the field name is the binding name. No `as` rename in 0.7.1. No hash re
 
 Closed hash shapes. Today `type User = { id: int, name: str }` requires those fields and **allows extras**. Exact types reject extras. This is the type-system counterpart of hashes-as-records, not structs or classes.
 
-Working spelling: **`exact { id: int, name: str }`** as a type constructor, in aliases and inline (`fn f(user: exact { id: int })`). Open `{ id: int, name: str }` stays open — **not a breaking change**. Aliases remain names, not nominal runtime types. Extra fields on an exact type are a type error at the same checkpoints as today (declaration, assignment, argument, return, `foreach` binding).
+Implemented spelling: **`exact { id: int, name: str }`** as a type constructor, in aliases and inline (`fn f(user: exact { id: int })`). Open `{ id: int, name: str }` stays open — **not a breaking change**. Aliases remain names, not nominal runtime types. Exact types require every listed key and type and reject extras at declarations, assignments, arguments, returns, destructured bindings, and `foreach` bindings. Exact → compatible open is assignable; open → exact is not. Extra fields are **E3208** and missing fields are **E3209**. Exactness nests and does not freeze the hash.
 
 Does not add methods on aliases. Does not add classes. `dynamic` still accepts any hash.
 

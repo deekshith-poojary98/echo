@@ -107,6 +107,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | User error handling | Usability | Missing | Usability now | v0.4+ (form undecided) |
 | Exceptions (`try/catch`) | Usability | Missing | Design hold | Reconsider form, do not copy |
 | Destructuring | Usability | Supported (0.7.1) | Frozen | 0.7.1 |
+| Exact object types | Usability | Supported (0.7.2) | Frozen | 0.7.2 |
 | Collection operations | Usability | Partial (`flatten` / `partition` 0.6.9) | Usability now | 0.6.9 |
 | String utilities | Usability | Partial | Usability now | v0.4 candidate |
 | Date / time | Usability | Missing | Later | Later (library) |
@@ -265,18 +266,21 @@ for existing types, not new runtime types.
 ```echo
 type Age = int;
 type User = { id: int, name: str };
+type ExactUser = exact { id: int, name: str };
 ```
 
-Object aliases require the listed fields and types. Extra fields are
-allowed. Aliases are not new runtime types.
+Open object aliases require the listed fields and types and allow extras.
+Exact object aliases require precisely the listed fields and types. Exactness
+nests and does not freeze values. Exact objects are assignable to compatible
+open object types; open objects are not assignable to exact types. Aliases are
+not new runtime types.
 
-**Limitations.** No exact-shape option, no nominal types, no methods on
-aliases. This is the closest thing Echo has to records.
+**Limitations.** No nominal types and no methods on aliases. This is the
+closest thing Echo has to records.
 
-**Priority.** Later.
+**Priority.** Frozen.
 
-**Possible version.** Later (exact object validation is already on the
-short roadmap).
+**Possible version.** Done in 0.7.2.
 
 ---
 
@@ -837,7 +841,7 @@ taste than `try/catch`.
 
 **Echo status.** Supported (0.7.1).
 
-`[a: int, b: int] = pair;` and `{ id: int, name: str } = user;` unpack into names. Types are required on a fresh declaration. `[a, b] = pair;` assigns to existing names. List rest is last: `[head: int, rest: int...] = xs`. Same patterns in `fn` parameters. Missing hash keys abort. Extra hash keys are ignored until exact objects (0.7.2). No `as` rename and no hash rest in 0.7.1.
+`[a: int, b: int] = pair;` and `{ id: int, name: str } = user;` unpack into names. Types are required on a fresh declaration. `[a, b] = pair;` assigns to existing names. List rest is last: `[head: int, rest: int...] = xs`. Same patterns in `fn` parameters. Missing hash keys abort. Extra hash keys in patterns are ignored. No `as` rename and no hash rest in 0.7.1.
 
 **Current syntax.**
 
@@ -851,7 +855,7 @@ fn add([a: int, b: int]) -> int {
 }
 ```
 
-**Limitations.** No field rename (`as`). No hash rest. Nested hash patterns are not a dedicated form; nested list patterns work. Extra hash keys stay allowed until 0.7.2.
+**Limitations.** No field rename (`as`). No hash rest. Nested hash patterns are not a dedicated form; nested list patterns work.
 
 **Priority.** Done for 0.7.1.
 
@@ -1315,7 +1319,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. **0.7.2** adds exact object types. Failure handling is still design only.
 
 ---
 

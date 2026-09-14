@@ -54,11 +54,14 @@ name = "Echo 2";
 ```echo
 type Age = int;
 type User = { id: int, name: str };
+type ExactUser = exact { id: int, name: str };
 ```
 
 Aliases are names for existing types. They are not new runtime types.
-Object aliases require the listed fields and field types.
-Extra fields are allowed.
+Open object aliases require the listed fields and field types while allowing extras.
+Exact object types require every listed field and reject extras. Exactness nests,
+does not freeze the hash, and may also be written inline. An exact type is
+assignable to a compatible open type; an open type is not assignable to an exact type.
 
 ### Runtime checks
 
@@ -193,7 +196,7 @@ Destructuring unpacks a list or hash into names in one declaration or assignment
 - Assignment to already-declared names omits types: `[a, b] = pair;` and `{ id, name } = user;`.
 - Function parameters use the same patterns: `fn add([a: int, b: int]) -> int`. The parameter is a `list` or `hash`.
 - List rest is last: `[head: int, rest: int...] = xs` binds `rest` as a `list` of that element type. No hash rest. No `as` rename.
-- Length mismatch without rest aborts (**E3205**). Missing hash keys abort (**E2711**). Extra hash keys are ignored in 0.7.1. Nested list patterns such as `[[a: int], b: int]` are allowed.
+- Length mismatch without rest aborts (**E3205**). Missing hash keys abort (**E2711**). Extra hash keys in patterns are ignored. Nested list patterns such as `[[a: int], b: int]` are allowed.
 
 Inside a function:
 
@@ -516,5 +519,6 @@ v0.6.7 adds list `zip` (pairs two lists to min length) and `unique` (first occur
 v0.6.8 adds `echo test -run` (glob on `testXxx` function names), list `chunk`, `rangeList` / `rangeListInclusive` (same bounds as `...` / `..`), and hash `mapValues` / `filter`.
 v0.6.9 adds function-type assignability for trailing defaults, list `flatten` / `partition`, and `echo test --json`. This is the last 0.6.x slice.
 v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Function parameters stay mutable.
-v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params). No `as` rename, hash rest, exact objects, unions, `switch`, builtins-as-values, or range-as-value.
+v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params).
+v0.7.2 adds `exact { ... }` object types. Extra exact fields are **E3208** and missing exact fields are **E3209**. No `as` rename, hash rest, unions, `switch`, builtins-as-values, or range-as-value.
 See `docs/v0.4-stdlib.md`.

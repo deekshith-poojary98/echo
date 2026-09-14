@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.2
+
+- Version tracks Echo v0.7.2.
+- `exact` is highlighted as a keyword for exact object types.
+
 ## 0.7.1
 
 - Version tracks Echo v0.7.1.

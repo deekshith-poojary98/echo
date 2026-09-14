@@ -46,6 +46,7 @@ Common causes:
 - list `partition` callback errors (`E2847`–`E2848`; non-`bool` result is `E2831`)
 - `const` reassignment / mutation (`E3201`–`E3204`)
 - destructuring length / shape (`E3205`–`E3207`); missing hash keys reuse **E2711**
+- exact object shape errors: extra field **E3208**, missing field **E3209**
 
 `fail(message)` always aborts with `message` (code `E2825`). `assert(cond, message)` aborts with the same diagnostic shape when `cond` is falsy (code `E2819`). `expect(cond, message)` requires a `bool` condition (code `E2826`). `expectEq` / `expectNeq` compare with Echo `==` (codes `E2827` / `E2828`).
 
@@ -53,7 +54,7 @@ List `map` / `filter` reject a non-function callback (`E2829`) or a callback tha
 
 `const` reassignment (`x =`, `x +=`) is **E3201**. In-place mutation through a const name (`push`, index assign, hash field set) is **E3202**. Mutating a frozen list or hash through another name or a function parameter is **E3203**. `use mut` on a const binding is **E3204**.
 
-List destructuring length mismatch (too few, or extra elements without rest) is **E3205**. A list pattern on a non-list is **E3206**. A hash pattern on a non-hash is **E3207**. Missing hash keys in a pattern use **E2711**, same as `user["x"]`. Extra hash keys are ignored in 0.7.1.
+List destructuring length mismatch (too few, or extra elements without rest) is **E3205**. A list pattern on a non-list is **E3206**. A hash pattern on a non-hash is **E3207**. Missing hash keys in a pattern use **E2711**, same as `user["x"]`. Exact object types report **E3208** for an extra field and **E3209** for a missing field; open object types continue to allow extras.
 
 `echo lint` is not an Echo runtime error. Findings print `path:line:col: rule: message` and exit 1. Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`, `test-naming`, `self-assign`, `unreachable-after-fail`. Zero-arg `fn test*` functions are not unused-function. `test-naming` flags a top-level `fn` that looks like a test but is not a zero-arg `testXxx` unit.
 

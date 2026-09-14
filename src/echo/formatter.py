@@ -358,7 +358,8 @@ class _Printer:
             return f"fn({', '.join(params)}) -> {self._type(annotation.return_type)}"
         if isinstance(annotation, ObjectType):
             fields = ", ".join(f"{name}: {self._type(field)}" for name, field in annotation.fields.items())
-            return f"{{{fields}}}" if fields else "{}"
+            object_type = f"{{{fields}}}" if fields else "{}"
+            return f"exact {object_type}" if annotation.exact else object_type
         raise TypeError(f"unhandled type: {type(annotation).__name__}")
 
     def _literal(self, value: object) -> str:

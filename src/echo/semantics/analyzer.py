@@ -72,6 +72,7 @@ class SemanticAnalyzer:
         self.module_symbols = ModuleSymbols()
         self._dependencies: Mapping[str, ModuleSymbols] = {}
         self._pending_exports: list[ExportDeclaration] = []
+        self._return_types: list[TypeAnnotation | None] = []
 
     def analyze(
         self,
@@ -83,6 +84,7 @@ class SemanticAnalyzer:
         self.module_symbols = ModuleSymbols()
         self._dependencies = dependencies or {}
         self._pending_exports = []
+        self._return_types = []
         if scope is None:
             scope = self.module_scope(program.location)
         self._statements(program.statements, scope)
@@ -266,6 +268,14 @@ class SemanticAnalyzer:
                 )
             if statement.value is not None:
                 self._expression(statement.value, scope)
+                if self._return_types:
+                    self._check_value_against_type(
+                        statement.value,
+                        self._return_types[-1],
+                        scope,
+                        statement.location,
+                        "return value",
+                    )
         elif isinstance(statement, BreakStatement):
             if not scope.is_loop:
                 raise SemanticError(
@@ -359,12 +369,17 @@ class SemanticAnalyzer:
             else:
                 function_scope.define(Symbol(parameter.name, SymbolKind.VARIABLE, parameter.location, parameter.type))
 
-        if inline:
-            assert isinstance(body, Expression)
-            self._expression(body, function_scope)
-        else:
-            assert isinstance(body, list)
-            self._statements(body, function_scope)
+        self._return_types.append(return_type)
+        try:
+            if inline:
+                assert isinstance(body, Expression)
+                self._expression(body, function_scope)
+                self._check_value_against_type(body, return_type, function_scope, location, "return value")
+            else:
+                assert isinstance(body, list)
+                self._statements(body, function_scope)
+        finally:
+            self._return_types.pop()
 
     def _expression(self, expression: Expression, scope: Scope) -> None:
         if isinstance(expression, VariableExpression):
@@ -866,8 +881,25 @@ class SemanticAnalyzer:
                     code="E3207",
                 )
             if not isinstance(value, HashLiteral):
-                for field in pattern.fields:
-                    self._check_pattern_field_type(field, value, location, scope)
+                source = scope.resolve(value.name) if isinstance(value, VariableExpression) else None
+                source_type = source.declared_type if source is not None else None
+                if isinstance(source_type, ObjectType):
+                    for field in pattern.fields:
+                        expected = field.declared_type
+                        actual = source_type.fields.get(field.name)
+                        if (
+                            isinstance(expected, ObjectType)
+                            and isinstance(actual, ObjectType)
+                            and not object_type_assignable(actual, expected)
+                        ):
+                            raise SemanticError(
+                                f"Cannot assign {format_type(actual)} to {format_type(expected)} "
+                                f"variable '{field.name}'",
+                                location,
+                                help_text="An open hash type is not assignable to an exact type "
+                                "(it might have extra fields).",
+                                code="E2001",
+                            )
                 return
             keys = {pair.key for pair in value.pairs}
             pairs = {pair.key: pair.value for pair in value.pairs}

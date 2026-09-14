@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.2
+
+Exact object types. Third 0.7 language increment. Open object types remain open, and exactness does not freeze values. No unions, `switch`, builtins-as-values, range-as-value, or `#{ ... }` syntax.
+
+- `exact { id: int, name: str }` is available inline and in aliases: `type User = exact { id: int, name: str };`
+- Exact types require every declared field with its declared type and reject undeclared fields. Nested exact object types are checked recursively
+- Exact-shape checks apply at declarations, assignments, function arguments and returns, destructured bindings, and `foreach` bindings
+- An exact object type is assignable to a compatible open object type. An open object type is not assignable to an exact type
+- Extra fields on an exact type report **E3208**; missing fields report **E3209**. Other type mismatches continue to report the existing checkpoint-specific type error
+- `exact` is a formatter-preserved and editor-highlighted keyword
+
 ## 0.7.1
 
 Destructuring. Second 0.7 language increment. Failure model is unchanged. No `as` rename, hash rest, exact objects, unions, `switch`, builtins-as-values, or range-as-value.

@@ -21,6 +21,7 @@ As of v0.5.0, Echo already has:
 - Function types honor trailing defaults, list `flatten` / `partition`, `echo test --json` (0.6.9)
 - `const` bindings (`const name: T = expr;`, `export const`, frozen lists/hashes) (0.7.0)
 - Destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params) (0.7.1)
+- Exact object types (`exact { id: int, name: str }`) (0.7.2)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 
@@ -32,8 +33,8 @@ The items below are still out of scope. Classes, `try`/`catch`, and the other fr
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
 - `const` does not apply to function parameters in 0.7.0 (parameters stay mutable unless a later version adds param `const`)
 - Nested collections inside a frozen list/hash are not recursively frozen; a nested value reached through a different mutable name can still be mutated
-- Destructuring has no `as` rename and no hash rest in 0.7.1; extra hash keys are still allowed (exact objects are 0.7.2)
-- Object type aliases accept extra fields
+- Destructuring has no `as` rename and no hash rest
+- Open object type aliases accept extra fields; use `exact { ... }` to reject them
 - Hash runtime indexing only supports string keys
 - `clone()` is shallow
 - `format()` only supports positional placeholders
