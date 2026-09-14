@@ -839,23 +839,26 @@ class Parser:
             if self._check(TokenType.SEMICOLON):
                 raise ParseError("Found ';' inside a hash pattern — you may be missing a closing '}'.", self._peek().location)
             field = self._parse_hash_field_pattern(require_types)
-            if field.rest:
-                raise ParseError(
-                    "Hash destructuring does not support rest",
-                    field.location,
-                    help_text="List rest is [head: int, rest: int...]. Hash rest is not in 0.7.1.",
-                )
             fields.append(field)
             self._match(TokenType.COMMA)
         self._expect(TokenType.RIGHT_BRACE, "}")
+        for index, field in enumerate(fields):
+            if field.rest and index != len(fields) - 1:
+                raise ParseError(
+                    "Rest element must be last in a hash pattern",
+                    field.location,
+                    help_text="Write { id: int, rest: dynamic... } = user;",
+                )
         return HashPattern(token.location, fields)
 
     def _parse_hash_field_pattern(self, require_types: bool | None) -> NamePattern:
         key_token = self._expect_name_token("hash key")
         key = key_token.lexeme
         binding = key
+        renamed = False
         if self._match(TokenType.AS):
             binding = self._expect_name("binding name")
+            renamed = True
         declared_type = None
         if self._match(TokenType.COLON):
             if require_types is False:
@@ -874,8 +877,23 @@ class Parser:
                 help_text="Write { id as userId: int } = user;",
             )
         rest = bool(self._match(TokenType.DOT_DOT_DOT))
+        if rest and renamed:
+            raise ParseError(
+                "Hash rest cannot use 'as' rename",
+                key_token.location,
+                help_text="Write { id: int, extras: dynamic... } = user;",
+            )
+        if rest:
+            return NamePattern(
+                key_token.location,
+                binding,
+                declared_type,
+                True,
+                None,
+                "hash",
+            )
         rename_key = None if binding == key else key
-        return NamePattern(key_token.location, binding, declared_type, rest, rename_key)
+        return NamePattern(key_token.location, binding, declared_type, False, rename_key, None)
 
     def _parse_pattern_element(self, require_types: bool | None) -> Pattern:
         if self._check(TokenType.LEFT_BRACKET):
@@ -904,7 +922,14 @@ class Parser:
                 help_text="Write [a: int, b: int] = pair;",
             )
         rest = bool(self._match(TokenType.DOT_DOT_DOT))
-        return NamePattern(name_token.location, name_token.lexeme, declared_type, rest)
+        return NamePattern(
+            name_token.location,
+            name_token.lexeme,
+            declared_type,
+            rest,
+            None,
+            "list" if rest else None,
+        )
 
     def _pattern_then_equal(self) -> bool:
         saved = self.pos

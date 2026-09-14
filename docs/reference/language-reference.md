@@ -11,6 +11,7 @@ name = "Echo 2";
 [a: int, b: int] = pair;
 { id: int, name: str } = user;
 { id as userId: int } = user;
+{ id: int, rest: dynamic... } = user;
 if cond { ... }
 switch x { 0 { ... } else { ... } }
 while cond { ... }

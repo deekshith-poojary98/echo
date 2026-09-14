@@ -62,6 +62,8 @@ from echo.frontend.ast.nodes import (
     WhileStatement,
     list_pattern_fixed,
     list_pattern_rest,
+    hash_pattern_fixed,
+    hash_pattern_rest,
 )
 from echo.frontend.tokens import TokenType
 from echo.runtime.builtins import (
@@ -1190,13 +1192,24 @@ class Interpreter:
         if isinstance(pattern, HashPattern):
             if not isinstance(value, dict):
                 return False
-            for field in pattern.fields:
+            fixed = hash_pattern_fixed(pattern)
+            rest = hash_pattern_rest(pattern)
+            taken: set[str] = set()
+            for field in fixed:
                 source_key = field.source_key()
                 if source_key not in value:
                     return False
                 if field.declared_type is not None and not matches_type(value[source_key], field.declared_type):
                     return False
                 self._bind_pattern_name(field, value[source_key], env, declare=True, const=False, location=location)
+                taken.add(source_key)
+            if rest is not None:
+                rest_value = {key: item for key, item in value.items() if key not in taken}
+                if rest.declared_type is not None:
+                    for item in rest_value.values():
+                        if not matches_type(item, rest.declared_type):
+                            return False
+                self._bind_pattern_name(rest, rest_value, env, declare=True, const=False, location=location)
             return True
         if isinstance(pattern, NamePattern):
             if pattern.declared_type is not None and not matches_type(value, pattern.declared_type):
@@ -1261,13 +1274,24 @@ class Interpreter:
                     location,
                     code="E3207",
                 )
-            for field in pattern.fields:
+            fixed = hash_pattern_fixed(pattern)
+            rest = hash_pattern_rest(pattern)
+            taken: set[str] = set()
+            for field in fixed:
                 source_key = field.source_key()
                 if source_key not in value:
                     raise EchoRuntimeError(f"Key '{source_key}' not found in hash", location, code="E2711")
                 self._bind_pattern_name(
                     field, value[source_key], env, declare=declare, const=const, location=location
                 )
+                taken.add(source_key)
+            if rest is not None:
+                rest_value = {key: item for key, item in value.items() if key not in taken}
+                if rest.declared_type is not None:
+                    for item in rest_value.values():
+                        if not matches_type(item, rest.declared_type):
+                            validate_type(rest.name, item, rest.declared_type, location)
+                self._bind_pattern_name(rest, rest_value, env, declare=declare, const=const, location=location)
             return
         if isinstance(pattern, NamePattern):
             self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)
@@ -1282,7 +1306,11 @@ class Interpreter:
         const: bool,
         location: SourceLocation,
     ) -> None:
-        declared_type = TypeName(pattern.location, "list") if pattern.rest else pattern.declared_type
+        declared_type = (
+            TypeName(pattern.location, pattern.rest_container or "list")
+            if pattern.rest
+            else pattern.declared_type
+        )
         if declare:
             if declared_type is not None:
                 validate_type(pattern.name, value, declared_type, location)

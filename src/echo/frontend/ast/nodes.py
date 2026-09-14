@@ -62,6 +62,7 @@ class NamePattern(Pattern):
     declared_type: TypeAnnotation | None = None
     rest: bool = False
     key: str | None = None  # hash source key when renamed; None means key == name
+    rest_container: str | None = None  # "list" or "hash" when rest
 
     def source_key(self) -> str:
         return self.key if self.key is not None else self.name
@@ -367,6 +368,18 @@ def list_pattern_fixed(pattern: ListPattern) -> list[Pattern]:
 def list_pattern_rest(pattern: ListPattern) -> NamePattern | None:
     if pattern.elements and isinstance(pattern.elements[-1], NamePattern) and pattern.elements[-1].rest:
         return pattern.elements[-1]
+    return None
+
+
+def hash_pattern_fixed(pattern: HashPattern) -> list[NamePattern]:
+    if pattern.fields and pattern.fields[-1].rest:
+        return pattern.fields[:-1]
+    return pattern.fields
+
+
+def hash_pattern_rest(pattern: HashPattern) -> NamePattern | None:
+    if pattern.fields and pattern.fields[-1].rest:
+        return pattern.fields[-1]
     return None
 
 

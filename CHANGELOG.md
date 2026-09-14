@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.8
+
+Hash destructure rest. Ninth 0.7 language increment — polish on 0.7.1. Failure model unchanged. No param `const` yet (0.7.9). No classes.
+
+- Spelling: **`{ id: int, rest: dynamic... }`** — fixed keys bind as usual; leftover keys bind as a **`hash`** named `rest`
+- `T...` is the value type for each leftover entry (same idea as list rest element type). Binding type is always `hash`
+- Rest must be last. No `as` rename on the rest field (`{ id as extras: dynamic... }` is a parse error)
+- Assignment omits types: **`{ id, rest... } = user;`**
+- Empty leftovers bind `{}`. Works in declarations, assignment, function parameters, and `switch` hash arms
+- Compose with 0.7.7 rename on fixed fields: `{ id as userId: int, rest: dynamic... }`
+
 ## 0.7.7
 
 Hash destructure rename. Eighth 0.7 language increment — polish on 0.7.1. Failure model unchanged. No hash rest (still later). No classes.

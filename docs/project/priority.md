@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.6**. **0.7.7** (hash destructure rename) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 is drafted below (OOP) and stays held until explicitly started.** Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.7**. **0.7.8** (hash destructure rest) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **0.8 is drafted below (OOP) and stays held until explicitly started.** Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.6**. **0.6.x is complete.** **0.7.0**–**0.7.7** are implemented (0.7.7 not yet tagged). **0.8 OOP** is drafted in this file and remains held until you say start.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.7**. **0.6.x is complete.** **0.7.0**–**0.7.8** are implemented (0.7.8 not yet tagged). **0.8 OOP** is drafted in this file and remains held until you say start.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -247,7 +247,7 @@ Working spellings below are the plan of record so each version can be implemente
 | 0.7.5 | Union types | implemented (0.7.5) |
 | 0.7.6 | `switch` on values | implemented (0.7.6) |
 | 0.7.7 | Hash destructure rename | implemented (0.7.7) |
-| 0.7.8 | Hash rest (optional polish) | pending |
+| 0.7.8 | Hash destructure rest | implemented (0.7.8) |
 | 0.7.9 | Param `const` (optional polish) | pending |
 
 ### 0.7.0 — `const` bindings
@@ -268,7 +268,7 @@ Unpack lists and hashes into names in one binding. This is new declaration / ass
 
 Hash patterns bind listed keys; missing keys abort (**E2711**, same as `user["x"]`). Extra keys are ignored unless the source is an exact object type (0.7.2). Length mismatch on a list pattern without rest aborts (**E3205**). Wrong container type is **E3206** / **E3207**. A callback or initializer that aborts still aborts.
 
-Default: the field name is the binding name. **0.7.7** adds rename: **`{ id as userId: int }`**. No hash rest (0.7.8 candidate).
+Default: the field name is the binding name. **0.7.7** adds rename: **`{ id as userId: int }`**. **0.7.8** adds hash rest: **`{ id: int, rest: dynamic... }`**.
 
 ### 0.7.2 — exact object types
 
@@ -324,11 +324,16 @@ Bind a hash key to a different local name. Completes a 0.7.1 open question; does
 
 **Implemented spelling:** **`{ id as userId: int }`**. Key is `id`; binding is `userId`. Same-name stays `{ id: int }`. Assignment omits types: **`{ id as userId } = user;`**. Works in declarations, assignment, function parameters, and `switch` hash arms. Keyword **`as`**. `{ id: int as userId }` is **not** the spelling.
 
-### 0.7.8 / 0.7.9 — optional polish (pending)
+### 0.7.8 — hash destructure rest
 
-Candidates only — not required before 0.8:
+Collect leftover keys into a hash binding. Completes the other 0.7.1 open gap beside rename.
 
-- **0.7.8** hash rest (e.g. `{ id: int, rest: dynamic... }`)
+**Implemented spelling:** **`{ id: int, rest: dynamic... }`**. Fixed fields bind as usual; remaining keys bind as a **`hash`** named `rest`. `T...` is the value type for each leftover entry; the binding’s type is always `hash`. Rest must be last. No `as` on the rest field. Assignment: **`{ id, rest... } = user;`**. Empty leftovers are `{}`. Compose with rename: `{ id as userId: int, rest: dynamic... }`.
+
+### 0.7.9 — optional polish (pending)
+
+Candidate only — not required before 0.8:
+
 - **0.7.9** param `const` (`fn f(const xs: list)`)
 
 ### 0.7 open questions
@@ -342,6 +347,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 | Destructure types | types on fresh names; omitted on reassignment | always repeat types |
 | Hash rename | `{ id as userId: int }` (locked in 0.7.7) | `{ id: int as userId }` |
 | List rest | `[head: int, rest: int...]` | a `..rest` token |
+| Hash rest | `{ id: int, rest: dynamic... }` (locked in 0.7.8); binding is `hash`; `T...` is value type; no `as` on rest | require `hash...` token; allow rename on rest |
 | Exact objects | opt-in `exact { ... }`; open `{ ... }` unchanged | `#{ ... }`; `{ ... }!`; closed-by-default + `...` rest (breaking) |
 | Builtin function types | real `fn(...)` types, including variadics | `dynamic` callable with no signature |
 | Range `by` | `0...10 by 2` as an expression | step only in `for`; value form always step `1` |

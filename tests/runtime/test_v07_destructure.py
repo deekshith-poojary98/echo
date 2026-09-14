@@ -214,12 +214,17 @@ say(sumPair([4, 5]));
     assert result.output.strip() == "9"
 
 
-def test_hash_rest_is_parse_error():
-    try:
-        parse_source("{ id: int... } = user;")
-        assert False, "expected ParseError"
-    except ParseError as exc:
-        assert "rest" in str(exc).lower()
+def test_hash_rest_may_be_empty():
+    result = run_echo(
+        """
+user: hash = { id: 1 };
+{ id: int, rest: dynamic... } = user;
+say(id);
+say(rest == {});
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["1", "true"]
 
 
 def test_parse_declare_assign_and_fn_params():

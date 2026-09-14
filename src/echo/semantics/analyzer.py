@@ -57,6 +57,8 @@ from echo.frontend.ast.nodes import (
     iter_name_patterns,
     list_pattern_fixed,
     list_pattern_rest,
+    hash_pattern_fixed,
+    hash_pattern_rest,
 )
 from echo.runtime.builtins import (
     MUTATING_METHODS,
@@ -955,7 +957,8 @@ class SemanticAnalyzer:
 
     def _binding_type(self, pattern: NamePattern) -> TypeAnnotation:
         if pattern.rest:
-            return TypeName(pattern.location, "list")
+            container = pattern.rest_container or "list"
+            return TypeName(pattern.location, container)
         assert pattern.declared_type is not None
         return pattern.declared_type
 
@@ -1036,7 +1039,7 @@ class SemanticAnalyzer:
                 source = scope.resolve(value.name) if isinstance(value, VariableExpression) else None
                 source_type = source.declared_type if source is not None else None
                 if isinstance(source_type, ObjectType):
-                    for field in pattern.fields:
+                    for field in hash_pattern_fixed(pattern):
                         expected = field.declared_type
                         actual = source_type.fields.get(field.source_key())
                         if (
@@ -1055,7 +1058,8 @@ class SemanticAnalyzer:
                 return
             keys = {pair.key for pair in value.pairs}
             pairs = {pair.key: pair.value for pair in value.pairs}
-            for field in pattern.fields:
+            fixed = hash_pattern_fixed(pattern)
+            for field in fixed:
                 source_key = field.source_key()
                 if source_key not in keys:
                     raise SemanticError(
