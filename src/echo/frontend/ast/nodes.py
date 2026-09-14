@@ -45,6 +45,13 @@ class FunctionType(TypeAnnotation):
 
 
 @dataclass
+class UnionType(TypeAnnotation):
+    """Flattened union of type members (`int | str`). Always has 2+ members."""
+
+    members: list[TypeAnnotation]
+
+
+@dataclass
 class Pattern(Node):
     pass
 

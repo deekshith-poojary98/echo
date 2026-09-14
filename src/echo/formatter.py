@@ -43,6 +43,7 @@ from echo.frontend.ast.nodes import (
     TypeAnnotation,
     TypeName,
     UnaryExpression,
+    UnionType,
     UseStatement,
     VariableDeclaration,
     VariableExpression,
@@ -364,6 +365,8 @@ class _Printer:
     def _type(self, annotation: TypeAnnotation) -> str:
         if isinstance(annotation, TypeName):
             return annotation.name
+        if isinstance(annotation, UnionType):
+            return " | ".join(self._type(member) for member in annotation.members)
         if isinstance(annotation, FunctionType):
             params = []
             for index, param_type in enumerate(annotation.param_types):

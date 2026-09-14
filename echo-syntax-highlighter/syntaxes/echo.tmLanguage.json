@@ -191,6 +191,10 @@
           "match": "&&|\\|\\||!"
         },
         {
+          "name": "keyword.operator.type.echo",
+          "match": "(?<!\\|)\\|(?!\\|)"
+        },
+        {
           "name": "keyword.operator.comparison.echo",
           "match": "==|!=|<=|>=|<|>"
         },

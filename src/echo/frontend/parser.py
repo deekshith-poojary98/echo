@@ -45,6 +45,7 @@ from echo.frontend.ast.nodes import (
     TypeAnnotation,
     TypeName,
     UnaryExpression,
+    UnionType,
     UseStatement,
     VariableDeclaration,
     VariableExpression,
@@ -560,6 +561,15 @@ class Parser:
         return args
 
     def _parse_type(self) -> TypeAnnotation:
+        left = self._parse_type_atom()
+        if not self._check(TokenType.PIPE):
+            return left
+        members = [left]
+        while self._match(TokenType.PIPE):
+            members.append(self._parse_type_atom())
+        return UnionType(left.location, members)
+
+    def _parse_type_atom(self) -> TypeAnnotation:
         token = self._peek()
         if token.type == TokenType.FN:
             return self._parse_function_type()

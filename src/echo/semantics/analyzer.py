@@ -45,6 +45,7 @@ from echo.frontend.ast.nodes import (
     TypeAnnotation,
     TypeName,
     UnaryExpression,
+    UnionType,
     UseStatement,
     VariableDeclaration,
     VariableExpression,
@@ -62,7 +63,13 @@ from echo.runtime.builtins import (
 )
 from echo.runtime.builtin_types import builtin_fn_type, builtin_method_fn_type
 from echo.runtime.functions import bind_arguments
-from echo.runtime.values import builtin_fn_assignable, format_type, function_signature_assignable, object_type_assignable
+from echo.runtime.values import (
+    builtin_fn_assignable,
+    format_type,
+    function_signature_assignable,
+    make_union,
+    type_assignable,
+)
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
 from echo.semantics.symbols import Symbol, SymbolKind
@@ -161,15 +168,7 @@ class SemanticAnalyzer:
         elif isinstance(statement, VariableDeclaration):
             self._expression(statement.initializer, scope)
             statement.declared_type = self._resolve_type(statement.declared_type, scope)
-            if isinstance(statement.declared_type, FunctionType):
-                self._check_function_value_assignable(
-                    statement.initializer,
-                    statement.declared_type,
-                    scope,
-                    statement.location,
-                    statement.name,
-                )
-            self._check_value_against_type(
+            self._check_typed_binding(
                 statement.initializer,
                 statement.declared_type,
                 scope,
@@ -200,16 +199,8 @@ class SemanticAnalyzer:
             self._expression(statement.value, scope)
             self._require_assignable(statement.name, statement, scope)
             target = scope.resolve(statement.name)
-            if target is not None and isinstance(target.declared_type, FunctionType):
-                self._check_function_value_assignable(
-                    statement.value,
-                    target.declared_type,
-                    scope,
-                    statement.location,
-                    statement.name,
-                )
             if target is not None:
-                self._check_value_against_type(
+                self._check_typed_binding(
                     statement.value,
                     target.declared_type,
                     scope,
@@ -280,7 +271,7 @@ class SemanticAnalyzer:
             if statement.value is not None:
                 self._expression(statement.value, scope)
                 if self._return_types:
-                    self._check_value_against_type(
+                    self._check_typed_binding(
                         statement.value,
                         self._return_types[-1],
                         scope,
@@ -385,7 +376,7 @@ class SemanticAnalyzer:
             if inline:
                 assert isinstance(body, Expression)
                 self._expression(body, function_scope)
-                self._check_value_against_type(body, return_type, function_scope, location, "return value")
+                self._check_typed_binding(body, return_type, function_scope, location, "return value")
             else:
                 assert isinstance(body, list)
                 self._statements(body, function_scope)
@@ -422,6 +413,18 @@ class SemanticAnalyzer:
                     declared = symbol.declared_type
                     if isinstance(declared, FunctionType):
                         self._check_function_type_arity(declared, expression)
+                    elif isinstance(declared, UnionType):
+                        fn_members = [m for m in declared.members if isinstance(m, FunctionType)]
+                        if any(isinstance(m, TypeName) and m.name == "dynamic" for m in declared.members):
+                            pass
+                        elif len(fn_members) == 1:
+                            self._check_function_type_arity(fn_members[0], expression)
+                        elif not fn_members:
+                            raise SemanticError(
+                                f"Cannot call '{expression.callee.name}' because it is not a function",
+                                expression.location,
+                                code="E1014",
+                            )
                     elif not (isinstance(declared, TypeName) and declared.name == "dynamic"):
                         raise SemanticError(
                             f"Cannot call '{expression.callee.name}' because it is not a function",
@@ -502,15 +505,7 @@ class SemanticAnalyzer:
             expected = types[index]
             if name not in bound:
                 continue
-            if isinstance(expected, FunctionType):
-                self._check_function_value_assignable(
-                    bound[name],
-                    expected,
-                    scope,
-                    expression.location,
-                    name,
-                )
-            self._check_value_against_type(
+            self._check_typed_binding(
                 bound[name],
                 expected,
                 scope,
@@ -546,6 +541,57 @@ class SemanticAnalyzer:
                 code="E2205",
             )
 
+    def _check_typed_binding(
+        self,
+        expression: Expression,
+        expected: TypeAnnotation | None,
+        scope: Scope,
+        location: SourceLocation,
+        name: str,
+    ) -> None:
+        if expected is None:
+            return
+        if isinstance(expected, FunctionType):
+            self._check_function_value_assignable(expression, expected, scope, location, name)
+            return
+        if isinstance(expected, UnionType):
+            fn_members = [m for m in expected.members if isinstance(m, FunctionType)]
+            if fn_members and self._function_signature_of(expression, scope) is not None:
+                if any(
+                    self._function_value_matches(expression, member, scope) for member in fn_members
+                ):
+                    return
+                non_fn = [m for m in expected.members if not isinstance(m, FunctionType)]
+                if not non_fn:
+                    raise SemanticError(
+                        f"Cannot assign fn to {format_type(expected)} variable '{name}'",
+                        location,
+                        code="E2001",
+                    )
+            self._check_value_against_type(expression, expected, scope, location, name)
+            return
+        self._check_value_against_type(expression, expected, scope, location, name)
+
+    def _function_value_matches(
+        self,
+        expression: Expression,
+        expected: FunctionType,
+        scope: Scope,
+    ) -> bool:
+        signature = self._function_signature_of(expression, scope)
+        if signature is None:
+            return False
+        param_types, param_defaults, variadic, return_type, from_builtin = signature
+        if from_builtin:
+            actual = FunctionType(
+                expected.location,
+                param_types,
+                return_type if return_type is not None else TypeName(expected.location, "dynamic"),
+                variadic,
+            )
+            return builtin_fn_assignable(actual, expected)
+        return function_signature_assignable(param_types, param_defaults, variadic, return_type, expected)
+
     def _check_function_value_assignable(
         self,
         expression: Expression,
@@ -554,20 +600,10 @@ class SemanticAnalyzer:
         location: SourceLocation,
         name: str,
     ) -> None:
+        if self._function_value_matches(expression, expected, scope):
+            return
         signature = self._function_signature_of(expression, scope)
         if signature is None:
-            return
-        param_types, param_defaults, variadic, return_type, from_builtin = signature
-        if from_builtin:
-            actual = FunctionType(
-                location,
-                param_types,
-                return_type if return_type is not None else TypeName(location, "dynamic"),
-                variadic,
-            )
-            if builtin_fn_assignable(actual, expected):
-                return
-        elif function_signature_assignable(param_types, param_defaults, variadic, return_type, expected):
             return
         raise SemanticError(
             f"Cannot assign fn to {format_type(expected)} variable '{name}'",
@@ -927,9 +963,9 @@ class SemanticAnalyzer:
                         expected = field.declared_type
                         actual = source_type.fields.get(field.name)
                         if (
-                            isinstance(expected, ObjectType)
-                            and isinstance(actual, ObjectType)
-                            and not object_type_assignable(actual, expected)
+                            expected is not None
+                            and actual is not None
+                            and not type_assignable(actual, expected)
                         ):
                             raise SemanticError(
                                 f"Cannot assign {format_type(actual)} to {format_type(expected)} "
@@ -977,6 +1013,9 @@ class SemanticAnalyzer:
         location: SourceLocation,
         name: str,
     ) -> None:
+        if isinstance(expected, UnionType):
+            self._check_value_against_union(expression, expected, scope, location, name)
+            return
         if not isinstance(expected, ObjectType):
             return
         if isinstance(expression, HashLiteral):
@@ -984,16 +1023,74 @@ class SemanticAnalyzer:
             return
         if isinstance(expression, VariableExpression):
             symbol = scope.resolve(expression.name)
-            if symbol is None or not isinstance(symbol.declared_type, ObjectType):
+            if symbol is None or symbol.declared_type is None:
                 return
-            if object_type_assignable(symbol.declared_type, expected):
+            if type_assignable(symbol.declared_type, expected):
                 return
+            if isinstance(symbol.declared_type, ObjectType):
+                raise SemanticError(
+                    f"Cannot assign {format_type(symbol.declared_type)} to {format_type(expected)} variable '{name}'",
+                    location,
+                    help_text="An open hash type is not assignable to an exact type (it might have extra fields).",
+                    code="E2001",
+                )
+
+    def _check_value_against_union(
+        self,
+        expression: Expression,
+        expected: UnionType,
+        scope: Scope,
+        location: SourceLocation,
+        name: str,
+    ) -> None:
+        if isinstance(expression, HashLiteral):
+            object_members = [m for m in expected.members if isinstance(m, ObjectType)]
+            accepts_hash = any(
+                isinstance(m, TypeName) and m.name in {"dynamic", "hash"} for m in expected.members
+            )
+            if accepts_hash:
+                return
+            if not object_members:
+                return
+            errors: list[SemanticError] = []
+            for member in object_members:
+                try:
+                    self._check_hash_literal_against_object(expression, member, scope, location, name)
+                    return
+                except SemanticError as exc:
+                    errors.append(exc)
+            other_members = [
+                m
+                for m in expected.members
+                if not isinstance(m, ObjectType)
+                and not (isinstance(m, TypeName) and m.name in {"dynamic", "hash"})
+            ]
+            if other_members:
+                raise SemanticError(
+                    f"Cannot assign hash to {format_type(expected)} variable '{name}'",
+                    location,
+                    code="E2001",
+                )
+            if errors and all(exc.code in {"E3208", "E3209"} for exc in errors):
+                raise errors[0]
             raise SemanticError(
-                f"Cannot assign {format_type(symbol.declared_type)} to {format_type(expected)} variable '{name}'",
+                f"Cannot assign hash to {format_type(expected)} variable '{name}'",
                 location,
-                help_text="An open hash type is not assignable to an exact type (it might have extra fields).",
                 code="E2001",
             )
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is None or symbol.declared_type is None:
+                return
+            if type_assignable(symbol.declared_type, expected):
+                return
+            if isinstance(symbol.declared_type, (ObjectType, UnionType)):
+                raise SemanticError(
+                    f"Cannot assign {format_type(symbol.declared_type)} to {format_type(expected)} "
+                    f"variable '{name}'",
+                    location,
+                    code="E2001",
+                )
 
     def _check_hash_literal_against_object(
         self,
@@ -1023,7 +1120,7 @@ class SemanticAnalyzer:
                     )
         for pair in expression.pairs:
             field_type = expected.fields.get(pair.key)
-            if isinstance(field_type, ObjectType):
+            if field_type is not None:
                 self._check_value_against_type(pair.value, field_type, scope, location, f"{name}.{pair.key}")
 
     def _require_assignable(self, name: str, statement: Statement, scope: Scope) -> None:
@@ -1111,6 +1208,9 @@ class SemanticAnalyzer:
         statement.target = resolved
 
     def _resolve_type(self, type_annotation: TypeAnnotation, scope: Scope) -> TypeAnnotation:
+        if isinstance(type_annotation, UnionType):
+            members = [self._resolve_type(member, scope) for member in type_annotation.members]
+            return make_union(type_annotation.location, members)
         if isinstance(type_annotation, FunctionType):
             param_types = [self._resolve_type(param_type, scope) for param_type in type_annotation.param_types]
             return_type = self._resolve_type(type_annotation.return_type, scope)

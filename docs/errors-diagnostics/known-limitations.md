@@ -24,6 +24,7 @@ As of v0.5.0, Echo already has:
 - Exact object types (`exact { id: int, name: str }`) (0.7.2)
 - Builtins as values (`say`, `map`, bound `xs.map`, …) (0.7.3)
 - Range expressions `0...10` / `0..10` (optional `by`) as `list` values (0.7.4)
+- Union types `int | str` (0.7.5); not Option; no `null` type member; no narrowing yet
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 
@@ -37,6 +38,7 @@ The items below are still out of scope. Classes, `try`/`catch`, and the other fr
 - Nested collections inside a frozen list/hash are not recursively frozen; a nested value reached through a different mutable name can still be mutated
 - Destructuring has no `as` rename and no hash rest
 - Open object type aliases accept extra fields; use `exact { ... }` to reject them
+- Union types do not narrow in `if type(x) == "..."`; `switch` is 0.7.6. `null` is not a type — use `str | void` when needed
 - Hash runtime indexing only supports string keys
 - `clone()` is shallow
 - `format()` only supports positional placeholders

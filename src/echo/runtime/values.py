@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from echo.errors import EchoTypeError, SourceLocation
-from echo.frontend.ast.nodes import FunctionType, ObjectType, TypeAnnotation, TypeName
+from echo.frontend.ast.nodes import FunctionType, ObjectType, TypeAnnotation, TypeName, UnionType
 
 
 def echo_type_name(value: object) -> str:
@@ -55,6 +55,8 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
         return is_echo_type(value, type_spec)
     if isinstance(type_spec, TypeName):
         return is_echo_type(value, type_spec.name)
+    if isinstance(type_spec, UnionType):
+        return any(matches_type(value, member) for member in type_spec.members)
     if isinstance(type_spec, ObjectType):
         if not isinstance(value, dict):
             return False
@@ -191,6 +193,8 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
         return type_spec
     if isinstance(type_spec, TypeName):
         return type_spec.name
+    if isinstance(type_spec, UnionType):
+        return " | ".join(format_type(member) for member in type_spec.members)
     if isinstance(type_spec, ObjectType):
         fields = ", ".join(f"{name}: {format_type(field)}" for name, field in type_spec.fields.items())
         inner = "{ " + fields + " }"
@@ -219,7 +223,13 @@ def raise_exact_shape_error(
     expected: TypeAnnotation | str | None,
     location: SourceLocation | None = None,
 ) -> None:
-    """Raise E3208/E3209 when a hash fails an exact object type's shape."""
+    """Raise E3208/E3209 when a hash fails an exact object type's shape.
+
+    Unions do not raise shape errors here; a value that matches no branch
+    reports the ordinary type mismatch (E2001) via ``matches_type``.
+    """
+    if isinstance(expected, UnionType):
+        return
     if not isinstance(expected, ObjectType) or not isinstance(value, dict):
         return
     for field_name, field_type in expected.fields.items():
@@ -337,6 +347,14 @@ def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> boo
         return left is right
     if isinstance(left, TypeName) and isinstance(right, TypeName):
         return left.name == right.name
+    if isinstance(left, UnionType) and isinstance(right, UnionType):
+        if len(left.members) != len(right.members):
+            return False
+        return all(
+            any(_same_type(member, other) for other in right.members) for member in left.members
+        ) and all(
+            any(_same_type(other, member) for member in left.members) for other in right.members
+        )
     if isinstance(left, ObjectType) and isinstance(right, ObjectType):
         if left.exact != right.exact:
             return False
@@ -362,6 +380,74 @@ def _type_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | N
     return _same_type(actual, expected)
 
 
+def flatten_union_members(members: list[TypeAnnotation]) -> list[TypeAnnotation]:
+    """Flatten nested unions and drop duplicate members (first occurrence wins)."""
+    flat: list[TypeAnnotation] = []
+    for member in members:
+        if isinstance(member, UnionType):
+            flat.extend(member.members)
+        else:
+            flat.append(member)
+    unique: list[TypeAnnotation] = []
+    for member in flat:
+        if not any(_same_type(member, existing) for existing in unique):
+            unique.append(member)
+    return unique
+
+
+def make_union(location, members: list[TypeAnnotation]) -> TypeAnnotation:
+    """Build a union type, or return the sole member when only one remains."""
+    unique = flatten_union_members(members)
+    if not unique:
+        return TypeName(location, "dynamic")
+    if len(unique) == 1:
+        return unique[0]
+    return UnionType(location, unique)
+
+
+def type_assignable(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:
+    """True when a value of ``actual`` can be used where ``expected`` is required.
+
+    Rules:
+    - ``dynamic`` accepts everything.
+    - A non-union is assignable to a union if it is assignable to **any** member.
+    - A union is assignable to a non-union if **every** member is assignable to it.
+    - Union to union: each source member is assignable to some target member.
+    - Exact/open object rules follow ``object_type_assignable``.
+    """
+    if expected is None:
+        return True
+    if isinstance(expected, TypeName) and expected.name == "dynamic":
+        return True
+    if actual is None:
+        return isinstance(expected, TypeName) and expected.name in {"dynamic", "void"}
+
+    if isinstance(expected, UnionType):
+        if isinstance(actual, UnionType):
+            return all(
+                any(type_assignable(source, target) for target in expected.members)
+                for source in actual.members
+            )
+        return any(type_assignable(actual, member) for member in expected.members)
+
+    if isinstance(actual, UnionType):
+        return all(type_assignable(member, expected) for member in actual.members)
+
+    if isinstance(actual, ObjectType) and isinstance(expected, ObjectType):
+        return object_type_assignable(actual, expected)
+
+    if isinstance(actual, FunctionType) and isinstance(expected, FunctionType):
+        return function_signature_assignable(
+            actual.param_types,
+            [False] * len(actual.param_types),
+            actual.variadic,
+            actual.return_type,
+            expected,
+        )
+
+    return _same_type(actual, expected)
+
+
 def object_type_assignable(actual: ObjectType, expected: ObjectType) -> bool:
     """True when a value of `actual` can be used where `expected` is required.
 
@@ -377,7 +463,7 @@ def object_type_assignable(actual: ObjectType, expected: ObjectType) -> bool:
         if isinstance(actual_field, ObjectType) and isinstance(expected_field, ObjectType):
             if not object_type_assignable(actual_field, expected_field):
                 return False
-        elif not _type_compatible(actual_field, expected_field):
+        elif not type_assignable(actual_field, expected_field):
             return False
     if expected.exact and set(actual.fields) != set(expected.fields):
         return False

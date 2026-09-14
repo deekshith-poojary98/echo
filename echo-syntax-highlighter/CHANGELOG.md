@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.5
+
+- Version tracks Echo v0.7.5.
+- `|` highlights as an operator so union types such as `int | str` read clearly.
+
 ## 0.7.4
 
 - Version tracks Echo v0.7.4.

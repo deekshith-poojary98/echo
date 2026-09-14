@@ -68,4 +68,7 @@ print: fn(str) -> dynamic = say;
 apply: fn(list, fn(int) -> int) -> list = map;
 type ExactUser = exact { id: int, name: str };
 user: ExactUser = { id: 1, name: title };
+type Id = int | str;
+id: Id = 1;
+id = "x";
 

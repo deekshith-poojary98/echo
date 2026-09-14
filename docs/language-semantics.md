@@ -55,6 +55,7 @@ name = "Echo 2";
 type Age = int;
 type User = { id: int, name: str };
 type ExactUser = exact { id: int, name: str };
+type Id = int | str;
 ```
 
 Aliases are names for existing types. They are not new runtime types.
@@ -62,6 +63,11 @@ Open object aliases require the listed fields and field types while allowing ext
 Exact object types require every listed field and reject extras. Exactness nests,
 does not freeze the hash, and may also be written inline. An exact type is
 assignable to a compatible open type; an open type is not assignable to an exact type.
+
+Union types (`int | str`) accept a value assignable to any member. A union is
+assignable to another type only when every member is. Echo has no `null` type;
+`null` stays a `dynamic` value, so prefer `str | void` when a binding may be null.
+Unions are not Option — no `?`, no unwrap. Control-flow narrowing is not in 0.7.5.
 
 ### Runtime checks
 
@@ -543,4 +549,5 @@ v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } =
 v0.7.2 adds `exact { ... }` object types. Extra exact fields are **E3208** and missing exact fields are **E3209**. No `as` rename, hash rest, unions, `switch`, builtins-as-values, or range-as-value.
 v0.7.3 makes standalone builtins first-class `fn` values (`say`, `map`, …), including bound methods such as `xs.map`. Variadic builtins are `fn(dynamic...) -> void` or `fn(dynamic...) -> str`. No range-as-value, unions, or `switch`.
 v0.7.4 makes `start...end` / `start..end` (optional `by step`) expressions that yield a `list` of `int`. `for` stays non-allocating. `rangeList` / `rangeListInclusive` remain. No unions or `switch`.
+v0.7.5 adds union types (`int | str`). Flattened members; assignability is any-branch for values and every-member when a union is the source. No `null` type member (`str | void` for nullability). No control-flow narrowing. No `switch`.
 See `docs/v0.4-stdlib.md`.

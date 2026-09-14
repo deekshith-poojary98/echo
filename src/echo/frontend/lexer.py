@@ -305,6 +305,7 @@ class Lexer:
             "<": TokenType.LESS,
             ">": TokenType.GREATER,
             "!": TokenType.BANG,
+            "|": TokenType.PIPE,
             "(": TokenType.LEFT_PAREN,
             ")": TokenType.RIGHT_PAREN,
             "{": TokenType.LEFT_BRACE,

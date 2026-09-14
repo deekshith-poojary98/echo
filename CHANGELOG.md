@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.5
+
+Union types. Sixth 0.7 language increment. `T | U` is a typed alternative to `dynamic`. Failure model is unchanged — unions are not `Option` / `Result`, and there is no error recovery. No `switch` (0.7.6). No control-flow narrowing yet (`if type(x) == "int"` does not narrow).
+
+- Spelling: `int | str` in type position (`||` stays boolean or). Spaces optional. Members flatten; duplicates drop (`int | str | int` is `int | str`)
+- Members may be builtins (`int`, `str`, `bool`, `float`, `list`, `hash`, `dynamic`, `void`), aliases, `fn(...)`, `{ ... }`, and `exact { ... }`
+- Assignability: a value is assignable to a union if it matches **any** member. A union is assignable to `C` if **every** member is assignable to `C`. Union to union: each source member is assignable to some target member. `dynamic` still accepts everything
+- Echo has no `null` type (`null` is a value typed as `dynamic`). `str | null` does not parse. Prefer `str | void` when a binding may hold `null`. Unions do not add Option
+- Runtime assignment / arguments / returns use `matches_type` against any branch. Mismatches report existing codes (**E2001** declarations/assignments, **E2706** arguments, and related return checkpoints)
+- Formatter prints `int | str`. Highlighter treats `|` as an operator in types
+
 ## 0.7.4
 
 Range as a value. Fifth 0.7 language increment. `start...end` and `start..end` are expressions that produce a `list` of `int`, matching `for` / `rangeList` / `rangeListInclusive`. Failure model is unchanged. No unions or `switch`.

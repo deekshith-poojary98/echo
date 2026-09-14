@@ -65,7 +65,20 @@ Destructuring unpacks a list or hash into names:
 - `dynamic`: any runtime value
 - `list`: mutable ordered collection
 - `hash`: mutable key-value map
-- `null`: literal value for missing data
+- `void`: only `null` (used when a binding may be absent)
+- `null`: literal value for missing data (typed as `dynamic` unless the binding is `void` or `dynamic`)
+
+### Union types
+```echo
+type Id = int | str;
+id: Id = 1;
+id = "x";
+fn show(x: int | str) -> str {
+    return asString(x);
+}
+```
+
+A value matches a union if it matches any member. Unions are not Option — Echo has no `null` type, so write `str | void` when `null` is allowed.
 
 ### Runtime type checking
 ```echo

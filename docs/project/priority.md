@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.3**. **0.7.4** (range as a value) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.4**. **0.7.5** (union types) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.3**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), **0.7.3** (builtins as values), and **0.7.4** (range as a value) are implemented. **0.7.5** is next.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.4**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), **0.7.3** (builtins as values), **0.7.4** (range as a value), and **0.7.5** (union types) are implemented. **0.7.6** (`switch`) is next.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -244,7 +244,7 @@ Working spellings below are the plan of record so each version can be implemente
 | 0.7.2 | Exact object types | implemented (0.7.2) |
 | 0.7.3 | Builtins as values | implemented (0.7.3) |
 | 0.7.4 | Range as a value | implemented (0.7.4) |
-| 0.7.5 | Union types | pending |
+| 0.7.5 | Union types | implemented (0.7.5) |
 | 0.7.6 | `switch` on values | pending |
 
 ### 0.7.0 — `const` bindings
@@ -293,7 +293,9 @@ Not overloading. Not a new `Callable` type. Function types still spell parameter
 
 ### 0.7.5 — union types
 
-Runtime-checked unions as a typed alternative to `dynamic`. Working spelling: **`int | str`** in type position (`||` stays boolean or). Flatten duplicates (`int | str | int` is `int | str`). `int` is assignable to `int | str`; `int | str` is not assignable to `int`. `str | null` is a union of two values, **not** `Option` — no `?`, no unwrap, no `Result`. Object types, function types, and `exact { ... }` may be members. Lists stay untyped sequences (`list`); a binding may be `list | hash`.
+Runtime-checked unions as a typed alternative to `dynamic`. **Implemented spelling:** **`int | str`** in type position (`||` stays boolean or). Flatten duplicates (`int | str | int` is `int | str`). `int` is assignable to `int | str`; `int | str` is not assignable to `int`. Object types, function types, and `exact { ... }` may be members. Lists stay untyped sequences (`list`); a binding may be `list | hash`.
+
+Echo has no `null` type (`null` is only a `dynamic` value), so `str | null` does not parse — use `str | void` when a binding may hold `null`. Unions are **not** `Option` / `Result`: no `?`, no unwrap, no error recovery. Control-flow narrowing (`if type(x) == "int"`) is **not** implemented in 0.7.5.
 
 Does not add generics, tagged enums, or exhaustiveness at compile time. Exhaustiveness belongs to `switch` (0.7.6) as a runtime/analyzer check on finite unions, not a new type-theory layer.
 
@@ -327,8 +329,8 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 | Exact objects | opt-in `exact { ... }`; open `{ ... }` unchanged | `#{ ... }`; `{ ... }!`; closed-by-default + `...` rest (breaking) |
 | Builtin function types | real `fn(...)` types, including variadics | `dynamic` callable with no signature |
 | Range `by` | `0...10 by 2` as an expression | step only in `for`; value form always step `1` |
-| Union bar | `int \| str` | a `or` type keyword |
-| `str \| null` | allowed as a union | forbid `null` members to keep distance from `Option` |
+| Union bar | `int \| str` (locked in 0.7.5) | a `or` type keyword |
+| `str \| null` | forbidden — no `null` type; use `str \| void` for nullability (locked in 0.7.5) | invent a `null` type member |
 | Switch keyword | `switch` | `match` (rejected: failure-model collision) |
 | Switch narrowing | arm `int { }` / `int n { }` on a union | literals + `else` only |
 

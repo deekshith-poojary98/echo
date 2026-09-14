@@ -52,6 +52,7 @@ class TokenType(Enum):
     GREATER_EQUAL = auto()
     AND_AND = auto()
     OR_OR = auto()
+    PIPE = auto()
     BANG = auto()
     ARROW = auto()
     FAT_ARROW = auto()
