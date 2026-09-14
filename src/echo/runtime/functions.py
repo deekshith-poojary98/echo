@@ -14,6 +14,34 @@ class EchoFunction:
     closure: Environment
 
 
+@dataclass(frozen=True)
+class EchoBuiltin:
+    name: str
+
+
+@dataclass
+class BoundBuiltin:
+    name: str
+    receiver: object
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BoundBuiltin):
+            return NotImplemented
+        return self.name == other.name and self.receiver is other.receiver
+
+
+def is_echo_callable(value: object) -> bool:
+    return isinstance(value, (EchoFunction, EchoBuiltin, BoundBuiltin))
+
+
+def callable_name(value: object) -> str:
+    if isinstance(value, EchoFunction):
+        return value.declaration.name
+    if isinstance(value, (EchoBuiltin, BoundBuiltin)):
+        return value.name
+    return "<fn>"
+
+
 class ReturnValue(Exception):
     def __init__(self, value: object):
         self.value = value

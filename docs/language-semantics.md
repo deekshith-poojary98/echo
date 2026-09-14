@@ -21,7 +21,7 @@ Echo values are:
 | `null` | Absence of a value |
 | `list` | Mutable ordered sequence |
 | `hash` | Mutable string-key map |
-| function | Named function value with a lexical closure |
+| function | User `fn` / lambda, or a standalone / bound builtin (0.7.3) |
 
 `bool` is **not** a subtype of `int`. `true` is not a valid `int`.
 
@@ -267,6 +267,21 @@ parameters and variadics still have to match the type (`...` is not
 treated as optional). Lambdas are `fn(x: int) -> int { ... }` or the
 inline `fn(x: int) -> int => x * 2`. Named functions are values: assign,
 pass, return, and call through a function-typed or `dynamic` variable.
+
+Standalone builtins are also function values (0.7.3). `print: fn(str) -> dynamic = say;`
+and `apply: fn(list, fn(int) -> int) -> list = map;` are legal. `type(say)` is `"fn"`.
+Variadic builtins (`say`, `eprint`, `format`, `pathJoin`) have type
+`fn(dynamic...) -> void` (`say` / `eprint`) or `fn(dynamic...) -> str`
+(`format` / `pathJoin`); Echo has no `null` type, so those returns use `void`.
+A variadic builtin may be assigned to a compatible fixed-arity type
+(`fn(str) -> dynamic = say`). `abs` is `fn(dynamic) -> dynamic` (int and
+float) and may be assigned to `fn(int) -> int`. Equality is the same
+builtin name (`say == say`); aliases compare equal to that builtin.
+`const print: fn(str) -> dynamic = say;` cannot be reassigned. The
+builtin itself is not a mutable object. Host-denied builtins remain
+values; calling them still aborts. Bound method form without a call is
+also a value (`xs.map`); `xs.map(f)` still calls. Unknown properties
+still error. Range-as-value is not in 0.7.3.
 
 `order(comparator)` accepts a function value, a lambda, or a function name
 string.
@@ -521,4 +536,5 @@ v0.6.9 adds function-type assignability for trailing defaults, list `flatten` / 
 v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`). The bound list or hash is frozen. Function parameters stay mutable.
 v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params).
 v0.7.2 adds `exact { ... }` object types. Extra exact fields are **E3208** and missing exact fields are **E3209**. No `as` rename, hash rest, unions, `switch`, builtins-as-values, or range-as-value.
+v0.7.3 makes standalone builtins first-class `fn` values (`say`, `map`, …), including bound methods such as `xs.map`. Variadic builtins are `fn(dynamic...) -> void` or `fn(dynamic...) -> str`. No range-as-value, unions, or `switch`.
 See `docs/v0.4-stdlib.md`.

@@ -68,6 +68,7 @@ from echo.runtime.builtins import (
     as_float_or,
     as_int,
     as_int_or,
+    builtin_value,
     do_abs,
     do_args,
     do_assert,
@@ -131,7 +132,19 @@ from echo.runtime.host import Host
 from echo.runtime.context import Environment
 from echo.runtime.freeze import freeze, require_unfrozen
 from echo.runtime.testing import TestSession
-from echo.runtime.functions import BreakSignal, ContinueSignal, EchoFunction, ReturnValue, bind_arguments, check_return, undefined_function
+from echo.runtime.functions import (
+    BoundBuiltin,
+    BreakSignal,
+    ContinueSignal,
+    EchoBuiltin,
+    EchoFunction,
+    ReturnValue,
+    bind_arguments,
+    callable_name,
+    check_return,
+    is_echo_callable,
+    undefined_function,
+)
 from echo.runtime.operators import binary_op, echo_equal, unary_op
 from echo.runtime.values import (
     echo_type_name,
@@ -342,6 +355,8 @@ class Interpreter:
             function = env.resolve_function(expression.name)
             if function is not None:
                 return function
+            if expression.name in BUILTIN_NAMES:
+                return builtin_value(expression.name)
             raise EchoNameError(f"Variable '{expression.name}' is not defined", expression.location, code="E2002")
         if isinstance(expression, ListLiteral):
             return [self.evaluate(element, env) for element in expression.elements]
@@ -378,6 +393,8 @@ class Interpreter:
         if isinstance(expression, LambdaExpression):
             return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):
+            if expression.name in BUILTIN_NAMES:
+                return BoundBuiltin(expression.name, self.evaluate(expression.object, env))
             raise EchoRuntimeError(
                 f"Property access '.{expression.name}' is not supported; use method calls or hash indexing",
                 expression.location,
@@ -400,18 +417,32 @@ class Interpreter:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
             if env.is_defined(callee.name):
                 value = env.get(callee.name, expression.location)
-                if isinstance(value, EchoFunction):
-                    return self._call_user_function(value, expression.arguments, env, expression.location)
-                raise EchoTypeError(
-                    f"Cannot call '{callee.name}' because it is not a function",
-                    expression.location,
-                    code="E2705",
-                )
+                return self._call_value(value, expression.arguments, env, expression.location, callee.name)
             undefined_function(callee.name, expression.location)
         value = self.evaluate(callee, env)
+        return self._call_value(value, expression.arguments, env, expression.location, None)
+
+    def _call_value(
+        self,
+        value: object,
+        raw_args,
+        env: Environment,
+        location: SourceLocation,
+        name: str | None,
+    ) -> object:
         if isinstance(value, EchoFunction):
-            return self._call_user_function(value, expression.arguments, env, expression.location)
-        raise EchoRuntimeError("Invalid call target", expression.location, code="E2705")
+            return self._call_user_function(value, raw_args, env, location)
+        if isinstance(value, EchoBuiltin):
+            return self._call_builtin(value.name, raw_args, env, None, location, None)
+        if isinstance(value, BoundBuiltin):
+            return self._call_builtin(value.name, raw_args, env, value.receiver, location, None)
+        if name is not None:
+            raise EchoTypeError(
+                f"Cannot call '{name}' because it is not a function",
+                location,
+                code="E2705",
+            )
+        raise EchoRuntimeError("Invalid call target", location, code="E2705")
 
     def _lambda_function(self, expression: LambdaExpression, env: Environment) -> EchoFunction:
         declaration = FunctionDeclaration(
@@ -474,7 +505,13 @@ class Interpreter:
         check_return(declaration.name, result, declaration.return_type, location)
         return result
 
-    def call_function_with_values(self, function: EchoFunction, values: list[object], location: SourceLocation | None = None) -> object:
+    def call_function_with_values(self, function: object, values: list[object], location: SourceLocation | None = None) -> object:
+        if isinstance(function, EchoBuiltin):
+            return self._invoke_builtin_values(function.name, None, values, location)
+        if isinstance(function, BoundBuiltin):
+            return self._invoke_builtin_values(function.name, function.receiver, values, location)
+        if not isinstance(function, EchoFunction):
+            raise EchoTypeError("Expected a function value", location, code="E2705")
         declaration = function.declaration
         if len(values) != len(declaration.parameters):
             raise ArgumentError(
@@ -533,6 +570,20 @@ class Interpreter:
         if method in MUTATING_METHODS and isinstance(target_expr, VariableExpression) and env.is_watched(target_expr.name):
             self._watch(target_expr.name, env.get(target_expr.name, location), env, f"modified by {method}() to")
         return result
+
+    def _invoke_builtin_values(
+        self,
+        method: str,
+        target: object,
+        values: list[object],
+        location: SourceLocation | None,
+    ) -> object:
+        env = getattr(self, "global_env", None) or Environment()
+        collection = target if target is not None else (values[0] if values else None)
+        if method in MUTATING_METHODS:
+            if method != "reverse" or isinstance(collection, list):
+                require_unfrozen(collection, location)
+        return self._dispatch_builtin(method, target, values, env, location or SourceLocation(0, 0))
 
     def _dispatch_builtin(self, method: str, target: object, args: list[object], env: Environment, location: SourceLocation) -> object:
         if method == "say":
@@ -882,11 +933,11 @@ class Interpreter:
             if resolved is None:
                 raise EchoNameError(f"Comparator function '{comparator}' is not defined", location, code="E2618")
             comparator = resolved
-        if not isinstance(comparator, EchoFunction):
+        if not is_echo_callable(comparator):
             raise EchoTypeError("order() comparator must be a function name or function", location, code="E2619")
-        if len(comparator.declaration.parameters) != 2:
+        if not self._callable_has_arity(comparator, 2):
             raise EchoTypeError(
-                f"Comparator function '{comparator.declaration.name}' must take exactly two arguments",
+                f"Comparator function '{callable_name(comparator)}' must take exactly two arguments",
                 location,
                 code="E2409",
             )
@@ -895,7 +946,7 @@ class Interpreter:
             result = self.call_function_with_values(comparator, [left, right], location)
             if not isinstance(result, int) or isinstance(result, bool):
                 raise EchoTypeError(
-                    f"Comparator function '{comparator.declaration.name}' must return int",
+                    f"Comparator function '{callable_name(comparator)}' must return int",
                     location,
                     code="E2410",
                 )
@@ -911,6 +962,19 @@ class Interpreter:
             ) from exc
         return target
 
+    def _callable_has_arity(self, callback: object, arity: int) -> bool:
+        if isinstance(callback, EchoFunction):
+            return len(callback.declaration.parameters) == arity
+        from echo.runtime.builtin_types import builtin_callback_arity
+
+        if isinstance(callback, EchoBuiltin):
+            actual = builtin_callback_arity(callback.name, bound=False)
+        elif isinstance(callback, BoundBuiltin):
+            actual = builtin_callback_arity(callback.name, bound=True)
+        else:
+            return False
+        return actual == arity
+
     def _require_callback(
         self,
         method: str,
@@ -919,19 +983,19 @@ class Interpreter:
         arity: int,
         not_fn_code: str,
         arity_code: str,
-    ) -> EchoFunction:
-        if not isinstance(callback, EchoFunction):
+    ) -> object:
+        if not is_echo_callable(callback):
             raise EchoTypeError(f"{method}() callback must be a function", location, code=not_fn_code)
-        if len(callback.declaration.parameters) != arity:
+        if not self._callable_has_arity(callback, arity):
             expected = {1: "one argument", 2: "two arguments"}.get(arity, f"{arity} arguments")
             raise EchoTypeError(
-                f"{method}() callback '{callback.declaration.name}' must take exactly {expected}",
+                f"{method}() callback '{callable_name(callback)}' must take exactly {expected}",
                 location,
                 code=arity_code,
             )
         return callback
 
-    def _require_unary_callback(self, method: str, callback: object, location: SourceLocation) -> EchoFunction:
+    def _require_unary_callback(self, method: str, callback: object, location: SourceLocation) -> object:
         return self._require_callback(method, callback, location, 1, "E2829", "E2830")
 
     def _map(self, items: list, callback: object, location: SourceLocation) -> list:
@@ -949,7 +1013,7 @@ class Interpreter:
             keep = self.call_function_with_values(function, [item], location)
             if not isinstance(keep, bool):
                 raise EchoTypeError(
-                    f"filter() callback '{function.declaration.name}' must return bool",
+                    f"filter() callback '{callable_name(function)}' must return bool",
                     location,
                     code="E2831",
                 )
@@ -964,7 +1028,7 @@ class Interpreter:
             keep = self.call_function_with_values(function, [value], location)
             if not isinstance(keep, bool):
                 raise EchoTypeError(
-                    f"filter() callback '{function.declaration.name}' must return bool",
+                    f"filter() callback '{callable_name(function)}' must return bool",
                     location,
                     code="E2831",
                 )
@@ -979,7 +1043,7 @@ class Interpreter:
             mapped = self.call_function_with_values(function, [item], location)
             if not isinstance(mapped, list):
                 raise EchoTypeError(
-                    f"flatMap() callback '{function.declaration.name}' must return list",
+                    f"flatMap() callback '{callable_name(function)}' must return list",
                     location,
                     code="E2839",
                 )
@@ -992,11 +1056,11 @@ class Interpreter:
             self.call_function_with_values(function, [item], location)
         return None
 
-    def _bool_predicate(self, method: str, function: EchoFunction, item: object, location: SourceLocation) -> bool:
+    def _bool_predicate(self, method: str, function: object, item: object, location: SourceLocation) -> bool:
         matched = self.call_function_with_values(function, [item], location)
         if not isinstance(matched, bool):
             raise EchoTypeError(
-                f"{method}() callback '{function.declaration.name}' must return bool",
+                f"{method}() callback '{callable_name(function)}' must return bool",
                 location,
                 code="E2831",
             )
@@ -1042,7 +1106,7 @@ class Interpreter:
             accumulator = self.call_function_with_values(function, [accumulator, item], location)
             if expected != "dynamic" and echo_type_name(accumulator) != expected:
                 raise EchoTypeError(
-                    f"reduce() callback '{function.declaration.name}' must return {expected}, "
+                    f"reduce() callback '{callable_name(function)}' must return {expected}, "
                     f"got {echo_type_name(accumulator)}",
                     location,
                     code="E2834",

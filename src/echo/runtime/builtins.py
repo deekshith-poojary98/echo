@@ -37,6 +37,7 @@ from echo.core.strings import (
     string_starts_with,
 )
 from echo.errors import ArgumentError, EchoExit, EchoRuntimeError, EchoTypeError, SourceLocation
+from echo.runtime.functions import EchoBuiltin
 from echo.runtime.host import Host
 from echo.runtime.operators import echo_equal
 from echo.runtime.testing import TestSession
@@ -300,8 +301,18 @@ STANDALONE_PARAMS = {
 }
 
 
+_BUILTIN_VALUES = {name: EchoBuiltin(name) for name in BUILTIN_NAMES}
+
+
 def builtin_names() -> frozenset[str]:
     return BUILTIN_NAMES
+
+
+def builtin_value(name: str) -> EchoBuiltin:
+    value = _BUILTIN_VALUES.get(name)
+    if value is None:
+        return EchoBuiltin(name)
+    return value
 
 
 def builtin_param_count(name: str) -> int | None:

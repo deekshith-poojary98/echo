@@ -56,12 +56,12 @@ from echo.frontend.ast.nodes import (
 from echo.runtime.builtins import (
     MUTATING_METHODS,
     builtin_names,
-    builtin_param_count,
     resolve_builtin_args,
     standalone_min_args,
 )
+from echo.runtime.builtin_types import builtin_fn_type, builtin_method_fn_type
 from echo.runtime.functions import bind_arguments
-from echo.runtime.values import format_type, function_signature_assignable, object_type_assignable
+from echo.runtime.values import builtin_fn_assignable, format_type, function_signature_assignable, object_type_assignable
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
 from echo.semantics.symbols import Symbol, SymbolKind
@@ -94,13 +94,20 @@ class SemanticAnalyzer:
     def module_scope(location: SourceLocation) -> Scope:
         scope = Scope()
         for name in builtin_names():
+            signature = builtin_fn_type(name)
+            param_types = list(signature.param_types)
             scope.define(
                 Symbol(
                     name=name,
                     kind=SymbolKind.FUNCTION,
                     location=location,
+                    declared_type=signature.return_type,
                     builtin=True,
-                    param_count=builtin_param_count(name),
+                    param_count=None if signature.variadic else len(param_types),
+                    param_names=[f"arg{index}" for index in range(len(param_types))],
+                    param_types=param_types,
+                    param_defaults=[False] * len(param_types),
+                    variadic=signature.variadic,
                 )
             )
         return scope
@@ -539,8 +546,17 @@ class SemanticAnalyzer:
         signature = self._function_signature_of(expression, scope)
         if signature is None:
             return
-        param_types, param_defaults, variadic, return_type = signature
-        if function_signature_assignable(param_types, param_defaults, variadic, return_type, expected):
+        param_types, param_defaults, variadic, return_type, from_builtin = signature
+        if from_builtin:
+            actual = FunctionType(
+                location,
+                param_types,
+                return_type if return_type is not None else TypeName(location, "dynamic"),
+                variadic,
+            )
+            if builtin_fn_assignable(actual, expected):
+                return
+        elif function_signature_assignable(param_types, param_defaults, variadic, return_type, expected):
             return
         raise SemanticError(
             f"Cannot assign fn to {format_type(expected)} variable '{name}'",
@@ -552,23 +568,35 @@ class SemanticAnalyzer:
         self,
         expression: Expression,
         scope: Scope,
-    ) -> tuple[list[TypeAnnotation], list[bool], bool, TypeAnnotation | None] | None:
+    ) -> tuple[list[TypeAnnotation], list[bool], bool, TypeAnnotation | None, bool] | None:
         if isinstance(expression, LambdaExpression):
             return (
                 [parameter.type for parameter in expression.parameters],
                 [parameter.default is not None for parameter in expression.parameters],
                 any(parameter.variadic for parameter in expression.parameters),
                 expression.return_type,
+                False,
+            )
+        if isinstance(expression, MemberExpression) and expression.name in builtin_names():
+            signature = builtin_method_fn_type(expression.name)
+            param_types = list(signature.param_types)
+            return (
+                param_types,
+                [False] * len(param_types),
+                signature.variadic,
+                signature.return_type,
+                True,
             )
         if isinstance(expression, VariableExpression):
             symbol = scope.resolve(expression.name)
-            if symbol is None or symbol.kind != SymbolKind.FUNCTION or symbol.builtin:
+            if symbol is None or symbol.kind != SymbolKind.FUNCTION:
                 return None
             return (
                 symbol.param_types or [],
                 symbol.param_defaults or [False] * len(symbol.param_names or []),
                 symbol.variadic,
                 symbol.declared_type,
+                symbol.builtin,
             )
         return None
 

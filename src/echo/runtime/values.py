@@ -69,6 +69,15 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
                     return False
         return True
     if isinstance(type_spec, FunctionType):
+        cls = value.__class__.__name__
+        if cls == "EchoBuiltin":
+            from echo.runtime.builtin_types import builtin_fn_type
+
+            return builtin_fn_assignable(builtin_fn_type(value.name), type_spec)
+        if cls == "BoundBuiltin":
+            from echo.runtime.builtin_types import builtin_method_fn_type
+
+            return builtin_fn_assignable(builtin_method_fn_type(value.name), type_spec)
         if not _is_echo_function(value):
             return False
         declaration = value.declaration
@@ -123,6 +132,56 @@ def function_signature_assignable(
         if not defaulted:
             return False
     return True
+
+
+def builtin_fn_assignable(actual: FunctionType, expected: FunctionType) -> bool:
+    """Assignability for a builtin (or bound method) used as a `fn(...)` value.
+
+    Wider than user-fn assignability: `dynamic` parameters and returns match
+    more specific types, and a variadic builtin such as `say`
+    (`fn(dynamic...) -> void`) is assignable to a fixed-arity type such as
+    `fn(str) -> dynamic`.
+    """
+    if not _builtin_return_compatible(actual.return_type, expected.return_type):
+        return False
+
+    actual_types = list(actual.param_types)
+    expected_types = list(expected.param_types)
+    if actual.variadic:
+        rest = actual_types[-1] if actual_types else TypeName(actual.location, "dynamic")
+        prefix = actual_types[:-1]
+        if expected.variadic:
+            if not expected_types:
+                return False
+            if not _builtin_param_compatible(rest, expected_types[-1]):
+                return False
+            expected_prefix = expected_types[:-1]
+            if len(expected_prefix) < len(prefix):
+                return False
+            for actual_param, expected_param in zip(prefix, expected_prefix):
+                if not _builtin_param_compatible(actual_param, expected_param):
+                    return False
+            for expected_param in expected_prefix[len(prefix) :]:
+                if not _builtin_param_compatible(rest, expected_param):
+                    return False
+            return True
+        if len(expected_types) < len(prefix):
+            return False
+        for actual_param, expected_param in zip(prefix, expected_types):
+            if not _builtin_param_compatible(actual_param, expected_param):
+                return False
+        for expected_param in expected_types[len(prefix) :]:
+            if not _builtin_param_compatible(rest, expected_param):
+                return False
+        return True
+    if expected.variadic:
+        return False
+    if len(actual_types) != len(expected_types):
+        return False
+    return all(
+        _builtin_param_compatible(actual_param, expected_param)
+        for actual_param, expected_param in zip(actual_types, expected_types)
+    )
 
 
 def format_type(type_spec: TypeAnnotation | str | None) -> str:
@@ -236,13 +295,41 @@ def stringify(value: object, nested: bool = False) -> str:
         parts = [f"{stringify(key, True)}: {stringify(item, True)}" for key, item in value.items()]
         return "{" + ", ".join(parts) + "}"
     if _is_echo_function(value):
-        name = value.declaration.name
-        return "<fn>" if name == "<lambda>" else f"<fn {name}>"
+        cls = value.__class__.__name__
+        if cls == "EchoFunction":
+            name = value.declaration.name
+            return "<fn>" if name == "<lambda>" else f"<fn {name}>"
+        return f"<fn {value.name}>"
     return str(value)
 
 
 def _is_echo_function(value: object) -> bool:
-    return value.__class__.__name__ == "EchoFunction"
+    return value.__class__.__name__ in {"EchoFunction", "EchoBuiltin", "BoundBuiltin"}
+
+
+def _builtin_param_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:
+    if expected is None or (isinstance(expected, TypeName) and expected.name == "dynamic"):
+        return True
+    if actual is None or (isinstance(actual, TypeName) and actual.name == "dynamic"):
+        return True
+    if isinstance(actual, FunctionType) and isinstance(expected, FunctionType):
+        if actual.variadic != expected.variadic or len(actual.param_types) != len(expected.param_types):
+            return False
+        for actual_param, expected_param in zip(actual.param_types, expected.param_types):
+            if not _builtin_param_compatible(actual_param, expected_param):
+                return False
+        return _builtin_return_compatible(actual.return_type, expected.return_type)
+    return _same_type(actual, expected)
+
+
+def _builtin_return_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:
+    if expected is None or (isinstance(expected, TypeName) and expected.name == "dynamic"):
+        return True
+    if actual is None or (isinstance(actual, TypeName) and actual.name == "dynamic"):
+        return True
+    if isinstance(actual, TypeName) and actual.name == "void":
+        return isinstance(expected, TypeName) and expected.name in {"void", "dynamic"}
+    return _type_compatible(actual, expected)
 
 
 def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> bool:

@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.3
+
+- Version tracks Echo v0.7.3.
+- Builtin names highlight as values, not only when followed by `(`.
+
 ## 0.7.2
 
 - Version tracks Echo v0.7.2.

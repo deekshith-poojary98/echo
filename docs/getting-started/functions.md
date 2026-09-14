@@ -78,6 +78,19 @@ say(full(2, 3));
 say(narrow(2));
 ```
 
+Standalone builtins are values too:
+
+```echo
+print: fn(str) -> dynamic = say;
+print("hi");
+apply: fn(list, fn(int) -> int) -> list = map;
+say(type(say));
+```
+
+Variadic builtins (`say`, `eprint`, `format`, `pathJoin`) have type
+`fn(dynamic...) -> void` or `fn(dynamic...) -> str`. Bound methods such as
+`xs.map` are values; `xs.unknown` is still an error.
+
 ## Output
 ```text
 Alice is 21
@@ -142,6 +155,7 @@ That raises a runtime type error.
 
 ## Current Limitation
 - No overloads
+- Range expressions are not values yet
 
 ## See Also
 - [Scope, use, and watch](/core-concepts/scope-use-watch)

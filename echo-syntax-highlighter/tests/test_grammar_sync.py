@@ -67,7 +67,8 @@ def test_keywords_and_types_match_the_language() -> None:
 def test_builtin_calls_cover_runtime() -> None:
     grammar = _load_grammar()
     builtin_pattern = grammar["repository"]["builtins"]["match"]
-    assert builtin_pattern.endswith(r"\s*(?=\()")
+    assert builtin_pattern.startswith(r"\b(")
+    assert builtin_pattern.endswith(r")\b")
 
     listed = _alternation_names(builtin_pattern)
     expected = set(builtin_names()) | RESERVED_BUILTINS

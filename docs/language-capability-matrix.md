@@ -95,7 +95,7 @@ Distinctive Echo capabilities that are not “missing Python features”:
 | Functions | Fundamentals | Supported | Frozen | Done |
 | Recursion | Fundamentals | Partial | Later | Later |
 | Closures | Fundamentals | Supported | Frozen | Done |
-| First-class functions | Fundamentals | Supported (0.6.0) | Frozen | 0.6.0 |
+| First-class functions | Fundamentals | Supported (0.6.0), builtins as values (0.7.3) | Frozen | 0.7.3 |
 | Scope | Fundamentals | Supported | Frozen | Done |
 | Mutation (`use` / `use mut`) | Fundamentals | Supported | Frozen | Done |
 | Modules | Fundamentals | Supported | Frozen | Done (v0.3) |
@@ -571,13 +571,20 @@ do not inherit `use mut`.
 
 **Why languages need it.** Higher-order APIs, callbacks, `map`/`filter`.
 
-**Echo status.** Supported (0.6.0).
+**Echo status.** Supported (0.6.0). Builtins as values in 0.7.3.
 
 Named functions are values. Lambdas use `fn(x: int) -> int { ... }`.
 The function type spelling is `fn(int) -> int` (no default markers).
 As of 0.6.9, a function with trailing defaults is assignable to the
 full-arity type and to a narrower type that omits those defaulted
 parameters. Required parameters and variadics still have to match.
+As of 0.7.3, standalone builtins (`say`, `map`, `type`, …) are also
+`fn` values: assign, pass, return, and store. Variadic builtins are
+`fn(dynamic...) -> void` (`say` / `eprint`) or `fn(dynamic...) -> str`
+(`format` / `pathJoin`). Bound methods such as `xs.map` are values;
+unknown properties still error. Equality is the same builtin (or the
+same bound receiver). `const` of a builtin alias cannot be reassigned.
+Host-denied builtins remain values; calling them still aborts.
 `order(comparator)` still accepts a function value, a lambda, or a name
 string. List `map` / `filter` take a unary function value or lambda. List
 `reduce` takes a binary function value or lambda and a required `init`. List
@@ -593,13 +600,15 @@ keeps first occurrences in order using Echo `==`.
 ```echo
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 say(map([1, 2, 3], double));
+print: fn(str) -> dynamic = say;
+print("hi");
 ```
 
-**Limitations.** No overloading.
+**Limitations.** No overloading. Range expressions are not yet values.
 
 **Priority.** Frozen.
 
-**Possible version.** 0.6.0.
+**Possible version.** 0.6.0; builtins as values in 0.7.3.
 
 ---
 
@@ -1319,7 +1328,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. **0.7.2** adds exact object types. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. **0.7.2** adds exact object types. **0.7.3** adds builtins as values. Failure handling is still design only.
 
 ---
 

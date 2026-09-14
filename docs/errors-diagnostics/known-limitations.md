@@ -22,6 +22,7 @@ As of v0.5.0, Echo already has:
 - `const` bindings (`const name: T = expr;`, `export const`, frozen lists/hashes) (0.7.0)
 - Destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params) (0.7.1)
 - Exact object types (`exact { id: int, name: str }`) (0.7.2)
+- Builtins as values (`say`, `map`, bound `xs.map`, …) (0.7.3)
 
 The items below are still out of scope. Classes, `try`/`catch`, and the other frozen holds are not implemented.
 
@@ -42,6 +43,7 @@ The items below are still out of scope. Classes, `try`/`catch`, and the other fr
 - No `mkdir -p` or recursive delete
 - No dates, HTTP, or regex builtins
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
+- Range expressions `0...10` / `0..10` are not list values yet (0.7.4)
 
 ## Why This Page Exists
 Echo is still evolving. The docs should not make the language sound more complete than it is, and they should not hide capabilities that already shipped.

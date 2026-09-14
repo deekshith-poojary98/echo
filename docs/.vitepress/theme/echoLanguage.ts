@@ -30,7 +30,7 @@ const TYPES = new Set(['int', 'float', 'str', 'bool', 'list', 'hash', 'dynamic',
 const LITERALS = new Set(['true', 'false', 'null'])
 
 // Keep in sync with BUILTIN_NAMES in src/echo/runtime/builtins.py
-// (and echo-syntax-highlighter/syntaxes/echo.tmLanguage.json). Only calls highlight.
+// (and echo-syntax-highlighter/syntaxes/echo.tmLanguage.json). Names highlight as values and calls.
 const BUILTINS = new Set([
   'abs',
   'args',
@@ -284,7 +284,7 @@ function tokenCode(stream: EchoStream, state: EchoState): string | null {
       clearDecl(state)
       return 'atom'
     }
-    if (isCall && BUILTINS.has(word)) {
+    if (BUILTINS.has(word)) {
       clearDecl(state)
       return 'builtin'
     }

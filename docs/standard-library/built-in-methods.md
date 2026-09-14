@@ -11,6 +11,8 @@ user.ensure("name", "Echo");
 ```
 
 > **Note:** Variadic built-ins (`say`, `eprint`, `format`, `pathJoin`) do not support keyword arguments. All other built-ins accept keyword arguments by parameter name, matching how user-defined functions work.
+>
+> **Values (0.7.3):** referring to a builtin without calling it yields a function value (`print: fn(str) -> dynamic = say;`, `xs.map` without `()`). `type(say)` is `"fn"`. Variadic builtins are `fn(dynamic...) -> void` (`say`, `eprint`) or `fn(dynamic...) -> str` (`format`, `pathJoin`). Equality is the same builtin; bound methods also require the same receiver object. Host-denied builtins remain values; calling them still aborts.
 
 ---
 

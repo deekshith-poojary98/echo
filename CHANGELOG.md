@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.3
+
+Builtins as values. Fourth 0.7 language increment. Named standalone builtins are first-class `fn` values: assign, pass, return, and store them. Failure model is unchanged. No range-as-value, unions, or `switch`.
+
+- Referring to `say`, `map`, `type`, and the other standalone builtins without calling them yields a function value. `say("hi")` and `xs.map(f)` still call as before
+- The value’s type is a `fn(...)` matching standalone arity. Variadic builtins are `fn(dynamic...) -> void` (`say`, `eprint`) or `fn(dynamic...) -> str` (`format`, `pathJoin`). Echo has no `null` type, so those returns use `void`. Fixed-arity names use real types where practical (`map`: `fn(list, fn(dynamic) -> dynamic) -> list`; `abs`: `fn(dynamic) -> dynamic` because it accepts int and float). Assignment to a compatible narrower type is allowed (`fn(str) -> dynamic = say`, `fn(list, fn(int) -> int) -> list = map`, `fn(int) -> int = abs`)
+- Method form without a call is also a value: `xs.map` is a bound `fn` that already has the receiver. Unknown properties still report **E2704**. Some mutating names (`push`, `pull`, …) remain method-oriented at the call site; prefer `xs.push` over a bare `push`
+- `type(say)` is `"fn"`. Equality is by builtin identity/name: `say == say` is true; aliases compare equal to the same builtin. Bound methods compare equal when they wrap the same builtin and the same receiver object
+- `const print: fn(str) -> dynamic = say;` cannot be reassigned (**E3201**). The builtin itself is not a mutable object
+- Host-denied builtins are still values; **calling** them still aborts **E2801**
+- Dispatch builtins such as `filter` (list vs hash) keep runtime dispatch on the first argument / receiver
+
 ## 0.7.2
 
 Exact object types. Third 0.7 language increment. Open object types remain open, and exactness does not freeze values. No unions, `switch`, builtins-as-values, range-as-value, or `#{ ... }` syntax.
