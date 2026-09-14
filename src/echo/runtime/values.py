@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 from echo.errors import EchoTypeError, SourceLocation
-from echo.frontend.ast.nodes import ClassType, FunctionType, ObjectType, TypeAnnotation, TypeName, UnionType
+from echo.frontend.ast.nodes import (
+    ClassType,
+    FunctionType,
+    InterfaceType,
+    ObjectType,
+    TypeAnnotation,
+    TypeName,
+    UnionType,
+)
 from echo.runtime.instances import ClassInstance
 
 
@@ -62,6 +70,10 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
         return any(matches_type(value, member) for member in type_spec.members)
     if isinstance(type_spec, ClassType):
         return isinstance(value, ClassInstance) and value.class_name == type_spec.name
+    if isinstance(type_spec, InterfaceType):
+        from echo.runtime.class_registry import class_implements_interface
+
+        return isinstance(value, ClassInstance) and class_implements_interface(value.class_name, type_spec)
     if isinstance(type_spec, ObjectType):
         if isinstance(value, ClassInstance):
             return False
@@ -217,6 +229,8 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
         inner = "{ " + fields + " }"
         return f"exact {inner}" if type_spec.exact else inner
     if isinstance(type_spec, ClassType):
+        return type_spec.name
+    if isinstance(type_spec, InterfaceType):
         return type_spec.name
     if isinstance(type_spec, FunctionType):
         params = []
@@ -411,6 +425,8 @@ def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> boo
         return all(_same_type(left.fields[name], right.fields[name]) for name in left.fields)
     if isinstance(left, ClassType) and isinstance(right, ClassType):
         return left.name == right.name
+    if isinstance(left, InterfaceType) and isinstance(right, InterfaceType):
+        return left.name == right.name
     if isinstance(left, FunctionType) and isinstance(right, FunctionType):
         if left.variadic != right.variadic or len(left.param_types) != len(right.param_types):
             return False
@@ -488,6 +504,16 @@ def type_assignable(actual: TypeAnnotation | None, expected: TypeAnnotation | No
 
     if isinstance(actual, ClassType) and isinstance(expected, ClassType):
         return actual.name == expected.name
+
+    if isinstance(actual, ClassType) and isinstance(expected, InterfaceType):
+        from echo.runtime.class_registry import class_type_implements_interface
+
+        return class_type_implements_interface(actual.methods, expected)
+
+    if isinstance(actual, InterfaceType) and isinstance(expected, InterfaceType):
+        from echo.runtime.class_registry import interface_assignable
+
+        return interface_assignable(actual, expected)
 
     if isinstance(actual, FunctionType) and isinstance(expected, FunctionType):
         return function_signature_assignable(

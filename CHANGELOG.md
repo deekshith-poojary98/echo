@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.2
+
+`interface` (no class inheritance). Third 0.8 language increment — closes the 0.8 OOP spine. Failure model unchanged.
+
+- Spelling: **`interface Named { fn name(this) -> str; }`** — method signatures only; no fields; no default bodies
+- A class implements an interface by providing compatible methods (inferred; no `implements` clause)
+- Class instances assignable to matching interfaces; interface → interface when the target’s methods are a subset
+- Call / bound methods work through an interface-typed binding (`n: Named = user; n.name()`)
+- `switch` on interfaces is not exhaustive by implementing classes — **`else` still required** (**E3210**)
+- `export interface` / `import` supported
+- No `extends` / class inheritance
+
 ## 0.8.1
 
 Methods + `this`. Second 0.8 language increment. Failure model unchanged. No `interface` yet (0.8.2).

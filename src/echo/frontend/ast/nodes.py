@@ -47,6 +47,14 @@ class ClassType(TypeAnnotation):
 
 
 @dataclass
+class InterfaceType(TypeAnnotation):
+    """Capability type: bound method signatures only (no fields)."""
+
+    name: str
+    methods: dict[str, FunctionType] = field(default_factory=dict)
+
+
+@dataclass
 class FunctionType(TypeAnnotation):
     param_types: list[TypeAnnotation]
     return_type: TypeAnnotation
@@ -365,6 +373,22 @@ class ClassDeclaration(Statement):
 
 
 @dataclass
+class InterfaceMethod:
+    """Signature-only method inside an interface (`fn name(this, ...) -> T;`)."""
+
+    name: str
+    parameters: list[Parameter]
+    return_type: TypeAnnotation
+    location: SourceLocation
+
+
+@dataclass
+class InterfaceDeclaration(Statement):
+    name: str
+    methods: list[InterfaceMethod]
+
+
+@dataclass
 class ClassConstruction(Expression):
     class_name: str
     fields: list[tuple[str, Expression]]
@@ -379,7 +403,7 @@ class ImportDeclaration(Statement):
 @dataclass
 class ExportDeclaration(Statement):
     name: str
-    declaration: FunctionDeclaration | VariableDeclaration | ClassDeclaration | None = None
+    declaration: FunctionDeclaration | VariableDeclaration | ClassDeclaration | InterfaceDeclaration | None = None
 
 
 def iter_name_patterns(pattern: Pattern) -> list[NamePattern]:

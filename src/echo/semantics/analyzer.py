@@ -28,6 +28,8 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
+    InterfaceType,
     LambdaExpression,
     ListLiteral,
     ListPattern,
@@ -72,6 +74,7 @@ from echo.runtime.builtins import (
 )
 from echo.runtime.builtin_types import builtin_fn_type, builtin_method_fn_type
 from echo.runtime.functions import bind_arguments
+from echo.runtime.class_registry import register_class_methods
 from echo.runtime.values import (
     builtin_fn_assignable,
     flatten_union_members,
@@ -177,6 +180,8 @@ class SemanticAnalyzer:
             self._type_alias(statement, scope)
         elif isinstance(statement, ClassDeclaration):
             self._class_declaration(statement, scope)
+        elif isinstance(statement, InterfaceDeclaration):
+            self._interface_declaration(statement, scope)
         elif isinstance(statement, VariableDeclaration):
             self._expression(statement.initializer, scope)
             statement.declared_type = self._resolve_type(statement.declared_type, scope)
@@ -424,11 +429,26 @@ class SemanticAnalyzer:
             return scope.classes.get(expression.class_name)
         return None
 
-    def _class_method_type(self, expression: MemberExpression, scope: Scope) -> FunctionType | None:
-        class_type = self._expression_class_type(expression.object, scope)
-        if class_type is None:
+    def _expression_method_owner(
+        self, expression: Expression, scope: Scope
+    ) -> ClassType | InterfaceType | None:
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is None or symbol.declared_type is None:
+                return None
+            resolved = self._resolve_type(symbol.declared_type, scope)
+            if isinstance(resolved, (ClassType, InterfaceType)):
+                return resolved
             return None
-        return class_type.methods.get(expression.name)
+        if isinstance(expression, ClassConstruction):
+            return scope.classes.get(expression.class_name)
+        return None
+
+    def _class_method_type(self, expression: MemberExpression, scope: Scope) -> FunctionType | None:
+        owner = self._expression_method_owner(expression.object, scope)
+        if owner is None:
+            return None
+        return owner.methods.get(expression.name)
 
     def _function_body(self, statement: FunctionDeclaration, scope: Scope) -> None:
         self._analyze_callable(
@@ -881,6 +901,8 @@ class SemanticAnalyzer:
                     add(self._variable_symbol(statement.declaration), True)
                 elif isinstance(statement.declaration, ClassDeclaration):
                     symbols.classes[statement.declaration.name] = self._class_type(statement.declaration)
+                elif isinstance(statement.declaration, InterfaceDeclaration):
+                    symbols.interfaces[statement.declaration.name] = self._interface_type(statement.declaration)
                 else:
                     pending.append(statement)
             elif isinstance(statement, FunctionDeclaration):
@@ -888,6 +910,8 @@ class SemanticAnalyzer:
             elif isinstance(statement, VariableDeclaration):
                 add(self._variable_symbol(statement), False)
             elif isinstance(statement, ClassDeclaration):
+                pass
+            elif isinstance(statement, InterfaceDeclaration):
                 pass
             elif isinstance(statement, DestructureDeclaration):
                 for name_pattern in iter_name_patterns(statement.pattern):
@@ -964,6 +988,18 @@ class SemanticAnalyzer:
             methods,
         )
 
+    def _interface_type(self, statement: InterfaceDeclaration) -> InterfaceType:
+        methods: dict[str, FunctionType] = {}
+        for method in statement.methods:
+            rest = method.parameters[1:]
+            methods[method.name] = FunctionType(
+                method.location,
+                [parameter.type for parameter in rest],
+                method.return_type,
+                any(parameter.variadic for parameter in rest),
+            )
+        return InterfaceType(statement.location, statement.name, methods)
+
     def _imported_symbol(self, exported: Symbol, statement: ImportDeclaration) -> Symbol:
         return Symbol(
             exported.name,
@@ -1005,6 +1041,9 @@ class SemanticAnalyzer:
         if isinstance(statement.declaration, ClassDeclaration):
             self._class_declaration(statement.declaration, scope, exported=True)
             return
+        if isinstance(statement.declaration, InterfaceDeclaration):
+            self._interface_declaration(statement.declaration, scope, exported=True)
+            return
         self._pending_exports.append(statement)
 
     def _bind_import(self, statement: ImportDeclaration, scope: Scope) -> None:
@@ -1019,6 +1058,11 @@ class SemanticAnalyzer:
         class_type = dependency.classes.get(statement.name)
         if class_type is not None:
             scope.classes[statement.name] = class_type
+            register_class_methods(statement.name, class_type.methods)
+            return
+        interface_type = dependency.interfaces.get(statement.name)
+        if interface_type is not None:
+            scope.interfaces[statement.name] = interface_type
             return
         exported = dependency.exports.get(statement.name)
         if exported is None:
@@ -1409,6 +1453,12 @@ class SemanticAnalyzer:
                 statement.location,
                 code="E1012",
             )
+        if statement.name in scope.interfaces:
+            raise SemanticError(
+                f"Cannot define type alias '{statement.name}' because an interface with that name exists",
+                statement.location,
+                code="E1012",
+            )
         resolved = self._resolve_type(statement.target, scope)
         scope.type_aliases[statement.name] = resolved
         statement.target = resolved
@@ -1417,6 +1467,12 @@ class SemanticAnalyzer:
         self._require_module_scope(scope, statement, "class")
         if statement.name in scope.classes:
             raise SemanticError(f"Class '{statement.name}' is already defined", statement.location, code="E1012")
+        if statement.name in scope.interfaces:
+            raise SemanticError(
+                f"Cannot define class '{statement.name}' because an interface with that name exists",
+                statement.location,
+                code="E1012",
+            )
         if statement.name in scope.type_aliases:
             raise SemanticError(
                 f"Cannot define class '{statement.name}' because a type alias with that name exists",
@@ -1453,6 +1509,7 @@ class SemanticAnalyzer:
                 any(parameter.variadic for parameter in rest),
             )
         class_type.methods = methods
+        register_class_methods(statement.name, methods)
         for method in statement.methods:
             self._analyze_callable(
                 method.parameters,
@@ -1465,6 +1522,54 @@ class SemanticAnalyzer:
             )
         if exported:
             self.module_symbols.classes[statement.name] = class_type
+
+    def _interface_declaration(
+        self, statement: InterfaceDeclaration, scope: Scope, *, exported: bool = False
+    ) -> None:
+        self._require_module_scope(scope, statement, "interface")
+        if statement.name in scope.interfaces:
+            raise SemanticError(
+                f"Interface '{statement.name}' is already defined",
+                statement.location,
+                code="E1012",
+            )
+        if statement.name in scope.classes:
+            raise SemanticError(
+                f"Cannot define interface '{statement.name}' because a class with that name exists",
+                statement.location,
+                code="E1012",
+            )
+        if statement.name in scope.type_aliases:
+            raise SemanticError(
+                f"Cannot define interface '{statement.name}' because a type alias with that name exists",
+                statement.location,
+                code="E1012",
+            )
+        interface_type = InterfaceType(statement.location, statement.name, {})
+        scope.interfaces[statement.name] = interface_type
+        methods: dict[str, FunctionType] = {}
+        for method in statement.methods:
+            if not method.parameters or method.parameters[0].name != "this":
+                raise SemanticError(
+                    f"Interface method '{method.name}' must start with an untyped 'this' parameter",
+                    method.location,
+                    code="E3212",
+                )
+            this_param = method.parameters[0]
+            this_param.type = interface_type
+            for parameter in method.parameters[1:]:
+                parameter.type = self._resolve_type(parameter.type, scope)
+            method.return_type = self._resolve_type(method.return_type, scope)
+            rest = method.parameters[1:]
+            methods[method.name] = FunctionType(
+                method.location,
+                [parameter.type for parameter in rest],
+                method.return_type,
+                any(parameter.variadic for parameter in rest),
+            )
+        interface_type.methods = methods
+        if exported:
+            self.module_symbols.interfaces[statement.name] = interface_type
 
     def _resolve_type(self, type_annotation: TypeAnnotation, scope: Scope) -> TypeAnnotation:
         if isinstance(type_annotation, UnionType):
@@ -1494,12 +1599,25 @@ class SemanticAnalyzer:
                 if isinstance(resolved, FunctionType):
                     methods[name] = resolved
             return ClassType(type_annotation.location, type_annotation.name, fields, methods)
+        if isinstance(type_annotation, InterfaceType):
+            existing = scope.interfaces.get(type_annotation.name)
+            if existing is not None:
+                return existing
+            methods = {}
+            for name, method_type in type_annotation.methods.items():
+                resolved = self._resolve_type(method_type, scope)
+                if isinstance(resolved, FunctionType):
+                    methods[name] = resolved
+            return InterfaceType(type_annotation.location, type_annotation.name, methods)
         if isinstance(type_annotation, TypeName):
             if type_annotation.name in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
                 return type_annotation
             class_type = scope.classes.get(type_annotation.name)
             if class_type is not None:
                 return class_type
+            interface_type = scope.interfaces.get(type_annotation.name)
+            if interface_type is not None:
+                return interface_type
             alias = scope.type_aliases.get(type_annotation.name)
             if alias is None:
                 raise SemanticError(

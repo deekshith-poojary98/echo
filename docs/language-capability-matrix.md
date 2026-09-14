@@ -1,7 +1,7 @@
 # Echo Language Capability Matrix
 
 **Status:** Living audit against `src/echo/` and tests. Not a language contract.
-**Aligned through:** v0.8.1 (methods + `this`). Earlier rows for nominal classes, param `const`, hash rest/rename, `switch`, unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
+**Aligned through:** v0.8.2 (`interface`). Earlier rows for methods/`this`, nominal classes, param `const`, hash rest/rename, `switch`, unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
 **Contracts win:** `docs/language-semantics.md`, `docs/module-semantics.md`, `docs/failure-model.md`.
 **v0.4 boundary:** Frozen in `docs/v0.4-language-vs-stdlib.md` (host + stdlib). 0.5–0.7 added syntax and tooling on top of that cut.
 
@@ -23,24 +23,24 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 
 ---
 
-## Snapshot (through v0.8.1)
+## Snapshot (through v0.8.2)
 
 Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
 `const` (including param `const`), destructuring (hash `as` rename and hash rest), exact object types, unions, range expressions as
 lists, lexical scope, closures, collections, strings (including multiline),
 `use` / `use mut`, `watch`, sibling-file modules, Echo-owned errors,
-nominal `class` + construction + methods/`this` (no interfaces yet).
+nominal `class` + construction + methods/`this` + `interface` (no inheritance).
 
 Host/stdlib and tooling that used to be the main gaps: `args` / `env` / files /
 JSON, inquiry + `*Or` twins, `echo check` / `fmt` / `lint` / `test`, REPL.
 
-Still open or held: interfaces, richer date/time, package manager, LSP, `try` / `catch`,
-generics, VM. Failure model is frozen — abort by default; recovery is
+Still open or held: richer date/time, package manager, LSP, `try` / `catch`,
+generics, VM, class inheritance. Failure model is frozen — abort by default; recovery is
 inquiry and `*Or`, not exceptions.
 
 | Bucket | Verdict |
 | --- | --- |
-| Language fundamentals | Supported through 0.8.1 surface |
+| Language fundamentals | Supported through 0.8.2 surface |
 | Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
 | Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
 | Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
@@ -116,7 +116,7 @@ Distinctive on purpose:
 | JIT | Runtime | Missing | Don't touch | Not now |
 | Concurrency / async | Runtime | Missing | Don't touch | Not now |
 | Generics | Runtime | Missing | Don't touch | Not now |
-| Classes / OOP | Runtime | Partial (0.8.1 methods; interface 0.8.2) | Active | 0.8.x |
+| Classes / OOP | Runtime | Supported (0.8.2; no inheritance) | Active | 0.8.x |
 | Structs / records | Runtime | Partial (aliases / exact / class fields) | Later | 0.8.0 |
 | Garbage collection | Runtime | Partial | Don't touch | Python-owned |
 
@@ -1109,7 +1109,7 @@ Held. Empty cells here are not near-term work.
 | JIT | Missing | Same |
 | Concurrency / async | Missing | Vision mentions orchestration later. Not a v0.4 language hole |
 | Generics | Missing | Premature type-theory |
-| Classes / OOP | Partial (0.8.1) | Methods + `this`; interfaces follow in 0.8.2 |
+| Classes / OOP | Supported (0.8.2) | Classes + methods + interfaces; no inheritance |
 | Structs / records | Partial | Type aliases, exact shapes, and class fields |
 | Garbage collection | Partial | Python owns GC. Echo does not need its own |
 
@@ -1131,7 +1131,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | File / OS / env / argv | Shipped (0.4+) |
 | REPL | Shipped (0.5.0) |
 | Packages (pip) | Missing. Sibling-file modules only |
-| Classes | Partial (0.8.1 methods + `this`) |
+| Classes | Supported (0.8.2; no inheritance) |
 | Default args, variadics, slices | Shipped (0.6.x); no comprehensions |
 
 ### JavaScript
@@ -1182,12 +1182,12 @@ Capability comparison only. Echo is not trying to become these languages.
 
 args, env, files, JSON, string/collection helpers, conversion, failure-model
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
-destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1).
+destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2).
 
 ### Not holes (held)
 
 - Overloading
-- Class methods / interfaces (0.8.1 done; **0.8.2** interfaces held), generics
+- Generics; class inheritance
 - Bytecode, VM, JIT, native compile
 - Concurrency
 - `try/catch`
@@ -1208,7 +1208,7 @@ Do not treat empty cells as a queue. Do not add a VM, generics, inheritance, or
 This file is not a contract — semantics, modules, and the failure model win.
 
 v0.4 was host + stdlib (`docs/v0.4-language-vs-stdlib.md`). Later releases
-added syntax and tooling; see `CHANGELOG.md` through **0.8.1**.
+added syntax and tooling; see `CHANGELOG.md` through **0.8.2**.
 
 ---
 

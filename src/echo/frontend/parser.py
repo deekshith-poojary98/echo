@@ -28,6 +28,8 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
+    InterfaceMethod,
     LambdaExpression,
     ListLiteral,
     ListPattern,
@@ -114,6 +116,8 @@ class Parser:
             return self.parse_type_alias()
         if token.type == TokenType.CLASS:
             return self.parse_class()
+        if token.type == TokenType.INTERFACE:
+            return self.parse_interface()
         if token.type == TokenType.RETURN:
             return self.parse_return()
         if token.type == TokenType.BREAK:
@@ -378,6 +382,9 @@ class Parser:
         if self._check(TokenType.CLASS):
             declaration = self.parse_class()
             return ExportDeclaration(token.location, declaration.name, declaration)
+        if self._check(TokenType.INTERFACE):
+            declaration = self.parse_interface()
+            return ExportDeclaration(token.location, declaration.name, declaration)
         if self._check(TokenType.CONST):
             declaration = self.parse_const()
             if isinstance(declaration, DestructureDeclaration):
@@ -510,6 +517,41 @@ class Parser:
         body = self._parse_block_body()
         self._expect(TokenType.RIGHT_BRACE, "}")
         return FunctionDeclaration(fn_token.location, name, parameters, body, False, return_type)
+
+    def parse_interface(self) -> InterfaceDeclaration:
+        token = self._expect(TokenType.INTERFACE, "interface")
+        name_token = self._expect_name_token("interface name")
+        if name_token.lexeme in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
+            raise ParseError(f"Cannot redefine built-in type '{name_token.lexeme}'", name_token.location)
+        self._expect(TokenType.LEFT_BRACE, "{")
+        methods: list[InterfaceMethod] = []
+        seen: set[str] = set()
+        while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            method = self._parse_interface_method(name_token.lexeme)
+            if method.name in seen:
+                raise ParseError(
+                    f"Duplicate method '{method.name}' in interface '{name_token.lexeme}'",
+                    method.location,
+                )
+            seen.add(method.name)
+            methods.append(method)
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return InterfaceDeclaration(token.location, name_token.lexeme, methods)
+
+    def _parse_interface_method(self, interface_name: str) -> InterfaceMethod:
+        fn_token = self._expect(TokenType.FN, "fn")
+        name = self._expect_name("method name")
+        self._expect(TokenType.LEFT_PAREN, "(")
+        parameters = self._parse_parameters(receiver_class=interface_name)
+        self._expect(TokenType.RIGHT_PAREN, ")")
+        if not self._match(TokenType.ARROW):
+            raise ParseError(
+                "Interface methods must include a return type, e.g. fn name(this) -> str",
+                self._peek().location,
+            )
+        return_type = self._parse_type()
+        self._expect(TokenType.SEMICOLON, ";")
+        return InterfaceMethod(name, parameters, return_type, fn_token.location)
 
     def parse_expression(self) -> Expression:
         return self.parse_logical_or()

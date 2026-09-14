@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.8.2
+
+- Version tracks Echo v0.8.2.
+- `interface` highlights as a keyword.
+
 ## 0.8.1
 
 - Version tracks Echo v0.8.1.

@@ -42,6 +42,7 @@ watch count;
 - Unions: `int | str` (no `null` type member; prefer `str | void`)
 - Object shapes: `{ id: int }` (open) and `exact { id: int }` (closed)
 - Nominal classes: `class Point { x: int; y: int; }` (construction `Point { x: 3, y: 4 }`)
+- Interfaces: `interface Named { fn name(this) -> str; }`
 - Function types: `fn(int) -> int`
 
 ## Literals

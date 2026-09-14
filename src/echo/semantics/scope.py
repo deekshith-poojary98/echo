@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from echo.errors import SemanticError
-from echo.frontend.ast.nodes import ClassType, TypeAnnotation
+from echo.frontend.ast.nodes import ClassType, InterfaceType, TypeAnnotation
 from echo.semantics.symbols import Symbol, SymbolKind
 
 
@@ -14,15 +14,18 @@ class Scope:
         self.in_function = is_function or (parent.in_function if parent else False)
         self.type_aliases: dict[str, TypeAnnotation] = {}
         self.classes: dict[str, ClassType] = {}
+        self.interfaces: dict[str, InterfaceType] = {}
         if parent:
             self.type_aliases = dict(parent.type_aliases)
             self.classes = dict(parent.classes)
+            self.interfaces = dict(parent.interfaces)
 
     def copy(self) -> Scope:
         clone = Scope(self.parent, is_function=self.is_function, is_loop=self.is_loop)
         clone.symbols = dict(self.symbols)
         clone.type_aliases = dict(self.type_aliases)
         clone.classes = dict(self.classes)
+        clone.interfaces = dict(self.interfaces)
         clone.in_function = self.in_function
         return clone
 

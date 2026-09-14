@@ -26,6 +26,8 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
+    InterfaceType,
     LambdaExpression,
     ListLiteral,
     ListPattern,
@@ -183,6 +185,18 @@ class _Printer:
                 self._line(f"{field.name}: {self._type(field.type)};")
             for method in statement.methods:
                 self._function(method)
+            self._indent -= 1
+            self._write("}")
+            self._newline()
+            return
+        if isinstance(statement, InterfaceDeclaration):
+            self._write(f"interface {statement.name} ")
+            self._write("{")
+            self._newline()
+            self._indent += 1
+            for method in statement.methods:
+                params = ", ".join(self._param(param) for param in method.parameters)
+                self._line(f"fn {method.name}({params}) -> {self._type(method.return_type)};")
             self._indent -= 1
             self._write("}")
             self._newline()
@@ -428,6 +442,8 @@ class _Printer:
         if isinstance(annotation, TypeName):
             return annotation.name
         if isinstance(annotation, ClassType):
+            return annotation.name
+        if isinstance(annotation, InterfaceType):
             return annotation.name
         if isinstance(annotation, UnionType):
             return " | ".join(self._type(member) for member in annotation.members)

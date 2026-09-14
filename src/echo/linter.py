@@ -25,6 +25,7 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
     LambdaExpression,
     ListLiteral,
     LiteralExpression,
@@ -229,7 +230,7 @@ class _Linter:
             if statement.value is not None:
                 self._expr(statement.value, scope)
             return
-        if isinstance(statement, (BreakStatement, ContinueStatement, TypeAliasStatement, ClassDeclaration)):
+        if isinstance(statement, (BreakStatement, ContinueStatement, TypeAliasStatement, ClassDeclaration, InterfaceDeclaration)):
             return
         if isinstance(statement, UseStatement):
             for name in statement.names:

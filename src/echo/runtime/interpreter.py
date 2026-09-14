@@ -37,6 +37,7 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
     LambdaExpression,
     ListLiteral,
     ListPattern,
@@ -190,6 +191,22 @@ class Interpreter:
                 for method in statement.methods
             }
             self._class_methods[statement.name] = methods
+            from echo.frontend.ast.nodes import FunctionType, TypeName
+            from echo.runtime.class_registry import register_class_methods
+
+            typed: dict[str, FunctionType] = {}
+            for method in statement.methods:
+                rest = method.parameters[1:]
+                return_type = method.return_type or TypeName(method.location, "void")
+                typed[method.name] = FunctionType(
+                    method.location,
+                    [parameter.type for parameter in rest],
+                    return_type,
+                    any(parameter.variadic for parameter in rest),
+                )
+            register_class_methods(statement.name, typed)
+            return
+        if isinstance(statement, InterfaceDeclaration):
             return
         if isinstance(statement, ImportDeclaration):
             return

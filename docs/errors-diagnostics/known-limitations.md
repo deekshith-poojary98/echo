@@ -28,13 +28,13 @@ Already in:
 - Hash destructure rename `{ id as userId: int }` (0.7.7)
 - Hash destructure rest `{ id: int, rest: dynamic... }` (0.7.8)
 - Param `const` (`fn f(const xs: list)`) (0.7.9)
-- Nominal `class` + construction (`Point { x: 3, y: 4 }`) (0.8.0); methods + `this` (0.8.1)
+- Nominal `class` + construction (`Point { x: 3, y: 4 }`) (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2)
 - No control-flow narrowing via `if type(x) == "..."` yet (type arms on `switch` cover the main case)
 
-Still out of scope. Interfaces, `try`/`catch`, and the other frozen holds are not implemented.
+Still out of scope. Class inheritance, `try`/`catch`, and the other frozen holds are not implemented.
 
 ## Current Limitations
-- No `interface` (0.8.2); no inheritance
+- No class inheritance (`extends`); shared behavior is interfaces + composition
 - No generics
 - No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
 - No overloads

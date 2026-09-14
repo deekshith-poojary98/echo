@@ -1,6 +1,6 @@
 # Echo Language Semantics
 
-Language contract (v0.2 base; additive notes through 0.8.1 in Execution model).
+Language contract (v0.2 base; additive notes through 0.8.2 in Execution model).
 Implementation and tests must match it.
 If code and this document disagree, change the document only after an explicit language decision.
 
@@ -558,4 +558,5 @@ v0.7.8 adds hash destructure rest (`{ id: int, rest: dynamic... }`). Leftovers b
 v0.7.9 adds param `const` (`fn f(const xs: list)`, lambdas, defaults, variadics, destructuring params). Same freeze / E3201–E3204 rules as binding `const`.
 v0.8.0 adds nominal `class` + construction (`class Point { x: int; y: int; }`, `Point { x: 3, y: 4 }`). Exact fields (**E3208**/**E3209**); `type` returns the class name; field get/set; `export class`; hash-shaped destructure; field-wise `==`. No methods/`this`/inheritance.
 v0.8.1 adds methods + `this` (`fn length(this) -> T`, call `p.length()`, bound `p.length`). No static/unbound methods; no interfaces.
+v0.8.2 adds `interface` (method signatures only; inferred structural implement by classes; no `implements` clause; no inheritance).
 See `docs/v0.4-stdlib.md`.

@@ -128,7 +128,9 @@ class ModuleLoader:
             analyzer = SemanticAnalyzer()
             analyzer.analyze(module.ast, dependencies=dependencies)
             module.exports = set(analyzer.module_symbols.exports)
-            module.class_exports = set(analyzer.module_symbols.classes)
+            module.class_exports = set(analyzer.module_symbols.classes) | set(
+                analyzer.module_symbols.interfaces
+            )
 
     def _initialize(self, module: Module, interpreter: Interpreter) -> None:
         if module.state == INITIALIZED:
