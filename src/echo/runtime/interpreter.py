@@ -132,7 +132,7 @@ from echo.runtime.context import Environment
 from echo.runtime.freeze import freeze, require_unfrozen
 from echo.runtime.testing import TestSession
 from echo.runtime.functions import BreakSignal, ContinueSignal, EchoFunction, ReturnValue, bind_arguments, check_return, undefined_function
-from echo.runtime.operators import binary_op, unary_op
+from echo.runtime.operators import binary_op, echo_equal, unary_op
 from echo.runtime.values import (
     echo_type_name,
     format_type,
@@ -595,11 +595,11 @@ class Interpreter:
         if method == "countOf":
             collection = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             value = args[0] if target is not None else _nth(args, 1, method, location)
-            return count_of(collection, value)
+            return count_of(collection, value, echo_equal)
         if method == "find":
             collection = require_list(target if target is not None else _nth(args, 0, method, location), method, location)
             value = args[0] if target is not None else _nth(args, 1, method, location)
-            return find(collection, value)
+            return find(collection, value, echo_equal)
         if method == "push":
             return push(require_list(target, method, location), _first(args, method, location))
         if method == "empty":
@@ -610,7 +610,7 @@ class Interpreter:
             index = args[0] if args else None
             return pull(require_list(target, method, location), index, location)
         if method == "removeValue":
-            return remove_value(require_list(target, method, location), _first(args, method, location), location)
+            return remove_value(require_list(target, method, location), _first(args, method, location), location, echo_equal)
         if method == "order":
             return self._order(require_list(target, method, location), args, env, location)
         if method == "merge":

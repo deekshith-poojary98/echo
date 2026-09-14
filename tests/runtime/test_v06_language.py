@@ -1089,10 +1089,11 @@ def test_unique_first_occurrences_in_order():
 say(unique([1, 2, 1, 3, 2]));
 say(unique([true, 1, true, 1]));
 say(unique(["a", "b", "a"]));
+say(unique([[true], [1], [true]]));
 """
     )
     assert result.exit_code == 0
-    assert result.lines == ["[1, 2, 3]", "[true, 1]", '["a", "b"]']
+    assert result.lines == ["[1, 2, 3]", "[true, 1]", '["a", "b"]', "[[true], [1]]"]
 
 
 def test_unique_empty_and_no_mutate():

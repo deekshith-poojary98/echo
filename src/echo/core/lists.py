@@ -40,23 +40,23 @@ def pull(target: list, index: object | None = None, location: SourceLocation | N
     return target.pop(index)
 
 
-def remove_value(target: list, value: object, location: SourceLocation | None = None) -> list:
-    try:
-        target.remove(value)
-    except ValueError as exc:
-        raise EchoRuntimeError(f"Value {value} not found in list", location, code="E2407") from exc
-    return target
+def remove_value(target: list, value: object, location: SourceLocation | None, matches) -> list:
+    for index, item in enumerate(target):
+        if matches(item, value):
+            del target[index]
+            return target
+    raise EchoRuntimeError(f"Value {value} not found in list", location, code="E2407")
 
 
-def find(target: list, value: object) -> int:
-    try:
-        return target.index(value)
-    except ValueError:
-        return -1
+def find(target: list, value: object, matches) -> int:
+    for index, item in enumerate(target):
+        if matches(item, value):
+            return index
+    return -1
 
 
-def count_of(target: list, value: object) -> int:
-    return target.count(value)
+def count_of(target: list, value: object, matches) -> int:
+    return sum(1 for item in target if matches(item, value))
 
 
 def reverse_list(target: list) -> list:

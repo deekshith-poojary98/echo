@@ -81,9 +81,32 @@ def _comparable(left: object, right: object) -> bool:
 
 
 def echo_equal(left: object, right: object) -> bool:
-    if isinstance(left, bool) or isinstance(right, bool):
-        return type(left) is type(right) and left == right
-    return left == right
+    seen: set[tuple[int, int]] = set()
+
+    def eq(a: object, b: object) -> bool:
+        if a is b:
+            return True
+        if isinstance(a, bool) or isinstance(b, bool):
+            return type(a) is type(b) and a == b
+        if isinstance(a, list) and isinstance(b, list):
+            if len(a) != len(b):
+                return False
+            pair = (id(a), id(b))
+            if pair in seen:
+                return True
+            seen.add(pair)
+            return all(eq(left_item, right_item) for left_item, right_item in zip(a, b))
+        if isinstance(a, dict) and isinstance(b, dict):
+            if a.keys() != b.keys():
+                return False
+            pair = (id(a), id(b))
+            if pair in seen:
+                return True
+            seen.add(pair)
+            return all(eq(a[key], b[key]) for key in a)
+        return a == b
+
+    return eq(left, right)
 
 
 def unary_op(op: TokenType, operand: object, location: SourceLocation | None = None) -> object:

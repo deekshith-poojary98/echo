@@ -8,10 +8,11 @@ say([1, 2, 3].contains(2));
 say([1, 2].contains(9));
 say([[1], [2]].contains([1]));
 say([true].contains(1));
+say([[true]].contains([1]));
 """
     )
     assert result.exit_code == 0, result.output
-    assert result.lines == ["true", "false", "true", "false"]
+    assert result.lines == ["true", "false", "true", "false", "false"]
 
 
 def test_hash_has_key():
