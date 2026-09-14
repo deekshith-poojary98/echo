@@ -30,6 +30,7 @@ from echo.frontend.ast.nodes import (
     Parameter,
     Pattern,
     Program,
+    RangeExpression,
     ReturnStatement,
     SliceExpression,
     Statement,
@@ -320,6 +321,17 @@ class _Linter:
             if expression.end is not None:
                 self._expr(expression.end, scope)
             return
+        if isinstance(expression, RangeExpression):
+            self._expr(expression.start, scope)
+            self._expr(expression.end, scope)
+            self._expr(expression.step, scope)
+            if self._redundant_by_one_expr(expression):
+                self._finding(
+                    expression.step.location,
+                    "redundant-by-one",
+                    "redundant 'by 1'; the formatter omits it",
+                )
+            return
         if isinstance(expression, LambdaExpression):
             self._lambda(expression, scope)
             return
@@ -465,6 +477,13 @@ class _Linter:
         if not isinstance(step, LiteralExpression) or isinstance(step.value, bool) or step.value != 1:
             return False
         return step.location != statement.end.location
+
+    @staticmethod
+    def _redundant_by_one_expr(expression: RangeExpression) -> bool:
+        step = expression.step
+        if not isinstance(step, LiteralExpression) or isinstance(step.value, bool) or step.value != 1:
+            return False
+        return step.location != expression.end.location
 
 
 def _looks_like_test_name(name: str) -> bool:

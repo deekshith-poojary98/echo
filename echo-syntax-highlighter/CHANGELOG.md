@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.4
+
+- Version tracks Echo v0.7.4.
+- Range operators `..` / `...` (and `by`) already highlight in expression position.
+
 ## 0.7.3
 
 - Version tracks Echo v0.7.3.

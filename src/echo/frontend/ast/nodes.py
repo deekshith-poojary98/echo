@@ -142,6 +142,14 @@ class SliceExpression(Expression):
 
 
 @dataclass
+class RangeExpression(Expression):
+    start: Expression
+    end: Expression
+    step: Expression
+    inclusive: bool
+
+
+@dataclass
 class LambdaExpression(Expression):
     parameters: list[Parameter]
     body: list[Statement] | Expression

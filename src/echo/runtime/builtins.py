@@ -582,14 +582,42 @@ def do_range_list(
     inclusive: bool,
     method: str,
 ) -> list[int]:
-    begin = _range_bound(start, method, location)
-    finish = _range_bound(end, method, location)
+    return do_range_values(start, end, 1, location, inclusive=inclusive, method=method)
+
+
+def do_range_values(
+    start: object,
+    end: object,
+    step: object,
+    location: SourceLocation | None = None,
+    *,
+    inclusive: bool,
+    method: str | None = None,
+) -> list[int]:
+    if method is not None:
+        begin = _range_bound(start, method, location)
+        finish = _range_bound(end, method, location)
+        stride = _range_bound(step, method, location)
+    else:
+        begin = _loop_bound(start, location)
+        finish = _loop_bound(end, location)
+        stride = _loop_bound(step, location)
+    if stride == 0:
+        raise EchoRuntimeError("range step 'by 0' is not allowed", location, code="E2702")
     values: list[int] = []
     index = begin
-    while index <= finish if inclusive else index < finish:
+    while (index <= finish if inclusive else index < finish) if stride > 0 else (
+        index >= finish if inclusive else index > finish
+    ):
         values.append(index)
-        index += 1
+        index += stride
     return values
+
+
+def _loop_bound(value: object, location: SourceLocation | None = None) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise EchoTypeError("range bounds must be convertible to int", location, code="E2702")
+    return int(value)
 
 
 def do_merge(target: object, other: object, location: SourceLocation | None = None) -> object:

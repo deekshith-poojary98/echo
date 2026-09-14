@@ -461,6 +461,9 @@ Out-of-range and missing keys are Echo errors. Indexed assignment follows
 - `while cond { }`
 - `for i: int in start..end by step { }` — `..` inclusive, `...` exclusive
 - `foreach item: T in iterable { }` — `list` or `hash` (keys as `str`)
+- Range expressions `start...end` / `start..end` (optional `by step`) are
+  `list` of `int` values (0.7.4). `for` does not allocate; `foreach` over a
+  range expression does
 
 `by 0` is a runtime error. Non-numeric bounds are not convertible.
 
@@ -604,7 +607,7 @@ print: fn(str) -> dynamic = say;
 print("hi");
 ```
 
-**Limitations.** No overloading. Range expressions are not yet values.
+**Limitations.** No overloading.
 
 **Priority.** Frozen.
 
@@ -1328,7 +1331,7 @@ The v0.4 boundary is frozen in `docs/v0.4-language-vs-stdlib.md`.
 Theme: host + standard library. Not a syntax release.
 v0.4 shipped `slice()` without slice syntax. **0.6.0** adds `xs[1:4]`,
 first-class functions including lambdas, and user `fn` defaults/variadics.
-**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. **0.7.2** adds exact object types. **0.7.3** adds builtins as values. Failure handling is still design only.
+**0.6.1** adds list `map` / `filter`. **0.6.2** adds list `reduce`. **0.6.3** adds list `forEach`. **0.6.4** adds list `flatMap`. **0.6.5** adds list `some` / `every` / `findIndex`. **0.6.6** allows omitting slice bounds (`xs[1:]`, `xs[:4]`, `xs[:]`). **0.6.7** adds list `zip` / `unique`. **0.6.8** adds `echo test -run`, list `chunk`, `rangeList` / `rangeListInclusive`, and hash `mapValues` / `filter`. **0.6.9** adds function-type trailing defaults, list `flatten` / `partition`, and `echo test --json`. **0.7.0** adds `const` bindings. **0.7.1** adds destructuring. **0.7.2** adds exact object types. **0.7.3** adds builtins as values. **0.7.4** adds range as a value (`0...10` / `0..10` / `by`). Failure handling is still design only.
 
 ---
 

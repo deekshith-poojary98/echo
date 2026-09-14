@@ -43,7 +43,7 @@ say(nums);
 - `chunk(size)` splits into new sublists of length `size` (last may be shorter).
 - `flatten()` concatenates one level of nested lists.
 - `partition(f)` returns `[matches, rest]` from a `bool` callback.
-- `rangeList(start, end)` / `rangeListInclusive(start, end)` build a `list` of `int` matching `...` / `..` `for` ranges.
+- `rangeList(start, end)` / `rangeListInclusive(start, end)` build a `list` of `int` matching `...` / `..` `for` ranges. As of 0.7.4, `0...5` / `0..5` (and `by`) are the language form of the same values.
 
 ## Common Mistakes
 - Calling list methods on non-list values

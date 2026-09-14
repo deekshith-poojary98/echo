@@ -32,6 +32,8 @@ value: int = asIntOr("nope", 0);
 for i: int in 0...10 by 2 {
     say(i);
 }
+nums: list = 0...5;
+evens: list = 0...10 by 2;
 
 watch n;
 use mut n;

@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.7.2**. **0.7.3** (builtins as values) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
+Current tagged version is **v0.7.3**. **0.7.4** (range as a value) is implemented but not yet tagged. **0.5.9** closed the 0.5.x tooling arc. **0.6.x** closed the first-class-function / collection series. **The 0.6.x series is complete.** **0.7 is the language series** — syntax, type system, and value-model; one big increment per version, not another HOF drip. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.2**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), and **0.7.3** (builtins as values) are implemented. **0.7.4** is next.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.7.3**. **0.6.x is complete.** **0.7.0** (`const`), **0.7.1** (destructuring), **0.7.2** (exact object types), **0.7.3** (builtins as values), and **0.7.4** (range as a value) are implemented. **0.7.5** is next.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -243,7 +243,7 @@ Working spellings below are the plan of record so each version can be implemente
 | 0.7.1 | Destructuring | implemented (0.7.1) |
 | 0.7.2 | Exact object types | implemented (0.7.2) |
 | 0.7.3 | Builtins as values | implemented (0.7.3) |
-| 0.7.4 | Range as a value | pending |
+| 0.7.4 | Range as a value | implemented (0.7.4) |
 | 0.7.5 | Union types | pending |
 | 0.7.6 | `switch` on values | pending |
 
@@ -288,6 +288,8 @@ Not overloading. Not a new `Callable` type. Function types still spell parameter
 `start...end` and `start..end` become expressions that produce a `list` of `int`, same bounds as `for` / `rangeList` / `rangeListInclusive`. **`0...10` is `[0, 1, ..., 9]`**; **`0..10` is `[0, 1, ..., 10]`**. Optional **`by step`** in expression position: `0...10 by 2`. Eager list; no `Range` type. Empty when that `for` would not iterate. Non-numeric bounds and `by 0` abort as they do in `for`.
 
 `for i: int in 0...10` stays the dedicated numeric loop (does not allocate a list). `foreach i: int in 0...10` iterates the list value. Keep `rangeList` / `rangeListInclusive`; they are the same values as the exclusive / inclusive expressions. Slice syntax stays colon (`xs[1:4]`); `xs[0...10]` is indexing with a list and is a type error.
+
+**Implemented** as above.
 
 ### 0.7.5 — union types
 

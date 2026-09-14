@@ -43,6 +43,7 @@ from echo.frontend.ast.nodes import (
     NamePattern,
     Pattern,
     Program,
+    RangeExpression,
     ReturnStatement,
     SliceExpression,
     Statement,
@@ -109,6 +110,7 @@ from echo.runtime.builtins import (
     do_random,
     do_random_int,
     do_range_list,
+    do_range_values,
     do_read_file,
     do_read_file_or,
     do_read_line,
@@ -390,6 +392,14 @@ class Interpreter:
             else:
                 end = 0
             return do_slice(target, start, end, expression.location)
+        if isinstance(expression, RangeExpression):
+            return do_range_values(
+                self.evaluate(expression.start, env),
+                self.evaluate(expression.end, env),
+                self.evaluate(expression.step, env),
+                expression.location,
+                inclusive=expression.inclusive,
+            )
         if isinstance(expression, LambdaExpression):
             return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):

@@ -33,6 +33,7 @@ from echo.frontend.ast.nodes import (
     Parameter,
     Pattern,
     Program,
+    RangeExpression,
     ReturnStatement,
     SliceExpression,
     Statement,
@@ -57,11 +58,12 @@ PREC_OR = 1
 PREC_AND = 2
 PREC_EQ = 3
 PREC_CMP = 4
-PREC_TERM = 5
-PREC_FACTOR = 6
-PREC_UNARY = 7
-PREC_POSTFIX = 8
-PREC_PRIMARY = 9
+PREC_RANGE = 5
+PREC_TERM = 6
+PREC_FACTOR = 7
+PREC_UNARY = 8
+PREC_POSTFIX = 9
+PREC_PRIMARY = 10
 
 _BIN_PREC = {
     TokenType.OR_OR: PREC_OR,
@@ -274,6 +276,16 @@ class _Printer:
             start = self._expr(expression.start) if expression.start is not None else ""
             end = self._expr(expression.end) if expression.end is not None else ""
             return f"{self._expr(expression.target, PREC_POSTFIX)}[{start}:{end}]"
+        if isinstance(expression, RangeExpression):
+            dots = ".." if expression.inclusive else "..."
+            text = f"{self._expr(expression.start, PREC_RANGE + 1)}{dots}{self._expr(expression.end, PREC_RANGE + 1)}"
+            if not (
+                isinstance(expression.step, LiteralExpression)
+                and not isinstance(expression.step.value, bool)
+                and expression.step.value == 1
+            ):
+                text += f" by {self._expr(expression.step, PREC_RANGE + 1)}"
+            return text
         if isinstance(expression, LambdaExpression):
             return self._lambda(expression)
         if isinstance(expression, ListLiteral):
@@ -284,6 +296,8 @@ class _Printer:
         raise TypeError(f"unhandled expression: {type(expression).__name__}")
 
     def _prec(self, expression: Expression) -> int:
+        if isinstance(expression, RangeExpression):
+            return PREC_RANGE
         if isinstance(expression, BinaryExpression):
             return _BIN_PREC[expression.operator.type]
         if isinstance(expression, UnaryExpression):

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.4
+
+Range as a value. Fifth 0.7 language increment. `start...end` and `start..end` are expressions that produce a `list` of `int`, matching `for` / `rangeList` / `rangeListInclusive`. Failure model is unchanged. No unions or `switch`.
+
+- Exclusive `0...5` is `[0, 1, 2, 3, 4]`; inclusive `0..5` is `[0, 1, 2, 3, 4, 5]`
+- Optional `by step` in expression position: `0...10 by 2`, same step rules as `for` (`by 0` aborts)
+- Empty when that `for` would not iterate (`0...0` is `[]`; `0..0` is `[0]`)
+- Type is `list` (of `int`). Non-int bounds abort like `for` (analyzer rejects clear literal non-ints as **E1015**)
+- `for i: int in 0...10` stays the dedicated numeric loop and does not allocate a list. `foreach i: int in 0...10` iterates the allocated list value
+- Keep `rangeList` / `rangeListInclusive`; they remain valid and produce the same values as the exclusive / inclusive expressions (step `1`)
+- Slice syntax stays colon (`xs[1:4]`); `xs[0...10]` indexes with a list and is a type error
+
 ## 0.7.3
 
 Builtins as values. Fourth 0.7 language increment. Named standalone builtins are first-class `fn` values: assign, pass, return, and store them. Failure model is unchanged. No range-as-value, unions, or `switch`.

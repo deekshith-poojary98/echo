@@ -281,7 +281,8 @@ builtin name (`say == say`); aliases compare equal to that builtin.
 builtin itself is not a mutable object. Host-denied builtins remain
 values; calling them still aborts. Bound method form without a call is
 also a value (`xs.map`); `xs.map(f)` still calls. Unknown properties
-still error. Range-as-value is not in 0.7.3.
+still error. Range expressions are list values as of 0.7.4 (`0...10`,
+`0..10`, optional `by step`).
 
 `order(comparator)` accepts a function value, a lambda, or a function name
 string.
@@ -348,8 +349,9 @@ that aborts aborts the whole call. The input is not mutated. List only.
 `rangeList(start, end)` returns the `list` of `int` values that
 `for i in start...end` would visit (exclusive end, step `1`).
 `rangeListInclusive(start, end)` matches `for i in start..end` (inclusive
-end). Empty when that `for` would not iterate. This is a builtin, not
-range-as-a-value syntax; `0...10` is not a list.
+end). Empty when that `for` would not iterate. These builtins remain valid;
+as of 0.7.4 the same values are also spelled as range expressions
+(`0...10` / `0..10`, optionally `by step`).
 
 `mapValues(h, f)` (and `h.mapValues(f)`) returns a new hash with the same
 keys. Unary `f` is called with each value. Empty hash returns empty hash.
@@ -384,6 +386,9 @@ Functions may recurse.
 - start, end, and step are numeric expressions converted to `int`
 - `bool`, `null`, and non-numeric values are not convertible loop bounds
 - `by 0` is a runtime error
+- Range expressions `start...end` / `start..end` (optional `by step`) evaluate
+  to a `list` of `int` with the same bounds. `for` does not allocate that list;
+  `foreach` over a range expression does
 - `foreach item: T in iterable { }` — iterable must be a `list` or `hash`
 - hashes iterate their keys as `str`
 - `break` and `continue` are only valid inside loops (semantic error otherwise)
@@ -537,4 +542,5 @@ v0.7.0 adds `const` bindings (`const name: T = expr;`, optional `export const`).
 v0.7.1 adds destructuring (`[a: int, b: int] = pair;`, `{ id: int, name: str } = user;`, rest, assignment, fn params).
 v0.7.2 adds `exact { ... }` object types. Extra exact fields are **E3208** and missing exact fields are **E3209**. No `as` rename, hash rest, unions, `switch`, builtins-as-values, or range-as-value.
 v0.7.3 makes standalone builtins first-class `fn` values (`say`, `map`, …), including bound methods such as `xs.map`. Variadic builtins are `fn(dynamic...) -> void` or `fn(dynamic...) -> str`. No range-as-value, unions, or `switch`.
+v0.7.4 makes `start...end` / `start..end` (optional `by step`) expressions that yield a `list` of `int`. `for` stays non-allocating. `rangeList` / `rangeListInclusive` remain. No unions or `switch`.
 See `docs/v0.4-stdlib.md`.

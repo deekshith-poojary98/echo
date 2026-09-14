@@ -35,6 +35,7 @@ from echo.frontend.ast.nodes import (
     Parameter,
     Pattern,
     Program,
+    RangeExpression,
     ReturnStatement,
     SliceExpression,
     Statement,
@@ -204,21 +205,22 @@ class Parser:
         self._expect(TokenType.COLON, ":")
         var_type = self._parse_type()
         self._expect(TokenType.IN, "in")
-        start = self.parse_expression()
-        range_token = self._peek()
-        if range_token.type not in (TokenType.DOT_DOT, TokenType.DOT_DOT_DOT):
-            raise ParseError("Expected '..' or '...' in for-range", range_token.location)
-        inclusive = range_token.type == TokenType.DOT_DOT
-        self._advance()
-        end = self.parse_expression()
-        if self._match(TokenType.BY):
-            step = self.parse_expression()
-        else:
-            step = LiteralExpression(end.location, 1)
+        range_expr = self.parse_expression()
+        if not isinstance(range_expr, RangeExpression):
+            raise ParseError("Expected '..' or '...' in for-range", range_expr.location)
         self._expect(TokenType.LEFT_BRACE, "{")
         body = self._parse_block_body()
         self._expect(TokenType.RIGHT_BRACE, "}")
-        return ForStatement(token.location, var, var_type, start, end, step, inclusive, body)
+        return ForStatement(
+            token.location,
+            var,
+            var_type,
+            range_expr.start,
+            range_expr.end,
+            range_expr.step,
+            range_expr.inclusive,
+            body,
+        )
 
     def parse_foreach(self) -> ForeachStatement:
         token = self._expect(TokenType.FOREACH, "foreach")
@@ -364,12 +366,26 @@ class Parser:
         return expr
 
     def parse_comparison(self) -> Expression:
-        expr = self.parse_term()
+        expr = self.parse_range()
         while self._check(TokenType.LESS, TokenType.GREATER, TokenType.LESS_EQUAL, TokenType.GREATER_EQUAL):
             operator = self._advance()
-            right = self.parse_term()
+            right = self.parse_range()
             expr = BinaryExpression(expr.location, expr, operator, right)
         return expr
+
+    def parse_range(self) -> Expression:
+        expr = self.parse_term()
+        range_token = self._peek()
+        if range_token.type not in (TokenType.DOT_DOT, TokenType.DOT_DOT_DOT):
+            return expr
+        inclusive = range_token.type == TokenType.DOT_DOT
+        self._advance()
+        end = self.parse_term()
+        if self._match(TokenType.BY):
+            step = self.parse_term()
+        else:
+            step = LiteralExpression(end.location, 1)
+        return RangeExpression(expr.location, expr, end, step, inclusive)
 
     def parse_term(self) -> Expression:
         expr = self.parse_factor()

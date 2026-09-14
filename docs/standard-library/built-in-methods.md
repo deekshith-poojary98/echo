@@ -894,7 +894,7 @@ say(partition(items: nums, f: even));
 ---
 
 ### `rangeList(start, end)`
-Returns a **new** `list` of `int` with the same values as `for i in start...end` (exclusive end, step `1`). Empty when that loop would not iterate (`rangeList(0, 0)` is `[]`). Not range-as-a-value syntax: `0...10` is not a list. Method form is not required.
+Returns a **new** `list` of `int` with the same values as `for i in start...end` (exclusive end, step `1`). Empty when that loop would not iterate (`rangeList(0, 0)` is `[]`). Same value as the range expression `start...end`. Method form is not required.
 
 ```echo
 say(rangeList(0, 5));    // [0, 1, 2, 3, 4]
@@ -1103,7 +1103,7 @@ say(copy["name"]);        // Echo
 - Assuming `some` / `every` / `findIndex` keep truthy `int` values such as `1`, or treating `findIndex(f)` as `find(value)`
 - Treating unequal `zip` lengths as an error, or expecting `unique` to treat `true` as `1`
 - Calling `chunk` with `size` `0`, a `bool`, or a float
-- Treating `rangeList(0, 5)` as inclusive, or expecting `0...10` to be a list value
+- Treating `rangeList(0, 5)` as inclusive (use `rangeListInclusive` or `0..5`)
 - Assuming hash `filter` / `mapValues` mutate the input, or that `filter` keeps truthy `1` on hash values
 - Expecting `clone()` to deep-copy nested structures
 

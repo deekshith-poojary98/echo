@@ -35,6 +35,7 @@ from echo.frontend.ast.nodes import (
     Parameter,
     Pattern,
     Program,
+    RangeExpression,
     ReturnStatement,
     SliceExpression,
     Statement,
@@ -245,6 +246,9 @@ class SemanticAnalyzer:
             self._expression(statement.start, scope)
             self._expression(statement.end, scope)
             self._expression(statement.step, scope)
+            self._check_range_bound(statement.start, "For-loop bound")
+            self._check_range_bound(statement.end, "For-loop bound")
+            self._check_range_bound(statement.step, "For-loop step")
             loop_scope = Scope(scope, is_loop=True)
             loop_scope.define(Symbol(statement.var, SymbolKind.VARIABLE, statement.location, statement.var_type))
             self._statements(statement.body, loop_scope)
@@ -448,6 +452,13 @@ class SemanticAnalyzer:
                 self._expression(expression.start, scope)
             if expression.end is not None:
                 self._expression(expression.end, scope)
+        elif isinstance(expression, RangeExpression):
+            self._expression(expression.start, scope)
+            self._expression(expression.end, scope)
+            self._expression(expression.step, scope)
+            self._check_range_bound(expression.start, "Range bound")
+            self._check_range_bound(expression.end, "Range bound")
+            self._check_range_bound(expression.step, "Range step")
         elif isinstance(expression, LambdaExpression):
             return_type = expression.return_type
             if return_type is not None:
@@ -1040,6 +1051,25 @@ class SemanticAnalyzer:
                 node.location,
                 help_text=f"'{name}' is declared with const and cannot be changed in place.",
                 code="E3202",
+            )
+
+    def _check_range_bound(self, expression: Expression, label: str) -> None:
+        if isinstance(expression, LiteralExpression):
+            value = expression.value
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise SemanticError(
+                    f"{label} must be convertible to int",
+                    expression.location,
+                    help_text="Range and for-loop bounds must be numeric (int or float).",
+                    code="E1015",
+                )
+            return
+        if isinstance(expression, (StringLiteralExpression, ListLiteral, HashLiteral, LambdaExpression)):
+            raise SemanticError(
+                f"{label} must be convertible to int",
+                expression.location,
+                help_text="Range and for-loop bounds must be numeric (int or float).",
+                code="E1015",
             )
 
     def _check_const_mutation_call(self, expression: CallExpression, scope: Scope) -> None:
