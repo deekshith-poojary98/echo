@@ -25,6 +25,41 @@ say([1] == [2]);
     assert result.lines == ["true", "true", "false"]
 
 
+def test_nested_true_is_not_equal_to_nested_one():
+    result = run_echo(
+        """
+say([true] == [1]);
+say([[true]] == [[1]]);
+say({"a": true} == {"a": 1});
+say({"a": [true]} == {"a": [1]});
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["false", "false", "false", "false"]
+
+
+def test_cyclic_lists_compare_without_python_recursion():
+    result = run_echo(
+        """
+left: list = [];
+left.push(left);
+right: list = [];
+right.push(right);
+say(left == left);
+say(left == right);
+mixed: list = [];
+mixed.push(true);
+mixed.push(mixed);
+other: list = [];
+other.push(1);
+other.push(other);
+say(mixed == other);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["true", "true", "false"]
+
+
 def test_bool_cannot_be_used_as_int_in_arithmetic():
     result = run_echo("say(true + 1);\n")
     assert result.exit_code == 1

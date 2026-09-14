@@ -7,6 +7,22 @@ def test_find_missing_returns_minus_one():
     assert result.output.strip() == "-1"
 
 
+def test_find_count_remove_use_echo_equality():
+    result = run_echo(
+        """
+flags: list = [true];
+say(flags.find(1));
+say(flags.countOf(true));
+say(flags.countOf(1));
+nums: list = [true, 1, true];
+nums.removeValue(1);
+say(nums);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["-1", "1", "0", "[true, true]"]
+
+
 def test_reverse_mutates_list():
     result = run_echo(
         """
