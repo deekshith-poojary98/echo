@@ -117,6 +117,23 @@ say(x);
     assert result.lines == ["2", "1"]
 
 
+def test_inner_function_value_shadows_outer_function_on_call():
+    result = run_echo(
+        """
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+fn main() {
+    add: fn(int, int) -> int = fn(a: int, b: int) -> int { return a * b; };
+    say(add(3, 4));
+}
+main();
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "12"
+
+
 def test_sibling_function_cannot_see_locals():
     result = run_echo(
         """

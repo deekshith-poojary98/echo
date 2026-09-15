@@ -435,14 +435,17 @@ class Interpreter:
             target = self.evaluate(callee.object, env)
             return self._call_builtin(callee.name, expression.arguments, env, target, expression.location, callee.object)
         if isinstance(callee, VariableExpression):
+            # Match evaluate(): a lexical value (parameter / variable) wins over a
+            # same-named user function or builtin. Otherwise `map(xs, f)` inside
+            # `fn apply(map: fn(...), ...)` silently calls the builtin `map`.
+            if env.is_defined(callee.name):
+                value = env.get(callee.name, expression.location)
+                return self._call_value(value, expression.arguments, env, expression.location, callee.name)
             function = env.resolve_function(callee.name)
             if function is not None:
                 return self._call_user_function(function, expression.arguments, env, expression.location)
             if callee.name in BUILTIN_NAMES:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
-            if env.is_defined(callee.name):
-                value = env.get(callee.name, expression.location)
-                return self._call_value(value, expression.arguments, env, expression.location, callee.name)
             undefined_function(callee.name, expression.location)
         value = self.evaluate(callee, env)
         return self._call_value(value, expression.arguments, env, expression.location, None)

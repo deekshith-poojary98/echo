@@ -197,6 +197,42 @@ def test_map_not_assignable_to_wrong_arity():
     assert "E2001" in result.output
 
 
+def test_call_uses_parameter_that_shadows_builtin():
+    result = run_echo(
+        """
+fn ident(xs: list, f: fn(int) -> int) -> list {
+    return xs;
+}
+fn apply(map: fn(list, fn(int) -> int) -> list, xs: list, f: fn(int) -> int) -> list {
+    return map(xs, f);
+}
+fn double(x: int) -> int {
+    return x * 2;
+}
+say(apply(ident, [1, 2, 3], double));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "[1, 2, 3]"
+
+
+def test_call_uses_variable_that_shadows_builtin():
+    result = run_echo(
+        """
+fn ident(xs: list, f: fn(int) -> int) -> list {
+    return xs;
+}
+map: fn(list, fn(int) -> int) -> list = ident;
+fn double(x: int) -> int {
+    return x * 2;
+}
+say(map([1, 2], double));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "[1, 2]"
+
+
 def test_formatter_keeps_builtin_as_value():
     source = "print: fn(str) -> dynamic = say;\n"
     assert "say" in format_source(source)
