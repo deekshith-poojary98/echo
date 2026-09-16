@@ -67,6 +67,21 @@ foreach key: str in data {
     assert set(result.lines) == {"a", "b"}
 
 
+def test_foreach_over_hash_does_not_visit_keys_added_during_loop():
+    result = run_echo(
+        """
+data: hash = { a: 1 };
+foreach key: str in data {
+    data["b"] = 2;
+    say(key);
+}
+say(length(data));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["a", "2"]
+
+
 def test_else_if():
     result = run_echo(
         """
