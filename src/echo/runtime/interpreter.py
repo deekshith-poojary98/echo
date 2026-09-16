@@ -306,7 +306,9 @@ class Interpreter:
         if isinstance(statement, ForeachStatement):
             items = self.evaluate(statement.iterable, env)
             if isinstance(items, dict):
-                iterator = items.keys()
+                # Snapshot keys so inserting/removing entries mid-loop is defined
+                # instead of raising Python's "dictionary changed size during iteration".
+                iterator = list(items.keys())
             elif isinstance(items, list):
                 iterator = items
             else:

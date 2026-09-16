@@ -14,6 +14,39 @@ foreach item: int in 1 {
     assert "foreach" in result.output.lower() or "Type Error" in result.output or "Execution Error" in result.output
 
 
+def test_foreach_hash_insert_does_not_leak_python():
+    result = run_echo(
+        """
+h: hash = { a: 1 };
+foreach k: str in h {
+    h["b"] = 2;
+    say(k);
+}
+say(h["b"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["a", "2"]
+
+
+def test_foreach_hash_take_does_not_leak_python():
+    result = run_echo(
+        """
+h: hash = { a: 1, b: 2 };
+foreach k: str in h {
+    h.take(k);
+    say(k);
+}
+say(length(h));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert set(result.lines[:2]) == {"a", "b"}
+    assert result.lines[-1] == "0"
+
+
 def test_foreach_over_null_is_echo_error_not_python():
     result = run_echo(
         """
