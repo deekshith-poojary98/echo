@@ -310,7 +310,9 @@ class Interpreter:
                 # instead of raising Python's "dictionary changed size during iteration".
                 iterator = list(items.keys())
             elif isinstance(items, list):
-                iterator = items
+                # Snapshot items so push/insert/pull mid-loop is defined instead of
+                # hanging forever or silently skipping remaining elements.
+                iterator = list(items)
             else:
                 raise EchoTypeError(
                     f"foreach iterable must be a list or hash, got {echo_type_name(items)}",
@@ -1064,7 +1066,10 @@ class Interpreter:
 
     def _mapValues(self, items: dict, callback: object, location: SourceLocation) -> dict:
         function = self._require_callback("mapValues", callback, location, 1, "E2844", "E2845")
-        return {key: self.call_function_with_values(function, [value], location) for key, value in items.items()}
+        return {
+            key: self.call_function_with_values(function, [value], location)
+            for key, value in list(items.items())
+        }
 
     def _filter(self, items: list, callback: object, location: SourceLocation) -> list:
         function = self._require_unary_callback("filter", callback, location)
@@ -1084,7 +1089,7 @@ class Interpreter:
     def _filter_hash(self, items: dict, callback: object, location: SourceLocation) -> dict:
         function = self._require_unary_callback("filter", callback, location)
         kept: dict = {}
-        for key, value in items.items():
+        for key, value in list(items.items()):
             keep = self.call_function_with_values(function, [value], location)
             if not isinstance(keep, bool):
                 raise EchoTypeError(
