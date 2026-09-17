@@ -82,6 +82,36 @@ say(length(data));
     assert result.lines == ["a", "2"]
 
 
+def test_foreach_over_list_does_not_visit_items_pushed_during_loop():
+    result = run_echo(
+        """
+xs: list = [1, 2];
+foreach x: int in xs {
+    xs.push(x);
+    say(x);
+}
+say(xs.asString());
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["1", "2", "[1, 2, 1, 2]"]
+
+
+def test_foreach_over_list_still_visits_items_pulled_during_loop():
+    result = run_echo(
+        """
+xs: list = [1, 2, 3];
+foreach x: int in xs {
+    say(x.asString());
+    xs.pull();
+}
+say(xs.asString());
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["1", "2", "3", "[]"]
+
+
 def test_else_if():
     result = run_echo(
         """

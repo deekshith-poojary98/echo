@@ -47,6 +47,74 @@ say(length(h));
     assert result.lines[-1] == "0"
 
 
+def test_foreach_list_push_does_not_hang_or_leak_python():
+    result = run_echo(
+        """
+xs: list = [1, 2];
+foreach x: int in xs {
+    xs.push(x);
+    say(x);
+}
+say(length(xs));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["1", "2", "4"]
+
+
+def test_foreach_list_insert_at_front_does_not_hang_or_leak_python():
+    result = run_echo(
+        """
+xs: list = [1, 2];
+foreach x: int in xs {
+    xs.insertAt(0, 99);
+    say(x);
+}
+say(xs.asString());
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["1", "2", "[99, 99, 1, 2]"]
+
+
+def test_map_values_insert_does_not_leak_python():
+    result = run_echo(
+        """
+h: hash = { a: 1 };
+fn grow(v: int) -> int {
+    use mut h;
+    h["b"] = 2;
+    return v + 1;
+}
+say(h.mapValues(grow));
+say(h["b"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ['{"a": 2}', "2"]
+
+
+def test_filter_hash_insert_does_not_leak_python():
+    result = run_echo(
+        """
+h: hash = { a: 1 };
+fn keep(v: int) -> bool {
+    use mut h;
+    h["b"] = 2;
+    return true;
+}
+say(h.filter(keep));
+say(h["b"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ['{"a": 1}', "2"]
+
+
 def test_foreach_over_null_is_echo_error_not_python():
     result = run_echo(
         """
