@@ -292,18 +292,29 @@ def quote_string(value: str) -> str:
     return f'"{escaped}"'
 
 
-def stringify(value: object, nested: bool = False) -> str:
+def stringify(value: object, nested: bool = False, seen: set[int] | None = None) -> str:
     if value is None:
         return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, str):
         return quote_string(value) if nested else value
-    if isinstance(value, list):
-        return "[" + ", ".join(stringify(item, True) for item in value) + "]"
-    if isinstance(value, dict):
-        parts = [f"{stringify(key, True)}: {stringify(item, True)}" for key, item in value.items()]
-        return "{" + ", ".join(parts) + "}"
+    if isinstance(value, (list, dict)):
+        ident = id(value)
+        if seen is not None and ident in seen:
+            return "[...]" if isinstance(value, list) else "{...}"
+        tracking = set() if seen is None else seen
+        tracking.add(ident)
+        try:
+            if isinstance(value, list):
+                return "[" + ", ".join(stringify(item, True, tracking) for item in value) + "]"
+            parts = [
+                f"{stringify(key, True, tracking)}: {stringify(item, True, tracking)}"
+                for key, item in value.items()
+            ]
+            return "{" + ", ".join(parts) + "}"
+        finally:
+            tracking.remove(ident)
     if _is_echo_function(value):
         cls = value.__class__.__name__
         if cls == "EchoFunction":
