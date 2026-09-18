@@ -46,7 +46,7 @@ def json_to_echo(raw: object, location: SourceLocation | None = None) -> object:
     raise EchoRuntimeError("Unsupported JSON value", location, code="E2806")
 
 
-def echo_to_json(value: object, location: SourceLocation | None = None) -> object:
+def echo_to_json(value: object, location: SourceLocation | None = None, seen: set[int] | None = None) -> object:
     if value is None or isinstance(value, (bool, str)):
         return value
     if isinstance(value, int) and not isinstance(value, bool):
@@ -55,10 +55,18 @@ def echo_to_json(value: object, location: SourceLocation | None = None) -> objec
         if not math.isfinite(value):
             raise EchoRuntimeError("Cannot write non-finite float as JSON", location, code="E2806")
         return value
-    if isinstance(value, list):
-        return [echo_to_json(item, location) for item in value]
-    if isinstance(value, dict):
-        return {str(key): echo_to_json(item, location) for key, item in value.items()}
+    if isinstance(value, (list, dict)):
+        ident = id(value)
+        tracking = set() if seen is None else seen
+        if ident in tracking:
+            raise EchoRuntimeError("Cannot write cyclic value as JSON", location, code="E2806")
+        tracking.add(ident)
+        try:
+            if isinstance(value, list):
+                return [echo_to_json(item, location, tracking) for item in value]
+            return {str(key): echo_to_json(item, location, tracking) for key, item in value.items()}
+        finally:
+            tracking.remove(ident)
     raise EchoTypeError(
         f"Cannot write {type(value).__name__} as JSON",
         location,

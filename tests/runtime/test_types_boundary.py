@@ -60,6 +60,75 @@ say(mixed == other);
     assert result.lines == ["true", "true", "false"]
 
 
+def test_cyclic_lists_print_without_python_recursion():
+    result = run_echo(
+        """
+xs: list = [1];
+xs.push(xs);
+say(xs);
+say(xs.asString());
+"""
+    )
+    assert result.exit_code == 0
+    assert_no_python_leak(result)
+    assert result.lines == ["[1, [...]]", "[1, [...]]"]
+
+
+def test_cyclic_hashes_print_without_python_recursion():
+    result = run_echo(
+        """
+h: hash = {};
+h["self"] = h;
+say(h);
+"""
+    )
+    assert result.exit_code == 0
+    assert_no_python_leak(result)
+    assert result.output.strip() == '{"self": {...}}'
+
+
+def test_shared_nested_lists_still_print_fully():
+    result = run_echo(
+        """
+inner: list = [1];
+xs: list = [];
+xs.push(inner);
+xs.push(inner);
+say(xs);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "[[1], [1]]"
+
+
+def test_write_json_rejects_cycles_without_python_recursion():
+    result = run_echo(
+        """
+xs: list = [];
+xs.push(xs);
+say(writeJson(xs));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2806" in result.output
+
+
+def test_write_json_allows_shared_nested_lists():
+    result = run_echo(
+        """
+inner: list = [1];
+xs: list = [];
+xs.push(inner);
+xs.push(inner);
+say(writeJson(xs));
+"""
+    )
+    assert result.exit_code == 0
+    assert_no_python_leak(result)
+    assert result.output.strip() == "[[1], [1]]"
+
+
 def test_bool_cannot_be_used_as_int_in_arithmetic():
     result = run_echo("say(true + 1);\n")
     assert result.exit_code == 1

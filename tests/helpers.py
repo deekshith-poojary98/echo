@@ -21,6 +21,8 @@ PYTHON_EXCEPTION_NAMES = (
     "ZeroDivisionError",
     "RuntimeError",
     "StopIteration",
+    "RecursionError",
+    "OverflowError",
 )
 
 
