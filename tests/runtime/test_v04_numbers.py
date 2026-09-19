@@ -69,3 +69,15 @@ def test_floor_rejects_bool():
     assert result.exit_code == 1
     assert_no_python_leak(result)
     assert "requires a number" in result.output
+
+
+def test_floor_rejects_overflowed_float():
+    result = run_echo(
+        """
+x: float = 1e308;
+say(floor(x * 10));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "finite" in result.output.lower()
