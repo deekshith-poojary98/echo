@@ -54,6 +54,18 @@ def test_asfloat_accepts_int_and_string():
     assert result.lines == ["7.0", "3.5"]
 
 
+def test_asfloat_rejects_infinity_and_nan_text():
+    result = run_echo('say("inf".asFloat());\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Cannot convert value to float" in result.output
+
+    result = run_echo('say("nan".asFloat());\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Cannot convert value to float" in result.output
+
+
 def test_asbool_keeps_truthiness():
     result = run_echo(
         """

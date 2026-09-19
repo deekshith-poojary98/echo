@@ -480,12 +480,18 @@ def as_float_or(value: object, fallback: object, location: SourceLocation | None
         return fallback
 
 
+def _is_nonfinite_float(value: object) -> bool:
+    return isinstance(value, float) and not math.isfinite(value)
+
+
 def as_int(value: object, location: SourceLocation | None = None) -> int:
     if isinstance(value, bool):
         raise EchoTypeError("Cannot convert bool to int", location, code="E2606")
     if isinstance(value, int):
         return value
     if isinstance(value, float):
+        if not math.isfinite(value):
+            raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
         return int(value)
     if isinstance(value, str):
         text = value.strip()
@@ -501,15 +507,21 @@ def as_float(value: object, location: SourceLocation | None = None) -> float:
     if isinstance(value, bool):
         raise EchoTypeError("Cannot convert bool to float", location, code="E2607")
     if isinstance(value, (int, float)):
-        return float(value)
+        result = float(value)
+        if not math.isfinite(result):
+            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+        return result
     if isinstance(value, str):
         text = value.strip()
         if text == "":
             raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
         try:
-            return float(text)
+            result = float(text)
         except ValueError as exc:
             raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607") from exc
+        if not math.isfinite(result):
+            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+        return result
     raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
 
 
@@ -522,6 +534,10 @@ def as_bool(value: object) -> bool:
 def do_wait(seconds: object, location: SourceLocation | None = None) -> None:
     if not isinstance(seconds, (int, float)) or isinstance(seconds, bool):
         raise ArgumentError("wait() requires a numeric number of seconds", location, code="E2608")
+    if _is_nonfinite_float(seconds):
+        raise ArgumentError("wait() requires a finite number of seconds", location, code="E2608")
+    if seconds < 0:
+        raise ArgumentError("wait() requires a non-negative number of seconds", location, code="E2608")
     time.sleep(float(seconds))
 
 
@@ -568,10 +584,27 @@ def do_flatten(value: object, location: SourceLocation | None = None) -> list:
     return result
 
 
-def _range_bound(value: object, method: str, location: SourceLocation | None = None) -> int:
+def require_int_convertible(
+    value: object,
+    location: SourceLocation | None = None,
+    *,
+    what: str,
+    code: str,
+) -> int:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise EchoTypeError(f"{method}() bounds must be convertible to int", location, code="E2843")
+        raise EchoTypeError(f"{what} must be convertible to int", location, code=code)
+    if _is_nonfinite_float(value):
+        raise EchoTypeError(f"{what} must be convertible to int", location, code=code)
     return int(value)
+
+
+def _range_bound(value: object, method: str, location: SourceLocation | None = None) -> int:
+    return require_int_convertible(
+        value,
+        location,
+        what=f"{method}() bounds",
+        code="E2843",
+    )
 
 
 def do_range_list(
@@ -615,9 +648,7 @@ def do_range_values(
 
 
 def _loop_bound(value: object, location: SourceLocation | None = None) -> int:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise EchoTypeError("range bounds must be convertible to int", location, code="E2702")
-    return int(value)
+    return require_int_convertible(value, location, what="range bounds", code="E2702")
 
 
 def do_merge(target: object, other: object, location: SourceLocation | None = None) -> object:
@@ -904,11 +935,17 @@ def do_max(left: object, right: object, location: SourceLocation | None = None) 
 
 
 def do_floor(value: object, location: SourceLocation | None = None) -> int:
-    return math.floor(_require_number(value, "floor", location))
+    number = _require_number(value, "floor", location)
+    if _is_nonfinite_float(number):
+        raise EchoTypeError("floor() requires a finite number", location, code="E2818")
+    return math.floor(number)
 
 
 def do_ceil(value: object, location: SourceLocation | None = None) -> int:
-    return math.ceil(_require_number(value, "ceil", location))
+    number = _require_number(value, "ceil", location)
+    if _is_nonfinite_float(number):
+        raise EchoTypeError("ceil() requires a finite number", location, code="E2818")
+    return math.ceil(number)
 
 
 def do_assert(cond: object, message: object, location: SourceLocation | None = None) -> None:

@@ -133,6 +133,7 @@ from echo.runtime.builtins import (
     do_write_file,
     do_write_json,
     do_zip,
+    require_int_convertible,
     resolve_builtin_args,
 )
 from echo.runtime.host import Host
@@ -1179,10 +1180,12 @@ class Interpreter:
         return accumulator
 
     def _loop_bound(self, expression: Expression, env: Environment, location: SourceLocation) -> int:
-        value = self.evaluate(expression, env)
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            raise EchoTypeError("for-loop bounds must be convertible to int", location, code="E2702")
-        return int(value)
+        return require_int_convertible(
+            self.evaluate(expression, env),
+            location,
+            what="for-loop bounds",
+            code="E2702",
+        )
 
     def _try_match_switch_pattern(
         self,
