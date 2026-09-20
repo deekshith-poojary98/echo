@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from echo.errors import EchoNameError, MutationError, SourceLocation
 from echo.frontend.ast.nodes import TypeAnnotation
+from echo.runtime.instances import ClassRecord
 from echo.runtime.values import validate_type
 
 
@@ -12,6 +13,7 @@ class Environment:
         self.mutability: dict[str, bool] = {}
         self.types: dict[str, TypeAnnotation | str | None] = {}
         self.functions: dict[str, object] = {}
+        self.classes: dict[str, ClassRecord] = {}
         self.is_function = is_function
         self.mutable_imports: set[str] = set()
         self.readonly_imports: set[str] = set()
@@ -172,6 +174,17 @@ class Environment:
 
     def define_function(self, name: str, function: object) -> None:
         self.functions[name] = function
+
+    def define_class(self, name: str, record: ClassRecord) -> None:
+        self.classes[name] = record
+
+    def resolve_class(self, name: str) -> ClassRecord | None:
+        current: Environment | None = self
+        while current:
+            if name in current.classes:
+                return current.classes[name]
+            current = current.parent
+        return None
 
     def resolve_function(self, name: str) -> object | None:
         current: Environment | None = self

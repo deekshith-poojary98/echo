@@ -26,6 +26,20 @@ def class_implements_interface(class_name: str, interface: InterfaceType) -> boo
     return True
 
 
+def instance_implements_interface(value: object, interface: InterfaceType) -> bool:
+    from echo.runtime.instances import ClassInstance
+    from echo.runtime.values import type_assignable
+
+    if not isinstance(value, ClassInstance) or value.record is None:
+        return False
+    actual = value.record.method_types
+    for name, expected in interface.methods.items():
+        method = actual.get(name)
+        if method is None or not type_assignable(method, expected):
+            return False
+    return True
+
+
 def interface_assignable(actual: InterfaceType, expected: InterfaceType) -> bool:
     """True when `actual` provides every method required by `expected`."""
     from echo.runtime.values import type_assignable

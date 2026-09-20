@@ -112,7 +112,10 @@ def echo_equal(left: object, right: object) -> bool:
             seen.add(pair)
             return all(eq(a[key], b[key]) for key in a)
         if isinstance(a, ClassInstance) and isinstance(b, ClassInstance):
-            if a.class_name != b.class_name:
+            if a.record is not None and b.record is not None:
+                if a.record is not b.record:
+                    return False
+            elif a.class_name != b.class_name:
                 return False
             if a.fields.keys() != b.fields.keys():
                 return False
