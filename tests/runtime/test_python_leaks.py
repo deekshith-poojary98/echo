@@ -212,6 +212,42 @@ def test_as_int_or_infinity_returns_fallback():
     assert result.output.strip() == "0"
 
 
+def test_as_int_unicode_digit_is_echo_error_not_python():
+    result = run_echo('say("²".asInt());\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Cannot convert value to int" in result.output
+
+    result = run_echo('say("①".asInt());\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Cannot convert value to int" in result.output
+
+
+def test_as_int_or_unicode_digit_returns_fallback():
+    result = run_echo('say(asIntOr("²", 0));\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "0"
+
+
+def test_format_unicode_digit_placeholder_is_echo_error_not_python():
+    result = run_echo('say("{²}".format("x"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "placeholder" in result.output.lower() or "format()" in result.output
+
+
+def test_superscript_number_literal_is_echo_error_not_python():
+    result = run_echo("say(²);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+
+    result = run_echo("say(1e²);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+
+
 def test_as_int_overflowed_multiply_is_echo_error_not_python():
     result = run_echo(
         """

@@ -94,7 +94,7 @@ class Lexer:
         char = self._peek()
         if char in ('"', "'"):
             return self._string()
-        if char.isdigit() or (char == "." and self._peek(1).isdigit()):
+        if _is_decimal_digit(char) or (char == "." and _is_decimal_digit(self._peek(1))):
             return [self._number()]
         if char.isalpha() or char == "_":
             return [self._identifier()]
@@ -122,26 +122,26 @@ class Lexer:
         if self._peek() == ".":
             is_float = True
             self._advance()
-            while self._peek().isdigit():
+            while _is_decimal_digit(self._peek()):
                 self._advance()
         else:
-            while self._peek().isdigit():
+            while _is_decimal_digit(self._peek()):
                 self._advance()
-            if self._peek() == "." and self._peek(1).isdigit():
+            if self._peek() == "." and _is_decimal_digit(self._peek(1)):
                 is_float = True
                 self._advance()
-                while self._peek().isdigit():
+                while _is_decimal_digit(self._peek()):
                     self._advance()
 
         if self._peek() in "eE":
             sign = self._peek(1)
             digits_at = 2 if sign in "+-" else 1
-            if self._peek(digits_at).isdigit():
+            if _is_decimal_digit(self._peek(digits_at)):
                 is_float = True
                 self._advance()
                 if self._peek() in "+-":
                     self._advance()
-                while self._peek().isdigit():
+                while _is_decimal_digit(self._peek()):
                     self._advance()
 
         lexeme = self.source[start:self.pos]
@@ -321,3 +321,12 @@ class Lexer:
 
         self._error(f"Invalid token '{char}'", start_line, start_col)
         return self._make_token(TokenType.EOF, "")
+
+
+def _is_decimal_digit(char: str) -> bool:
+    """True for characters Python's int()/float() accept as digits.
+
+    ``str.isdigit()`` is too wide: superscripts and circled numbers are digits,
+    but ``int("²")`` and ``float("1e²")`` raise ValueError.
+    """
+    return char.isdecimal()

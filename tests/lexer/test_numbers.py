@@ -1,3 +1,4 @@
+from echo.errors import LexError
 from echo.frontend.lexer import Lexer
 from echo.frontend.tokens import TokenType
 
@@ -26,6 +27,14 @@ def test_leading_dot_and_scientific():
         (TokenType.FLOAT, "1e-3"),
         (TokenType.FLOAT, "1E+2"),
     ]
+
+
+def test_superscript_digit_is_not_a_number():
+    try:
+        Lexer().tokenize("²\n")
+        assert False, "expected LexError"
+    except LexError as exc:
+        assert "Invalid token" in exc.message
 
 
 def test_trailing_dot_stays_integer_then_dot():

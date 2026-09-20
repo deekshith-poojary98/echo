@@ -22,13 +22,20 @@ def apply_format(template: str, values: list[object], location: SourceLocation |
                 arg_index = auto_index
                 auto_index += 1
             else:
-                if not placeholder.isdigit():
+                if not placeholder.isdecimal():
                     raise EchoRuntimeError(
                         "format() placeholders must be '{}' or numeric indexes like '{0}'",
                         location,
                         code="E2302",
                     )
-                arg_index = int(placeholder)
+                try:
+                    arg_index = int(placeholder)
+                except ValueError as exc:
+                    raise EchoRuntimeError(
+                        "format() placeholders must be '{}' or numeric indexes like '{0}'",
+                        location,
+                        code="E2302",
+                    ) from exc
             if arg_index >= len(values):
                 raise EchoIndexError(f"format() placeholder index {arg_index} out of range", location, code="E2303")
             result += stringify(values[arg_index])
