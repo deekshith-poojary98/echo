@@ -218,6 +218,7 @@ class Interpreter:
                 field_types={field.name: field.type for field in statement.fields},
                 method_types=typed,
                 class_id=id(statement),
+                closure=env,
             )
             env.define_class(statement.name, record)
             register_class_methods(statement.name, typed)
@@ -524,9 +525,10 @@ class Interpreter:
                     code="E3211",
                 )
             values = {name: self.evaluate(value, env) for name, value in expression.fields}
+            default_env = record.closure if isinstance(record.closure, Environment) else env
             for field_name, default_expr in record.field_defaults.items():
                 if field_name not in values:
-                    values[field_name] = self.evaluate(default_expr, env)  # type: ignore[arg-type]
+                    values[field_name] = self.evaluate(default_expr, default_env)  # type: ignore[arg-type]
             for field_name, value in values.items():
                 expected = record.field_types.get(field_name)
                 if expected is not None:

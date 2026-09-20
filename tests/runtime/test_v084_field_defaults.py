@@ -1,8 +1,11 @@
+from pathlib import Path
+
 from echo.formatter import format_source
 from echo.frontend.ast.nodes import ClassDeclaration
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from helpers import assert_no_python_leak, run_echo
+from modules.harness import assert_success, run_entry, write_modules
 
 
 def parse_source(source: str):
@@ -146,6 +149,72 @@ say(b.value);
     )
     assert result.exit_code == 0
     assert result.lines == ["7", "9"]
+
+
+def test_default_expression_uses_declaring_env_not_local_shadow():
+    result = run_echo(
+        """
+n: int = 7;
+class Box {
+    new {
+        value: int = n;
+    }
+}
+fn make() {
+    n: int = 0;
+    box: Box = Box {};
+    say(box.value);
+}
+make();
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "7"
+
+
+def test_imported_class_default_uses_declaring_module_variable(tmp_path: Path):
+    write_modules(
+        tmp_path,
+        {
+            "lib.echo": """
+                DEFAULT_TIMEOUT: int = 30;
+                export class Config {
+                    new {
+                        timeout: int = DEFAULT_TIMEOUT;
+                    }
+                }
+            """,
+            "app.echo": """
+                import Config from "lib";
+                c: Config = Config {};
+                say(c.timeout);
+            """,
+        },
+    )
+    assert_success(run_entry(tmp_path), "30")
+
+
+def test_imported_class_default_ignores_importer_name_collision(tmp_path: Path):
+    write_modules(
+        tmp_path,
+        {
+            "lib.echo": """
+                DEFAULT_TIMEOUT: int = 30;
+                export class Config {
+                    new {
+                        timeout: int = DEFAULT_TIMEOUT;
+                    }
+                }
+            """,
+            "app.echo": """
+                import Config from "lib";
+                DEFAULT_TIMEOUT: int = 0;
+                c: Config = Config {};
+                say(c.timeout);
+            """,
+        },
+    )
+    assert_success(run_entry(tmp_path), "30")
 
 
 def test_formatter_prints_field_defaults():
