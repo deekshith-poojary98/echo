@@ -160,6 +160,68 @@ say(y);
     assert result.lines == ["3", "4"]
 
 
+def test_cyclic_instance_prints_without_python_recursion():
+    result = run_echo(
+        """
+class Node {
+    new {
+        value: int;
+        next: dynamic;
+    }
+}
+n: Node = Node { value: 1, next: null };
+n.next = n;
+say(n);
+say(asString(n));
+say("node ${n}");
+"""
+    )
+    assert result.exit_code == 0
+    assert_no_python_leak(result)
+    assert result.lines == [
+        "Node {value: 1, next: Node {...}}",
+        "Node {value: 1, next: Node {...}}",
+        "node Node {value: 1, next: Node {...}}",
+    ]
+
+
+def test_cyclic_instance_via_list_field_prints_without_python_recursion():
+    result = run_echo(
+        """
+class Box {
+    new {
+        items: list;
+    }
+}
+b: Box = Box { items: [] };
+b.items.push(b);
+say(b);
+"""
+    )
+    assert result.exit_code == 0
+    assert_no_python_leak(result)
+    assert result.output.strip() == "Box {items: [Box {...}]}"
+
+
+def test_watch_cyclic_instance_does_not_crash():
+    result = run_echo(
+        """
+class Node {
+    new {
+        next: dynamic;
+    }
+}
+n: Node = Node { next: null };
+watch n;
+n.next = n;
+"""
+    )
+    assert result.exit_code == 0
+    assert_no_python_leak(result)
+    assert "WATCH:" in result.output
+    assert "Node {next: Node {...}}" in result.output
+
+
 def test_const_instance_rejects_field_assign():
     result = run_echo(
         """
