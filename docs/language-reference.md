@@ -1,5 +1,5 @@
 # Language Reference
 
-See [language-semantics.md](language-semantics.md) for the language contract.
+See the [Language Reference](/reference/language-reference) for the compact syntax lookup.
 
-Narrative docs: `docs/getting-started/` and `docs/reference/`. If a guide disagrees with `language-semantics.md`, the semantics document wins until the guide is updated.
+The maintainer language contract lives in [Language Semantics](/language-semantics).

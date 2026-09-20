@@ -41,6 +41,7 @@ class TokenType(Enum):
     AS = auto()
     CLASS = auto()
     INTERFACE = auto()
+    NEW = auto()
 
     PLUS = auto()
     MINUS = auto()
@@ -111,6 +112,7 @@ KEYWORDS: dict[str, TokenType] = {
     "as": TokenType.AS,
     "class": TokenType.CLASS,
     "interface": TokenType.INTERFACE,
+    "new": TokenType.NEW,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "null": TokenType.NULL,

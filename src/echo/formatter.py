@@ -181,8 +181,13 @@ class _Printer:
             self._write("{")
             self._newline()
             self._indent += 1
-            for field in statement.fields:
-                self._line(f"{field.name}: {self._type(field.type)};")
+            if statement.fields:
+                self._line("new {")
+                self._indent += 1
+                for field in statement.fields:
+                    self._line(f"{field.name}: {self._type(field.type)};")
+                self._indent -= 1
+                self._line("}")
             for method in statement.methods:
                 self._function(method)
             self._indent -= 1

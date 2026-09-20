@@ -1,6 +1,6 @@
 # Echo Language Semantics
 
-Language contract (v0.2 base; additive notes through 0.8.2 in Execution model).
+Language contract (v0.2 base; additive notes through 0.8.3 in Execution model).
 Implementation and tests must match it.
 If code and this document disagree, change the document only after an explicit language decision.
 
@@ -556,7 +556,11 @@ v0.7.6 adds statement-form `switch` on values (literals, type arms with optional
 v0.7.7 adds hash destructure rename (`{ id as userId: int }`). Keyword `as`. No hash rest.
 v0.7.8 adds hash destructure rest (`{ id: int, rest: dynamic... }`). Leftovers bind as a `hash`; `T...` is the value type. Rest last; no `as` on rest.
 v0.7.9 adds param `const` (`fn f(const xs: list)`, lambdas, defaults, variadics, destructuring params). Same freeze / E3201–E3204 rules as binding `const`.
-v0.8.0 adds nominal `class` + construction (`class Point { x: int; y: int; }`, `Point { x: 3, y: 4 }`). Exact fields (**E3208**/**E3209**); `type` returns the class name; field get/set; `export class`; hash-shaped destructure; field-wise `==`. No methods/`this`/inheritance.
-v0.8.1 adds methods + `this` (`fn length(this) -> T`, call `p.length()`, bound `p.length`). No static/unbound methods; no interfaces.
+v0.8.0 adds nominal `class` + construction (`class Point { x: int; y: int; }` historically; **0.8.3** moves fields under `new { ... }`, `Point { x: 3, y: 4 }`). Exact fields (**E3208**/**E3209**); `type` returns the class name; field get/set; `export class`; hash-shaped destructure; field-wise `==`. No methods/`this`/inheritance.
+
+v0.8.1 adds methods + `this` (`fn length(this) -> T` inside a class; call `p.length()`; bound `p.length`).
+
 v0.8.2 adds `interface` (method signatures only; inferred structural implement by classes; no `implements` clause; no inheritance).
-See `docs/v0.4-stdlib.md`.
+
+v0.8.3 requires class fields under **`new { ... }`**. Call site unchanged. Empty classes may omit `new`. Bare field declarations outside `new` are a parse error.
+See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

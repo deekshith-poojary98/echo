@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.3
+
+- `new` highlights as a keyword (class field block).
+
 ## 0.8.2
 
 - Version tracks Echo v0.8.2.

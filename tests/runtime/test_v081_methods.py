@@ -16,8 +16,10 @@ def test_parser_builds_methods_with_this():
     declaration = parse_source(
         """
 class Point {
+    new {
     x: int;
     y: int;
+    }
     fn length(this) -> int {
         return this.x;
     }
@@ -40,8 +42,10 @@ def test_method_call_and_field_mutation():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
     y: int;
+    }
 
     fn length(this) -> int {
         return this.x * this.x + this.y * this.y;
@@ -68,8 +72,10 @@ def test_bound_method_is_a_value():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
     y: int;
+    }
 
     fn length(this) -> int {
         return this.x * this.x + this.y * this.y;
@@ -91,7 +97,9 @@ def test_inline_method():
     result = run_echo(
         """
 class Counter {
+    new {
     n: int;
+    }
     fn bump(this) -> int => this.n + 1;
 }
 c: Counter = Counter { n: 7 };
@@ -106,7 +114,9 @@ def test_unknown_method_is_e2704():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
+    }
     fn length(this) -> int {
         return this.x;
     }
@@ -124,7 +134,9 @@ def test_method_arity_error():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
+    }
     fn move(this, dx: int) -> void {
         this.x = this.x + dx;
     }
@@ -141,7 +153,9 @@ def test_this_must_be_first_and_untyped():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
+    }
     fn bad(x: int) -> int {
         return x;
     }
@@ -156,7 +170,9 @@ def test_typed_this_is_rejected():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
+    }
     fn bad(this: Point) -> int {
         return this.x;
     }
@@ -171,13 +187,16 @@ def test_formatter_prints_methods():
     formatted = format_source(
         """
 class Point {
+new {
 x: int;
+}
 fn length(this) -> int {
 return this.x;
 }
 }
 """
     )
+    assert "new {" in formatted
     assert "fn length(this) -> int" in formatted
     assert "this.x" in formatted
 
@@ -188,8 +207,10 @@ def test_export_class_methods(tmp_path: Path):
         {
             "geo.echo": """
                 export class Point {
+                    new {
                     x: int;
                     y: int;
+                    }
                     fn length(this) -> int {
                         return this.x * this.x + this.y * this.y;
                     }

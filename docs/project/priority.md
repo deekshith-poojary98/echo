@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.8.1**. **0.8.2** (`interface`) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.8 OOP spine is complete** (0.8.0–0.8.2). Failure model stays abort + `*Or`.
+Current tagged version is **v0.8.2**. **0.8.3** (`new { ... }` field block) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.8 OOP spine is complete** (0.8.0–0.8.2). **0.8.3–0.8.9** is the OOP polish arc ending in the first **PyPI** release. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.8.1**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.2** are implemented (0.8.2 not yet tagged).
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.8.2**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.2** are implemented; **0.8.3** is implemented (not yet tagged); polish **0.8.4–0.8.9** remains drafted.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -358,7 +358,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 
 ## 0.8.x — OOP
 
-**Status: 0.8.0–0.8.2 implemented.** 0.8 OOP spine is complete.
+**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3 implemented; 0.8.4–0.8.9 drafted (held until started).**
 
 **0.7 is closed** (spine through 0.7.6; polish through 0.7.9). Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
 
@@ -367,9 +367,13 @@ Shape: **structs with methods**, Echo-flavored.
 - Nominal `class` names (runtime identity, not structural)
 - Fields are an **exact** shape (extras rejected)
 - Methods use the existing call form `obj.method(args)` (same surface as list/hash builtins) — **0.8.1**
+- Interfaces are capability types (method signatures) — **0.8.2**
 - Failure model unchanged: abort + `*Or`; no exceptions from methods
 - Open `{ ... }` hashes and `exact { ... }` keep working; classes do not replace them
 - Generics, overloading, async, packages, VM stay held outside this spine
+- **Public release:** first PyPI upload of `echolang` at **0.8.9** (not earlier)
+
+### Spine (done)
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -377,16 +381,32 @@ Shape: **structs with methods**, Echo-flavored.
 | 0.8.1 | Methods + `this` | implemented (0.8.1) |
 | 0.8.2 | `interface` (no inheritance) | implemented (0.8.2) |
 
+### Polish (draft / held until started)
+
+Do not implement until explicitly started (`start 0.8.3`, etc.). Goal: make the OOP surface teachable and release-ready, then publish.
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 0.8.3 | Explicit `new { ... }` field block | implemented (0.8.3) |
+| 0.8.4 | Field defaults in `new` / construction | held (draft) |
+| 0.8.5 | Unbound methods `Point.length(p)` | held (draft) |
+| 0.8.6 | Type methods (no `this`) / `Point.origin()` | held (draft) |
+| 0.8.7 | Optional `implements` clause | held (draft) |
+| 0.8.8 | Docs / examples / README release pass | held (draft) |
+| 0.8.9 | First PyPI release (`echolang`) | held (draft) |
+
 ### 0.8.0 — nominal `class` + construction
 
 Introduce a nominal type distinct from `type Alias = exact { ... }`.
 
-**Implemented spelling:**
+**Implemented spelling** (field block later moved under `new { ... }` in **0.8.3**):
 
 ```echo
 class Point {
-    x: int;
-    y: int;
+    new {
+        x: int;
+        y: int;
+    }
 }
 
 p: Point = Point { x: 3, y: 4 };
@@ -396,7 +416,7 @@ p.x = 10;
 
 Rules:
 
-- `class Name { field: T; ... }` declares a nominal type `Name`
+- `class Name { new { field: T; ... } }` declares a nominal type `Name` (as of 0.8.3)
 - Field list is **exact**: every field required; extras abort (**E3208** / **E3209**)
 - Construct with **`Name { field: expr, ... }`** (named fields only; order free). No positional `Point(3, 4)` in 0.8.0
 - `export class Name { ... }` allowed, same as other top-level declarations
@@ -421,8 +441,10 @@ Attach functions to a class. Receiver is explicit as the first parameter named *
 
 ```echo
 class Point {
-    x: int;
-    y: int;
+    new {
+        x: int;
+        y: int;
+    }
 
     fn length(this) -> int {
         return this.x * this.x + this.y * this.y;
@@ -465,8 +487,10 @@ interface Named {
 }
 
 class User {
-    id: int;
-    label: str;
+    new {
+        id: int;
+        label: str;
+    }
 
     fn name(this) -> str {
         return this.label;
@@ -490,32 +514,208 @@ Rules:
 - **No** `extends` / class inheritance in 0.8. Shared behavior = interfaces + composition (store another instance as a field)
 - No default method bodies in 0.8.2
 
+### 0.8.3 — explicit `new { ... }` field block
+
+Make the constructor surface obvious inside `class`, without changing the call site.
+
+**Implemented spelling:**
+
+```echo
+class Point {
+    new {
+        x: int;
+        y: int;
+    }
+
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
+}
+
+p: Point = Point { x: 3, y: 4 };
+```
+
+Rules:
+
+- Fields live under **`new { field: T; ... }`** (exact shape, same **E3208** / **E3209** rules)
+- Call site stays **`Point { x: 3, y: 4 }`** (named fields only; order free)
+- Methods stay top-level in the class body (`fn …(this, …)`); may appear before or after `new`
+- Empty classes may omit `new` (`class Marker { }`) or use `new { }`
+- Bare top-level `x: int;` inside `class` is a **parse error**
+- At most one `new` block per class
+- Keyword is **`new`**, not `construct` / `init`
+
+Does not add ctor method bodies, positional `Point(3, 4)`, or `new Point(...)`.
+
+### 0.8.4 — field defaults
+
+Defaults on constructor fields so callers may omit them.
+
+**Working spelling:**
+
+```echo
+class Point {
+    new {
+        x: int = 0;
+        y: int = 0;
+    }
+}
+
+origin: Point = Point {};
+p: Point = Point { x: 3 };
+```
+
+Rules:
+
+- Default is an expression evaluated at construction time (same evaluation rules as fn defaults)
+- Omitted fields use their default; required fields without defaults still **E3209**
+- Extra fields still **E3208**
+- Defaults do not change assignability of `Point` itself
+
+Does not add optional types or `null`-default sugar beyond what expressions already allow.
+
+### 0.8.5 — unbound methods
+
+Use a method without an instance binding, by passing the receiver explicitly.
+
+**Working spelling:**
+
+```echo
+class Point {
+    new { x: int; y: int; }
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
+}
+
+p: Point = Point { x: 3, y: 4 };
+say(Point.length(p));
+raw: fn(Point) -> int = Point.length;
+say(raw(p));
+```
+
+Rules:
+
+- `Point.length` is an unbound `fn(Point, …) -> T` (first param is the class type)
+- `Point.length(p, …)` is equivalent to `p.length(…)` when `p` is `Point`
+- Bound form `p.length` stays as in 0.8.1
+- Unknown method on the type name → member error family
+
+Does not add static/type methods without a receiver (that is **0.8.6**).
+
+### 0.8.6 — type methods (no `this`)
+
+Methods that belong to the type, not an instance — factory / helpers.
+
+**Working spelling:**
+
+```echo
+class Point {
+    new { x: int; y: int; }
+
+    fn origin() -> Point {
+        return Point { x: 0, y: 0 };
+    }
+
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
+}
+
+p: Point = Point.origin();
+```
+
+Rules:
+
+- No `this` parameter ⇒ type method; call as **`Point.origin()`**
+- May not read/write instance fields except through a constructed value
+- Type method as value: `Point.origin` is `fn() -> Point` (or with its params)
+- Instance methods still require `this` as first param
+- Name clash between type method and instance method is a semantic error
+
+Does not add free-standing `static` keyword. Absence of `this` is the signal.
+
+### 0.8.7 — optional `implements` clause
+
+Make intended interfaces visible at the class declaration; inference remains.
+
+**Working spelling:**
+
+```echo
+interface Named {
+    fn name(this) -> str;
+}
+
+class User implements Named {
+    new {
+        id: int;
+        label: str;
+    }
+
+    fn name(this) -> str {
+        return this.label;
+    }
+}
+```
+
+Rules:
+
+- `implements I, J` is **optional**. Omitting it keeps 0.8.2 inferred assignability
+- When present, the class must provide every listed interface’s methods (compatible signatures) or abort at analyze time (new **E32xx** or reuse existing type errors)
+- Multiple interfaces allowed; order free
+- Still **no** class inheritance / `extends`
+
+Does not require `implements` for assignability (inference stays).
+
+### 0.8.8 — docs / examples / README release pass
+
+No new language syntax. Make the public surface match 0.8.0–0.8.7 before shipping.
+
+- README: remove stale “no classes”; install path ready for PyPI (`pipx install echolang` / prefer `echolang` over `echo`)
+- Getting started + language reference: `new { }`, defaults, unbound/type methods, optional `implements`
+- Capability matrix / known limitations / semantics notes through 0.8.7
+- At least one small examples set covering class + interface
+- Highlighter / VitePress keyword sync for `new` in class-body context if needed
+- Confirm `./build.sh` builds a clean sdist+wheel; dry-run upload to **TestPyPI** encouraged
+
+### 0.8.9 — first PyPI release
+
+Publish **`echolang`** to PyPI. Language surface is whatever 0.8.8 documented.
+
+- Version **0.8.9** in `pyproject.toml` / `__init__.py` / highlighter package
+- Tag **`v0.8.9`**
+- Upload via `./build.sh --release` (or Trusted Publishing) after full pytest green
+- Post-release: docs install section points at PyPI; changelog marks first public package release
+- **Do not** publish 0.8.0–0.8.8 to PyPI as the first public versions if avoidable — 0.8.9 is the intentional first upload
+
 ### 0.8 open questions
 
 | Topic | Working assumption | Alternatives |
 | --- | --- | --- |
-| Keyword | `class` (struct-like) | `struct`; keep `class` for later inheritance |
-| Construction | `Point { x: 3, y: 4 }` | `Point.new(3, 4)`; positional `Point(3, 4)` |
-| Receiver name | `this` | `self` |
-| Equality | field-wise `==` | identity / `===` later |
-| Unbound methods | not in 0.8.1 | `Point.length(p)` |
-| Static methods | held | `fn origin() -> Point` on the class |
-| Visibility | all fields/methods public | `priv` / module-private later |
-| `implements` clause | inferred | required `implements Named` |
-| Inheritance | never in 0.8; interfaces only | single `extends` in a later 0.8.x |
-| Class vs exact hash | strictly nominal | allow explicit convert helpers |
+| Keyword | `class` (struct-like) — locked | `struct` |
+| Construction call | `Point { x: 3, y: 4 }` — locked | `Point.new(...)`; positional `Point(3, 4)` |
+| Ctor field block | `new { ... }` — locked in **0.8.3** | keep bare fields forever |
+| Receiver name | `this` — locked | `self` |
+| Equality | field-wise `==` — locked | identity / `===` later |
+| Unbound methods | **0.8.5** | never |
+| Type methods | **0.8.6** (no `this`) | `static` keyword |
+| Visibility | all public through 0.8.9 | `priv` later (held) |
+| `implements` | optional in **0.8.7**; inference remains | required always |
+| Inheritance | never in 0.8 | single `extends` later series |
+| Class vs exact hash | strictly nominal | convert helpers later |
+| First PyPI version | **0.8.9** | 1.0.0 |
 
 ### Out of 0.8 (still held globally)
 
-Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, and `match` / `Result` remain outside this spine.
+Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, `priv`, and `match` / `Result` remain outside this spine.
 
 ## Held (do not implement)
 
-Do not move global holds into 0.7. **0.8.0–0.8.2 are implemented** (OOP spine closed). The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.3 are implemented**; **0.8.4–0.8.9** stay held until started. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
-| Classes / OOP | **0.8.0–0.8.2** implemented (no inheritance) |
+| Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3** done; **0.8.4–0.8.9** drafted |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

@@ -20,8 +20,10 @@ foreach item: str in items { ... }
 fn greet(name: str) { ... }
 fn lock(const xs: list) { ... }
 class Point {
-    x: int;
-    y: int;
+    new {
+        x: int;
+        y: int;
+    }
     fn length(this) -> int { return this.x * this.x + this.y * this.y; }
 }
 p: Point = Point { x: 3, y: 4 };
@@ -41,7 +43,7 @@ watch count;
 - `void` — function return annotations only
 - Unions: `int | str` (no `null` type member; prefer `str | void`)
 - Object shapes: `{ id: int }` (open) and `exact { id: int }` (closed)
-- Nominal classes: `class Point { x: int; y: int; }` (construction `Point { x: 3, y: 4 }`)
+- Nominal classes: `class Point { new { x: int; y: int; } }` (construction `Point { x: 3, y: 4 }`)
 - Interfaces: `interface Named { fn name(this) -> str; }`
 - Function types: `fn(int) -> int`
 

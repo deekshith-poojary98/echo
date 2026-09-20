@@ -54,8 +54,8 @@ say("Hello, Echo!");
 
 ## Next
 
-- [Playground](/playground) — run in the browser
+- [Playground](/playground)
 - [Installation](/getting-started/installation)
-- [Getting Started](/getting-started/getting-started)
+- [Getting Started / Language Tour](/getting-started/tour)
 - [Syntax Basics](/getting-started/syntax-basics)
 - [Variables and Types](/getting-started/variables-and-types)

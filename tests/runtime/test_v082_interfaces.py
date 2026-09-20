@@ -35,8 +35,10 @@ interface Named {
 }
 
 class User {
+    new {
     id: int;
     label: str;
+    }
 
     fn name(this) -> str {
         return this.label;
@@ -62,7 +64,9 @@ interface Named {
     fn name(this) -> str;
 }
 class User {
+    new {
     label: str;
+    }
     fn name(this) -> str {
         return this.label;
     }
@@ -82,7 +86,9 @@ interface Named {
     fn name(this) -> str;
 }
 class User {
+    new {
     id: int;
+    }
 }
 n: Named = User { id: 1 };
 """
@@ -103,7 +109,9 @@ interface Labeled {
     fn label(this) -> str;
 }
 class User {
+    new {
     text: str;
+    }
     fn name(this) -> str {
         return this.text;
     }
@@ -127,7 +135,9 @@ interface Named {
     fn name(this) -> str;
 }
 class User {
+    new {
     label: str;
+    }
     fn name(this) -> str {
         return this.label;
     }
@@ -150,7 +160,9 @@ interface Named {
     fn name(this) -> str;
 }
 class User {
+    new {
     label: str;
+    }
     fn name(this) -> str {
         return this.label;
     }
@@ -185,7 +197,9 @@ def test_export_interface(tmp_path: Path):
                     fn name(this) -> str;
                 }
                 export class User {
+                    new {
                     label: str;
+                    }
                     fn name(this) -> str {
                         return this.label;
                     }

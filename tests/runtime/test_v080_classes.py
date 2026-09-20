@@ -16,8 +16,10 @@ def test_parser_builds_class_and_construction():
     program = parse_source(
         """
 class Point {
+    new {
     x: int;
     y: int;
+    }
 }
 p: Point = Point { x: 3, y: 4 };
 p.x = 10;
@@ -38,8 +40,10 @@ def test_construct_read_assign_and_type_name():
     result = run_echo(
         """
 class Point {
+    new {
     x: int;
     y: int;
+    }
 }
 p: Point = Point { x: 3, y: 4 };
 say(p.x);
@@ -67,7 +71,7 @@ say(type(m));
 def test_construction_rejects_extra_field_with_e3208():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 p: Point = Point { x: 1, y: 2, z: 3 };
 """
     )
@@ -79,7 +83,7 @@ p: Point = Point { x: 1, y: 2, z: 3 };
 def test_construction_rejects_missing_field_with_e3209():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 p: Point = Point { x: 1 };
 """
     )
@@ -91,7 +95,7 @@ p: Point = Point { x: 1 };
 def test_exact_hash_is_not_assignable_to_class():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 h: exact { x: int, y: int } = { x: 1, y: 2 };
 p: Point = h;
 """
@@ -104,7 +108,7 @@ p: Point = h;
 def test_class_is_not_assignable_to_exact_hash():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 p: Point = Point { x: 1, y: 2 };
 h: exact { x: int, y: int } = p;
 """
@@ -117,7 +121,7 @@ h: exact { x: int, y: int } = p;
 def test_unknown_field_is_e2704():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 p: Point = Point { x: 1, y: 2 };
 say(p.z);
 """
@@ -130,7 +134,7 @@ say(p.z);
 def test_equality_is_field_wise():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 a: Point = Point { x: 1, y: 2 };
 b: Point = Point { x: 1, y: 2 };
 c: Point = Point { x: 9, y: 2 };
@@ -145,7 +149,7 @@ say(a == c);
 def test_destructure_class_as_hash_shaped():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 p: Point = Point { x: 3, y: 4 };
 { x: int, y: int } = p;
 say(x);
@@ -159,7 +163,7 @@ say(y);
 def test_const_instance_rejects_field_assign():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 const p: Point = Point { x: 1, y: 2 };
 p.x = 9;
 """
@@ -172,7 +176,7 @@ p.x = 9;
 def test_frozen_instance_via_other_name_is_e3203():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 const locked: Point = Point { x: 1, y: 2 };
 alias: Point = locked;
 alias.x = 9;
@@ -186,7 +190,7 @@ alias.x = 9;
 def test_switch_type_arm_matches_class():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 v: Point | int = Point { x: 1, y: 2 };
 switch v {
     Point { say("point"); }
@@ -201,7 +205,7 @@ switch v {
 def test_switch_type_arm_binds_class():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 p: Point = Point { x: 7, y: 8 };
 switch p {
     Point pt { say(pt.x); }
@@ -216,7 +220,7 @@ switch p {
 def test_union_with_class():
     result = run_echo(
         """
-class Point { x: int; y: int; }
+class Point { new { x: int; y: int; }}
 v: Point | str = Point { x: 1, y: 2 };
 say(type(v));
 """
@@ -229,14 +233,17 @@ def test_formatter_prints_class():
     formatted = format_source(
         """
 class Point {
+new {
 x: int;
 y: int;
+}
 }
 p: Point = Point { x: 3, y: 4 };
 p.x = 10;
 """
     )
     assert "class Point {" in formatted
+    assert "new {" in formatted
     assert "x: int;" in formatted
     assert "Point {x: 3, y: 4}" in formatted or "Point { x: 3, y: 4 }" in formatted
     assert "p.x = 10;" in formatted
@@ -248,8 +255,10 @@ def test_export_class_can_be_imported(tmp_path: Path):
         {
             "geo.echo": """
                 export class Point {
+                    new {
                     x: int;
                     y: int;
+                    }
                 }
             """,
             "app.echo": """
@@ -268,8 +277,10 @@ def test_private_class_cannot_be_imported(tmp_path: Path):
         {
             "geo.echo": """
                 class Point {
+                    new {
                     x: int;
                     y: int;
+                    }
                 }
             """,
             "app.echo": """

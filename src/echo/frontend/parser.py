@@ -463,6 +463,7 @@ class Parser:
         methods: list[FunctionDeclaration] = []
         seen_fields: set[str] = set()
         seen_methods: set[str] = set()
+        saw_new = False
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
             if self._check(TokenType.FN):
                 method = self._parse_method(name_token.lexeme)
@@ -479,15 +480,53 @@ class Parser:
                 seen_methods.add(method.name)
                 methods.append(method)
                 continue
+            if self._check(TokenType.NEW):
+                if saw_new:
+                    raise ParseError(
+                        f"Class '{name_token.lexeme}' already has a 'new' field block",
+                        self._peek().location,
+                    )
+                saw_new = True
+                fields.extend(
+                    self._parse_class_new_block(
+                        name_token.lexeme,
+                        seen_fields,
+                        seen_methods,
+                    )
+                )
+                continue
+            if self._is_name(self._peek()) and self._check_offset(1, TokenType.COLON):
+                raise ParseError(
+                    "Class fields must be declared inside 'new { ... }'",
+                    self._peek().location,
+                )
+            unexpected = self._peek()
+            raise ParseError(
+                f"Unexpected token in class body: {unexpected.lexeme}",
+                unexpected.location,
+            )
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return ClassDeclaration(token.location, name_token.lexeme, fields, methods)
+
+    def _parse_class_new_block(
+        self,
+        class_name: str,
+        seen_fields: set[str],
+        seen_methods: set[str],
+    ) -> list[ClassField]:
+        self._expect(TokenType.NEW, "new")
+        self._expect(TokenType.LEFT_BRACE, "{")
+        fields: list[ClassField] = []
+        while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
             field_token = self._expect_name_token("class field name")
             if field_token.lexeme in seen_fields:
                 raise ParseError(
-                    f"Duplicate field '{field_token.lexeme}' in class '{name_token.lexeme}'",
+                    f"Duplicate field '{field_token.lexeme}' in class '{class_name}'",
                     field_token.location,
                 )
             if field_token.lexeme in seen_methods:
                 raise ParseError(
-                    f"Field '{field_token.lexeme}' conflicts with a method in class '{name_token.lexeme}'",
+                    f"Field '{field_token.lexeme}' conflicts with a method in class '{class_name}'",
                     field_token.location,
                 )
             seen_fields.add(field_token.lexeme)
@@ -498,7 +537,7 @@ class Parser:
             self._expect(TokenType.SEMICOLON, ";")
             fields.append(ClassField(field_token.lexeme, field_type, field_token.location))
         self._expect(TokenType.RIGHT_BRACE, "}")
-        return ClassDeclaration(token.location, name_token.lexeme, fields, methods)
+        return fields
 
     def _parse_method(self, class_name: str) -> FunctionDeclaration:
         fn_token = self._expect(TokenType.FN, "fn")

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.3
+
+Explicit `new { ... }` field block. First 0.8 polish increment. Failure model unchanged. Call site unchanged.
+
+- Spelling: **`class Point { new { x: int; y: int; } ... }`** — fields live under **`new { ... }`**
+- Construction stays **`Point { x: 3, y: 4 }`** (named fields; order free)
+- Methods stay top-level in the class body (`fn …(this, …)`); may appear before or after `new`
+- Bare top-level `x: int;` inside a class is a **parse error** (breaking within 0.8 polish)
+- Empty classes may omit `new` (`class Marker { }`) or use `new { }`
+- At most one `new` block per class
+- Formatter emits `new { ... }` when the class has fields
+- Keyword **`new`** (highlighter / docs synced)
+
 ## 0.8.2
 
 `interface` (no class inheritance). Third 0.8 language increment — closes the 0.8 OOP spine. Failure model unchanged.

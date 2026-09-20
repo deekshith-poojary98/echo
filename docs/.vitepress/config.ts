@@ -9,7 +9,14 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', type: 'image/jpeg', href: '/echo/echo_logo.jpg' }],
     ['link', { rel: 'shortcut icon', type: 'image/jpeg', href: '/echo/echo_logo.jpg' }],
-    ['link', { rel: 'apple-touch-icon', href: '/echo/echo_logo.jpg' }]
+    ['link', { rel: 'apple-touch-icon', href: '/echo/echo_logo.jpg' }],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,550;9..144,650&family=IBM+Plex+Mono:wght@400;500&display=swap'
+      }
+    ]
   ],
   cleanUrls: true,
   lastUpdated: true,
@@ -24,8 +31,10 @@ export default defineConfig({
   },
   themeConfig: {
     logo: '/echo_logo.jpg',
+    siteTitle: false,
     nav: [
-      { text: 'Docs', link: '/getting-started/quick-start' },
+      { text: 'Install', link: '/getting-started/installation' },
+      { text: 'Learn', link: '/getting-started/quick-start' },
       { text: 'Playground', link: '/playground' },
       { text: 'Examples', link: '/examples/hello-world' },
       { text: 'Reference', link: '/reference/language-reference' },
@@ -33,26 +42,31 @@ export default defineConfig({
     ],
     sidebar: [
       {
-        text: 'Getting Started',
+        text: 'Start',
         items: [
           { text: 'Installation', link: '/getting-started/installation' },
-          { text: 'Playground', link: '/playground' },
           { text: 'Quick Start', link: '/getting-started/quick-start' },
-          { text: 'Getting Started', link: '/getting-started/getting-started' },
+          { text: 'Playground', link: '/playground' }
+        ]
+      },
+      {
+        text: 'Language',
+        items: [
+          { text: 'Language Tour', link: '/getting-started/tour' },
           { text: 'Syntax Basics', link: '/getting-started/syntax-basics' },
           { text: 'Variables and Types', link: '/getting-started/variables-and-types' },
           { text: 'Strings and Interpolation', link: '/getting-started/strings-and-interpolation' },
           { text: 'Control Flow', link: '/getting-started/control-flow' },
-          { text: 'Functions', link: '/getting-started/functions' }
+          { text: 'Functions', link: '/getting-started/functions' },
+          { text: 'Scope, use, and watch', link: '/core-concepts/scope-use-watch' }
         ]
       },
       {
-        text: 'Core Concepts',
+        text: 'Data',
         items: [
           { text: 'Lists', link: '/core-concepts/lists' },
           { text: 'Hashes', link: '/core-concepts/hashes' },
-          { text: 'Type Aliases', link: '/core-concepts/type-aliases' },
-          { text: 'Scope, use, and watch', link: '/core-concepts/scope-use-watch' }
+          { text: 'Type Aliases', link: '/core-concepts/type-aliases' }
         ]
       },
       {
@@ -75,14 +89,15 @@ export default defineConfig({
       {
         text: 'Reference',
         items: [
+          { text: 'Language Reference', link: '/reference/language-reference' },
           { text: 'Operators', link: '/reference/operators' },
           { text: 'Loops Reference', link: '/reference/loops-reference' },
           { text: 'CLI and Execution Model', link: '/reference/cli-and-execution-model' },
-          { text: 'Language Reference', link: '/reference/language-reference' }
+          { text: 'Failure Model', link: '/failure-model' }
         ]
       },
       {
-        text: 'Errors & Diagnostics',
+        text: 'Errors',
         items: [
           { text: 'Errors and Troubleshooting', link: '/errors-diagnostics/errors-and-troubleshooting' },
           { text: 'Known Limitations', link: '/errors-diagnostics/known-limitations' }
@@ -91,12 +106,7 @@ export default defineConfig({
       {
         text: 'Project',
         items: [
-          { text: 'Roadmap / Planned Improvements', link: '/project/roadmap' },
-          { text: 'Remaining Feature Priority', link: '/project/priority' },
-          { text: 'Language Capability Matrix', link: '/language-capability-matrix' },
-          { text: 'v0.4 Language vs Stdlib', link: '/v0.4-language-vs-stdlib' },
-          { text: 'v0.4 Standard Library', link: '/v0.4-stdlib' },
-          { text: 'Failure Model', link: '/failure-model' }
+          { text: 'Roadmap', link: '/project/roadmap' }
         ]
       }
     ],
