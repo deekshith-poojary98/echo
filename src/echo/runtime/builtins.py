@@ -497,9 +497,12 @@ def as_int(value: object, location: SourceLocation | None = None) -> int:
         text = value.strip()
         signed = text[0] in "+-" if text else False
         digits = text[1:] if signed else text
-        if text == "" or not digits.isdigit():
+        if text == "" or not digits.isdecimal():
             raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
-        return int(text)
+        try:
+            return int(text)
+        except ValueError as exc:
+            raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606") from exc
     raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
 
 
