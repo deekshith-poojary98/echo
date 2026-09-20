@@ -44,6 +44,7 @@ class ClassType(TypeAnnotation):
     name: str
     fields: dict[str, TypeAnnotation]
     methods: dict[str, FunctionType] = field(default_factory=dict)
+    default_fields: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass
@@ -363,6 +364,7 @@ class ClassField:
     name: str
     type: TypeAnnotation
     location: SourceLocation
+    default: Expression | None = None
 
 
 @dataclass

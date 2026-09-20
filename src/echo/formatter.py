@@ -185,7 +185,10 @@ class _Printer:
                 self._line("new {")
                 self._indent += 1
                 for field in statement.fields:
-                    self._line(f"{field.name}: {self._type(field.type)};")
+                    line = f"{field.name}: {self._type(field.type)}"
+                    if field.default is not None:
+                        line += f" = {self._expr(field.default)}"
+                    self._line(f"{line};")
                 self._indent -= 1
                 self._line("}")
             for method in statement.methods:

@@ -601,11 +601,11 @@ class SemanticAnalyzer:
                 )
             provided = {name for name, _ in expression.fields}
             for field_name in class_type.fields:
-                if field_name not in provided:
+                if field_name not in provided and field_name not in class_type.default_fields:
                     raise SemanticError(
                         f"Class '{expression.class_name}' is missing required field '{field_name}'",
                         expression.location,
-                        help_text="Class construction requires every declared field.",
+                        help_text="Class construction requires every declared field without a default.",
                         code="E3209",
                     )
             for field_name, field_value in expression.fields:
@@ -986,6 +986,7 @@ class SemanticAnalyzer:
             statement.name,
             {field.name: field.type for field in statement.fields},
             methods,
+            frozenset(field.name for field in statement.fields if field.default is not None),
         )
 
     def _interface_type(self, statement: InterfaceDeclaration) -> InterfaceType:
@@ -1480,10 +1481,27 @@ class SemanticAnalyzer:
                 code="E1012",
             )
         fields: dict[str, TypeAnnotation] = {}
+        default_fields: set[str] = set()
         for field in statement.fields:
             fields[field.name] = self._resolve_type(field.type, scope)
             field.type = fields[field.name]
-        class_type = ClassType(statement.location, statement.name, fields, {})
+            if field.default is not None:
+                default_fields.add(field.name)
+                self._expression(field.default, scope)
+                self._check_typed_binding(
+                    field.default,
+                    field.type,
+                    scope,
+                    field.location,
+                    field.name,
+                )
+        class_type = ClassType(
+            statement.location,
+            statement.name,
+            fields,
+            {},
+            frozenset(default_fields),
+        )
         scope.classes[statement.name] = class_type
         methods: dict[str, FunctionType] = {}
         for method in statement.methods:
@@ -1598,7 +1616,13 @@ class SemanticAnalyzer:
                 resolved = self._resolve_type(method_type, scope)
                 if isinstance(resolved, FunctionType):
                     methods[name] = resolved
-            return ClassType(type_annotation.location, type_annotation.name, fields, methods)
+            return ClassType(
+                type_annotation.location,
+                type_annotation.name,
+                fields,
+                methods,
+                type_annotation.default_fields,
+            )
         if isinstance(type_annotation, InterfaceType):
             existing = scope.interfaces.get(type_annotation.name)
             if existing is not None:

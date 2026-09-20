@@ -11,7 +11,7 @@ Already in the language or CLI:
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
-- Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3)
+- Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3); field defaults (0.8.4)
 
 ## Next
 
@@ -20,14 +20,14 @@ Already in the language or CLI:
 | Version | Item | Status |
 | --- | --- | --- |
 | 0.8.3 | Explicit `new { ... }` field block | implemented (0.8.3) |
-| 0.8.4 | Field defaults in construction | held (draft) |
+| 0.8.4 | Field defaults in construction | implemented (0.8.4) |
 | 0.8.5 | Unbound methods `Point.length(p)` | held (draft) |
 | 0.8.6 | Type methods (no `this`) | held (draft) |
 | 0.8.7 | Optional `implements` clause | held (draft) |
 | 0.8.8 | Docs / README release pass | held (draft) |
 | 0.8.9 | First PyPI release (`echolang`) | held (draft) |
 
-Details and spellings: [Priority — 0.8.x](/project/priority). Start with `start 0.8.4`.
+Details and spellings: [Priority — 0.8.x](/project/priority). Start with `start 0.8.5`.
 
 ## Held
 

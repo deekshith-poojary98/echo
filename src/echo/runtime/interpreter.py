@@ -176,6 +176,8 @@ class Interpreter:
         self.host = host or Host()
         self.test_session = test_session
         self._class_methods: dict[str, dict[str, EchoFunction]] = {}
+        self._class_field_defaults: dict[str, dict[str, object]] = {}
+        self._class_field_types: dict[str, dict[str, object]] = {}
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -191,6 +193,14 @@ class Interpreter:
                 for method in statement.methods
             }
             self._class_methods[statement.name] = methods
+            self._class_field_defaults[statement.name] = {
+                field.name: field.default
+                for field in statement.fields
+                if field.default is not None
+            }
+            self._class_field_types[statement.name] = {
+                field.name: field.type for field in statement.fields
+            }
             from echo.frontend.ast.nodes import FunctionType, TypeName
             from echo.runtime.class_registry import register_class_methods
 
@@ -478,6 +488,15 @@ class Interpreter:
             )
         if isinstance(expression, ClassConstruction):
             values = {name: self.evaluate(value, env) for name, value in expression.fields}
+            defaults = self._class_field_defaults.get(expression.class_name, {})
+            for field_name, default_expr in defaults.items():
+                if field_name not in values:
+                    values[field_name] = self.evaluate(default_expr, env)  # type: ignore[arg-type]
+            field_types = self._class_field_types.get(expression.class_name, {})
+            for field_name, value in values.items():
+                expected = field_types.get(field_name)
+                if expected is not None:
+                    validate_type(field_name, value, expected, expression.location)  # type: ignore[arg-type]
             return ClassInstance(expression.class_name, values)
         if isinstance(expression, CallExpression):
             return self._call(expression, env)

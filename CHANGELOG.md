@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.4
+
+Field defaults in `new { ... }`. Second 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`x: int = 0;`** inside `new { ... }`
+- Omitted fields use their default at construction (`Point {}`, `Point { x: 3 }`)
+- Required fields without defaults still **E3209**; extras still **E3208**
+- Defaults are expressions evaluated at construction time (same idea as fn parameter defaults)
+- Construction field values (provided or defaulted) are type-checked (**E2001**)
+- Defaults do not change assignability of the class type itself
+
 ## 0.8.3
 
 Explicit `new { ... }` field block. First 0.8 polish increment. Failure model unchanged. Call site unchanged.

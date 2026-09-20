@@ -94,7 +94,7 @@ p.x = 10;
 say(type(p)); // "Point"
 ```
 
-`Point` is a nominal type — not the same as `exact { x: int, y: int }`. Fields are declared under **`new { ... }`**. Construction requires every field and rejects extras. Methods use an explicit `this` receiver: `fn length(this) -> int { ... }`, call `p.length()`, and `p.length` is a bound function value. Interfaces declare method signatures only (`interface Named { fn name(this) -> str; }`); a class implements them by providing compatible methods (no `implements` clause).
+`Point` is a nominal type — not the same as `exact { x: int, y: int }`. Fields are declared under **`new { ... }`** (optional defaults: `x: int = 0`). Construction requires every field without a default and rejects extras. Methods use an explicit `this` receiver: `fn length(this) -> int { ... }`, call `p.length()`, and `p.length` is a bound function value. Interfaces declare method signatures only (`interface Named { fn name(this) -> str; }`); a class implements them by providing compatible methods (no `implements` clause).
 
 ### Runtime type checking
 ```echo

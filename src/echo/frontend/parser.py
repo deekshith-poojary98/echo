@@ -534,8 +534,13 @@ class Parser:
             field_type = self._parse_type()
             if isinstance(field_type, TypeName) and field_type.name == "void":
                 raise ParseError("Cannot use 'void' as a field type", field_token.location)
+            default = None
+            if self._match(TokenType.EQUAL):
+                default = self.parse_expression()
             self._expect(TokenType.SEMICOLON, ";")
-            fields.append(ClassField(field_token.lexeme, field_type, field_token.location))
+            fields.append(
+                ClassField(field_token.lexeme, field_type, field_token.location, default)
+            )
         self._expect(TokenType.RIGHT_BRACE, "}")
         return fields
 
