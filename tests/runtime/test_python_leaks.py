@@ -198,6 +198,15 @@ def test_wait_nonfinite_is_echo_error_not_python():
     assert "finite" in result.output
 
 
+def test_wait_integer_too_large_for_float_is_echo_error_not_python():
+    huge = "1" + "0" * 400
+    result = run_echo(f"wait({huge});\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "wait()" in result.output
+    assert "finite" in result.output
+
+
 def test_as_int_infinity_is_echo_error_not_python():
     result = run_echo("say(asInt(1e400));\n")
     assert result.exit_code == 1

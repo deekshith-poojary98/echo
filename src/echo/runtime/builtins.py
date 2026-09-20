@@ -510,7 +510,10 @@ def as_float(value: object, location: SourceLocation | None = None) -> float:
     if isinstance(value, bool):
         raise EchoTypeError("Cannot convert bool to float", location, code="E2607")
     if isinstance(value, (int, float)):
-        result = float(value)
+        try:
+            result = float(value)
+        except OverflowError as exc:
+            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607") from exc
         if not math.isfinite(result):
             raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
         return result
@@ -541,7 +544,11 @@ def do_wait(seconds: object, location: SourceLocation | None = None) -> None:
         raise ArgumentError("wait() requires a finite number of seconds", location, code="E2608")
     if seconds < 0:
         raise ArgumentError("wait() requires a non-negative number of seconds", location, code="E2608")
-    time.sleep(float(seconds))
+    try:
+        duration = float(seconds)
+    except OverflowError as exc:
+        raise ArgumentError("wait() requires a finite number of seconds", location, code="E2608") from exc
+    time.sleep(duration)
 
 
 def do_clone(value: object, location: SourceLocation | None = None) -> object:
@@ -1105,6 +1112,13 @@ def do_random_int(low: object, high: object, location: SourceLocation | None = N
     if low > high:
         raise EchoRuntimeError("randomInt() min must be <= max", location, code="E2823")
     return random.randint(low, high)
+
+
+def do_ask(prompt: object, location: SourceLocation | None = None) -> str:
+    try:
+        return input(str(prompt))
+    except EOFError as exc:
+        raise EchoRuntimeError("end of input", location, code="E2824") from exc
 
 
 def do_read_line(args: list[object], location: SourceLocation | None = None) -> str:
