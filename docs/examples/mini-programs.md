@@ -46,8 +46,8 @@ say(counts);
 `examples/json_report.echo` reads a JSON suite, prints a summary, and can write it back out.
 
 ```bash
-echolang examples/json_report.echo -- examples/sample_jobs.json
-ECHO_REPORT=report.json echolang examples/json_report.echo -- examples/sample_jobs.json
+elang examples/json_report.echo -- examples/sample_jobs.json
+ECHO_REPORT=report.json elang examples/json_report.echo -- examples/sample_jobs.json
 ```
 
 Uses `args()`, `envOr()`, `readFile()`, `writeFile()`, `parseJson()`, and `writeJson()`.

@@ -16,10 +16,10 @@ From a clone of this repo:
 python src/main.py hello.echo
 ```
 
-If Echo is installed (`echolang`):
+If Echo is installed (`elang`):
 
 ```bash
-echolang hello.echo
+elang hello.echo
 ```
 
 Output:

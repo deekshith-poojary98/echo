@@ -38,7 +38,7 @@ function deactivate() {}
 
 function cliPath() {
   const configured = vscode.workspace.getConfiguration("echo").get("path");
-  return typeof configured === "string" && configured.trim() ? configured.trim() : "echolang";
+  return typeof configured === "string" && configured.trim() ? configured.trim() : "elang";
 }
 
 function workspaceFolder() {
@@ -134,7 +134,7 @@ function formatDocument(document) {
         if (error) {
           if (error.code === "ENOENT") {
             vscode.window.showErrorMessage(
-              `Echo: CLI not found (${cliPath()}). Install Echo and put echolang on PATH, or set echo.path.`,
+              `Echo: CLI not found (${cliPath()}). Install Echo and put elang on PATH, or set echo.path.`,
             );
           }
           resolve([]);

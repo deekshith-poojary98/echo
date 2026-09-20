@@ -36,7 +36,7 @@ for i: int in 0..10 by 2 {
 
 ## Install
 
-Python 3.10+. Prefer the command name **`echolang`** — shells often reserve `echo`.
+Python 3.10+. Prefer the command name **`elang`** — short, and shells often reserve `echo`. The package also registers `echolang` (and `echo`).
 
 Package name on PyPI will be **`echolang`** (first public upload planned for **0.8.9**). Until then, install from GitHub or a clone.
 
@@ -46,7 +46,7 @@ Package name on PyPI will be **`echolang`** (first public upload planned for **0
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 pipx install git+https://github.com/deekshith-poojary98/echo.git
-echolang examples/language_feature_smoke.echo
+elang examples/language_feature_smoke.echo
 ```
 
 After the PyPI release:
@@ -60,7 +60,7 @@ pipx install echolang
 ```bash
 pip install .
 # or: pip install -e .
-echolang path/to/file.echo
+elang path/to/file.echo
 ```
 
 ### Without installing
@@ -70,7 +70,7 @@ python src/main.py examples/language_feature_smoke.echo
 python src/main.py examples/language_feature_smoke.echo --plain
 ```
 
-Repo launchers: `./echolang` (Unix) or `.\echolang.bat` (Windows).
+Repo launchers: `./elang` (Unix) or `.\elang.bat` (Windows). `./echolang` still works.
 
 ## Layout
 

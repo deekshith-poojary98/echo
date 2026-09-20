@@ -6,7 +6,7 @@ Run path: tokenize → parse → analyze → interpret. The CLI wraps that pipel
 python src/main.py file.echo
 python src/main.py file.echo --plain
 # or, once installed:
-echolang file.echo
+elang file.echo
 ```
 
 ## Pipeline
@@ -22,7 +22,7 @@ echolang file.echo
 
 ```bash
 python src/main.py program.echo
-# echolang program.echo
+# elang program.echo
 ```
 
 ### Plain output mode

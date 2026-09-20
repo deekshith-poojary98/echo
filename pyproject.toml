@@ -28,6 +28,7 @@ dev = ["pytest>=8.0"]
 
 [project.scripts]
 echo = "echo.cli.main:main"
+elang = "echo.cli.main:main"
 echolang = "echo.cli.main:main"
 
 [tool.setuptools]

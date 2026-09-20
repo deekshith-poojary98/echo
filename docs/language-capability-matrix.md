@@ -1046,10 +1046,10 @@ problem matchers. It highlights current keywords, types, builtins (`expect`,
 `fail`, `assert`, `*Or` twins, host/stdlib), comments, strings with `${...}`,
 and number literals.
 
-Commands / Run Task run `echolang check`, `fmt`, `lint`, and `test` (`--plain`)
+Commands / Run Task run `elang check`, `fmt`, `lint`, and `test` (`--plain`)
 so CLI diagnostics appear in the Problems panel. **Echo: Check workspace**
-(0.5.9) runs `echolang check --plain` on the folder; **Echo: Check file**
-remains. Format Document shells out to `echolang fmt`. There are still no
+(0.5.9) runs `elang check --plain` on the folder; **Echo: Check file**
+remains. Format Document shells out to `elang fmt`. There are still no
 completions, jump-to-definition, or a language server.
 
 **Priority.** Tooling. Shipped as highlight + tasks.

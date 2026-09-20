@@ -4,7 +4,7 @@
     {
       "label": "Echo: Check file",
       "type": "shell",
-      "command": "echolang",
+      "command": "elang",
       "args": ["check", "--plain", "${file}"],
       "problemMatcher": ["$echo"],
       "group": "build"
@@ -12,28 +12,28 @@
     {
       "label": "Echo: Check workspace",
       "type": "shell",
-      "command": "echolang",
+      "command": "elang",
       "args": ["check", "--plain", "${workspaceFolder}"],
       "problemMatcher": ["$echo"]
     },
     {
       "label": "Echo: Lint workspace",
       "type": "shell",
-      "command": "echolang",
+      "command": "elang",
       "args": ["lint", "--plain", "${workspaceFolder}"],
       "problemMatcher": ["$echo-lint", "$echo"]
     },
     {
       "label": "Echo: Format workspace",
       "type": "shell",
-      "command": "echolang",
+      "command": "elang",
       "args": ["fmt", "${workspaceFolder}"],
       "problemMatcher": ["$echo"]
     },
     {
       "label": "Echo: Test workspace",
       "type": "shell",
-      "command": "echolang",
+      "command": "elang",
       "args": ["test", "--plain", "${workspaceFolder}"],
       "problemMatcher": ["$echo-test-detail", "$echo-test"],
       "group": "test"

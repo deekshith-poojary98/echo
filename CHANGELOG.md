@@ -9,6 +9,7 @@ Docs / examples / README release pass. Sixth 0.8 polish increment. No new langua
 - Example: `examples/classes_and_interfaces.echo` and docs page Classes and Interfaces
 - Capability matrix / known limitations / semantics notes through 0.8.8
 - Highlighter keywords already include `new` / `implements`
+- CLI: preferred command is **`elang`** (also registers `echolang` and `echo`)
 
 ## 0.8.7
 

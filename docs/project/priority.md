@@ -94,7 +94,7 @@ Test-only continue-after-failure helpers. `message` must be `str`. `expect(cond,
 
 ### 14. Editor tasks + problem matchers
 
-VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command palette for `echo check`, `echo fmt`, `echo lint`, and `echo test`, with problem matchers into the Problems panel. Tasks use `--plain`. **Echo: Check workspace** (0.5.9) runs `echolang check --plain` on the folder; **Echo: Check file** remains. Not an LSP: no completions, jump-to-definition, or language-server diagnostics.
+VS Code / Cursor integration in `echo-syntax-highlighter/`: Run Task / command palette for `elang check`, `elang fmt`, `elang lint`, and `elang test`, with problem matchers into the Problems panel. Tasks use `--plain`. **Echo: Check workspace** (0.5.9) runs `elang check --plain` on the folder; **Echo: Check file** remains. Not an LSP: no completions, jump-to-definition, or language-server diagnostics.
 
 ### 15. `echo check [paths...]`
 
@@ -674,12 +674,13 @@ Does not require `implements` for assignability (inference stays).
 
 **Implemented.** No new language syntax. Public surface matches 0.8.0–0.8.7 before PyPI.
 
-- README: remove stale “no classes”; install path ready for PyPI (`pipx install echolang` / prefer `echolang` over `echo`)
+- README: remove stale “no classes”; install path ready for PyPI (`pipx install echolang` / prefer **`elang`** over `echolang` / `echo`)
 - Getting started + language reference: `new { }`, defaults, unbound/type methods, optional `implements`
 - Capability matrix / known limitations / semantics notes through 0.8.7
 - At least one small examples set covering class + interface
 - Highlighter / VitePress keyword sync for `new` in class-body context if needed
 - Confirm `./build.sh` builds a clean sdist+wheel; dry-run upload to **TestPyPI** encouraged
+- CLI: preferred command **`elang`** (also registers `echolang` and `echo`)
 
 ### 0.8.9 — first PyPI release
 

@@ -2,7 +2,8 @@
 
 ## 0.8.8
 
-- Package version bump only (docs release pass).
+- Package version bump (docs release pass).
+- Extension default CLI path is **`elang`** (was `echolang`).
 
 ## 0.8.7
 

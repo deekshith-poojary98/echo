@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+if [ -x "$SCRIPT_DIR/.venv/Scripts/python.exe" ]; then
+  PYTHON="$SCRIPT_DIR/.venv/Scripts/python.exe"
+elif [ -x "$SCRIPT_DIR/.venv/bin/python" ]; then
+  PYTHON="$SCRIPT_DIR/.venv/bin/python"
+else
+  PYTHON="python"
+fi
+export PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+"$PYTHON" -m echo "$@"
