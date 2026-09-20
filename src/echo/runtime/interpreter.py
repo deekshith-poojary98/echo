@@ -1673,6 +1673,10 @@ class Interpreter:
                 location,
                 code="E2704",
             )
+        if target.record is not None:
+            expected = target.record.field_types.get(name)
+            if expected is not None:
+                validate_type(name, value, expected, location)
         target.fields[name] = value
 
     def _bind_pattern_name(
