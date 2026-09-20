@@ -10,14 +10,6 @@ Create `hello.echo`:
 say("Hello, Echo!");
 ```
 
-From a clone of this repo:
-
-```bash
-python src/main.py hello.echo
-```
-
-If Echo is installed (`elang`):
-
 ```bash
 elang hello.echo
 ```
@@ -31,7 +23,7 @@ Hello, Echo!
 Plain diagnostics (no Rich panels):
 
 ```bash
-python src/main.py hello.echo --plain
+elang hello.echo --plain
 ```
 
 ## Rules you hit immediately

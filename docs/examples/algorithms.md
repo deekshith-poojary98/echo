@@ -75,8 +75,6 @@ Echo ports of common coding problems. Sources: [examples/](https://github.com/de
 
 ```bash
 elang examples/two_sum.echo
-# or from a clone:
-python src/main.py examples/two_sum.echo
 ```
 
 ## See Also

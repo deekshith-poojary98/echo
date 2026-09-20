@@ -3,10 +3,8 @@
 Run path: tokenize → parse → analyze → interpret. The CLI wraps that pipeline.
 
 ```bash
-python src/main.py file.echo
-python src/main.py file.echo --plain
-# or, once installed:
 elang file.echo
+elang file.echo --plain
 ```
 
 ## Pipeline
@@ -21,14 +19,13 @@ elang file.echo
 ### Run a file
 
 ```bash
-python src/main.py program.echo
-# elang program.echo
+elang program.echo
 ```
 
 ### Plain output mode
 
 ```bash
-python src/main.py program.echo --plain
+elang program.echo --plain
 ```
 
 `--plain` drops Rich panels for simple text diagnostics.
@@ -36,9 +33,9 @@ python src/main.py program.echo --plain
 ### Analyze without running
 
 ```bash
-echo check program.echo
-echo check src/
-echo check program.echo --plain
+elang check program.echo
+elang check src/
+elang check program.echo --plain
 ```
 
 `check` lexes, parses, and analyzes each file and its import graph. It does not execute.
@@ -46,15 +43,15 @@ echo check program.echo --plain
 - Directory → recursive `*.echo`. Explicit file paths always check.
 - Success: silence, exit 0. Failure: print every diagnostic, exit 1 after all paths (does not stop at the first bad file).
 - Missing path → exit 1. No path → help, exit 2.
-- First argv token must be the word `check`; `echo check.echo` still runs a file named `check.echo`.
+- First argv token must be the word `check`; `elang check.echo` still runs a file named `check.echo`.
 - `--plain` disables Rich panels.
 - Editor: **Echo: Check file** / **Echo: Check workspace** (`--plain`) → Problems panel.
 
 ### REPL
 
 ```bash
-echo
-echo --plain
+elang
+elang --plain
 ```
 
 No source file → REPL. `--plain` uses the same plain diagnostics as file runs.
@@ -72,14 +69,14 @@ Quit: `exit(code)` or EOF (Ctrl-D → exit 0). Session state dies with the proce
 ### Run tests
 
 ```bash
-echo test program.echo
-echo test path/foo_test.echo
-echo test tests/
-echo test program.echo --plain
-echo test tests/ --run '*Add*'
-echo test path/foo_test.echo -run testAdd --plain
-echo test tests/ --json
-echo test tests/ --run '*Add*' --json --plain
+elang test program.echo
+elang test path/foo_test.echo
+elang test tests/
+elang test program.echo --plain
+elang test tests/ --run '*Add*'
+elang test path/foo_test.echo -run testAdd --plain
+elang test tests/ --json
+elang test tests/ --run '*Add*' --json --plain
 ```
 
 Native test runner. No `test "name" { }` syntax.
@@ -88,7 +85,7 @@ Native test runner. No `test "name" { }` syntax.
 
 - Directory → recursive `*_test.echo`. Explicit file path always runs (even if not `*_test.echo`).
 - No path → help, exit 2.
-- First argv token must be `test`; `echo test.echo` still runs that file.
+- First argv token must be `test`; `elang test.echo` still runs that file.
 
 **Units**
 
@@ -111,7 +108,7 @@ Native test runner. No `test "name" { }` syntax.
 
 **Assertions**
 
-- `expect` / `expectEq` / `expectNeq` record and continue under this runner (`E2826`–`E2828`). Outside `echo test` they abort like `assert`.
+- `expect` / `expectEq` / `expectNeq` record and continue under this runner (`E2826`–`E2828`). Outside `elang test` they abort like `assert`.
 - `assert` / `fail` still abort the current unit; later units still run.
 - Parse / load errors fail that file as a unit.
 
@@ -149,23 +146,23 @@ FAIL path/foo_test.echo::testSub
 }
 ```
 
-Program `say` output is shown. Editor can run `echo test --plain` as a task.
+Program `say` output is shown. Editor can run `elang test --plain` as a task.
 
 ### Format source files
 
 ```bash
-echo fmt program.echo
-echo fmt src/
-echo fmt program.echo --check
-echo fmt program.echo --plain
+elang fmt program.echo
+elang fmt src/
+elang fmt program.echo --check
+elang fmt program.echo --plain
 ```
 
 Rewrites sources in place to the canonical layout (4-space indent, comments kept, `else if` flattening, parentheses from operator precedence).
 
 - Directory → recursive `*.echo`.
 - `--check`: print paths that would change, exit 1; clean → silence, exit 0.
-- Parse errors match `echo check`; file is not written.
-- No path → help, exit 2. First token must be `fmt`; `echo fmt.echo` still runs that file.
+- Parse errors match `elang check`; file is not written.
+- No path → help, exit 2. First token must be `fmt`; `elang fmt.echo` still runs that file.
 - Editor: Format Document / Format workspace.
 
 Side effects of formatting: number literals may respell (`1e3` → `1000.0`). Strings wrap from raw lexemes and are not re-escaped, so quote style may change (`'hello'` → `"hello"`).
@@ -173,17 +170,17 @@ Side effects of formatting: number literals may respell (`1e3` → `1000.0`). St
 ### Lint source files
 
 ```bash
-echo lint program.echo
-echo lint src/
-echo lint program.echo --plain
+elang lint program.echo
+elang lint src/
+elang lint program.echo --plain
 ```
 
-Style and convention findings. Does not run the program. Not a second typechecker — semantic errors stay `echo check`.
+Style and convention findings. Does not run the program. Not a second typechecker — semantic errors stay `elang check`.
 
 - Directory → recursive `*.echo`.
 - Finding line: `path:line:col: rule: message`. Any finding → exit 1; clean → silence, exit 0.
-- Parse errors match `echo check`.
-- No path → help, exit 2. First token must be `lint`; `echo lint.echo` still runs that file.
+- Parse errors match `elang check`.
+- No path → help, exit 2. First token must be `lint`; `elang lint.echo` still runs that file.
 - Editor task with `--plain` → Problems panel.
 
 | Rule | What it flags |

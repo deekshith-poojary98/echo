@@ -63,15 +63,6 @@ pip install .
 elang path/to/file.echo
 ```
 
-### Without installing
-
-```bash
-python src/main.py examples/language_feature_smoke.echo
-python src/main.py examples/language_feature_smoke.echo --plain
-```
-
-Repo launchers: `./elang` (Unix) or `.\elang.bat` (Windows). `./echolang` still works.
-
 ## Layout
 
 - `src/echo/` — frontend, semantics, modules, runtime, CLI

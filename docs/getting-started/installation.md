@@ -65,16 +65,6 @@ pip install -e .
 
 No path on `elang` / `echolang` / `echo` alone starts the REPL (see [CLI and Execution Model](/reference/cli-and-execution-model)).
 
-## Without installing
-
-From the repo:
-
-```bash
-python src/main.py examples/language_feature_smoke.echo
-python src/main.py examples/language_feature_smoke.echo --plain
-# or: ./elang examples/language_feature_smoke.echo
-```
-
 ## See Also
 
 - [Quick Start](/getting-started/quick-start)
