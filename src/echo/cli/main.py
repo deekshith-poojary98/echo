@@ -264,6 +264,11 @@ def _repl_bind_imports(program: Program, loader: ModuleLoader, env: Environment,
             loaded[statement.module] = loader.load(path, host=host)
         dependency = loaded[statement.module]
         if statement.name in dependency.class_exports:
+            record = (
+                dependency.env.resolve_class(statement.name) if dependency.env is not None else None
+            )
+            if record is not None:
+                env.define_class(statement.name, record)
             continue
         value = _repl_export_value(dependency, statement.name)
         if isinstance(value, EchoFunction):

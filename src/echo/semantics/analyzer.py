@@ -1076,6 +1076,7 @@ class SemanticAnalyzer:
             methods,
             frozenset(field.name for field in statement.fields if field.default is not None),
             type_methods,
+            id(statement),
         )
 
     def _interface_type(self, statement: InterfaceDeclaration) -> InterfaceType:
@@ -1590,6 +1591,7 @@ class SemanticAnalyzer:
             fields,
             {},
             frozenset(default_fields),
+            class_id=id(statement),
         )
         scope.classes[statement.name] = class_type
         methods: dict[str, FunctionType] = {}
@@ -1769,6 +1771,7 @@ class SemanticAnalyzer:
                 methods,
                 type_annotation.default_fields,
                 type_methods,
+                type_annotation.class_id,
             )
         if isinstance(type_annotation, InterfaceType):
             existing = scope.interfaces.get(type_annotation.name)

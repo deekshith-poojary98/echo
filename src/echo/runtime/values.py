@@ -69,11 +69,15 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
     if isinstance(type_spec, UnionType):
         return any(matches_type(value, member) for member in type_spec.members)
     if isinstance(type_spec, ClassType):
-        return isinstance(value, ClassInstance) and value.class_name == type_spec.name
+        if not isinstance(value, ClassInstance):
+            return False
+        if type_spec.class_id and value.record is not None and value.record.class_id:
+            return value.record.class_id == type_spec.class_id
+        return value.class_name == type_spec.name
     if isinstance(type_spec, InterfaceType):
-        from echo.runtime.class_registry import class_implements_interface
+        from echo.runtime.class_registry import instance_implements_interface
 
-        return isinstance(value, ClassInstance) and class_implements_interface(value.class_name, type_spec)
+        return isinstance(value, ClassInstance) and instance_implements_interface(value, type_spec)
     if isinstance(type_spec, ObjectType):
         if isinstance(value, ClassInstance):
             return False
@@ -464,6 +468,8 @@ def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> boo
             return False
         return all(_same_type(left.fields[name], right.fields[name]) for name in left.fields)
     if isinstance(left, ClassType) and isinstance(right, ClassType):
+        if left.class_id and right.class_id:
+            return left.class_id == right.class_id
         return left.name == right.name
     if isinstance(left, InterfaceType) and isinstance(right, InterfaceType):
         return left.name == right.name
@@ -543,6 +549,8 @@ def type_assignable(actual: TypeAnnotation | None, expected: TypeAnnotation | No
         return object_type_assignable(actual, expected)
 
     if isinstance(actual, ClassType) and isinstance(expected, ClassType):
+        if actual.class_id and expected.class_id:
+            return actual.class_id == expected.class_id
         return actual.name == expected.name
 
     if isinstance(actual, ClassType) and isinstance(expected, InterfaceType):

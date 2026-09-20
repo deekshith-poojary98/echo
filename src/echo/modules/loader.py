@@ -169,6 +169,9 @@ class ModuleLoader:
         for name, dependency_path in module.imported_bindings:
             dependency = self._modules[dependency_path]
             if name in dependency.class_exports:
+                record = dependency.env.resolve_class(name) if dependency.env is not None else None
+                if record is not None:
+                    env.define_class(name, record)
                 continue
             value = self._export_value(dependency, name)
             if isinstance(value, EchoFunction):

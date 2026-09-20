@@ -70,7 +70,7 @@ from echo.frontend.ast.nodes import (
     hash_pattern_rest,
 )
 from echo.frontend.tokens import TokenType
-from echo.runtime.instances import ClassInstance
+from echo.runtime.instances import ClassInstance, ClassRecord
 from echo.runtime.builtins import (
     BUILTIN_NAMES,
     MUTATING_METHODS,
@@ -178,9 +178,6 @@ class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
-        self._class_methods: dict[str, dict[str, EchoFunction]] = {}
-        self._class_field_defaults: dict[str, dict[str, object]] = {}
-        self._class_field_types: dict[str, dict[str, object]] = {}
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -194,15 +191,6 @@ class Interpreter:
             methods = {
                 method.name: EchoFunction(method, env)
                 for method in statement.methods
-            }
-            self._class_methods[statement.name] = methods
-            self._class_field_defaults[statement.name] = {
-                field.name: field.default
-                for field in statement.fields
-                if field.default is not None
-            }
-            self._class_field_types[statement.name] = {
-                field.name: field.type for field in statement.fields
             }
             from echo.frontend.ast.nodes import FunctionType, TypeName
             from echo.runtime.class_registry import register_class_methods
@@ -219,6 +207,19 @@ class Interpreter:
                     return_type,
                     any(parameter.variadic for parameter in rest),
                 )
+            record = ClassRecord(
+                name=statement.name,
+                methods=methods,
+                field_defaults={
+                    field.name: field.default
+                    for field in statement.fields
+                    if field.default is not None
+                },
+                field_types={field.name: field.type for field in statement.fields},
+                method_types=typed,
+                class_id=id(statement),
+            )
+            env.define_class(statement.name, record)
             register_class_methods(statement.name, typed)
             return
         if isinstance(statement, InterfaceDeclaration):
@@ -478,8 +479,9 @@ class Interpreter:
         if isinstance(expression, MemberExpression):
             if isinstance(expression.object, VariableExpression):
                 class_name = expression.object.name
-                if not env.is_defined(class_name) and class_name in self._class_methods:
-                    method = self._class_methods[class_name].get(expression.name)
+                record = env.resolve_class(class_name)
+                if record is not None and not env.is_defined(class_name):
+                    method = self._record_method(record, expression.name)
                     if method is not None:
                         return UnboundMethod(method, class_name)
                     raise EchoRuntimeError(
@@ -491,7 +493,7 @@ class Interpreter:
             if isinstance(target, ClassInstance):
                 if expression.name in target.fields:
                     return target.fields[expression.name]
-                method = self._class_methods.get(target.class_name, {}).get(expression.name)
+                method = self._instance_method(target, expression.name)
                 if method is not None:
                     if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
                         raise EchoRuntimeError(
@@ -514,17 +516,22 @@ class Interpreter:
                 code="E2704",
             )
         if isinstance(expression, ClassConstruction):
+            record = env.resolve_class(expression.class_name)
+            if record is None:
+                raise EchoRuntimeError(
+                    f"Unknown class '{expression.class_name}'",
+                    expression.location,
+                    code="E3211",
+                )
             values = {name: self.evaluate(value, env) for name, value in expression.fields}
-            defaults = self._class_field_defaults.get(expression.class_name, {})
-            for field_name, default_expr in defaults.items():
+            for field_name, default_expr in record.field_defaults.items():
                 if field_name not in values:
                     values[field_name] = self.evaluate(default_expr, env)  # type: ignore[arg-type]
-            field_types = self._class_field_types.get(expression.class_name, {})
             for field_name, value in values.items():
-                expected = field_types.get(field_name)
+                expected = record.field_types.get(field_name)
                 if expected is not None:
                     validate_type(field_name, value, expected, expression.location)  # type: ignore[arg-type]
-            return ClassInstance(expression.class_name, values)
+            return ClassInstance(expression.class_name, values, record)
         if isinstance(expression, CallExpression):
             return self._call(expression, env)
         raise EchoRuntimeError(f"Unknown expression: {type(expression).__name__}", expression.location, code="E2798")
@@ -534,8 +541,9 @@ class Interpreter:
         if isinstance(callee, MemberExpression):
             if isinstance(callee.object, VariableExpression):
                 class_name = callee.object.name
-                if not env.is_defined(class_name) and class_name in self._class_methods:
-                    method = self._class_methods[class_name].get(callee.name)
+                record = env.resolve_class(class_name)
+                if record is not None and not env.is_defined(class_name):
+                    method = self._record_method(record, callee.name)
                     if method is not None:
                         return self._call_user_function(
                             method, expression.arguments, env, expression.location
@@ -547,7 +555,7 @@ class Interpreter:
                     )
             target = self.evaluate(callee.object, env)
             if isinstance(target, ClassInstance):
-                method = self._class_methods.get(target.class_name, {}).get(callee.name)
+                method = self._instance_method(target, callee.name)
                 if method is not None:
                     if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
                         raise EchoRuntimeError(
@@ -612,6 +620,15 @@ class Interpreter:
                 code="E2705",
             )
         raise EchoRuntimeError("Invalid call target", location, code="E2705")
+
+    def _record_method(self, record: ClassRecord, name: str) -> EchoFunction | None:
+        method = record.methods.get(name)
+        return method if isinstance(method, EchoFunction) else None
+
+    def _instance_method(self, target: ClassInstance, name: str) -> EchoFunction | None:
+        if target.record is None:
+            return None
+        return self._record_method(target.record, name)
 
     def _lambda_function(self, expression: LambdaExpression, env: Environment) -> EchoFunction:
         declaration = FunctionDeclaration(

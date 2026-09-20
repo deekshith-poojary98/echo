@@ -291,3 +291,119 @@ def test_private_class_cannot_be_imported(tmp_path: Path):
     )
     result = run_entry(tmp_path)
     assert_echo_error(result, "Point")
+
+
+def test_same_class_name_in_another_module_does_not_steal_defaults(tmp_path: Path):
+    write_modules(
+        tmp_path,
+        {
+            "alpha.echo": """
+                export class Config {
+                    new {
+                        timeout: int = 30;
+                    }
+                    fn label(this) -> str {
+                        return "alpha";
+                    }
+                }
+            """,
+            "beta.echo": """
+                export class Config {
+                    new {
+                        timeout: int = 0;
+                    }
+                    fn label(this) -> str {
+                        return "beta";
+                    }
+                }
+                export fn ping() -> int {
+                    return 1;
+                }
+            """,
+            "app.echo": """
+                import ping from "beta";
+                import Config from "alpha";
+                c: Config = Config {};
+                say(c.timeout);
+                say(c.label());
+                say(ping());
+            """,
+        },
+    )
+    assert_success(run_entry(tmp_path), "30\nalpha\n1")
+
+
+def test_same_class_name_in_another_module_does_not_drop_methods(tmp_path: Path):
+    write_modules(
+        tmp_path,
+        {
+            "alpha.echo": """
+                export class Config {
+                    new {
+                        timeout: int = 30;
+                    }
+                    fn label(this) -> str {
+                        return "alpha";
+                    }
+                }
+            """,
+            "beta.echo": """
+                export class Config {
+                    new {
+                        timeout: int = 0;
+                    }
+                    fn other(this) -> str {
+                        return "beta";
+                    }
+                }
+                export fn ping() -> int {
+                    return 1;
+                }
+            """,
+            "app.echo": """
+                import ping from "beta";
+                import Config from "alpha";
+                c: Config = Config {};
+                say(c.timeout);
+                say(c.label());
+                say(ping());
+            """,
+        },
+    )
+    assert_success(run_entry(tmp_path), "30\nalpha\n1")
+
+
+def test_same_named_classes_from_different_modules_are_not_equal(tmp_path: Path):
+    write_modules(
+        tmp_path,
+        {
+            "alpha.echo": """
+                export class Point {
+                    new {
+                        x: int;
+                    }
+                }
+                export fn makeAlpha(x: int) -> dynamic {
+                    return Point { x: x };
+                }
+            """,
+            "beta.echo": """
+                export class Point {
+                    new {
+                        x: int;
+                    }
+                }
+                export fn makeBeta(x: int) -> dynamic {
+                    return Point { x: x };
+                }
+            """,
+            "app.echo": """
+                import makeAlpha from "alpha";
+                import makeBeta from "beta";
+                a: dynamic = makeAlpha(1);
+                b: dynamic = makeBeta(1);
+                say(a == b);
+            """,
+        },
+    )
+    assert_success(run_entry(tmp_path), "false")

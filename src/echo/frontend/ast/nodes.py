@@ -46,6 +46,7 @@ class ClassType(TypeAnnotation):
     methods: dict[str, FunctionType] = field(default_factory=dict)
     default_fields: frozenset[str] = field(default_factory=frozenset)
     type_methods: dict[str, FunctionType] = field(default_factory=dict)
+    class_id: int = 0
 
 
 @dataclass
