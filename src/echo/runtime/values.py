@@ -109,6 +109,16 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
                 declaration.return_type,
                 type_spec,
             )
+        if cls == "UnboundMethod":
+            declaration = value.function.declaration
+            params = declaration.parameters
+            return function_signature_assignable(
+                [parameter.type for parameter in params],
+                [parameter.default is not None for parameter in params],
+                bool(params) and params[-1].variadic,
+                declaration.return_type,
+                type_spec,
+            )
         if not _is_echo_function(value):
             return False
         declaration = value.declaration
@@ -371,12 +381,21 @@ def stringify(value: object, nested: bool = False) -> str:
         if cls == "BoundMethod":
             name = value.function.declaration.name
             return f"<fn {name}>"
+        if cls == "UnboundMethod":
+            name = value.function.declaration.name
+            return f"<fn {name}>"
         return f"<fn {value.name}>"
     return str(value)
 
 
 def _is_echo_function(value: object) -> bool:
-    return value.__class__.__name__ in {"EchoFunction", "EchoBuiltin", "BoundBuiltin", "BoundMethod"}
+    return value.__class__.__name__ in {
+        "EchoFunction",
+        "EchoBuiltin",
+        "BoundBuiltin",
+        "BoundMethod",
+        "UnboundMethod",
+    }
 
 
 def _builtin_param_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:

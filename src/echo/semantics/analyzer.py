@@ -450,6 +450,30 @@ class SemanticAnalyzer:
             return None
         return owner.methods.get(expression.name)
 
+    def _bare_class_type(self, expression: Expression, scope: Scope) -> ClassType | None:
+        """Class name used as a value path (`Point.length`), not an instance binding."""
+        if not isinstance(expression, VariableExpression):
+            return None
+        if scope.resolve(expression.name) is not None:
+            return None
+        return scope.classes.get(expression.name)
+
+    def _unbound_class_method_type(
+        self, expression: MemberExpression, scope: Scope
+    ) -> FunctionType | None:
+        class_type = self._bare_class_type(expression.object, scope)
+        if class_type is None:
+            return None
+        method = class_type.methods.get(expression.name)
+        if method is None:
+            return None
+        return FunctionType(
+            method.location,
+            [class_type, *method.param_types],
+            method.return_type,
+            method.variadic,
+        )
+
     def _function_body(self, statement: FunctionDeclaration, scope: Scope) -> None:
         self._analyze_callable(
             statement.parameters,
@@ -579,17 +603,39 @@ class SemanticAnalyzer:
                         code="E1014",
                     )
             elif isinstance(expression.callee, MemberExpression):
-                self._expression(expression.callee.object, scope)
-                method_type = self._class_method_type(expression.callee, scope)
-                if method_type is not None:
-                    self._check_function_type_arity(method_type, expression)
+                unbound = self._unbound_class_method_type(expression.callee, scope)
+                if unbound is not None:
+                    self._check_function_type_arity(unbound, expression)
+                else:
+                    bare = self._bare_class_type(expression.callee.object, scope)
+                    if bare is not None:
+                        raise SemanticError(
+                            f"Unknown method '{expression.callee.name}' on {bare.name}",
+                            expression.location,
+                            code="E2704",
+                        )
+                    self._expression(expression.callee.object, scope)
+                    method_type = self._class_method_type(expression.callee, scope)
+                    if method_type is not None:
+                        self._check_function_type_arity(method_type, expression)
             else:
                 self._expression(expression.callee, scope)
             self._check_const_mutation_call(expression, scope)
             for argument in expression.arguments:
                 self._expression(argument.value, scope)
         elif isinstance(expression, MemberExpression):
-            self._expression(expression.object, scope)
+            unbound = self._unbound_class_method_type(expression, scope)
+            if unbound is not None:
+                pass
+            else:
+                bare = self._bare_class_type(expression.object, scope)
+                if bare is not None:
+                    raise SemanticError(
+                        f"Unknown method '{expression.name}' on {bare.name}",
+                        expression.location,
+                        code="E2704",
+                    )
+                self._expression(expression.object, scope)
         elif isinstance(expression, ClassConstruction):
             class_type = scope.classes.get(expression.class_name)
             if class_type is None:
@@ -803,6 +849,15 @@ class SemanticAnalyzer:
                 False,
             )
         if isinstance(expression, MemberExpression):
+            unbound = self._unbound_class_method_type(expression, scope)
+            if unbound is not None:
+                return (
+                    list(unbound.param_types),
+                    [False] * len(unbound.param_types),
+                    unbound.variadic,
+                    unbound.return_type,
+                    False,
+                )
             method_type = self._class_method_type(expression, scope)
             if method_type is not None:
                 return (

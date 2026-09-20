@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.5
+
+Unbound methods. Third 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`Point.length`** is an unbound `fn(Point, …) -> T`; call **`Point.length(p)`**
+- Equivalent to **`p.length(…)`** when `p` is `Point`
+- Method as value: **`raw: fn(Point) -> int = Point.length`**
+- Bound form **`p.length`** unchanged (0.8.1)
+- Unknown method on the class name → **E2704**
+- No type methods without `this` yet (0.8.6)
+
 ## 0.8.4
 
 Field defaults in `new { ... }`. Second 0.8 polish increment. Failure model unchanged.

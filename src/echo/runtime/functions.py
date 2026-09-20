@@ -44,14 +44,32 @@ class BoundMethod:
         )
 
 
+@dataclass
+class UnboundMethod:
+    """Class method as a value: `Point.length` — first argument is the receiver."""
+
+    function: EchoFunction
+    class_name: str
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UnboundMethod):
+            return NotImplemented
+        return (
+            self.class_name == other.class_name
+            and self.function.declaration.name == other.function.declaration.name
+        )
+
+
 def is_echo_callable(value: object) -> bool:
-    return isinstance(value, (EchoFunction, EchoBuiltin, BoundBuiltin, BoundMethod))
+    return isinstance(value, (EchoFunction, EchoBuiltin, BoundBuiltin, BoundMethod, UnboundMethod))
 
 
 def callable_name(value: object) -> str:
     if isinstance(value, EchoFunction):
         return value.declaration.name
     if isinstance(value, BoundMethod):
+        return value.function.declaration.name
+    if isinstance(value, UnboundMethod):
         return value.function.declaration.name
     if isinstance(value, (EchoBuiltin, BoundBuiltin)):
         return value.name

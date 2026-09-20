@@ -43,7 +43,7 @@ watch count;
 - `void` — function return annotations only
 - Unions: `int | str` (no `null` type member; prefer `str | void`)
 - Object shapes: `{ id: int }` (open) and `exact { id: int }` (closed)
-- Nominal classes: `class Point { new { x: int = 0; y: int; } }` (construction `Point { y: 4 }` / `Point {}` when defaults cover all fields)
+- Nominal classes: `class Point { new { x: int = 0; y: int; } }` (construction `Point { y: 4 }`; unbound methods `Point.length(p)`)
 - Interfaces: `interface Named { fn name(this) -> str; }`
 - Function types: `fn(int) -> int`
 

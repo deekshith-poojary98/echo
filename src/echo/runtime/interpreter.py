@@ -152,6 +152,7 @@ from echo.runtime.functions import (
     EchoBuiltin,
     EchoFunction,
     ReturnValue,
+    UnboundMethod,
     bind_arguments,
     callable_name,
     check_return,
@@ -467,6 +468,17 @@ class Interpreter:
         if isinstance(expression, LambdaExpression):
             return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):
+            if isinstance(expression.object, VariableExpression):
+                class_name = expression.object.name
+                if not env.is_defined(class_name) and class_name in self._class_methods:
+                    method = self._class_methods[class_name].get(expression.name)
+                    if method is not None:
+                        return UnboundMethod(method, class_name)
+                    raise EchoRuntimeError(
+                        f"Unknown method '{expression.name}' on {class_name}",
+                        expression.location,
+                        code="E2704",
+                    )
             target = self.evaluate(expression.object, env)
             if isinstance(target, ClassInstance):
                 if expression.name in target.fields:
@@ -505,6 +517,19 @@ class Interpreter:
     def _call(self, expression: CallExpression, env: Environment) -> object:
         callee = expression.callee
         if isinstance(callee, MemberExpression):
+            if isinstance(callee.object, VariableExpression):
+                class_name = callee.object.name
+                if not env.is_defined(class_name) and class_name in self._class_methods:
+                    method = self._class_methods[class_name].get(callee.name)
+                    if method is not None:
+                        return self._call_user_function(
+                            method, expression.arguments, env, expression.location
+                        )
+                    raise EchoRuntimeError(
+                        f"Unknown method '{callee.name}' on {class_name}",
+                        expression.location,
+                        code="E2704",
+                    )
             target = self.evaluate(callee.object, env)
             if isinstance(target, ClassInstance):
                 method = self._class_methods.get(target.class_name, {}).get(callee.name)
@@ -553,6 +578,8 @@ class Interpreter:
             return self._call_builtin(value.name, raw_args, env, value.receiver, location, None)
         if isinstance(value, BoundMethod):
             return self._call_method(value.function, value.receiver, raw_args, env, location)
+        if isinstance(value, UnboundMethod):
+            return self._call_user_function(value.function, raw_args, env, location)
         if name is not None:
             raise EchoTypeError(
                 f"Cannot call '{name}' because it is not a function",
