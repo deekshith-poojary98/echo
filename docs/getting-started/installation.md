@@ -4,7 +4,7 @@ Install a CLI that runs `.echo` files. Needs **Python 3.10+**.
 
 Prefer the command name **`elang`**. Many shells already treat `echo` as a built-in (`Write-Output` on PowerShell; POSIX `echo`). The package also registers `echolang` and `echo`; docs and examples use `elang`.
 
-The PyPI package name is **`echolang`**. The first public upload is planned for **0.8.9**; until then, install from GitHub or a clone.
+The PyPI package name is **`echolang`** (first public release **0.8.9**).
 
 ## Option 1: pipx (recommended)
 
@@ -15,7 +15,7 @@ Isolated env, global commands.
 ```powershell
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install git+https://github.com/deekshith-poojary98/echo.git
+pipx install echolang
 ```
 
 ```powershell
@@ -27,20 +27,20 @@ elang examples\language_feature_smoke.echo
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
-pipx install git+https://github.com/deekshith-poojary98/echo.git
+pipx install echolang
 ```
 
 ```bash
 elang examples/language_feature_smoke.echo
 ```
 
-### After PyPI (0.8.9+)
+That installs the package `echolang` and puts **`elang`** (and `echolang`) on your PATH.
+
+### From GitHub
 
 ```bash
-pipx install echolang
+pipx install git+https://github.com/deekshith-poojary98/echo.git
 ```
-
-That installs the package `echolang` and puts **`elang`** (and `echolang`) on your PATH.
 
 ## Option 2: pip from a clone
 

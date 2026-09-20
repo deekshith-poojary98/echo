@@ -38,21 +38,21 @@ for i: int in 0..10 by 2 {
 
 Python 3.10+. Prefer the command name **`elang`** — short, and shells often reserve `echo`. The package also registers `echolang` (and `echo`).
 
-Package name on PyPI will be **`echolang`** (first public upload planned for **0.8.9**). Until then, install from GitHub or a clone.
+Package name on PyPI is **`echolang`**.
 
 ### pipx (recommended)
 
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
-pipx install git+https://github.com/deekshith-poojary98/echo.git
-elang examples/language_feature_smoke.echo
+pipx install echolang
+elang --version
 ```
 
-After the PyPI release:
+From GitHub instead of PyPI:
 
 ```bash
-pipx install echolang
+pipx install git+https://github.com/deekshith-poojary98/echo.git
 ```
 
 ### From a clone

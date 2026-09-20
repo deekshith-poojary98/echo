@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.9
+
+First public package release on PyPI (`echolang`). No new language syntax. Failure model unchanged.
+
+- Version **0.8.9**; preferred CLI remains **`elang`** (also `echolang`, `echo`)
+- Install: `pipx install echolang` (or `pip install echolang`)
+- Docs / README install path points at PyPI; GitHub / clone install remains supported
+- Language surface matches 0.8.0–0.8.8 documentation
+
 ## 0.8.8
 
 Docs / examples / README release pass. Sixth 0.8 polish increment. No new language syntax. Failure model unchanged.

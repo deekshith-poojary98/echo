@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.9
+
+- Package version bump (first PyPI release of `echolang`; no highlighter changes).
+
 ## 0.8.8
 
 - Package version bump (docs release pass).
