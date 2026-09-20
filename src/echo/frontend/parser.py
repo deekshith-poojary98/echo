@@ -548,7 +548,7 @@ class Parser:
         fn_token = self._expect(TokenType.FN, "fn")
         name = self._expect_name("method name")
         self._expect(TokenType.LEFT_PAREN, "(")
-        parameters = self._parse_parameters(receiver_class=class_name)
+        parameters = self._parse_parameters(receiver_class=class_name, allow_omit_this=True)
         self._expect(TokenType.RIGHT_PAREN, ")")
         return_type = None
         if self._match(TokenType.ARROW):
@@ -943,12 +943,17 @@ class Parser:
         self._expect(TokenType.RIGHT_BRACE, "}")
         return LambdaExpression(fn_token.location, parameters, body, False, return_type)
 
-    def _parse_parameters(self, *, receiver_class: str | None = None) -> list[Parameter]:
+    def _parse_parameters(
+        self,
+        *,
+        receiver_class: str | None = None,
+        allow_omit_this: bool = False,
+    ) -> list[Parameter]:
         parameters: list[Parameter] = []
         while not self._check(TokenType.RIGHT_PAREN) and not self._check(TokenType.EOF):
             is_const = bool(self._match(TokenType.CONST))
             if self._check(TokenType.LEFT_BRACKET, TokenType.LEFT_BRACE):
-                if receiver_class is not None and not parameters:
+                if receiver_class is not None and not parameters and not allow_omit_this:
                     raise ParseError(
                         "Class methods must start with an untyped 'this' parameter",
                         self._peek().location,
@@ -981,17 +986,11 @@ class Parser:
                 self._match(TokenType.COMMA)
                 continue
             param_token = self._expect_name_token("parameter name")
-            if receiver_class is not None and not parameters:
+            if receiver_class is not None and not parameters and param_token.lexeme == "this":
                 if is_const:
                     raise ParseError(
                         "Receiver parameter 'this' cannot be const",
                         param_token.location,
-                    )
-                if param_token.lexeme != "this":
-                    raise ParseError(
-                        "Class methods must start with an untyped 'this' parameter",
-                        param_token.location,
-                        help_text="Write fn name(this, ...) { ... }.",
                     )
                 if self._check(TokenType.COLON):
                     raise ParseError(
@@ -1012,6 +1011,12 @@ class Parser:
                 )
                 self._match(TokenType.COMMA)
                 continue
+            if receiver_class is not None and not parameters and not allow_omit_this:
+                raise ParseError(
+                    "Class methods must start with an untyped 'this' parameter",
+                    param_token.location,
+                    help_text="Write fn name(this, ...) { ... }.",
+                )
             self._expect(TokenType.COLON, ":")
             param_type = self._parse_type()
             variadic = bool(self._match(TokenType.DOT_DOT_DOT))
@@ -1035,7 +1040,11 @@ class Parser:
                 )
             )
             self._match(TokenType.COMMA)
-        if receiver_class is not None and (not parameters or parameters[0].name != "this"):
+        if (
+            receiver_class is not None
+            and not allow_omit_this
+            and (not parameters or parameters[0].name != "this")
+        ):
             raise ParseError(
                 "Class methods must start with an untyped 'this' parameter",
                 self._peek().location,

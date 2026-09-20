@@ -464,6 +464,9 @@ class SemanticAnalyzer:
         class_type = self._bare_class_type(expression.object, scope)
         if class_type is None:
             return None
+        type_method = class_type.type_methods.get(expression.name)
+        if type_method is not None:
+            return type_method
         method = class_type.methods.get(expression.name)
         if method is None:
             return None
@@ -615,6 +618,18 @@ class SemanticAnalyzer:
                             code="E2704",
                         )
                     self._expression(expression.callee.object, scope)
+                    owner = self._expression_method_owner(expression.callee.object, scope)
+                    if (
+                        isinstance(owner, ClassType)
+                        and expression.callee.name in owner.type_methods
+                    ):
+                        raise SemanticError(
+                            f"Type method '{expression.callee.name}' must be called as "
+                            f"'{owner.name}.{expression.callee.name}(...)'",
+                            expression.location,
+                            help_text="Type methods have no 'this'; call them on the class name.",
+                            code="E3213",
+                        )
                     method_type = self._class_method_type(expression.callee, scope)
                     if method_type is not None:
                         self._check_function_type_arity(method_type, expression)
@@ -636,6 +651,15 @@ class SemanticAnalyzer:
                         code="E2704",
                     )
                 self._expression(expression.object, scope)
+                owner = self._expression_method_owner(expression.object, scope)
+                if isinstance(owner, ClassType) and expression.name in owner.type_methods:
+                    raise SemanticError(
+                        f"Type method '{expression.name}' must be accessed as "
+                        f"'{owner.name}.{expression.name}'",
+                        expression.location,
+                        help_text="Type methods have no 'this'; use the class name.",
+                        code="E3213",
+                    )
         elif isinstance(expression, ClassConstruction):
             class_type = scope.classes.get(expression.class_name)
             if class_type is None:
@@ -1027,21 +1051,31 @@ class SemanticAnalyzer:
 
     def _class_type(self, statement: ClassDeclaration) -> ClassType:
         methods: dict[str, FunctionType] = {}
+        type_methods: dict[str, FunctionType] = {}
         for method in statement.methods:
-            rest = method.parameters[1:]
             return_type = method.return_type or TypeName(method.location, "void")
-            methods[method.name] = FunctionType(
-                method.location,
-                [parameter.type for parameter in rest],
-                return_type,
-                any(parameter.variadic for parameter in rest),
-            )
+            if method.parameters and method.parameters[0].name == "this":
+                rest = method.parameters[1:]
+                methods[method.name] = FunctionType(
+                    method.location,
+                    [parameter.type for parameter in rest],
+                    return_type,
+                    any(parameter.variadic for parameter in rest),
+                )
+            else:
+                type_methods[method.name] = FunctionType(
+                    method.location,
+                    [parameter.type for parameter in method.parameters],
+                    return_type,
+                    any(parameter.variadic for parameter in method.parameters),
+                )
         return ClassType(
             statement.location,
             statement.name,
             {field.name: field.type for field in statement.fields},
             methods,
             frozenset(field.name for field in statement.fields if field.default is not None),
+            type_methods,
         )
 
     def _interface_type(self, statement: InterfaceDeclaration) -> InterfaceType:
@@ -1559,29 +1593,40 @@ class SemanticAnalyzer:
         )
         scope.classes[statement.name] = class_type
         methods: dict[str, FunctionType] = {}
+        type_methods: dict[str, FunctionType] = {}
         for method in statement.methods:
-            if not method.parameters or method.parameters[0].name != "this":
-                raise SemanticError(
-                    f"Method '{method.name}' must start with an untyped 'this' parameter",
+            is_instance = bool(method.parameters) and method.parameters[0].name == "this"
+            if is_instance:
+                this_param = method.parameters[0]
+                this_param.type = class_type
+                for parameter in method.parameters[1:]:
+                    if parameter.pattern is None:
+                        parameter.type = self._resolve_type(parameter.type, scope)
+                if method.return_type is not None:
+                    method.return_type = self._resolve_type(method.return_type, scope)
+                rest = method.parameters[1:]
+                return_type = method.return_type or TypeName(method.location, "void")
+                methods[method.name] = FunctionType(
                     method.location,
-                    code="E3212",
+                    [parameter.type for parameter in rest],
+                    return_type,
+                    any(parameter.variadic for parameter in rest),
                 )
-            this_param = method.parameters[0]
-            this_param.type = class_type
-            for parameter in method.parameters[1:]:
-                if parameter.pattern is None:
-                    parameter.type = self._resolve_type(parameter.type, scope)
-            if method.return_type is not None:
-                method.return_type = self._resolve_type(method.return_type, scope)
-            rest = method.parameters[1:]
-            return_type = method.return_type or TypeName(method.location, "void")
-            methods[method.name] = FunctionType(
-                method.location,
-                [parameter.type for parameter in rest],
-                return_type,
-                any(parameter.variadic for parameter in rest),
-            )
+            else:
+                for parameter in method.parameters:
+                    if parameter.pattern is None:
+                        parameter.type = self._resolve_type(parameter.type, scope)
+                if method.return_type is not None:
+                    method.return_type = self._resolve_type(method.return_type, scope)
+                return_type = method.return_type or TypeName(method.location, "void")
+                type_methods[method.name] = FunctionType(
+                    method.location,
+                    [parameter.type for parameter in method.parameters],
+                    return_type,
+                    any(parameter.variadic for parameter in method.parameters),
+                )
         class_type.methods = methods
+        class_type.type_methods = type_methods
         register_class_methods(statement.name, methods)
         for method in statement.methods:
             self._analyze_callable(
@@ -1671,12 +1716,18 @@ class SemanticAnalyzer:
                 resolved = self._resolve_type(method_type, scope)
                 if isinstance(resolved, FunctionType):
                     methods[name] = resolved
+            type_methods: dict[str, FunctionType] = {}
+            for name, method_type in type_annotation.type_methods.items():
+                resolved = self._resolve_type(method_type, scope)
+                if isinstance(resolved, FunctionType):
+                    type_methods[name] = resolved
             return ClassType(
                 type_annotation.location,
                 type_annotation.name,
                 fields,
                 methods,
                 type_annotation.default_fields,
+                type_methods,
             )
         if isinstance(type_annotation, InterfaceType):
             existing = scope.interfaces.get(type_annotation.name)

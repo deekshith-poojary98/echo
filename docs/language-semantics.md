@@ -1,6 +1,6 @@
 # Echo Language Semantics
 
-Language contract (v0.2 base; additive notes through 0.8.5 in Execution model).
+Language contract (v0.2 base; additive notes through 0.8.6 in Execution model).
 Implementation and tests must match it.
 If code and this document disagree, change the document only after an explicit language decision.
 
@@ -565,4 +565,5 @@ v0.8.2 adds `interface` (method signatures only; inferred structural implement b
 v0.8.3 requires class fields under **`new { ... }`**. Call site unchanged. Empty classes may omit `new`. Bare field declarations outside `new` are a parse error.
 v0.8.4 adds field defaults (`x: int = 0` in `new`); omitted fields fill at construction; required fields without defaults still **E3209**.
 v0.8.5 adds unbound methods (`Point.length` / `Point.length(p)` as `fn(Point, …) -> T`). Bound `p.length` unchanged.
+v0.8.6 adds type methods (`fn origin() -> Point` with no `this`; call `Point.origin()`; instance access **E3213**).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

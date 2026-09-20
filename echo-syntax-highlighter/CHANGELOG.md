@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.6
+
+- Package version bump only (no new highlighter keywords).
+
 ## 0.8.5
 
 - Package version bump only (no new highlighter keywords).

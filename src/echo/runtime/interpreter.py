@@ -207,6 +207,8 @@ class Interpreter:
 
             typed: dict[str, FunctionType] = {}
             for method in statement.methods:
+                if not method.parameters or method.parameters[0].name != "this":
+                    continue
                 rest = method.parameters[1:]
                 return_type = method.return_type or TypeName(method.location, "void")
                 typed[method.name] = FunctionType(
@@ -485,6 +487,13 @@ class Interpreter:
                     return target.fields[expression.name]
                 method = self._class_methods.get(target.class_name, {}).get(expression.name)
                 if method is not None:
+                    if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
+                        raise EchoRuntimeError(
+                            f"Type method '{expression.name}' must be accessed as "
+                            f"'{target.class_name}.{expression.name}'",
+                            expression.location,
+                            code="E3213",
+                        )
                     return BoundMethod(method, target)
                 raise EchoRuntimeError(
                     f"Unknown field '{expression.name}' on {target.class_name}",
@@ -534,6 +543,13 @@ class Interpreter:
             if isinstance(target, ClassInstance):
                 method = self._class_methods.get(target.class_name, {}).get(callee.name)
                 if method is not None:
+                    if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
+                        raise EchoRuntimeError(
+                            f"Type method '{callee.name}' must be called as "
+                            f"'{target.class_name}.{callee.name}(...)'",
+                            expression.location,
+                            code="E3213",
+                        )
                     return self._call_method(method, target, expression.arguments, env, expression.location)
                 if callee.name in target.fields:
                     return self._call_value(
@@ -675,9 +691,10 @@ class Interpreter:
         declaration = function.declaration
         if not declaration.parameters or declaration.parameters[0].name != "this":
             raise EchoRuntimeError(
-                f"Method '{declaration.name}' is missing a 'this' parameter",
+                f"Type method '{declaration.name}' must be called on the class name",
                 location,
-                code="E3212",
+                help_text="Type methods have no 'this'; call them as ClassName.method(...).",
+                code="E3213",
             )
         rest = declaration.parameters[1:]
         bound = bind_arguments(declaration.name, rest, raw_args, location)

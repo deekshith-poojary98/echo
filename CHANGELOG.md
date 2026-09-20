@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.6
+
+Type methods (no `this`). Fourth 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`fn origin() -> Point { ... }`** inside a class — no `this` ⇒ type method
+- Call: **`Point.origin()`**; value: **`Point.origin`** is `fn() -> Point` (or with its params)
+- Instance methods still require **`this`** as the first parameter
+- Calling or binding a type method through an instance → **E3213**
+- No `static` keyword; absence of `this` is the signal
+
+
 ## 0.8.5
 
 Unbound methods. Third 0.8 polish increment. Failure model unchanged.

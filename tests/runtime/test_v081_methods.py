@@ -149,21 +149,23 @@ p.move();
     assert_no_python_leak(result)
 
 
-def test_this_must_be_first_and_untyped():
+def test_method_without_this_is_type_method():
+    """As of 0.8.6, omitting `this` declares a type method (not an error)."""
     result = run_echo(
         """
 class Point {
     new {
     x: int;
     }
-    fn bad(x: int) -> int {
-        return x;
+    fn zero() -> int {
+        return 0;
     }
 }
+say(Point.zero());
 """
     )
-    assert result.exit_code == 1
-    assert_no_python_leak(result)
+    assert result.exit_code == 0
+    assert result.output.strip() == "0"
 
 
 def test_typed_this_is_rejected():
