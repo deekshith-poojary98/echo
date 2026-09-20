@@ -13,6 +13,14 @@ def test_mixed_division_is_float():
     assert result.output.strip().startswith("3.5")
 
 
+def test_mixed_arithmetic_with_oversized_int_is_echo_error():
+    huge = "1" + "0" * 400
+    result = run_echo(f"say({huge} + 0.5);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output.lower() or "float" in result.output.lower()
+
+
 def test_int_modulo_uses_toward_zero_quotient():
     result = run_echo("say(7 % 2);\nsay(-7 % 2);\n")
     assert result.exit_code == 0

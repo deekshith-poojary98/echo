@@ -66,6 +66,22 @@ def test_asfloat_rejects_infinity_and_nan_text():
     assert "Cannot convert value to float" in result.output
 
 
+def test_asfloat_rejects_integer_too_large_for_float():
+    huge = "1" + "0" * 400
+    result = run_echo(f"say(asFloat({huge}));\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Cannot convert value to float" in result.output
+
+
+def test_asfloat_or_integer_too_large_returns_fallback():
+    huge = "1" + "0" * 400
+    result = run_echo(f"say(asFloatOr({huge}, 0.0));\n")
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "0.0"
+
+
 def test_asbool_keeps_truthiness():
     result = run_echo(
         """

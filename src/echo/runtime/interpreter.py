@@ -77,6 +77,7 @@ from echo.runtime.builtins import (
     builtin_value,
     do_abs,
     do_args,
+    do_ask,
     do_assert,
     do_ceil,
     do_chunk,
@@ -662,7 +663,7 @@ class Interpreter:
             return None
         if method == "ask":
             prompt = target if target is not None else (args[0] if args else "")
-            return input(str(prompt))
+            return do_ask(prompt, location)
         if method == "asInt":
             return as_int(target if target is not None else _first(args, method, location), location)
         if method == "asFloat":
