@@ -2,7 +2,9 @@
 
 Install a CLI that runs `.echo` files. Needs **Python 3.10+**.
 
-Prefer the command name `echolang`. Many shells already treat `echo` as a built-in (`Write-Output` on PowerShell; POSIX `echo`). The package still registers `echo`, but docs and examples use `echolang`.
+Prefer the command name **`elang`**. Many shells already treat `echo` as a built-in (`Write-Output` on PowerShell; POSIX `echo`). The package also registers `echolang` and `echo`; docs and examples use `elang`.
+
+The PyPI package name is **`echolang`** (first public release **0.8.9**).
 
 ## Option 1: pipx (recommended)
 
@@ -13,11 +15,11 @@ Isolated env, global commands.
 ```powershell
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install git+https://github.com/deekshith-poojary98/echo.git
+pipx install echolang
 ```
 
 ```powershell
-echolang examples\language_feature_smoke.echo
+elang examples\language_feature_smoke.echo
 ```
 
 ### macOS / Linux
@@ -25,18 +27,26 @@ echolang examples\language_feature_smoke.echo
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
-pipx install git+https://github.com/deekshith-poojary98/echo.git
+pipx install echolang
 ```
 
 ```bash
-echolang examples/language_feature_smoke.echo
+elang examples/language_feature_smoke.echo
+```
+
+That installs the package `echolang` and puts **`elang`** (and `echolang`) on your PATH.
+
+### From GitHub
+
+```bash
+pipx install git+https://github.com/deekshith-poojary98/echo.git
 ```
 
 ## Option 2: pip from a clone
 
 ```bash
 pip install .
-echolang path/to/file.echo
+elang path/to/file.echo
 ```
 
 ## Option 3: editable install (development)
@@ -47,13 +57,13 @@ pip install -e .
 
 ## Commands
 
-- `echolang path/to/file.echo` — run
-- `echolang check [paths...]`
-- `echolang test [paths...]`
-- `echolang fmt [paths...] [--check]`
-- `echolang lint [paths...]`
+- `elang path/to/file.echo` — run
+- `elang check [paths...]`
+- `elang test [paths...]`
+- `elang fmt [paths...] [--check]`
+- `elang lint [paths...]`
 
-No path on `echo` / `echolang` alone starts the REPL (see [CLI and Execution Model](/reference/cli-and-execution-model)).
+No path on `elang` / `echolang` / `echo` alone starts the REPL (see [CLI and Execution Model](/reference/cli-and-execution-model)).
 
 ## Without installing
 
@@ -62,6 +72,7 @@ From the repo:
 ```bash
 python src/main.py examples/language_feature_smoke.echo
 python src/main.py examples/language_feature_smoke.echo --plain
+# or: ./elang examples/language_feature_smoke.echo
 ```
 
 ## See Also

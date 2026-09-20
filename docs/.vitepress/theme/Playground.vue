@@ -50,7 +50,13 @@ say("as string:", count.asString());
     id: 'lists',
     label: 'Lists & hashes',
     stdin: '',
-    source: `words: list = ["a", "b", "a"];
+    source: `nums: list = [1, 2, 3];
+
+foreach n: int in nums {
+    say(n * 2);
+}
+
+words: list = ["a", "b", "a"];
 counts: hash = {};
 
 i: int = 0;
@@ -61,10 +67,25 @@ while i < words.length() {
 }
 
 say(counts);
+`,
+  },
+  {
+    id: 'classes',
+    label: 'Classes',
+    stdin: '',
+    source: `class Point {
+    new {
+        x: int;
+        y: int;
+    }
 
-[first: str, rest: str...] = words;
-{ a: int } = counts;
-say(first, rest, a);
+    fn describe(this) {
+        say("(", this.x, ",", this.y, ")");
+    }
+}
+
+p: Point = Point { x: 3, y: 4 };
+p.describe();
 `,
   },
   {
@@ -141,10 +162,19 @@ say("Hello, \${name}!");
 
 const RUN_TIMEOUT_MS = 8000
 
+function exampleFromQuery(): string {
+  if (typeof window === 'undefined') {
+    return EXAMPLES[0].id
+  }
+  const id = new URLSearchParams(window.location.search).get('example')
+  return EXAMPLES.some((item) => item.id === id) ? (id as string) : EXAMPLES[0].id
+}
+
 const editorHost = ref<HTMLElement | null>(null)
-const exampleId = ref(EXAMPLES[0].id)
-const source = ref(EXAMPLES[0].source)
-const stdin = ref(EXAMPLES[0].stdin)
+const exampleId = ref(exampleFromQuery())
+const initialExample = EXAMPLES.find((item) => item.id === exampleId.value) ?? EXAMPLES[0]
+const source = ref(initialExample.source)
+const stdin = ref(initialExample.stdin)
 const output = ref('')
 const failed = ref(false)
 const status = ref('Starting playground…')

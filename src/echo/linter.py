@@ -8,6 +8,8 @@ from echo.frontend.ast.nodes import (
     BinaryExpression,
     BreakStatement,
     CallExpression,
+    ClassConstruction,
+    ClassDeclaration,
     CompoundAssignment,
     ContinueStatement,
     DestructureAssignment,
@@ -23,9 +25,11 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
     LambdaExpression,
     ListLiteral,
     LiteralExpression,
+    MemberAssignment,
     MemberExpression,
     Parameter,
     Pattern,
@@ -36,6 +40,7 @@ from echo.frontend.ast.nodes import (
     Statement,
     StringInterpolation,
     StringLiteralExpression,
+    SwitchStatement,
     TypeAliasStatement,
     UnaryExpression,
     UseStatement,
@@ -189,11 +194,20 @@ class _Linter:
                 self._expr(index, scope)
             self._expr(statement.value, scope)
             return
+        if isinstance(statement, MemberAssignment):
+            self._expr(statement.object, scope)
+            self._expr(statement.value, scope)
+            return
         if isinstance(statement, ExpressionStatement):
             self._expr(statement.expression, scope)
             return
         if isinstance(statement, IfStatement):
             self._if_statement(statement, scope)
+            return
+        if isinstance(statement, SwitchStatement):
+            self._expr(statement.discriminant, scope)
+            for arm in statement.arms:
+                self._block(arm.body, _Scope(scope))
             return
         if isinstance(statement, WhileStatement):
             self._expr(statement.condition, scope)
@@ -216,7 +230,7 @@ class _Linter:
             if statement.value is not None:
                 self._expr(statement.value, scope)
             return
-        if isinstance(statement, (BreakStatement, ContinueStatement, TypeAliasStatement)):
+        if isinstance(statement, (BreakStatement, ContinueStatement, TypeAliasStatement, ClassDeclaration, InterfaceDeclaration)):
             return
         if isinstance(statement, UseStatement):
             for name in statement.names:
@@ -342,6 +356,10 @@ class _Linter:
         if isinstance(expression, HashLiteral):
             for pair in expression.pairs:
                 self._expr(pair.value, scope)
+            return
+        if isinstance(expression, ClassConstruction):
+            for _, value in expression.fields:
+                self._expr(value, scope)
             return
         if isinstance(expression, StringInterpolation):
             for part in expression.parts:

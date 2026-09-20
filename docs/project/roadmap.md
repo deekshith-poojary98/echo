@@ -1,6 +1,6 @@
 # Roadmap
 
-Short pointer. The ordered plan lives in [Priority](/project/priority). This page is not a promise list.
+Public status page for what ships today. The ordered implementation plan lives under Internals → [Priority](/project/priority). This page is not a promise list.
 
 ## Shipped (do not re-list as “later”)
 
@@ -11,18 +11,23 @@ Already in the language or CLI:
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
+- Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3); field defaults (0.8.4); unbound methods (0.8.5); type methods (0.8.6); optional `implements` (0.8.7); docs/README release pass (0.8.8); first PyPI package `echolang` (0.8.9)
 
 ## Next
 
-**0.7 is complete.** Next series is held 0.8 OOP until explicitly started.
+**0.8.x closed** after PyPI upload of 0.8.9. Ops remaining: build, upload, tag.
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 0.8.0 | Nominal `class` + construction | held (draft) |
-| 0.8.1 | Methods + `this` | held (draft) |
-| 0.8.2 | `interface` (no inheritance) | held (draft) |
+| 0.8.3 | Explicit `new { ... }` field block | implemented (0.8.3) |
+| 0.8.4 | Field defaults in construction | implemented (0.8.4) |
+| 0.8.5 | Unbound methods `Point.length(p)` | implemented (0.8.5) |
+| 0.8.6 | Type methods (no `this`) | implemented (0.8.6) |
+| 0.8.7 | Optional `implements` clause | implemented (0.8.7) |
+| 0.8.8 | Docs / README release pass | implemented (0.8.8) |
+| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9; upload pending) |
 
-Details and spellings: [Priority — 0.8.x](/project/priority).
+Details: [Priority — 0.8.x](/project/priority). Upload with `./build.sh --release` when ready.
 
 ## Held
 

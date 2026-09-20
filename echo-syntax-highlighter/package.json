@@ -2,7 +2,7 @@
   "name": "echo-syntax-highlighter",
   "displayName": "Echo Syntax Highlighter",
   "description": "Syntax highlighting, tasks, and Problems panel matchers for Echo (.echo files). Not a language server.",
-  "version": "0.7.9",
+  "version": "0.8.9",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
   "engines": {
@@ -15,6 +15,7 @@
   ],
   "keywords": [
     "echo",
+    "elang",
     "echolang",
     "syntax highlighting",
     "linter",
@@ -131,8 +132,8 @@
       "properties": {
         "echo.path": {
           "type": "string",
-          "default": "echolang",
-          "description": "Echo CLI executable. Default is echolang (the Unix echo builtin is not the Echo language). Install the Echo package so this command is on PATH."
+          "default": "elang",
+          "description": "Echo CLI executable. Default is elang (short). Also registered as echolang; avoid the Unix echo builtin. Install the Echo package so this command is on PATH."
         }
       }
     },

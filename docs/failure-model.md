@@ -2,7 +2,7 @@
 
 > **Status:** Frozen. `*Or` twins shipped in v0.5.3.
 > **Rule:** Abort by default. Recovery is inquiry and `*Or` twins — not `try` / `catch`.
-> **Background:** [`docs/v0.4-language-vs-stdlib.md`](/v0.4-language-vs-stdlib) section 8
+> **Background:** [v0.4 language vs stdlib](/archive/v0.4-language-vs-stdlib) section 8
 
 How Echo fails. This page does not add grammar.
 `try` / `catch`, `Result` / `Option`, and `?` stay held.
@@ -129,8 +129,8 @@ Do **not** change `readFile` to return a hash or `null` on failure. The aborting
 
 ## See also
 
-- [v0.4 language vs stdlib](/v0.4-language-vs-stdlib)
-- [v0.4 standard library](/v0.4-stdlib)
+- [v0.4 language vs stdlib](/archive/v0.4-language-vs-stdlib) (historical)
+- [v0.4 standard library](/archive/v0.4-stdlib) (historical)
 - [Language semantics](/language-semantics)
 - [Known limitations](/errors-diagnostics/known-limitations)
 - [Priority](/project/priority)

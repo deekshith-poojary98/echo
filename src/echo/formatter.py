@@ -6,6 +6,9 @@ from echo.frontend.ast.nodes import (
     BinaryExpression,
     BreakStatement,
     CallExpression,
+    ClassConstruction,
+    ClassDeclaration,
+    ClassType,
     CompoundAssignment,
     ContinueStatement,
     DestructureAssignment,
@@ -23,11 +26,14 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
+    InterfaceType,
     LambdaExpression,
     ListLiteral,
     ListPattern,
     LiteralExpression,
     LiteralPattern,
+    MemberAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -140,6 +146,11 @@ class _Printer:
             path = "".join(f"[{self._expr(index)}]" for index in statement.indices)
             self._line(f"{statement.name}{path} = {self._expr(statement.value)};")
             return
+        if isinstance(statement, MemberAssignment):
+            self._line(
+                f"{self._expr(statement.object)}.{statement.name} = {self._expr(statement.value)};"
+            )
+            return
         if isinstance(statement, ExpressionStatement):
             self._line(f"{self._expr(statement.expression)};")
             return
@@ -164,6 +175,42 @@ class _Printer:
             return
         if isinstance(statement, TypeAliasStatement):
             self._line(f"type {statement.name} = {self._type(statement.target)};")
+            return
+        if isinstance(statement, ClassDeclaration):
+            self._write(f"class {statement.name}")
+            if statement.implements:
+                self._write(f" implements {', '.join(statement.implements)}")
+            self._write(" ")
+            self._write("{")
+            self._newline()
+            self._indent += 1
+            if statement.fields:
+                self._line("new {")
+                self._indent += 1
+                for field in statement.fields:
+                    line = f"{field.name}: {self._type(field.type)}"
+                    if field.default is not None:
+                        line += f" = {self._expr(field.default)}"
+                    self._line(f"{line};")
+                self._indent -= 1
+                self._line("}")
+            for method in statement.methods:
+                self._function(method)
+            self._indent -= 1
+            self._write("}")
+            self._newline()
+            return
+        if isinstance(statement, InterfaceDeclaration):
+            self._write(f"interface {statement.name} ")
+            self._write("{")
+            self._newline()
+            self._indent += 1
+            for method in statement.methods:
+                params = ", ".join(self._param(param) for param in method.parameters)
+                self._line(f"fn {method.name}({params}) -> {self._type(method.return_type)};")
+            self._indent -= 1
+            self._write("}")
+            self._newline()
             return
         if isinstance(statement, ImportDeclaration):
             self._line(f'import {statement.name} from "{statement.module}";')
@@ -292,6 +339,9 @@ class _Printer:
             return f"{callee}({args})"
         if isinstance(expression, MemberExpression):
             return f"{self._expr(expression.object, PREC_POSTFIX)}.{expression.name}"
+        if isinstance(expression, ClassConstruction):
+            inner = ", ".join(f"{name}: {self._expr(value)}" for name, value in expression.fields)
+            return f"{expression.class_name} {{{inner}}}" if inner else f"{expression.class_name} {{}}"
         if isinstance(expression, IndexExpression):
             return f"{self._expr(expression.target, PREC_POSTFIX)}[{self._expr(expression.index)}]"
         if isinstance(expression, SliceExpression):
@@ -340,6 +390,8 @@ class _Printer:
         if parameter.pattern is not None:
             text = self._pattern(parameter.pattern)
             return f"const {text}" if parameter.const else text
+        if parameter.name == "this":
+            return "this"
         text = f"{parameter.name}: {self._type(parameter.type)}"
         if parameter.variadic:
             text += "..."
@@ -399,6 +451,10 @@ class _Printer:
 
     def _type(self, annotation: TypeAnnotation) -> str:
         if isinstance(annotation, TypeName):
+            return annotation.name
+        if isinstance(annotation, ClassType):
+            return annotation.name
+        if isinstance(annotation, InterfaceType):
             return annotation.name
         if isinstance(annotation, UnionType):
             return " | ".join(self._type(member) for member in annotation.members)

@@ -262,10 +262,13 @@ def _repl_bind_imports(program: Program, loader: ModuleLoader, env: Environment,
         if statement.module not in loaded:
             path = loader.resolver.resolve(importer, statement.module)
             loaded[statement.module] = loader.load(path, host=host)
-        value = _repl_export_value(loaded[statement.module], statement.name)
+        dependency = loaded[statement.module]
+        if statement.name in dependency.class_exports:
+            continue
+        value = _repl_export_value(dependency, statement.name)
         if isinstance(value, EchoFunction):
             env.define_function(statement.name, value)
-        module_env = loaded[statement.module].env
+        module_env = dependency.env
         is_const = bool(module_env.const.get(statement.name, False)) if module_env is not None else False
         env.define(statement.name, value, mutable=False, const=is_const)
 

@@ -136,7 +136,7 @@
         },
         {
           "name": "storage.modifier.echo",
-          "match": "\\b(mut|watch|const|exact)\\b"
+          "match": "\\b(mut|watch|const|exact|class|interface|new|implements)\\b"
         },
         {
           "name": "storage.type.function.echo",

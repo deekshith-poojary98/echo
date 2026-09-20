@@ -2,18 +2,18 @@
 
 TextMate grammar plus **editor tasks** for **Echo** (`.echo` files) in VS Code and Cursor. The docs site also imports this grammar for Echo code fences (Shiki).
 
-This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`echolang check` / `lint` / `test`) through tasks and problem matchers.
+This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`elang check` / `lint` / `test`) through tasks and problem matchers.
 
-It tracks Echo **v0.7.5**.
+It tracks Echo **v0.8.9**.
 
 ## Install
 
 The extension is not published to the Marketplace yet. Install it from this repo.
 
-The Echo CLI must be on `PATH` as **`echolang`** (recommended). Most shells already have an `echo` builtin, so tasks default to `echolang`. After `pipx install` / `pip install`, confirm:
+The Echo CLI must be on `PATH` as **`elang`** (recommended). Most shells already have an `echo` builtin; `echolang` remains available as a longer alias. After `pipx install` / `pip install`, confirm:
 
 ```bash
-echolang --version
+elang --version
 ```
 
 If your executable is named something else, set **`echo.path`** in VS Code/Cursor settings.
@@ -51,9 +51,9 @@ Tasks pass **`--plain`** so problem matchers see stable text (not Rich panels).
 | Action | How |
 | --- | --- |
 | Check the current file | Command Palette → **Echo: Check file**, or Terminal → Run Task → **Echo: Check file** |
-| Check the workspace | **Echo: Check workspace** (command) or Run Task → **Echo: Check workspace** (`*.echo` recursively, same as `echolang check .`) |
+| Check the workspace | **Echo: Check workspace** (command) or Run Task → **Echo: Check workspace** (`*.echo` recursively, same as `elang check .`) |
 | Lint the workspace | **Echo: Lint** (command) or Run Task → **Echo: Lint workspace** |
-| Format the workspace | **Echo: Format** (command) or Run Task → **Echo: Format workspace**. Format Document (`Shift+Alt+F`) also shells out to `echolang fmt` on a temp copy of the buffer |
+| Format the workspace | **Echo: Format** (command) or Run Task → **Echo: Format workspace**. Format Document (`Shift+Alt+F`) also shells out to `elang fmt` on a temp copy of the buffer |
 | Run tests | **Echo: Test** (command) or Run Task → **Echo: Test workspace** (`*_test.echo` discovery, same as the CLI) |
 
 File-scoped variants are also on the task list: **Echo: Check file**, **Echo: Lint file**, **Echo: Format file**, **Echo: Test file**.
@@ -84,7 +84,7 @@ To copy tasks into a workspace instead of using the provider, see `templates/tas
 
 Snippets cover `fn testName()`, `expect` / `expectEq`, and `fail`.
 
-The grammar does **not** invent syntax Echo does not have (`try`/`catch`, classes, `as` as a keyword, hex/binary literals).
+The grammar does **not** invent syntax Echo does not have (`try`/`catch`, hex/binary literals).
 
 ## Keep the builtin list in sync
 

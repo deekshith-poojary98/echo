@@ -26,6 +26,10 @@ const KEYWORDS = new Set([
   'from',
   'const',
   'exact',
+  'class',
+  'interface',
+  'new',
+  'implements',
 ])
 
 const TYPES = new Set(['int', 'float', 'str', 'bool', 'list', 'hash', 'dynamic', 'void'])

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from echo.errors import SourceLocation
 from echo.frontend.tokens import Token
@@ -35,6 +35,25 @@ class TypeName(TypeAnnotation):
 class ObjectType(TypeAnnotation):
     fields: dict[str, TypeAnnotation]
     exact: bool = False
+
+
+@dataclass
+class ClassType(TypeAnnotation):
+    """Nominal class type. Fields are an exact shape; methods are bound fn types (no `this`)."""
+
+    name: str
+    fields: dict[str, TypeAnnotation]
+    methods: dict[str, FunctionType] = field(default_factory=dict)
+    default_fields: frozenset[str] = field(default_factory=frozenset)
+    type_methods: dict[str, FunctionType] = field(default_factory=dict)
+
+
+@dataclass
+class InterfaceType(TypeAnnotation):
+    """Capability type: bound method signatures only (no fields)."""
+
+    name: str
+    methods: dict[str, FunctionType] = field(default_factory=dict)
 
 
 @dataclass
@@ -235,6 +254,13 @@ class AssignmentStatement(Statement):
 
 
 @dataclass
+class MemberAssignment(Statement):
+    object: Expression
+    name: str
+    value: Expression
+
+
+@dataclass
 class DestructureDeclaration(Statement):
     pattern: Pattern
     initializer: Expression
@@ -335,6 +361,44 @@ class TypeAliasStatement(Statement):
 
 
 @dataclass
+class ClassField:
+    name: str
+    type: TypeAnnotation
+    location: SourceLocation
+    default: Expression | None = None
+
+
+@dataclass
+class ClassDeclaration(Statement):
+    name: str
+    fields: list[ClassField]
+    methods: list[FunctionDeclaration] = field(default_factory=list)
+    implements: list[str] = field(default_factory=list)
+
+
+@dataclass
+class InterfaceMethod:
+    """Signature-only method inside an interface (`fn name(this, ...) -> T;`)."""
+
+    name: str
+    parameters: list[Parameter]
+    return_type: TypeAnnotation
+    location: SourceLocation
+
+
+@dataclass
+class InterfaceDeclaration(Statement):
+    name: str
+    methods: list[InterfaceMethod]
+
+
+@dataclass
+class ClassConstruction(Expression):
+    class_name: str
+    fields: list[tuple[str, Expression]]
+
+
+@dataclass
 class ImportDeclaration(Statement):
     name: str
     module: str
@@ -343,7 +407,7 @@ class ImportDeclaration(Statement):
 @dataclass
 class ExportDeclaration(Statement):
     name: str
-    declaration: FunctionDeclaration | VariableDeclaration | None = None
+    declaration: FunctionDeclaration | VariableDeclaration | ClassDeclaration | InterfaceDeclaration | None = None
 
 
 def iter_name_patterns(pattern: Pattern) -> list[NamePattern]:

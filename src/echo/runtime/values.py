@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 from echo.errors import EchoTypeError, SourceLocation
-from echo.frontend.ast.nodes import FunctionType, ObjectType, TypeAnnotation, TypeName, UnionType
+from echo.frontend.ast.nodes import (
+    ClassType,
+    FunctionType,
+    InterfaceType,
+    ObjectType,
+    TypeAnnotation,
+    TypeName,
+    UnionType,
+)
+from echo.runtime.instances import ClassInstance
 
 
 def echo_type_name(value: object) -> str:
@@ -17,6 +26,8 @@ def echo_type_name(value: object) -> str:
         return "str"
     if isinstance(value, list):
         return "list"
+    if isinstance(value, ClassInstance):
+        return value.class_name
     if isinstance(value, dict):
         return "hash"
     if _is_echo_function(value):
@@ -57,7 +68,15 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
         return is_echo_type(value, type_spec.name)
     if isinstance(type_spec, UnionType):
         return any(matches_type(value, member) for member in type_spec.members)
+    if isinstance(type_spec, ClassType):
+        return isinstance(value, ClassInstance) and value.class_name == type_spec.name
+    if isinstance(type_spec, InterfaceType):
+        from echo.runtime.class_registry import class_implements_interface
+
+        return isinstance(value, ClassInstance) and class_implements_interface(value.class_name, type_spec)
     if isinstance(type_spec, ObjectType):
+        if isinstance(value, ClassInstance):
+            return False
         if not isinstance(value, dict):
             return False
         for field_name, field_type in type_spec.fields.items():
@@ -80,6 +99,26 @@ def matches_type(value: object, type_spec: TypeAnnotation | str | None) -> bool:
             from echo.runtime.builtin_types import builtin_method_fn_type
 
             return builtin_fn_assignable(builtin_method_fn_type(value.name), type_spec)
+        if cls == "BoundMethod":
+            declaration = value.function.declaration
+            params = declaration.parameters[1:]
+            return function_signature_assignable(
+                [parameter.type for parameter in params],
+                [parameter.default is not None for parameter in params],
+                bool(params) and params[-1].variadic,
+                declaration.return_type,
+                type_spec,
+            )
+        if cls == "UnboundMethod":
+            declaration = value.function.declaration
+            params = declaration.parameters
+            return function_signature_assignable(
+                [parameter.type for parameter in params],
+                [parameter.default is not None for parameter in params],
+                bool(params) and params[-1].variadic,
+                declaration.return_type,
+                type_spec,
+            )
         if not _is_echo_function(value):
             return False
         declaration = value.declaration
@@ -199,6 +238,10 @@ def format_type(type_spec: TypeAnnotation | str | None) -> str:
         fields = ", ".join(f"{name}: {format_type(field)}" for name, field in type_spec.fields.items())
         inner = "{ " + fields + " }"
         return f"exact {inner}" if type_spec.exact else inner
+    if isinstance(type_spec, ClassType):
+        return type_spec.name
+    if isinstance(type_spec, InterfaceType):
+        return type_spec.name
     if isinstance(type_spec, FunctionType):
         params = []
         for index, param_type in enumerate(type_spec.param_types):
@@ -229,6 +272,27 @@ def raise_exact_shape_error(
     reports the ordinary type mismatch (E2001) via ``matches_type``.
     """
     if isinstance(expected, UnionType):
+        return
+    if isinstance(expected, ClassType) and isinstance(value, ClassInstance):
+        if value.class_name != expected.name:
+            return
+        for field_name in expected.fields:
+            if field_name not in value.fields:
+                raise EchoTypeError(
+                    f"Class '{expected.name}' is missing required field '{field_name}'",
+                    location,
+                    help_text="Class instances require every declared field.",
+                    code="E3209",
+                )
+            raise_exact_shape_error(value.fields[field_name], expected.fields[field_name], location)
+        for key in value.fields:
+            if key not in expected.fields:
+                raise EchoTypeError(
+                    f"Class '{expected.name}' does not allow extra field '{key}'",
+                    location,
+                    help_text="Remove extra fields.",
+                    code="E3208",
+                )
         return
     if not isinstance(expected, ObjectType) or not isinstance(value, dict):
         return
@@ -263,6 +327,8 @@ def is_truthy(value: object) -> bool:
         return value != 0
     if isinstance(value, (str, list, dict)):
         return len(value) != 0
+    if isinstance(value, ClassInstance):
+        return True
     return True
 
 
@@ -315,17 +381,42 @@ def stringify(value: object, nested: bool = False, seen: set[int] | None = None)
             return "{" + ", ".join(parts) + "}"
         finally:
             tracking.remove(ident)
+    if isinstance(value, ClassInstance):
+        ident = id(value)
+        if seen is not None and ident in seen:
+            return f"{value.class_name} {{...}}"
+        tracking = set() if seen is None else seen
+        tracking.add(ident)
+        try:
+            parts = [
+                f"{key}: {stringify(item, True, tracking)}" for key, item in value.fields.items()
+            ]
+            return f"{value.class_name} {{{', '.join(parts)}}}"
+        finally:
+            tracking.remove(ident)
     if _is_echo_function(value):
         cls = value.__class__.__name__
         if cls == "EchoFunction":
             name = value.declaration.name
             return "<fn>" if name == "<lambda>" else f"<fn {name}>"
+        if cls == "BoundMethod":
+            name = value.function.declaration.name
+            return f"<fn {name}>"
+        if cls == "UnboundMethod":
+            name = value.function.declaration.name
+            return f"<fn {name}>"
         return f"<fn {value.name}>"
     return str(value)
 
 
 def _is_echo_function(value: object) -> bool:
-    return value.__class__.__name__ in {"EchoFunction", "EchoBuiltin", "BoundBuiltin"}
+    return value.__class__.__name__ in {
+        "EchoFunction",
+        "EchoBuiltin",
+        "BoundBuiltin",
+        "BoundMethod",
+        "UnboundMethod",
+    }
 
 
 def _builtin_param_compatible(actual: TypeAnnotation | None, expected: TypeAnnotation | None) -> bool:
@@ -372,6 +463,10 @@ def _same_type(left: TypeAnnotation | None, right: TypeAnnotation | None) -> boo
         if left.fields.keys() != right.fields.keys():
             return False
         return all(_same_type(left.fields[name], right.fields[name]) for name in left.fields)
+    if isinstance(left, ClassType) and isinstance(right, ClassType):
+        return left.name == right.name
+    if isinstance(left, InterfaceType) and isinstance(right, InterfaceType):
+        return left.name == right.name
     if isinstance(left, FunctionType) and isinstance(right, FunctionType):
         if left.variadic != right.variadic or len(left.param_types) != len(right.param_types):
             return False
@@ -446,6 +541,19 @@ def type_assignable(actual: TypeAnnotation | None, expected: TypeAnnotation | No
 
     if isinstance(actual, ObjectType) and isinstance(expected, ObjectType):
         return object_type_assignable(actual, expected)
+
+    if isinstance(actual, ClassType) and isinstance(expected, ClassType):
+        return actual.name == expected.name
+
+    if isinstance(actual, ClassType) and isinstance(expected, InterfaceType):
+        from echo.runtime.class_registry import class_type_implements_interface
+
+        return class_type_implements_interface(actual.methods, expected)
+
+    if isinstance(actual, InterfaceType) and isinstance(expected, InterfaceType):
+        from echo.runtime.class_registry import interface_assignable
+
+        return interface_assignable(actual, expected)
 
     if isinstance(actual, FunctionType) and isinstance(expected, FunctionType):
         return function_signature_assignable(

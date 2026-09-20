@@ -1,5 +1,119 @@
 # Changelog
 
+## 0.8.9
+
+First public package release on PyPI (`echolang`). No new language syntax. Failure model unchanged.
+
+- Version **0.8.9**; preferred CLI remains **`elang`** (also `echolang`, `echo`)
+- Install: `pipx install echolang` (or `pip install echolang`)
+- Docs / README install path points at PyPI; GitHub / clone install remains supported
+- Language surface matches 0.8.0–0.8.8 documentation
+
+## 0.8.8
+
+Docs / examples / README release pass. Sixth 0.8 polish increment. No new language syntax. Failure model unchanged.
+
+- README: classes/interfaces documented; stale “no classes” removed; PyPI install path prepared (`pipx install echolang` after 0.8.9)
+- Installation + tour + language reference aligned through 0.8.7 surface
+- Example: `examples/classes_and_interfaces.echo` and docs page Classes and Interfaces
+- Capability matrix / known limitations / semantics notes through 0.8.8
+- Highlighter keywords already include `new` / `implements`
+- CLI: preferred command is **`elang`** (also registers `echolang` and `echo`)
+
+## 0.8.7
+
+Optional `implements` clause. Fifth 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`class User implements Named { ... }`** (multiple: `implements A, B`)
+- Optional — omitting it keeps inferred interface assignability (0.8.2)
+- When present, the class must provide every listed interface’s methods with compatible signatures (**E3214**)
+- Unknown interface / implementing a class / incompatible or missing method → **E3214**
+- Still **no** `extends` / class inheritance
+- Keyword **`implements`** (highlighter / docs synced)
+
+
+## 0.8.6
+
+Type methods (no `this`). Fourth 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`fn origin() -> Point { ... }`** inside a class — no `this` ⇒ type method
+- Call: **`Point.origin()`**; value: **`Point.origin`** is `fn() -> Point` (or with its params)
+- Instance methods still require **`this`** as the first parameter
+- Calling or binding a type method through an instance → **E3213**
+- No `static` keyword; absence of `this` is the signal
+
+
+## 0.8.5
+
+Unbound methods. Third 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`Point.length`** is an unbound `fn(Point, …) -> T`; call **`Point.length(p)`**
+- Equivalent to **`p.length(…)`** when `p` is `Point`
+- Method as value: **`raw: fn(Point) -> int = Point.length`**
+- Bound form **`p.length`** unchanged (0.8.1)
+- Unknown method on the class name → **E2704**
+- No type methods without `this` yet (0.8.6)
+
+## 0.8.4
+
+Field defaults in `new { ... }`. Second 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`x: int = 0;`** inside `new { ... }`
+- Omitted fields use their default at construction (`Point {}`, `Point { x: 3 }`)
+- Required fields without defaults still **E3209**; extras still **E3208**
+- Defaults are expressions evaluated at construction time (same idea as fn parameter defaults)
+- Construction field values (provided or defaulted) are type-checked (**E2001**)
+- Defaults do not change assignability of the class type itself
+
+## 0.8.3
+
+Explicit `new { ... }` field block. First 0.8 polish increment. Failure model unchanged. Call site unchanged.
+
+- Spelling: **`class Point { new { x: int; y: int; } ... }`** — fields live under **`new { ... }`**
+- Construction stays **`Point { x: 3, y: 4 }`** (named fields; order free)
+- Methods stay top-level in the class body (`fn …(this, …)`); may appear before or after `new`
+- Bare top-level `x: int;` inside a class is a **parse error** (breaking within 0.8 polish)
+- Empty classes may omit `new` (`class Marker { }`) or use `new { }`
+- At most one `new` block per class
+- Formatter emits `new { ... }` when the class has fields
+- Keyword **`new`** (highlighter / docs synced)
+
+## 0.8.2
+
+`interface` (no class inheritance). Third 0.8 language increment — closes the 0.8 OOP spine. Failure model unchanged.
+
+- Spelling: **`interface Named { fn name(this) -> str; }`** — method signatures only; no fields; no default bodies
+- A class implements an interface by providing compatible methods (inferred; no `implements` clause)
+- Class instances assignable to matching interfaces; interface → interface when the target’s methods are a subset
+- Call / bound methods work through an interface-typed binding (`n: Named = user; n.name()`)
+- `switch` on interfaces is not exhaustive by implementing classes — **`else` still required** (**E3210**)
+- `export interface` / `import` supported
+- No `extends` / class inheritance
+
+## 0.8.1
+
+Methods + `this`. Second 0.8 language increment. Failure model unchanged. No `interface` yet (0.8.2).
+
+- Spelling: **`fn length(this) -> T { ... }`** inside a class (inline `=>` allowed)
+- First parameter must be untyped **`this`** (implicitly the enclosing class); do not write `this: Point`
+- Call: **`p.length()`** / **`p.move(1, 1)`** — receiver bound as `this`
+- Method as value: **`p.length`** is a bound `fn` (same idea as `xs.map`)
+- Methods may read/write fields through `this`; unknown method **E2704**
+- No static methods, no unbound `Point.length`, no overloading
+
+## 0.8.0
+
+Nominal `class` + construction. First 0.8 language increment — opens the OOP series. Failure model unchanged. No methods / `this` (0.8.1). No `interface` (0.8.2).
+
+- Spelling: **`class Point { x: int; y: int; }`** and construction **`Point { x: 3, y: 4 }`**
+- Nominal type: `Point` is not interchangeable with a compatible `exact { ... }` hash (either direction)
+- Exact fields on construct (**E3208** extras / **E3209** missing), same family as exact object types
+- `type(p)` returns the class name (`"Point"`); field get/set via `.`; unknown field **E2704**
+- `const` freezes the instance (**E3202** through the const name; **E3203** via another name)
+- Destructure as hash-shaped; equality is field-wise; usable in unions and `switch` type arms
+- `export class` / `import` binds the type (no runtime value for the class name itself)
+- Empty classes allowed (`class Marker { }`)
+
 ## 0.7.9
 
 Param `const`. Tenth 0.7 language increment — closes the 0.7.0 gap where parameters stayed mutable. Failure model unchanged. **0.7 polish is complete.** No classes (0.8).

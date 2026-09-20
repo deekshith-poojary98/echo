@@ -1,5 +1,48 @@
 # Change Log
 
+## 0.8.9
+
+- Package version bump (first PyPI release of `echolang`; no highlighter changes).
+
+## 0.8.8
+
+- Package version bump (docs release pass).
+- Extension default CLI path is **`elang`** (was `echolang`).
+
+## 0.8.7
+
+- `implements` highlights as a keyword.
+
+## 0.8.6
+
+- Package version bump only (no new highlighter keywords).
+
+## 0.8.5
+
+- Package version bump only (no new highlighter keywords).
+
+## 0.8.4
+
+- Package version bump only (no new highlighter keywords).
+
+## 0.8.3
+
+- `new` highlights as a keyword (class field block).
+
+## 0.8.2
+
+- Version tracks Echo v0.8.2.
+- `interface` highlights as a keyword.
+
+## 0.8.1
+
+- Version tracks Echo v0.8.1.
+
+## 0.8.0
+
+- Version tracks Echo v0.8.0.
+- `class` highlights as a keyword.
+
 ## 0.7.9
 
 - Version tracks Echo v0.7.9.

@@ -20,6 +20,8 @@ from echo.frontend.ast.nodes import (
     BreakStatement,
     CallExpression,
     CompoundAssignment,
+    ClassConstruction,
+    ClassDeclaration,
     ContinueStatement,
     DestructureAssignment,
     DestructureDeclaration,
@@ -35,11 +37,13 @@ from echo.frontend.ast.nodes import (
     ImportDeclaration,
     IndexAssignment,
     IndexExpression,
+    InterfaceDeclaration,
     LambdaExpression,
     ListLiteral,
     ListPattern,
     LiteralExpression,
     LiteralPattern,
+    MemberAssignment,
     MemberExpression,
     NamePattern,
     Pattern,
@@ -66,6 +70,7 @@ from echo.frontend.ast.nodes import (
     hash_pattern_rest,
 )
 from echo.frontend.tokens import TokenType
+from echo.runtime.instances import ClassInstance
 from echo.runtime.builtins import (
     BUILTIN_NAMES,
     MUTATING_METHODS,
@@ -143,11 +148,13 @@ from echo.runtime.freeze import freeze, require_unfrozen
 from echo.runtime.testing import TestSession
 from echo.runtime.functions import (
     BoundBuiltin,
+    BoundMethod,
     BreakSignal,
     ContinueSignal,
     EchoBuiltin,
     EchoFunction,
     ReturnValue,
+    UnboundMethod,
     bind_arguments,
     callable_name,
     check_return,
@@ -171,6 +178,9 @@ class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
+        self._class_methods: dict[str, dict[str, EchoFunction]] = {}
+        self._class_field_defaults: dict[str, dict[str, object]] = {}
+        self._class_field_types: dict[str, dict[str, object]] = {}
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -179,6 +189,39 @@ class Interpreter:
 
     def execute_statement(self, statement: Statement, env: Environment) -> None:
         if isinstance(statement, TypeAliasStatement):
+            return
+        if isinstance(statement, ClassDeclaration):
+            methods = {
+                method.name: EchoFunction(method, env)
+                for method in statement.methods
+            }
+            self._class_methods[statement.name] = methods
+            self._class_field_defaults[statement.name] = {
+                field.name: field.default
+                for field in statement.fields
+                if field.default is not None
+            }
+            self._class_field_types[statement.name] = {
+                field.name: field.type for field in statement.fields
+            }
+            from echo.frontend.ast.nodes import FunctionType, TypeName
+            from echo.runtime.class_registry import register_class_methods
+
+            typed: dict[str, FunctionType] = {}
+            for method in statement.methods:
+                if not method.parameters or method.parameters[0].name != "this":
+                    continue
+                rest = method.parameters[1:]
+                return_type = method.return_type or TypeName(method.location, "void")
+                typed[method.name] = FunctionType(
+                    method.location,
+                    [parameter.type for parameter in rest],
+                    return_type,
+                    any(parameter.variadic for parameter in rest),
+                )
+            register_class_methods(statement.name, typed)
+            return
+        if isinstance(statement, InterfaceDeclaration):
             return
         if isinstance(statement, ImportDeclaration):
             return
@@ -256,6 +299,15 @@ class Interpreter:
             self._index_assign(inner, final_key, value, statement.location)
             if env.is_watched(statement.name):
                 self._watch(statement.name, container, env, "modified by index assignment to")
+            return
+        if isinstance(statement, MemberAssignment):
+            target = self.evaluate(statement.object, env)
+            if isinstance(statement.object, VariableExpression):
+                env.require_mutable(statement.object.name, statement.location)
+            value = self.evaluate(statement.value, env)
+            self._member_assign(target, statement.name, value, statement.location)
+            if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
+                self._watch(statement.object.name, target, env, "modified by field assignment to")
             return
         if isinstance(statement, ExpressionStatement):
             self.evaluate(statement.expression, env)
@@ -424,13 +476,55 @@ class Interpreter:
         if isinstance(expression, LambdaExpression):
             return self._lambda_function(expression, env)
         if isinstance(expression, MemberExpression):
+            if isinstance(expression.object, VariableExpression):
+                class_name = expression.object.name
+                if not env.is_defined(class_name) and class_name in self._class_methods:
+                    method = self._class_methods[class_name].get(expression.name)
+                    if method is not None:
+                        return UnboundMethod(method, class_name)
+                    raise EchoRuntimeError(
+                        f"Unknown method '{expression.name}' on {class_name}",
+                        expression.location,
+                        code="E2704",
+                    )
+            target = self.evaluate(expression.object, env)
+            if isinstance(target, ClassInstance):
+                if expression.name in target.fields:
+                    return target.fields[expression.name]
+                method = self._class_methods.get(target.class_name, {}).get(expression.name)
+                if method is not None:
+                    if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
+                        raise EchoRuntimeError(
+                            f"Type method '{expression.name}' must be accessed as "
+                            f"'{target.class_name}.{expression.name}'",
+                            expression.location,
+                            code="E3213",
+                        )
+                    return BoundMethod(method, target)
+                raise EchoRuntimeError(
+                    f"Unknown field '{expression.name}' on {target.class_name}",
+                    expression.location,
+                    code="E2704",
+                )
             if expression.name in BUILTIN_NAMES:
-                return BoundBuiltin(expression.name, self.evaluate(expression.object, env))
+                return BoundBuiltin(expression.name, target)
             raise EchoRuntimeError(
                 f"Property access '.{expression.name}' is not supported; use method calls or hash indexing",
                 expression.location,
                 code="E2704",
             )
+        if isinstance(expression, ClassConstruction):
+            values = {name: self.evaluate(value, env) for name, value in expression.fields}
+            defaults = self._class_field_defaults.get(expression.class_name, {})
+            for field_name, default_expr in defaults.items():
+                if field_name not in values:
+                    values[field_name] = self.evaluate(default_expr, env)  # type: ignore[arg-type]
+            field_types = self._class_field_types.get(expression.class_name, {})
+            for field_name, value in values.items():
+                expected = field_types.get(field_name)
+                if expected is not None:
+                    validate_type(field_name, value, expected, expression.location)  # type: ignore[arg-type]
+            return ClassInstance(expression.class_name, values)
         if isinstance(expression, CallExpression):
             return self._call(expression, env)
         raise EchoRuntimeError(f"Unknown expression: {type(expression).__name__}", expression.location, code="E2798")
@@ -438,7 +532,44 @@ class Interpreter:
     def _call(self, expression: CallExpression, env: Environment) -> object:
         callee = expression.callee
         if isinstance(callee, MemberExpression):
+            if isinstance(callee.object, VariableExpression):
+                class_name = callee.object.name
+                if not env.is_defined(class_name) and class_name in self._class_methods:
+                    method = self._class_methods[class_name].get(callee.name)
+                    if method is not None:
+                        return self._call_user_function(
+                            method, expression.arguments, env, expression.location
+                        )
+                    raise EchoRuntimeError(
+                        f"Unknown method '{callee.name}' on {class_name}",
+                        expression.location,
+                        code="E2704",
+                    )
             target = self.evaluate(callee.object, env)
+            if isinstance(target, ClassInstance):
+                method = self._class_methods.get(target.class_name, {}).get(callee.name)
+                if method is not None:
+                    if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
+                        raise EchoRuntimeError(
+                            f"Type method '{callee.name}' must be called as "
+                            f"'{target.class_name}.{callee.name}(...)'",
+                            expression.location,
+                            code="E3213",
+                        )
+                    return self._call_method(method, target, expression.arguments, env, expression.location)
+                if callee.name in target.fields:
+                    return self._call_value(
+                        target.fields[callee.name],
+                        expression.arguments,
+                        env,
+                        expression.location,
+                        callee.name,
+                    )
+                raise EchoRuntimeError(
+                    f"Unknown method '{callee.name}' on {target.class_name}",
+                    expression.location,
+                    code="E2704",
+                )
             return self._call_builtin(callee.name, expression.arguments, env, target, expression.location, callee.object)
         if isinstance(callee, VariableExpression):
             # Match evaluate(): a lexical value (parameter / variable) wins over a
@@ -470,6 +601,10 @@ class Interpreter:
             return self._call_builtin(value.name, raw_args, env, None, location, None)
         if isinstance(value, BoundBuiltin):
             return self._call_builtin(value.name, raw_args, env, value.receiver, location, None)
+        if isinstance(value, BoundMethod):
+            return self._call_method(value.function, value.receiver, raw_args, env, location)
+        if isinstance(value, UnboundMethod):
+            return self._call_user_function(value.function, raw_args, env, location)
         if name is not None:
             raise EchoTypeError(
                 f"Cannot call '{name}' because it is not a function",
@@ -554,11 +689,170 @@ class Interpreter:
         check_return(declaration.name, result, declaration.return_type, location)
         return result
 
+    def _call_method(
+        self,
+        function: EchoFunction,
+        receiver: object,
+        raw_args,
+        env: Environment,
+        location: SourceLocation,
+    ) -> object:
+        declaration = function.declaration
+        if not declaration.parameters or declaration.parameters[0].name != "this":
+            raise EchoRuntimeError(
+                f"Type method '{declaration.name}' must be called on the class name",
+                location,
+                help_text="Type methods have no 'this'; call them as ClassName.method(...).",
+                code="E3213",
+            )
+        rest = declaration.parameters[1:]
+        bound = bind_arguments(declaration.name, rest, raw_args, location)
+        new_env = Environment(parent=function.closure, is_function=True)
+        new_env.function_name = declaration.name
+        this_param = declaration.parameters[0]
+        raise_exact_shape_error(receiver, this_param.type, location)
+        if not matches_type(receiver, this_param.type):
+            raise EchoTypeError(
+                f"Argument 'this' in method '{declaration.name}' must be of type "
+                f"{format_type(this_param.type)}, got {echo_type_name(receiver)}",
+                location,
+                code="E2706",
+            )
+        new_env.define("this", receiver, this_param.type, mutable=True, const=False)
+        for parameter in rest:
+            value = self.evaluate(bound[parameter.name], new_env if parameter.default is bound[parameter.name] else env)
+            if parameter.variadic:
+                if not isinstance(value, list):
+                    raise EchoTypeError(
+                        f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                        f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                        location,
+                        code="E2706",
+                    )
+                for item in value:
+                    raise_exact_shape_error(item, parameter.type, location)
+                    if not matches_type(item, parameter.type):
+                        raise EchoTypeError(
+                            f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                            f"{format_type(parameter.type)}, got list",
+                            location,
+                            code="E2706",
+                        )
+            else:
+                raise_exact_shape_error(value, parameter.type, location)
+                if not matches_type(value, parameter.type):
+                    label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
+                    raise EchoTypeError(
+                        f"Argument {label} in function '{declaration.name}' must be of type "
+                        f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                        location,
+                        code="E2706",
+                    )
+            if parameter.pattern is not None:
+                self._unpack_pattern(
+                    parameter.pattern,
+                    value,
+                    new_env,
+                    declare=True,
+                    const=parameter.const,
+                    location=location,
+                )
+            else:
+                if parameter.const:
+                    freeze(value)
+                new_env.define(
+                    parameter.name,
+                    value,
+                    parameter.type if not parameter.variadic else TypeName(parameter.location, "list"),
+                    mutable=not parameter.const,
+                    const=parameter.const,
+                )
+
+        if declaration.inline:
+            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
+        else:
+            try:
+                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
+                result = None
+            except ReturnValue as returned:
+                result = returned.value
+        check_return(declaration.name, result, declaration.return_type, location)
+        return result
+
+    def _call_method_values(
+        self,
+        function: EchoFunction,
+        receiver: object,
+        values: list[object],
+        location: SourceLocation | None,
+    ) -> object:
+        declaration = function.declaration
+        rest = declaration.parameters[1:]
+        if len(values) != len(rest):
+            raise ArgumentError(
+                f"Function '{declaration.name}' expected {len(rest)} arguments, got {len(values)}",
+                location,
+                code="E2707",
+            )
+        new_env = Environment(parent=function.closure, is_function=True)
+        new_env.function_name = declaration.name
+        this_param = declaration.parameters[0]
+        raise_exact_shape_error(receiver, this_param.type, location)
+        if not matches_type(receiver, this_param.type):
+            raise EchoTypeError(
+                f"Argument 'this' in method '{declaration.name}' must be of type "
+                f"{format_type(this_param.type)}, got {echo_type_name(receiver)}",
+                location,
+                code="E2706",
+            )
+        new_env.define("this", receiver, this_param.type, mutable=True, const=False)
+        for parameter, value in zip(rest, values):
+            raise_exact_shape_error(value, parameter.type, location)
+            if not matches_type(value, parameter.type):
+                label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
+                raise EchoTypeError(
+                    f"Argument {label} in function '{declaration.name}' must be of type "
+                    f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                    location,
+                    code="E2706",
+                )
+            if parameter.pattern is not None:
+                self._unpack_pattern(
+                    parameter.pattern,
+                    value,
+                    new_env,
+                    declare=True,
+                    const=parameter.const,
+                    location=location,
+                )
+            else:
+                if parameter.const:
+                    freeze(value)
+                new_env.define(
+                    parameter.name,
+                    value,
+                    parameter.type,
+                    mutable=not parameter.const,
+                    const=parameter.const,
+                )
+        if declaration.inline:
+            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
+        else:
+            try:
+                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
+                result = None
+            except ReturnValue as returned:
+                result = returned.value
+        check_return(declaration.name, result, declaration.return_type, location)
+        return result
+
     def call_function_with_values(self, function: object, values: list[object], location: SourceLocation | None = None) -> object:
         if isinstance(function, EchoBuiltin):
             return self._invoke_builtin_values(function.name, None, values, location)
         if isinstance(function, BoundBuiltin):
             return self._invoke_builtin_values(function.name, function.receiver, values, location)
+        if isinstance(function, BoundMethod):
+            return self._call_method_values(function.function, function.receiver, values, location)
         if not isinstance(function, EchoFunction):
             raise EchoTypeError("Expected a function value", location, code="E2705")
         declaration = function.declaration
@@ -1234,21 +1528,25 @@ class Interpreter:
                 self._bind_pattern_name(rest, rest_value, env, declare=True, const=False, location=location)
             return True
         if isinstance(pattern, HashPattern):
-            if not isinstance(value, dict):
+            if isinstance(value, ClassInstance):
+                mapping = value.fields
+            elif isinstance(value, dict):
+                mapping = value
+            else:
                 return False
             fixed = hash_pattern_fixed(pattern)
             rest = hash_pattern_rest(pattern)
             taken: set[str] = set()
             for field in fixed:
                 source_key = field.source_key()
-                if source_key not in value:
+                if source_key not in mapping:
                     return False
-                if field.declared_type is not None and not matches_type(value[source_key], field.declared_type):
+                if field.declared_type is not None and not matches_type(mapping[source_key], field.declared_type):
                     return False
-                self._bind_pattern_name(field, value[source_key], env, declare=True, const=False, location=location)
+                self._bind_pattern_name(field, mapping[source_key], env, declare=True, const=False, location=location)
                 taken.add(source_key)
             if rest is not None:
-                rest_value = {key: item for key, item in value.items() if key not in taken}
+                rest_value = {key: item for key, item in mapping.items() if key not in taken}
                 if rest.declared_type is not None:
                     for item in rest_value.values():
                         if not matches_type(item, rest.declared_type):
@@ -1312,7 +1610,11 @@ class Interpreter:
                 self._bind_pattern_name(rest, rest_value, env, declare=declare, const=const, location=location)
             return
         if isinstance(pattern, HashPattern):
-            if not isinstance(value, dict):
+            if isinstance(value, ClassInstance):
+                mapping = value.fields
+            elif isinstance(value, dict):
+                mapping = value
+            else:
                 raise EchoTypeError(
                     f"Hash destructuring expected a hash, got {echo_type_name(value)}",
                     location,
@@ -1323,14 +1625,14 @@ class Interpreter:
             taken: set[str] = set()
             for field in fixed:
                 source_key = field.source_key()
-                if source_key not in value:
+                if source_key not in mapping:
                     raise EchoRuntimeError(f"Key '{source_key}' not found in hash", location, code="E2711")
                 self._bind_pattern_name(
-                    field, value[source_key], env, declare=declare, const=const, location=location
+                    field, mapping[source_key], env, declare=declare, const=const, location=location
                 )
                 taken.add(source_key)
             if rest is not None:
-                rest_value = {key: item for key, item in value.items() if key not in taken}
+                rest_value = {key: item for key, item in mapping.items() if key not in taken}
                 if rest.declared_type is not None:
                     for item in rest_value.values():
                         if not matches_type(item, rest.declared_type):
@@ -1339,6 +1641,22 @@ class Interpreter:
             return
         if isinstance(pattern, NamePattern):
             self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)
+
+    def _member_assign(self, target: object, name: str, value: object, location: SourceLocation) -> None:
+        require_unfrozen(target, location)
+        if not isinstance(target, ClassInstance):
+            raise EchoTypeError(
+                f"Cannot assign field on type {echo_type_name(target)}",
+                location,
+                code="E2704",
+            )
+        if name not in target.fields:
+            raise EchoRuntimeError(
+                f"Unknown field '{name}' on {target.class_name}",
+                location,
+                code="E2704",
+            )
+        target.fields[name] = value
 
     def _bind_pattern_name(
         self,

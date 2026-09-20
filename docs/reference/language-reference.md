@@ -19,6 +19,30 @@ for i: int in 0..10 { ... }
 foreach item: str in items { ... }
 fn greet(name: str) { ... }
 fn lock(const xs: list) { ... }
+class Point {
+    new {
+        x: int = 0;
+        y: int = 0;
+    }
+    fn origin() -> Point {
+        return Point {};
+    }
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
+}
+interface Named {
+    fn name(this) -> str;
+}
+class User implements Named {
+    new { label: str; }
+    fn name(this) -> str {
+        return this.label;
+    }
+}
+p: Point = Point.origin();
+say(p.length());
+say(Point.length(Point { x: 3, y: 4 }));
 return;
 break;
 continue;
@@ -33,6 +57,8 @@ watch count;
 - `void` — function return annotations only
 - Unions: `int | str` (no `null` type member; prefer `str | void`)
 - Object shapes: `{ id: int }` (open) and `exact { id: int }` (closed)
+- Nominal classes: `class Point { new { x: int = 0; y: int; } }` (construction `Point { y: 4 }`; unbound methods `Point.length(p)`)
+- Interfaces: `interface Named { fn name(this) -> str; }` (optional `class User implements Named`)
 - Function types: `fn(int) -> int`
 
 ## Literals

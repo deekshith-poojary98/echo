@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "echolang"
-version = "0.7.9"
+version = "0.8.9"
 description = "Echo programming language interpreter"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,6 +28,7 @@ dev = ["pytest>=8.0"]
 
 [project.scripts]
 echo = "echo.cli.main:main"
+elang = "echo.cli.main:main"
 echolang = "echo.cli.main:main"
 
 [tool.setuptools]

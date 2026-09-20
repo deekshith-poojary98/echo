@@ -12,7 +12,7 @@ from echo.cli.main import main
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_JSON = REPO_ROOT / "echo-syntax-highlighter" / "package.json"
 
-# Captured `echolang … --plain` strings (paths substituted in tests).
+# Captured `elang … --plain` strings (paths substituted in tests).
 CHECK_SEMANTIC = """\
 Semantic Error: Error[E2205]: Missing argument for parameter 'b' in function 'add'
   --> {path}:2:5

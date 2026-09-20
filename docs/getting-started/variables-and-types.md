@@ -78,6 +78,24 @@ fn show(x: int | str) -> str {
 
 A value matches a union if it matches any member. Unions are not Option — Echo has no `null` type, so write `str | void` when `null` is allowed. Use `switch` type arms to dispatch on members.
 
+### Classes (nominal)
+
+```echo
+class Point {
+    new {
+        x: int;
+        y: int;
+    }
+}
+
+p: Point = Point { x: 3, y: 4 };
+say(p.x);
+p.x = 10;
+say(type(p)); // "Point"
+```
+
+`Point` is a nominal type — not the same as `exact { x: int, y: int }`. Fields are declared under **`new { ... }`** (optional defaults: `x: int = 0`). Construction requires every field without a default and rejects extras. Methods use an explicit `this` receiver: `fn length(this) -> int { ... }`, call `p.length()` or unbound `Point.length(p)`; type methods omit `this` (`fn origin() -> Point`, call `Point.origin()`). Interfaces declare method signatures only (`interface Named { fn name(this) -> str; }`); a class implements them by providing compatible methods; an optional `implements Named` clause documents intent and is checked (**E3214**).
+
 ### Runtime type checking
 ```echo
 count: int = 1;
