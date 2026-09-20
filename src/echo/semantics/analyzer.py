@@ -1628,6 +1628,7 @@ class SemanticAnalyzer:
         class_type.methods = methods
         class_type.type_methods = type_methods
         register_class_methods(statement.name, methods)
+        self._check_implements(statement, class_type, scope)
         for method in statement.methods:
             self._analyze_callable(
                 method.parameters,
@@ -1640,6 +1641,46 @@ class SemanticAnalyzer:
             )
         if exported:
             self.module_symbols.classes[statement.name] = class_type
+
+    def _check_implements(
+        self,
+        statement: ClassDeclaration,
+        class_type: ClassType,
+        scope: Scope,
+    ) -> None:
+        from echo.runtime.values import type_assignable
+
+        for name in statement.implements:
+            interface = scope.interfaces.get(name)
+            if interface is None:
+                if name in scope.classes:
+                    raise SemanticError(
+                        f"Class '{statement.name}' cannot implement '{name}' because it is a class, not an interface",
+                        statement.location,
+                        code="E3214",
+                    )
+                raise SemanticError(
+                    f"Unknown interface '{name}' in implements list for class '{statement.name}'",
+                    statement.location,
+                    help_text="Declare the interface before the class, or import it.",
+                    code="E3214",
+                )
+            for method_name, expected in interface.methods.items():
+                actual = class_type.methods.get(method_name)
+                if actual is None:
+                    raise SemanticError(
+                        f"Class '{statement.name}' does not implement interface '{name}': "
+                        f"missing method '{method_name}'",
+                        statement.location,
+                        code="E3214",
+                    )
+                if not type_assignable(actual, expected):
+                    raise SemanticError(
+                        f"Class '{statement.name}' does not implement interface '{name}': "
+                        f"method '{method_name}' has an incompatible signature",
+                        statement.location,
+                        code="E3214",
+                    )
 
     def _interface_declaration(
         self, statement: InterfaceDeclaration, scope: Scope, *, exported: bool = False

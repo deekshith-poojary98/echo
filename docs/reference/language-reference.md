@@ -44,7 +44,7 @@ watch count;
 - Unions: `int | str` (no `null` type member; prefer `str | void`)
 - Object shapes: `{ id: int }` (open) and `exact { id: int }` (closed)
 - Nominal classes: `class Point { new { x: int = 0; y: int; } }` (construction `Point { y: 4 }`; unbound methods `Point.length(p)`)
-- Interfaces: `interface Named { fn name(this) -> str; }`
+- Interfaces: `interface Named { fn name(this) -> str; }` (optional `class User implements Named`)
 - Function types: `fn(int) -> int`
 
 ## Literals

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.7
+
+Optional `implements` clause. Fifth 0.8 polish increment. Failure model unchanged.
+
+- Spelling: **`class User implements Named { ... }`** (multiple: `implements A, B`)
+- Optional — omitting it keeps inferred interface assignability (0.8.2)
+- When present, the class must provide every listed interface’s methods with compatible signatures (**E3214**)
+- Unknown interface / implementing a class / incompatible or missing method → **E3214**
+- Still **no** `extends` / class inheritance
+- Keyword **`implements`** (highlighter / docs synced)
+
+
 ## 0.8.6
 
 Type methods (no `this`). Fourth 0.8 polish increment. Failure model unchanged.

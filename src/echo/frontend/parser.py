@@ -458,6 +458,20 @@ class Parser:
         name_token = self._expect_name_token("class name")
         if name_token.lexeme in {"int", "float", "str", "bool", "dynamic", "list", "hash", "void"}:
             raise ParseError(f"Cannot redefine built-in type '{name_token.lexeme}'", name_token.location)
+        implements: list[str] = []
+        if self._match(TokenType.IMPLEMENTS):
+            seen: set[str] = set()
+            while True:
+                iface = self._expect_name_token("interface name")
+                if iface.lexeme in seen:
+                    raise ParseError(
+                        f"Duplicate interface '{iface.lexeme}' in implements list",
+                        iface.location,
+                    )
+                seen.add(iface.lexeme)
+                implements.append(iface.lexeme)
+                if not self._match(TokenType.COMMA):
+                    break
         self._expect(TokenType.LEFT_BRACE, "{")
         fields: list[ClassField] = []
         methods: list[FunctionDeclaration] = []
@@ -506,7 +520,7 @@ class Parser:
                 unexpected.location,
             )
         self._expect(TokenType.RIGHT_BRACE, "}")
-        return ClassDeclaration(token.location, name_token.lexeme, fields, methods)
+        return ClassDeclaration(token.location, name_token.lexeme, fields, methods, implements)
 
     def _parse_class_new_block(
         self,

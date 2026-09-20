@@ -373,6 +373,7 @@ class ClassDeclaration(Statement):
     name: str
     fields: list[ClassField]
     methods: list[FunctionDeclaration] = field(default_factory=list)
+    implements: list[str] = field(default_factory=list)
 
 
 @dataclass

@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.8.5**. **0.8.6** (type methods) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.8 OOP spine is complete** (0.8.0–0.8.2). **0.8.3–0.8.9** is the OOP polish arc ending in the first **PyPI** release. Failure model stays abort + `*Or`.
+Current tagged version is **v0.8.6**. **0.8.7** (optional `implements`) is implemented but not yet tagged. **0.7 polish is complete** through 0.7.9. **0.8 OOP spine is complete** (0.8.0–0.8.2). **0.8.3–0.8.9** is the OOP polish arc ending in the first **PyPI** release. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.8.5**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.5** are implemented; **0.8.6** is implemented (not yet tagged); polish **0.8.7–0.8.9** remains drafted.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.8.6**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.6** are implemented; **0.8.7** is implemented (not yet tagged); polish **0.8.8–0.8.9** remains drafted.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -358,7 +358,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 
 ## 0.8.x — OOP
 
-**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3–0.8.6 implemented; 0.8.7–0.8.9 drafted (held until started).**
+**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3–0.8.7 implemented; 0.8.8–0.8.9 drafted (held until started).**
 
 **0.7 is closed** (spine through 0.7.6; polish through 0.7.9). Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
 
@@ -391,7 +391,7 @@ Do not implement until explicitly started (`start 0.8.3`, etc.). Goal: make the 
 | 0.8.4 | Field defaults in `new` / construction | implemented (0.8.4) |
 | 0.8.5 | Unbound methods `Point.length(p)` | implemented (0.8.5) |
 | 0.8.6 | Type methods (no `this`) / `Point.origin()` | implemented (0.8.6) |
-| 0.8.7 | Optional `implements` clause | held (draft) |
+| 0.8.7 | Optional `implements` clause | implemented (0.8.7) |
 | 0.8.8 | Docs / examples / README release pass | held (draft) |
 | 0.8.9 | First PyPI release (`echolang`) | held (draft) |
 
@@ -642,7 +642,7 @@ Does not add free-standing `static` keyword. Absence of `this` is the signal.
 
 Make intended interfaces visible at the class declaration; inference remains.
 
-**Working spelling:**
+**Implemented spelling:**
 
 ```echo
 interface Named {
@@ -664,7 +664,7 @@ class User implements Named {
 Rules:
 
 - `implements I, J` is **optional**. Omitting it keeps 0.8.2 inferred assignability
-- When present, the class must provide every listed interface’s methods (compatible signatures) or abort at analyze time (new **E32xx** or reuse existing type errors)
+- When present, the class must provide every listed interface’s methods (compatible signatures) or abort at analyze time (**E3214**)
 - Multiple interfaces allowed; order free
 - Still **no** class inheritance / `extends`
 
@@ -703,7 +703,7 @@ Publish **`echolang`** to PyPI. Language surface is whatever 0.8.8 documented.
 | Unbound methods | **0.8.5** — locked | never |
 | Type methods | **0.8.6** — locked (no `this`) | `static` keyword |
 | Visibility | all public through 0.8.9 | `priv` later (held) |
-| `implements` | optional in **0.8.7**; inference remains | required always |
+| `implements` | optional in **0.8.7** — locked; inference remains | required always |
 | Inheritance | never in 0.8 | single `extends` later series |
 | Class vs exact hash | strictly nominal | convert helpers later |
 | First PyPI version | **0.8.9** | 1.0.0 |
@@ -714,11 +714,11 @@ Inheritance trees, abstract classes, generics on classes, operator overloading, 
 
 ## Held (do not implement)
 
-Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.6 are implemented**; **0.8.7–0.8.9** stay held until started. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.7 are implemented**; **0.8.8–0.8.9** stay held until started. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
-| Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.6** done; **0.8.7–0.8.9** drafted |
+| Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.7** done; **0.8.8–0.8.9** drafted |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

@@ -24,6 +24,7 @@ const KEYWORDS = new Set([
   'class',
   'interface',
   'new',
+  'implements',
   'this',
 ])
 

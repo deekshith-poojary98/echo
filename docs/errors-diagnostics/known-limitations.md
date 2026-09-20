@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.8.6**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, and nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, and interfaces (no inheritance). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.8.7**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, and nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, and interfaces (no inheritance). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 

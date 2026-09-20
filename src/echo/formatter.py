@@ -177,7 +177,10 @@ class _Printer:
             self._line(f"type {statement.name} = {self._type(statement.target)};")
             return
         if isinstance(statement, ClassDeclaration):
-            self._write(f"class {statement.name} ")
+            self._write(f"class {statement.name}")
+            if statement.implements:
+                self._write(f" implements {', '.join(statement.implements)}")
+            self._write(" ")
             self._write("{")
             self._newline()
             self._indent += 1
