@@ -82,6 +82,7 @@ from echo.runtime.builtins import (
     builtin_value,
     do_abs,
     do_args,
+    do_ask,
     do_assert,
     do_ceil,
     do_chunk,
@@ -138,6 +139,7 @@ from echo.runtime.builtins import (
     do_write_file,
     do_write_json,
     do_zip,
+    require_int_convertible,
     resolve_builtin_args,
 )
 from echo.runtime.host import Host
@@ -948,7 +950,7 @@ class Interpreter:
             return None
         if method == "ask":
             prompt = target if target is not None else (args[0] if args else "")
-            return input(str(prompt))
+            return do_ask(prompt, location)
         if method == "asInt":
             return as_int(target if target is not None else _first(args, method, location), location)
         if method == "asFloat":
@@ -1463,10 +1465,12 @@ class Interpreter:
         return accumulator
 
     def _loop_bound(self, expression: Expression, env: Environment, location: SourceLocation) -> int:
-        value = self.evaluate(expression, env)
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            raise EchoTypeError("for-loop bounds must be convertible to int", location, code="E2702")
-        return int(value)
+        return require_int_convertible(
+            self.evaluate(expression, env),
+            location,
+            what="for-loop bounds",
+            code="E2702",
+        )
 
     def _try_match_switch_pattern(
         self,

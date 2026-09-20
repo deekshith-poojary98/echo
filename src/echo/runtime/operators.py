@@ -68,6 +68,12 @@ def binary_op(op: TokenType, left: object, right: object, location: SourceLocati
             return bool(is_truthy(left) or is_truthy(right))
     except EchoRuntimeError:
         raise
+    except OverflowError as exc:
+        raise EchoTypeError(
+            "Numeric operator cannot convert an integer that is too large for float",
+            location,
+            code="E2108",
+        ) from exc
     except TypeError as exc:
         raise EchoTypeError(str(exc), location, code="E2104") from exc
     raise EchoRuntimeError(f"Unknown operator: {op.name}", location, code="E2105")
