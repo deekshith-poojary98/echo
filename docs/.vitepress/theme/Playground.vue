@@ -7,7 +7,7 @@ import { EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lin
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { echoLanguage } from './echoLanguage'
 import { echoHighlight } from './echoHighlight'
-import gradebookSource from '../../../complex_example.echo?raw'
+import classesSource from '../../../examples/classes_and_interfaces.echo?raw'
 
 type Example = {
   id: string
@@ -153,10 +153,10 @@ say("Hello, \${name}!");
 `,
   },
   {
-    id: 'gradebook',
-    label: 'Gradebook (complex)',
+    id: 'classes-full',
+    label: 'Classes & interfaces',
     stdin: '',
-    source: gradebookSource,
+    source: classesSource,
   },
 ]
 
