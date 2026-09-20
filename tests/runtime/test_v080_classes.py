@@ -160,6 +160,52 @@ say(y);
     assert result.lines == ["3", "4"]
 
 
+def test_field_assignment_rejects_wrong_type():
+    result = run_echo(
+        """
+class Point { new { x: int; y: int; } }
+p: Point = Point { x: 1, y: 2 };
+p.x = "oops";
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2001" in result.output
+
+
+def test_field_assignment_rejects_float_into_int():
+    result = run_echo(
+        """
+class Point { new { x: int; } }
+p: Point = Point { x: 1 };
+p.x = 1.5;
+say(p.x);
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2001" in result.output
+
+
+def test_method_field_assignment_rejects_wrong_type():
+    result = run_echo(
+        """
+class Point {
+    new { x: int; }
+    fn set(this, v: dynamic) -> void {
+        this.x = v;
+    }
+}
+p: Point = Point { x: 1 };
+p.set("oops");
+say(p.x);
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2001" in result.output
+
+
 def test_const_instance_rejects_field_assign():
     result = run_echo(
         """
