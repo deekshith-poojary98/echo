@@ -4,6 +4,8 @@ Install a CLI that runs `.echo` files. Needs **Python 3.10+**.
 
 Prefer the command name `echolang`. Many shells already treat `echo` as a built-in (`Write-Output` on PowerShell; POSIX `echo`). The package still registers `echo`, but docs and examples use `echolang`.
 
+The PyPI package name is **`echolang`**. The first public upload is planned for **0.8.9**; until then, install from GitHub or a clone.
+
 ## Option 1: pipx (recommended)
 
 Isolated env, global commands.
@@ -30,6 +32,12 @@ pipx install git+https://github.com/deekshith-poojary98/echo.git
 
 ```bash
 echolang examples/language_feature_smoke.echo
+```
+
+### After PyPI (0.8.9+)
+
+```bash
+pipx install echolang
 ```
 
 ## Option 2: pip from a clone

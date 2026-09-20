@@ -1,13 +1,13 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.8.7**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, and nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, and interfaces (no inheritance). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.8.8**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, and nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, and interfaces (no inheritance). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
 - Core syntax and v0.3 file modules (`import` / `export`)
 - Host/stdlib, REPL, `check` / `test` / `fmt` / `lint`
 - 0.6–0.7: lambdas, collection helpers, `const`, destructuring, exact objects, unions, `switch`, range-as-value
-- 0.8: `class` + construction, methods + `this`, `interface`
+- 0.8: `class` + `new { ... }`, methods + `this`, unbound/type methods, `interface`, optional `implements`
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 

@@ -25,11 +25,12 @@ for i: int in 0..10 by 2 {
 - `list` and `hash`, string interpolation, method calls, `use mut`, lexical scope
 - File modules: `export` / `import name from "module"`
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
+- Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
 - CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`
 
 ## What you do not
 
-- No classes / structs, no generics, no `try` / `catch`
+- No class inheritance (`extends`), no generics, no `try` / `catch`
 - Type inference is limited — you still declare types
 - See [Known Limitations](https://deekshith-poojary98.github.io/echo/errors-diagnostics/known-limitations) and [failure model](https://deekshith-poojary98.github.io/echo/failure-model)
 
@@ -37,13 +38,21 @@ for i: int in 0..10 by 2 {
 
 Python 3.10+. Prefer the command name **`echolang`** — shells often reserve `echo`.
 
-### pipx
+Package name on PyPI will be **`echolang`** (first public upload planned for **0.8.9**). Until then, install from GitHub or a clone.
+
+### pipx (recommended)
 
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 pipx install git+https://github.com/deekshith-poojary98/echo.git
 echolang examples/language_feature_smoke.echo
+```
+
+After the PyPI release:
+
+```bash
+pipx install echolang
 ```
 
 ### From a clone
@@ -67,9 +76,9 @@ Repo launchers: `./echolang` (Unix) or `.\echolang.bat` (Windows).
 
 - `src/echo/` — frontend, semantics, modules, runtime, CLI
 - `docs/` — VitePress site (this is the docs source)
-- `docs/language-semantics.md` — language contract (v0.2 base; through 0.7.5)
+- `docs/language-semantics.md` — language contract (v0.2 base; additive through 0.8.x)
 - `docs/module-semantics.md` — v0.3 module contract
-- `*.echo` / `examples/` — sample programs
+- `*.echo` / `examples/` — sample programs (including `examples/classes_and_interfaces.echo`)
 
 ## License / contributing
 

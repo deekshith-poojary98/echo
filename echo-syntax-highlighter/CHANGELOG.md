@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.8
+
+- Package version bump only (docs release pass).
+
 ## 0.8.7
 
 - `implements` highlights as a keyword.

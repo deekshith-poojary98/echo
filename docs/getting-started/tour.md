@@ -21,7 +21,7 @@ say("Version:", version);
 - Not compiled. Files go lexer → parser → analyzer → interpreter.
 - Declarations and parameters need types. A `return` requires a return type annotation on the function.
 - Abort is the default on failure; inquiry and `*Or` twins cover expected absence — see [Failure model](/failure-model).
-- Classes and interfaces ship (0.8.x); class inheritance does not.
+- Classes and interfaces ship (0.8.x): `new { ... }` fields, methods, type methods, unbound methods, optional `implements`. Class inheritance does not.
 - Comments:
 
 ```echo

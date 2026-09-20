@@ -21,14 +21,28 @@ fn greet(name: str) { ... }
 fn lock(const xs: list) { ... }
 class Point {
     new {
-        x: int;
-        y: int;
+        x: int = 0;
+        y: int = 0;
     }
-    fn length(this) -> int { return this.x * this.x + this.y * this.y; }
+    fn origin() -> Point {
+        return Point {};
+    }
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
 }
-p: Point = Point { x: 3, y: 4 };
-p.x = 10;
+interface Named {
+    fn name(this) -> str;
+}
+class User implements Named {
+    new { label: str; }
+    fn name(this) -> str {
+        return this.label;
+    }
+}
+p: Point = Point.origin();
 say(p.length());
+say(Point.length(Point { x: 3, y: 4 }));
 return;
 break;
 continue;

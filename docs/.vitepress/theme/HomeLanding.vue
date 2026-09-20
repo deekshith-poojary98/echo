@@ -281,7 +281,7 @@ onUnmounted(() => {
       <div class="echo-home__hero-glow" aria-hidden="true" />
       <canvas ref="water" class="echo-home__water" aria-hidden="true"></canvas>
 
-      <p class="echo-home__version">Latest · 0.8.7</p>
+      <p class="echo-home__version">Latest · 0.8.8</p>
       <div class="echo-home__mark" role="img" aria-label="Echo">
         <span class="echo-home__bar" style="--h: 0.36; --d: 0s"></span>
         <span class="echo-home__bar" style="--h: 0.78; --d: -0.28s"></span>

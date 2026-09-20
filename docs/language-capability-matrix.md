@@ -1,7 +1,7 @@
 # Echo Language Capability Matrix
 
 **Status:** Living audit against `src/echo/` and tests. Not a language contract.
-**Aligned through:** v0.8.7 (optional `implements`). Earlier rows for field defaults, `new { ... }`, interfaces, methods/`this`, nominal classes, param `const`, hash rest/rename, `switch`, unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
+**Aligned through:** v0.8.8 (docs/README release pass). Earlier rows for field defaults, `new { ... }`, interfaces, methods/`this`, nominal classes, param `const`, hash rest/rename, `switch`, unions, const, destructure, exact, builtins-as-values, range-as-value, modules, REPL, fmt/lint/test, `*Or`, map/filter stay marked as shipped.
 **Contracts win:** `docs/language-semantics.md`, `docs/module-semantics.md`, `docs/failure-model.md`.
 **v0.4 boundary:** Frozen in [archive/v0.4-language-vs-stdlib](/archive/v0.4-language-vs-stdlib) (host + stdlib). 0.5–0.8 added syntax and tooling on top of that cut.
 
@@ -23,7 +23,7 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 
 ---
 
-## Snapshot (through v0.8.7)
+## Snapshot (through v0.8.8)
 
 Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
 `const` (including param `const`), destructuring (hash `as` rename and hash rest), exact object types, unions, range expressions as
@@ -40,7 +40,7 @@ inquiry and `*Or`, not exceptions.
 
 | Bucket | Verdict |
 | --- | --- |
-| Language fundamentals | Supported through 0.8.7 surface |
+| Language fundamentals | Supported through 0.8.8 surface |
 | Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
 | Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
 | Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
@@ -116,7 +116,7 @@ Distinctive on purpose:
 | JIT | Runtime | Missing | Don't touch | Not now |
 | Concurrency / async | Runtime | Missing | Don't touch | Not now |
 | Generics | Runtime | Missing | Don't touch | Not now |
-| Classes / OOP | Runtime | Supported (0.8.7; no inheritance) | Active | 0.8.x |
+| Classes / OOP | Runtime | Supported (0.8.8; no inheritance) | Active | 0.8.x |
 | Structs / records | Runtime | Partial (aliases / exact / class fields) | Later | 0.8.0 |
 | Garbage collection | Runtime | Partial | Don't touch | Python-owned |
 
@@ -1109,7 +1109,7 @@ Held. Empty cells here are not near-term work.
 | JIT | Missing | Same |
 | Concurrency / async | Missing | Vision mentions orchestration later. Not a v0.4 language hole |
 | Generics | Missing | Premature type-theory |
-| Classes / OOP | Supported (0.8.7) | Classes + `new { }` fields/defaults + bound/unbound/type methods + optional `implements` + interfaces; no inheritance |
+| Classes / OOP | Supported (0.8.8) | Classes + `new { }` fields/defaults + bound/unbound/type methods + optional `implements` + interfaces; no inheritance |
 | Structs / records | Partial | Type aliases, exact shapes, and class fields |
 | Garbage collection | Partial | Python owns GC. Echo does not need its own |
 
@@ -1131,7 +1131,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | File / OS / env / argv | Shipped (0.4+) |
 | REPL | Shipped (0.5.0) |
 | Packages (pip) | Missing. Sibling-file modules only |
-| Classes | Supported (0.8.7; no inheritance) |
+| Classes | Supported (0.8.8; no inheritance) |
 | Default args, variadics, slices | Shipped (0.6.x); no comprehensions |
 
 ### JavaScript
@@ -1182,7 +1182,7 @@ Capability comparison only. Echo is not trying to become these languages.
 
 args, env, files, JSON, string/collection helpers, conversion, failure-model
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
-destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7).
+destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8).
 
 ### Not holes (held)
 
@@ -1208,7 +1208,7 @@ Do not treat empty cells as a queue. Do not add a VM, generics, inheritance, or
 This file is not a contract — semantics, modules, and the failure model win.
 
 v0.4 was host + stdlib ([archive/v0.4-language-vs-stdlib](/archive/v0.4-language-vs-stdlib)). Later releases
-added syntax and tooling; see `CHANGELOG.md` through **0.8.7**.
+added syntax and tooling; see `CHANGELOG.md` through **0.8.8**.
 
 ---
 

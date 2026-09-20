@@ -79,6 +79,7 @@ export default defineConfig({
         text: 'Examples',
         items: [
           { text: 'Hello World', link: '/examples/hello-world' },
+          { text: 'Classes and Interfaces', link: '/examples/classes-and-interfaces' },
           { text: 'Lists in Practice', link: '/examples/lists-in-practice' },
           { text: 'Hash Usage', link: '/examples/hash-usage' },
           { text: 'Functions in Practice', link: '/examples/functions-in-practice' },

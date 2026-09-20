@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.8
+
+Docs / examples / README release pass. Sixth 0.8 polish increment. No new language syntax. Failure model unchanged.
+
+- README: classes/interfaces documented; stale “no classes” removed; PyPI install path prepared (`pipx install echolang` after 0.8.9)
+- Installation + tour + language reference aligned through 0.8.7 surface
+- Example: `examples/classes_and_interfaces.echo` and docs page Classes and Interfaces
+- Capability matrix / known limitations / semantics notes through 0.8.8
+- Highlighter keywords already include `new` / `implements`
+
 ## 0.8.7
 
 Optional `implements` clause. Fifth 0.8 polish increment. Failure model unchanged.

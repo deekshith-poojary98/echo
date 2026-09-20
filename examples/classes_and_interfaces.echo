@@ -1,0 +1,43 @@
+interface Named {
+    fn name(this) -> str;
+}
+
+class Point {
+    new {
+        x: int = 0;
+        y: int = 0;
+    }
+
+    fn origin() -> Point {
+        return Point {};
+    }
+
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
+
+    fn describe(this) -> str {
+        return "(" + this.x.asString() + ", " + this.y.asString() + ")";
+    }
+}
+
+class User implements Named {
+    new {
+        label: str;
+    }
+
+    fn name(this) -> str {
+        return this.label;
+    }
+}
+
+fn show(n: Named) {
+    say(n.name());
+}
+
+p: Point = Point.origin();
+say(p.describe());
+say(Point.length(Point { x: 3, y: 4 }));
+
+u: User = User { label: "Ada" };
+show(u);
