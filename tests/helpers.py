@@ -36,11 +36,31 @@ class ExecutionResult:
         return self.output.splitlines()
 
 
-def run_echo(source: str, *, filename: str = "<test>", host: Host | None = None) -> ExecutionResult:
+def run_echo(
+    source: str,
+    *,
+    filename: str = "<test>",
+    host: Host | None = None,
+    stdin_lines: list[str] | None = None,
+) -> ExecutionResult:
     stdout = StringIO()
     with redirect_stdout(stdout):
         try:
-            exit_code = run_source(source, filename=filename, plain=True, host=host)
+            if stdin_lines is None:
+                exit_code = run_source(source, filename=filename, plain=True, host=host)
+            else:
+                from unittest.mock import patch
+
+                answers = iter(stdin_lines)
+
+                def _fake_input(_prompt: object = "") -> str:
+                    try:
+                        return next(answers)
+                    except StopIteration as exc:
+                        raise EOFError from exc
+
+                with patch("builtins.input", side_effect=_fake_input):
+                    exit_code = run_source(source, filename=filename, plain=True, host=host)
         except Exception as exc:  # noqa: BLE001 — leak detector
             raise AssertionError(
                 f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"
@@ -59,6 +79,6 @@ def assert_no_python_leak(result: ExecutionResult) -> None:
     assert "traceback (most recent call last)" not in lower, result.output
 
 
-def run_echo_file(path: Path) -> ExecutionResult:
+def run_echo_file(path: Path, *, stdin_lines: list[str] | None = None) -> ExecutionResult:
     source = path.read_text(encoding="utf-8")
-    return run_echo(source, filename=str(path))
+    return run_echo(source, filename=str(path), stdin_lines=stdin_lines)
