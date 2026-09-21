@@ -14,6 +14,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 ## Current Limitations
 
 - No class inheritance (`extends`); shared behavior is interfaces + composition
+- Compound assignment (`+=` / `-=` / `*=` / `/=` / `%=`) works on simple names only — not on member fields (`this.x += 1` is not supported yet; use `this.x = this.x + 1`). Planned for the next version after 0.8.9
 - No generics
 - No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
 - No overloads

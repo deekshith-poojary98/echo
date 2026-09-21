@@ -15,7 +15,7 @@ Already in the language or CLI:
 
 ## Next
 
-**0.8.x closed** after PyPI upload of 0.8.9. Ops remaining: build, upload, tag.
+**0.8.x closed** (PyPI `echolang` 0.8.9 shipped). Language freeze while dogfooding.
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -25,9 +25,10 @@ Already in the language or CLI:
 | 0.8.6 | Type methods (no `this`) | implemented (0.8.6) |
 | 0.8.7 | Optional `implements` clause | implemented (0.8.7) |
 | 0.8.8 | Docs / README release pass | implemented (0.8.8) |
-| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9; upload pending) |
+| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9) |
+| next | Compound assign on members (`this.x += 1`) | drafted (held) |
 
-Details: [Priority — 0.8.x](/project/priority). Upload with `./build.sh --release` when ready.
+Details: [Priority — 0.8.x](/project/priority). Do not start “next” until dogfooding ends.
 
 ## Held
 

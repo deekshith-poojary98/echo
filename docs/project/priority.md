@@ -719,7 +719,8 @@ Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.9 are implemented**;
 
 | Item | Status |
 | --- | --- |
-| Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.9** done (PyPI upload pending) |
+| Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.9** done |
+| Compound assign on members (`this.x += 1`) | drafted for next version (held until dogfooding ends) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |
