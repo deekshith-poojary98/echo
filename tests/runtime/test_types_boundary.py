@@ -114,6 +114,24 @@ say(writeJson(xs));
     assert "E2806" in result.output
 
 
+def test_write_json_nested_too_deeply_is_echo_error_not_python():
+    result = run_echo(
+        """
+xs: list = [];
+for i: int in 1..1200 {
+    nxt: list = [];
+    nxt.push(xs);
+    xs = nxt;
+}
+say(writeJson(xs));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2806" in result.output
+    assert "nested too deeply" in result.output
+
+
 def test_write_json_allows_shared_nested_lists():
     result = run_echo(
         """

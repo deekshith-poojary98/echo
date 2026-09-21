@@ -97,6 +97,18 @@ def test_parse_json_still_aborts_on_invalid():
     assert "Invalid JSON" in result.output
 
 
+def test_parse_json_or_nested_too_deeply_returns_fallback():
+    result = run_echo(
+        """
+payload: str = "[".repeat(2000) + "]".repeat(2000);
+say(parseJsonOr(payload, "fallback"));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "fallback"
+
+
 def test_as_int_or_unparseable_string_returns_fallback():
     result = run_echo('say(asIntOr("abc", 0));\nsay("abc".asIntOr(0));\n')
     assert result.exit_code == 0, result.output

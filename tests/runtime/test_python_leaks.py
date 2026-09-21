@@ -1,3 +1,5 @@
+from echo.core.jsonutil import parse_json
+from echo.errors import EchoRuntimeError
 from helpers import assert_no_python_leak, run_echo
 
 
@@ -332,3 +334,68 @@ h.take("nope");
     )
     assert result.exit_code == 1
     assert_no_python_leak(result)
+
+
+def test_parse_json_nested_too_deeply_is_echo_error_not_python():
+    result = run_echo(
+        """
+payload: str = "[".repeat(2000) + "]".repeat(2000);
+parseJson(payload);
+say("reached");
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "reached" not in result.lines
+
+
+def test_parse_json_direct_nested_too_deeply_is_echo_error():
+    payload = "[" * 2000 + "]" * 2000
+    try:
+        parse_json(payload)
+    except RecursionError as exc:
+        raise AssertionError("RecursionError leaked from parse_json") from exc
+    except EchoRuntimeError as exc:
+        assert "nested too deeply" in exc.message
+        assert exc.code == "E2805"
+        return
+    raise AssertionError("parse_json accepted JSON nested 2000 levels deep")
+
+
+def test_say_nested_too_deeply_is_echo_error_not_python():
+    result = run_echo(
+        """
+xs: list = [];
+for i: int in 1..1200 {
+    nxt: list = [];
+    nxt.push(xs);
+    xs = nxt;
+}
+say(xs);
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+
+
+def test_equality_nested_too_deeply_is_echo_error_not_python():
+    result = run_echo(
+        """
+left: list = [];
+right: list = [];
+for i: int in 1..1200 {
+    next_left: list = [];
+    next_left.push(left);
+    left = next_left;
+    next_right: list = [];
+    next_right.push(right);
+    right = next_right;
+}
+say(left == right);
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
