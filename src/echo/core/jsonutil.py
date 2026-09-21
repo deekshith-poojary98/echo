@@ -10,15 +10,24 @@ def parse_json(text: object, location: SourceLocation | None = None) -> object:
     if not isinstance(text, str):
         raise EchoTypeError("parseJson() requires a string", location, code="E2805")
     try:
-        raw = json.loads(text)
+        # json.loads and json_to_echo both recurse; a JSON bomb of nested
+        # arrays/objects raises RecursionError instead of JSONDecodeError.
+        return json_to_echo(json.loads(text), location)
     except json.JSONDecodeError as exc:
         raise EchoRuntimeError(f"Invalid JSON: {exc.msg}", location, code="E2805") from exc
-    return json_to_echo(raw, location)
+    except RecursionError as exc:
+        raise EchoRuntimeError("JSON is nested too deeply", location, code="E2805") from exc
 
 
 def write_json(value: object, location: SourceLocation | None = None) -> str:
     try:
         return json.dumps(echo_to_json(value, location), ensure_ascii=False, allow_nan=False)
+    except RecursionError as exc:
+        raise EchoRuntimeError(
+            "Cannot write a value nested too deeply as JSON",
+            location,
+            code="E2806",
+        ) from exc
     except (TypeError, ValueError) as exc:
         raise EchoRuntimeError("Cannot write value as JSON", location, code="E2806") from exc
 

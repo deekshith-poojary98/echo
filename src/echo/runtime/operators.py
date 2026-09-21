@@ -126,7 +126,14 @@ def echo_equal(left: object, right: object) -> bool:
             return all(eq(a.fields[key], b.fields[key]) for key in a.fields)
         return a == b
 
-    return eq(left, right)
+    try:
+        return eq(left, right)
+    except RecursionError as exc:
+        raise EchoRuntimeError(
+            "Cannot compare values nested too deeply",
+            None,
+            code="E2104",
+        ) from exc
 
 
 def unary_op(op: TokenType, operand: object, location: SourceLocation | None = None) -> object:

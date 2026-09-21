@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from echo.errors import EchoTypeError, SourceLocation
+from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.frontend.ast.nodes import (
     ClassType,
     FunctionType,
@@ -363,6 +363,17 @@ def quote_string(value: str) -> str:
 
 
 def stringify(value: object, nested: bool = False, seen: set[int] | None = None) -> str:
+    try:
+        return _stringify(value, nested, seen)
+    except RecursionError as exc:
+        raise EchoRuntimeError(
+            "Cannot print a value nested too deeply",
+            None,
+            code="E2806",
+        ) from exc
+
+
+def _stringify(value: object, nested: bool = False, seen: set[int] | None = None) -> str:
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -377,9 +388,9 @@ def stringify(value: object, nested: bool = False, seen: set[int] | None = None)
         tracking.add(ident)
         try:
             if isinstance(value, list):
-                return "[" + ", ".join(stringify(item, True, tracking) for item in value) + "]"
+                return "[" + ", ".join(_stringify(item, True, tracking) for item in value) + "]"
             parts = [
-                f"{stringify(key, True, tracking)}: {stringify(item, True, tracking)}"
+                f"{_stringify(key, True, tracking)}: {_stringify(item, True, tracking)}"
                 for key, item in value.items()
             ]
             return "{" + ", ".join(parts) + "}"
@@ -393,7 +404,7 @@ def stringify(value: object, nested: bool = False, seen: set[int] | None = None)
         tracking.add(ident)
         try:
             parts = [
-                f"{key}: {stringify(item, True, tracking)}" for key, item in value.fields.items()
+                f"{key}: {_stringify(item, True, tracking)}" for key, item in value.fields.items()
             ]
             return f"{value.class_name} {{{', '.join(parts)}}}"
         finally:
