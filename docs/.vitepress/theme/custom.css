@@ -645,6 +645,14 @@ body:has(.echo-playground) {
   max-width: none !important;
 }
 
+/* On mobile the nav is in normal flow (not fixed), so extra top padding
+   doubles the offset and shows as an empty bar under the header. */
+@media (max-width: 959px) {
+  .Layout:has(.echo-playground) .VPContent {
+    padding-top: 0 !important;
+  }
+}
+
 .Layout:has(.echo-playground) .VPPage {
   padding: 0 !important;
   margin: 0 !important;
@@ -758,10 +766,19 @@ body:has(.echo-playground) {
 
 .echo-playground__workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 57fr) auto minmax(0, 43fr);
+  grid-template-rows: minmax(0, 1fr);
   flex: 1;
   min-height: 0;
+}
+
+.echo-playground__workspace.is-dragging {
+  user-select: none;
+  cursor: col-resize;
+}
+
+.echo-playground__workspace.is-stacked.is-dragging {
+  cursor: row-resize;
 }
 
 .echo-playground__panel {
@@ -772,8 +789,47 @@ body:has(.echo-playground) {
   background: var(--vp-c-bg);
 }
 
-.echo-playground__panel + .echo-playground__panel {
-  border-left: 1px solid var(--vp-c-divider);
+.echo-playground__splitter {
+  position: relative;
+  z-index: 2;
+  width: 7px;
+  margin: 0 -3px;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.echo-playground__splitter::before {
+  content: '';
+  position: absolute;
+  inset: 0 3px;
+  background: var(--vp-c-divider);
+  transition: background-color 0.15s ease, inset 0.15s ease;
+}
+
+.echo-playground__splitter:hover::before,
+.echo-playground__splitter:focus-visible::before,
+.echo-playground__workspace.is-dragging > .echo-playground__splitter::before {
+  inset: 0 2px;
+  background: var(--vp-c-brand-1);
+}
+
+.echo-playground__workspace.is-stacked .echo-playground__splitter {
+  width: auto;
+  height: 7px;
+  margin: -3px 0;
+  cursor: row-resize;
+}
+
+.echo-playground__workspace.is-stacked .echo-playground__splitter::before {
+  inset: 3px 0;
+}
+
+.echo-playground__workspace.is-stacked .echo-playground__splitter:hover::before,
+.echo-playground__workspace.is-stacked .echo-playground__splitter:focus-visible::before,
+.echo-playground__workspace.is-stacked.is-dragging > .echo-playground__splitter::before {
+  inset: 2px 0;
 }
 
 .echo-playground__panel-bar {
@@ -798,35 +854,6 @@ body:has(.echo-playground) {
   height: 100%;
 }
 
-.echo-playground__stdin {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.55rem 0.85rem;
-  border-top: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-2);
-  font-size: 0.75rem;
-  font-weight: 650;
-}
-
-.echo-playground__stdin textarea {
-  width: 100%;
-  min-height: 2.3rem;
-  max-height: 4.5rem;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  resize: vertical;
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-1);
-  font-family: var(--vp-font-family-mono);
-  font-size: 0.82rem;
-  font-weight: 400;
-}
-
 .echo-playground__output {
   flex: 1;
   min-height: 0;
@@ -836,33 +863,60 @@ body:has(.echo-playground) {
   background: var(--vp-c-bg-alt);
   color: var(--vp-c-text-1);
   white-space: pre-wrap;
+  word-break: break-word;
   font-family: var(--vp-font-family-mono);
   font-size: 0.88rem;
   line-height: 1.6;
+  outline: none;
+  cursor: text;
+}
+
+.echo-playground__output.is-placeholder {
+  color: var(--vp-c-text-3);
 }
 
 .echo-playground__output.is-error {
   color: var(--vp-c-danger-1);
 }
 
+.echo-playground__output.is-waiting {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vp-c-brand-1) 45%, transparent);
+}
+
+.echo-playground__draft {
+  color: var(--vp-c-text-1);
+}
+
+.echo-playground__caret {
+  display: inline-block;
+  width: 0.55ch;
+  height: 1.05em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--vp-c-brand-1);
+  animation: echo-playground-caret 1s steps(1) infinite;
+}
+
+@keyframes echo-playground-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (max-width: 860px) {
   .echo-playground {
-    height: auto;
-    min-height: calc(100vh - var(--vp-nav-height, 64px));
-    overflow: visible;
+    height: calc(100dvh - var(--vp-nav-height, 64px));
+    min-height: 0;
+    overflow: hidden;
   }
 
   .echo-playground__workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .echo-playground__panel + .echo-playground__panel {
-    border-left: 0;
-    border-top: 1px solid var(--vp-c-divider);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 57fr) auto minmax(0, 43fr);
   }
 
   .echo-playground__editor,
   .echo-playground__output {
-    min-height: 18rem;
+    min-height: 0;
   }
 }

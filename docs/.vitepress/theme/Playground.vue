@@ -4,7 +4,7 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search'
 import { EditorState } from '@codemirror/state'
 import { EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers } from '@codemirror/view'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { echoLanguage } from './echoLanguage'
 import { echoHighlight } from './echoHighlight'
 import classesSource from '../../../examples/classes_and_interfaces.echo?raw'
@@ -13,7 +13,6 @@ import bankSource from '../../../examples/bank_account.echo?raw'
 type Example = {
   id: string
   label: string
-  stdin: string
   source: string
 }
 
@@ -21,7 +20,6 @@ const EXAMPLES: Example[] = [
   {
     id: 'hello',
     label: 'Hello',
-    stdin: '',
     source: `name: str = "Echo";
 
 fn greet(user: str) {
@@ -34,7 +32,6 @@ greet(name);
   {
     id: 'types',
     label: 'Types',
-    stdin: '',
     source: `count: int = 3;
 pi: float = 3.14;
 ready: bool = true;
@@ -50,7 +47,6 @@ say("as string:", count.asString());
   {
     id: 'lists',
     label: 'Lists & hashes',
-    stdin: '',
     source: `nums: list = [1, 2, 3];
 
 foreach n: int in nums {
@@ -73,7 +69,6 @@ say(counts);
   {
     id: 'classes',
     label: 'Classes',
-    stdin: '',
     source: `class Point {
     new {
         x: int;
@@ -92,7 +87,6 @@ p.describe();
   {
     id: 'functions',
     label: 'Functions',
-    stdin: '',
     source: `fn describe(name: str, age: int) {
     say(name, "is", age);
 }
@@ -103,7 +97,6 @@ describe(age: 21, name: "Alice");
   {
     id: 'lambdas',
     label: 'Lambdas & lists',
-    stdin: '',
     source: `nums: list = [1, 2, 3, 4];
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 
@@ -131,7 +124,6 @@ join(" | ", "a", "b", "c");
   {
     id: 'fizzbuzz',
     label: 'FizzBuzz',
-    stdin: '',
     source: `for n: int in 1..20 {
     if n % 15 == 0 {
         say("FizzBuzz");
@@ -148,7 +140,6 @@ join(" | ", "a", "b", "c");
   {
     id: 'ask',
     label: 'ask()',
-    stdin: 'Ada\n',
     source: `name: str = ask("Name: ");
 say("Hello, \${name}!");
 `,
@@ -156,28 +147,17 @@ say("Hello, \${name}!");
   {
     id: 'bank',
     label: 'Bank account',
-    stdin: `deposit
-100
-balance
-withdraw
-30
-withdraw
-abc
-w
-999
-exit
-`,
     source: bankSource,
   },
   {
     id: 'classes-full',
     label: 'Classes & interfaces',
-    stdin: '',
     source: classesSource,
   },
 ]
 
 const RUN_TIMEOUT_MS = 8000
+const PLACEHOLDER = 'Output appears here after you run a program.\nClick here and type when ask() prompts you.'
 
 function exampleFromQuery(): string {
   if (typeof window === 'undefined') {
@@ -188,24 +168,113 @@ function exampleFromQuery(): string {
 }
 
 const editorHost = ref<HTMLElement | null>(null)
+const consoleEl = ref<HTMLElement | null>(null)
+const workspaceEl = ref<HTMLElement | null>(null)
 const exampleId = ref(exampleFromQuery())
 const initialExample = EXAMPLES.find((item) => item.id === exampleId.value) ?? EXAMPLES[0]
 const source = ref(initialExample.source)
-const stdin = ref(initialExample.stdin)
 const output = ref('')
+const draftInput = ref('')
+const awaitingInput = ref(false)
 const failed = ref(false)
 const status = ref('Starting playground…')
 const ready = ref(false)
 const running = ref(false)
+const splitPct = ref(57)
+const stacked = ref(false)
+const dragging = ref(false)
 
 const canRun = computed(() => ready.value && !running.value && source.value.trim().length > 0)
-const statusKind = computed(() => (failed.value ? 'error' : running.value ? 'running' : ready.value ? 'ready' : 'boot'))
+const statusKind = computed(() =>
+  failed.value ? 'error' : awaitingInput.value ? 'running' : running.value ? 'running' : ready.value ? 'ready' : 'boot',
+)
+const showPlaceholder = computed(() => !output.value && !awaitingInput.value && !running.value)
+const workspaceStyle = computed(() => {
+  const primary = `minmax(0, ${splitPct.value}fr)`
+  const secondary = `minmax(0, ${100 - splitPct.value}fr)`
+  if (stacked.value) {
+    return {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+      gridTemplateRows: `${primary} auto ${secondary}`,
+    }
+  }
+  return {
+    gridTemplateColumns: `${primary} auto ${secondary}`,
+    gridTemplateRows: 'minmax(0, 1fr)',
+  }
+})
 
 let worker: Worker | null = null
 let editor: EditorView | null = null
 let runId = 0
 let timeoutHandle = 0
 let applyingExample = false
+let stackQuery: MediaQueryList | null = null
+let editorResizeObserver: ResizeObserver | null = null
+
+const SPLIT_MIN = 22
+const SPLIT_MAX = 78
+const STACK_MQ = '(max-width: 860px)'
+
+function clampSplit(value: number): number {
+  return Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, value))
+}
+
+function syncStacked() {
+  stacked.value = stackQuery?.matches ?? false
+}
+
+function onSplitterPointerDown(event: PointerEvent) {
+  if (event.button !== 0 || !workspaceEl.value) {
+    return
+  }
+  event.preventDefault()
+  const target = event.currentTarget as HTMLElement
+  const rect = workspaceEl.value.getBoundingClientRect()
+  const startPos = stacked.value ? event.clientY : event.clientX
+  const startPct = splitPct.value
+  const size = stacked.value ? rect.height : rect.width
+  if (size <= 0) {
+    return
+  }
+
+  dragging.value = true
+  target.setPointerCapture(event.pointerId)
+
+  const onMove = (moveEvent: PointerEvent) => {
+    const delta = (stacked.value ? moveEvent.clientY : moveEvent.clientX) - startPos
+    splitPct.value = clampSplit(startPct + (delta / size) * 100)
+  }
+
+  const onUp = (upEvent: PointerEvent) => {
+    dragging.value = false
+    target.releasePointerCapture(upEvent.pointerId)
+    target.removeEventListener('pointermove', onMove)
+    target.removeEventListener('pointerup', onUp)
+    target.removeEventListener('pointercancel', onUp)
+    editor?.requestMeasure()
+  }
+
+  target.addEventListener('pointermove', onMove)
+  target.addEventListener('pointerup', onUp)
+  target.addEventListener('pointercancel', onUp)
+}
+
+function onSplitterKeydown(event: KeyboardEvent) {
+  const step = event.shiftKey ? 8 : 3
+  const grow =
+    (!stacked.value && event.key === 'ArrowRight') ||
+    (stacked.value && event.key === 'ArrowDown')
+  const shrink =
+    (!stacked.value && event.key === 'ArrowLeft') ||
+    (stacked.value && event.key === 'ArrowUp')
+  if (!grow && !shrink) {
+    return
+  }
+  event.preventDefault()
+  splitPct.value = clampSplit(splitPct.value + (grow ? step : -step))
+  nextTick(() => editor?.requestMeasure())
+}
 
 function workerUrl(): string {
   return `${import.meta.env.BASE_URL}echo-playground-worker.js`
@@ -218,6 +287,33 @@ function clearTimeoutHandle() {
   }
 }
 
+function armRunTimeout(id: number) {
+  clearTimeoutHandle()
+  timeoutHandle = window.setTimeout(() => {
+    if (id !== runId || awaitingInput.value) {
+      return
+    }
+    worker?.terminate()
+    worker = null
+    running.value = false
+    awaitingInput.value = false
+    draftInput.value = ''
+    failed.value = true
+    output.value = `Program stopped after ${RUN_TIMEOUT_MS / 1000}s. Infinite loops and long wait() calls are limited in the playground.`
+    status.value = 'Timed out'
+    startWorker()
+  }, RUN_TIMEOUT_MS)
+}
+
+function focusConsole() {
+  nextTick(() => {
+    consoleEl.value?.focus()
+    if (consoleEl.value) {
+      consoleEl.value.scrollTop = consoleEl.value.scrollHeight
+    }
+  })
+}
+
 function handleWorkerMessage(event: MessageEvent) {
   const data = event.data || {}
   if (data.type === 'status') {
@@ -227,6 +323,16 @@ function handleWorkerMessage(event: MessageEvent) {
   if (data.type === 'ready') {
     ready.value = true
     status.value = 'Ready'
+    return
+  }
+  if (data.type === 'ask' && data.id === runId) {
+    clearTimeoutHandle()
+    awaitingInput.value = true
+    draftInput.value = ''
+    failed.value = false
+    output.value = typeof data.output === 'string' ? data.output : ''
+    status.value = 'Waiting for input…'
+    focusConsole()
     return
   }
   if (data.type === 'result' && data.id === runId) {
@@ -255,6 +361,8 @@ function formatResult(stdout?: string, error?: string): string {
 function finishRun(ok: boolean, text: string) {
   clearTimeoutHandle()
   running.value = false
+  awaitingInput.value = false
+  draftInput.value = ''
   failed.value = !ok
   output.value = text
   status.value = ok ? 'Finished' : 'Failed'
@@ -269,6 +377,7 @@ function startWorker() {
   worker.addEventListener('error', (event) => {
     ready.value = false
     running.value = false
+    awaitingInput.value = false
     failed.value = true
     status.value = 'Failed'
     output.value = event.message || 'Playground worker failed to start.'
@@ -292,7 +401,6 @@ function setEditorText(text: string) {
 function loadExample() {
   const example = EXAMPLES.find((item) => item.id === exampleId.value) ?? EXAMPLES[0]
   setEditorText(example.source)
-  stdin.value = example.stdin
 }
 
 watch(exampleId, loadExample)
@@ -302,28 +410,19 @@ function run() {
     return
   }
   running.value = true
+  awaitingInput.value = false
+  draftInput.value = ''
   failed.value = false
   status.value = 'Running…'
   output.value = ''
   runId += 1
   const id = runId
-  worker.postMessage({ type: 'run', id, source: source.value, stdin: stdin.value })
-  timeoutHandle = window.setTimeout(() => {
-    if (id !== runId) {
-      return
-    }
-    worker?.terminate()
-    worker = null
-    running.value = false
-    failed.value = true
-    output.value = `Program stopped after ${RUN_TIMEOUT_MS / 1000}s. Infinite loops and long wait() calls are limited in the playground.`
-    status.value = 'Timed out'
-    startWorker()
-  }, RUN_TIMEOUT_MS)
+  worker.postMessage({ type: 'run', id, source: source.value })
+  armRunTimeout(id)
 }
 
 function stop() {
-  if (!running.value) {
+  if (!running.value && !awaitingInput.value) {
     return
   }
   clearTimeoutHandle()
@@ -331,10 +430,61 @@ function stop() {
   worker?.terminate()
   worker = null
   running.value = false
+  awaitingInput.value = false
+  draftInput.value = ''
   failed.value = true
   status.value = 'Stopped'
   output.value = output.value || 'Program stopped.'
   startWorker()
+}
+
+function submitInput() {
+  if (!worker || !awaitingInput.value) {
+    return
+  }
+  const line = draftInput.value
+  output.value = `${output.value}${line}\n`
+  draftInput.value = ''
+  awaitingInput.value = false
+  status.value = 'Running…'
+  worker.postMessage({ type: 'stdin', id: runId, line })
+  armRunTimeout(runId)
+  focusConsole()
+}
+
+function onConsoleKeydown(event: KeyboardEvent) {
+  if (!awaitingInput.value) {
+    return
+  }
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    submitInput()
+    return
+  }
+  if (event.key === 'Backspace') {
+    event.preventDefault()
+    draftInput.value = draftInput.value.slice(0, -1)
+    return
+  }
+  if (event.key === 'Tab') {
+    event.preventDefault()
+    draftInput.value += '\t'
+    return
+  }
+  if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault()
+    draftInput.value += event.key
+  }
+}
+
+function onConsolePaste(event: ClipboardEvent) {
+  if (!awaitingInput.value) {
+    return
+  }
+  event.preventDefault()
+  const text = event.clipboardData?.getData('text') ?? ''
+  const line = text.split(/\r?\n/, 1)[0] ?? ''
+  draftInput.value += line
 }
 
 function createEditor() {
@@ -410,10 +560,21 @@ function createEditor() {
 onMounted(() => {
   createEditor()
   startWorker()
+  stackQuery = window.matchMedia(STACK_MQ)
+  syncStacked()
+  stackQuery.addEventListener('change', syncStacked)
+  if (editorHost.value) {
+    editorResizeObserver = new ResizeObserver(() => editor?.requestMeasure())
+    editorResizeObserver.observe(editorHost.value)
+  }
 })
 
 onUnmounted(() => {
   clearTimeoutHandle()
+  stackQuery?.removeEventListener('change', syncStacked)
+  stackQuery = null
+  editorResizeObserver?.disconnect()
+  editorResizeObserver = null
   worker?.terminate()
   worker = null
   editor?.destroy()
@@ -440,13 +601,18 @@ onUnmounted(() => {
         <button class="echo-playground__run" type="button" :disabled="!canRun" @click="run">
           Run
         </button>
-        <button class="echo-playground__stop" type="button" :disabled="!running" @click="stop">
+        <button class="echo-playground__stop" type="button" :disabled="!running && !awaitingInput" @click="stop">
           Stop
         </button>
       </div>
     </header>
 
-    <div class="echo-playground__workspace">
+    <div
+      ref="workspaceEl"
+      class="echo-playground__workspace"
+      :class="{ 'is-stacked': stacked, 'is-dragging': dragging }"
+      :style="workspaceStyle"
+    >
       <section class="echo-playground__panel">
         <div class="echo-playground__panel-bar">
           <span>main.echo</span>
@@ -454,21 +620,48 @@ onUnmounted(() => {
         </div>
         <div ref="editorHost" class="echo-playground__editor" />
       </section>
+      <div
+        class="echo-playground__splitter"
+        role="separator"
+        :aria-orientation="stacked ? 'horizontal' : 'vertical'"
+        :aria-valuenow="Math.round(splitPct)"
+        aria-valuemin="22"
+        aria-valuemax="78"
+        aria-label="Resize editor and output"
+        tabindex="0"
+        @pointerdown="onSplitterPointerDown"
+        @keydown="onSplitterKeydown"
+      />
       <section class="echo-playground__panel">
         <div class="echo-playground__panel-bar">
           <span>Output</span>
-          <span v-if="failed">error</span>
+          <span v-if="awaitingInput">input</span>
+          <span v-else-if="failed">error</span>
         </div>
-        <pre class="echo-playground__output" :class="{ 'is-error': failed }">{{ output || 'Output appears here after you run a program.' }}</pre>
+        <pre
+          ref="consoleEl"
+          class="echo-playground__output"
+          :class="{
+            'is-error': failed,
+            'is-waiting': awaitingInput,
+            'is-placeholder': showPlaceholder,
+          }"
+          tabindex="0"
+          role="textbox"
+          :aria-readonly="!awaitingInput"
+          aria-label="Program output and input"
+          @keydown="onConsoleKeydown"
+          @paste="onConsolePaste"
+          @click="focusConsole"
+        ><template v-if="showPlaceholder">{{ PLACEHOLDER }}</template><template v-else>{{ output }}<span
+            v-if="awaitingInput"
+            class="echo-playground__draft"
+          >{{ draftInput }}</span><span
+            v-if="awaitingInput"
+            class="echo-playground__caret"
+            aria-hidden="true"
+          /></template></pre>
       </section>
-      <label class="echo-playground__stdin">
-        <span>ask() input</span>
-        <textarea
-          v-model="stdin"
-          spellcheck="false"
-          placeholder="One line per ask() call"
-        />
-      </label>
     </div>
   </div>
 </template>
