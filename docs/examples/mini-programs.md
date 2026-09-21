@@ -52,6 +52,16 @@ ECHO_REPORT=report.json elang examples/json_report.echo -- examples/sample_jobs.
 
 Uses `args()`, `envOr()`, `readFile()`, `writeFile()`, `parseJson()`, and `writeJson()`.
 
+### Bank account
+
+Interactive class demo: `examples/bank_account.echo` (also in the [playground](/playground?example=bank)).
+
+```bash
+elang examples/bank_account.echo
+```
+
+Commands: `deposit` / `withdraw` / `balance` / `exit` (short: `d` `w` `b` `q`). Amounts use `asFloatOr`.
+
 ## See Also
 
 - [Control Flow](/getting-started/control-flow)

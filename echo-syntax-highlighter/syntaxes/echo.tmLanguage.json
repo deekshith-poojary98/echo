@@ -15,7 +15,8 @@
     { "include": "#function-calls" },
     { "include": "#numbers" },
     { "include": "#operators" },
-    { "include": "#constants" }
+    { "include": "#constants" },
+    { "include": "#variables" }
   ],
   "repository": {
     "comments": {
@@ -78,13 +79,14 @@
     },
     "interpolation": {
       "name": "meta.interpolation.echo",
-      "begin": "\\$\\{",
+      "begin": "(\\$)(\\{)",
       "beginCaptures": {
-        "0": { "name": "punctuation.section.interpolation.begin.echo" }
+        "1": { "name": "punctuation.definition.interpolation.echo" },
+        "2": { "name": "punctuation.section.interpolation.begin.echo" }
       },
-      "end": "\\}",
+      "end": "(\\})",
       "endCaptures": {
-        "0": { "name": "punctuation.section.interpolation.end.echo" }
+        "1": { "name": "punctuation.section.interpolation.end.echo" }
       },
       "contentName": "source.echo.embedded",
       "patterns": [
@@ -122,6 +124,10 @@
     },
     "keywords": {
       "patterns": [
+        {
+          "name": "variable.language.this.echo",
+          "match": "\\bthis\\b"
+        },
         {
           "name": "keyword.control.echo",
           "match": "\\b(if|else|while|for|foreach|switch|return|break|continue)\\b"
@@ -219,6 +225,10 @@
     "constants": {
       "name": "variable.other.constant.echo",
       "match": "\\b[A-Z_][A-Z0-9_]*\\b"
+    },
+    "variables": {
+      "name": "variable.other.echo",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
     }
   }
 }

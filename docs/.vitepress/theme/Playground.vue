@@ -8,6 +8,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { echoLanguage } from './echoLanguage'
 import { echoHighlight } from './echoHighlight'
 import classesSource from '../../../examples/classes_and_interfaces.echo?raw'
+import bankSource from '../../../examples/bank_account.echo?raw'
 
 type Example = {
   id: string
@@ -151,6 +152,22 @@ join(" | ", "a", "b", "c");
     source: `name: str = ask("Name: ");
 say("Hello, \${name}!");
 `,
+  },
+  {
+    id: 'bank',
+    label: 'Bank account',
+    stdin: `deposit
+100
+balance
+withdraw
+30
+withdraw
+abc
+w
+999
+exit
+`,
+    source: bankSource,
   },
   {
     id: 'classes-full',

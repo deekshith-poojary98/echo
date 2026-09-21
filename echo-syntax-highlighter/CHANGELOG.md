@@ -1,5 +1,12 @@
 # Change Log
 
+## Unreleased
+
+- Extension **icon** and **`.echo` file icons** from real sound-wave logo (`docs/public/echo_logo.jpg` alpha silhouette), transparent background (light/dark variants).
+- Highlight **`this`** as `variable.language.this` and ordinary identifiers as `variable.other`.
+- Default Echo editor colors: variables **#4FC1FF**, `this` **#C586C0** (themes often left variables as plain white).
+- String interpolation **`${` / `}`** scoped and colored (**#4EC9B0**) so they stand out from string text.
+
 ## 0.8.9
 
 - Package version bump (first PyPI release of `echolang`; no highlighter changes).

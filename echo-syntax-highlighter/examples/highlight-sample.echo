@@ -72,3 +72,17 @@ type Id = int | str;
 id: Id = 1;
 id = "x";
 
+class Point {
+    new {
+        x: int = 0;
+        y: int = 0;
+    }
+
+    fn length(this) -> int {
+        return this.x * this.x + this.y * this.y;
+    }
+}
+
+p: Point = Point { x: 3, y: 4 };
+say(p.length());
+

@@ -41,6 +41,28 @@ def _alternation_names(*patterns: str) -> set[str]:
     return names
 
 
+def test_interpolation_punctuation_is_scoped() -> None:
+    grammar = _load_grammar()
+    interp = grammar["repository"]["interpolation"]
+    assert interp["begin"] == r"(\$)(\{)"
+    begin = interp["beginCaptures"]
+    assert begin["1"]["name"] == "punctuation.definition.interpolation.echo"
+    assert begin["2"]["name"] == "punctuation.section.interpolation.begin.echo"
+    assert interp["endCaptures"]["1"]["name"] == "punctuation.section.interpolation.end.echo"
+
+
+def test_this_and_variables_are_scoped() -> None:
+    grammar = _load_grammar()
+    repo = grammar["repository"]
+    keyword_blob = "\n".join(_collect_strings(repo["keywords"]))
+    assert r"\bthis\b" in keyword_blob
+    assert "variable.language.this.echo" in _collect_strings(repo["keywords"])
+    assert repo["variables"]["name"] == "variable.other.echo"
+    assert "variables" in grammar["patterns"][-1]["include"] or any(
+        p.get("include") == "#variables" for p in grammar["patterns"]
+    )
+
+
 def test_grammar_json_is_valid() -> None:
     grammar = _load_grammar()
     assert grammar["scopeName"] == "source.echo"
@@ -109,7 +131,7 @@ def test_lexer_surface_is_present() -> None:
     interpolation = repo["interpolation"]["begin"]
     numbers = repo["numbers"]["match"]
 
-    assert interpolation == r"\$\{"
+    assert interpolation == r"(\$)(\{)"
     assert "//" in comments
     assert r"/\*" in comments
     assert r'"""' in strings or '"""' in strings

@@ -5,6 +5,7 @@
   "version": "0.8.9",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -42,7 +43,11 @@
         "extensions": [
           ".echo"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./images/echo-file-light.png",
+          "dark": "./images/echo-file-dark.png"
+        }
       }
     ],
     "grammars": [
@@ -140,7 +145,38 @@
     "configurationDefaults": {
       "[echo]": {
         "editor.defaultFormatter": "deekshith-poojary98.echo-syntax-highlighter"
-      }
+      },
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": [
+              "variable.other.echo"
+            ],
+            "settings": {
+              "foreground": "#4FC1FF"
+            }
+          },
+          {
+            "scope": [
+              "variable.language.this.echo"
+            ],
+            "settings": {
+              "foreground": "#C586C0"
+            }
+          },
+          {
+            "scope": [
+              "punctuation.definition.interpolation.echo",
+              "punctuation.section.interpolation.begin.echo",
+              "punctuation.section.interpolation.end.echo"
+            ],
+            "settings": {
+              "foreground": "#4EC9B0"
+            }
+          }
+        ]
+      },
+      "material-icon-theme.showLanguageModeIcons": true
     },
     "taskDefinitions": [
       {

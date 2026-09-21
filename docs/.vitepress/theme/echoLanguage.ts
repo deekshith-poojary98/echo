@@ -177,7 +177,7 @@ function tokenBlockComment(stream: EchoStream, state: EchoState): string {
 function tokenString(stream: EchoStream, state: EchoState, frame: StringFrame): string {
   if (stream.match('${')) {
     state.stack.push({ kind: 'interp', depth: 0 })
-    return 'string-2'
+    return 'keyword'
   }
   if (stream.match('\\')) {
     if (!stream.eol()) {
@@ -225,10 +225,10 @@ function tokenCode(stream: EchoStream, state: EchoState): string | null {
     }
     if (stream.peek() === '}') {
       stream.next()
-      if (inInterp.depth === 0) {
+      if (inInterp.depth == 0) {
         state.stack.pop()
         clearDecl(state)
-        return 'string-2'
+        return 'keyword'
       }
       inInterp.depth -= 1
       clearDecl(state)
@@ -276,6 +276,10 @@ function tokenCode(stream: EchoStream, state: EchoState): string | null {
     if (word === 'type') {
       state.afterType = true
       state.afterFn = false
+      return 'keyword'
+    }
+    if (word === 'this') {
+      clearDecl(state)
       return 'keyword'
     }
     if (KEYWORDS.has(word)) {

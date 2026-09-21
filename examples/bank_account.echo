@@ -1,0 +1,56 @@
+// Interactive bank account — classes, methods, ask(), and *Or parsing.
+class Bank {
+    new {
+        availableBalance: float = 0.0;
+    }
+
+    fn depositAmount(this, amount: float) -> void {
+        if amount <= 0.0 {
+            say("Invalid amount. Enter a positive number.");
+            return;
+        }
+        this.availableBalance = this.availableBalance + amount;
+        say("Deposited $${amount}.");
+        this.showBalance();
+    }
+
+    fn withdrawAmount(this, amount: float) -> void {
+        if amount <= 0.0 {
+            say("Invalid amount. Enter a positive number.");
+            return;
+        }
+        if amount > this.availableBalance {
+            say("Insufficient balance.");
+            return;
+        }
+        this.availableBalance = this.availableBalance - amount;
+        say("Withdrew $${amount}.");
+        this.showBalance();
+    }
+
+    fn showBalance(this) -> void {
+        say("Available balance: $${this.availableBalance}");
+    }
+}
+
+bank: Bank = Bank {};
+say("Commands: deposit, withdraw, balance, exit (or d / w / b / q)");
+
+while true {
+    choice: str = ask("> ").trim().lowerCase();
+
+    if choice == "deposit" || choice == "d" {
+        amount: float = ask("Amount to deposit: ").trim().asFloatOr(0.0);
+        bank.depositAmount(amount);
+    } else if choice == "withdraw" || choice == "w" {
+        amount: float = ask("Amount to withdraw: ").trim().asFloatOr(0.0);
+        bank.withdrawAmount(amount);
+    } else if choice == "balance" || choice == "b" || choice == "check balance" {
+        bank.showBalance();
+    } else if choice == "exit" || choice == "q" || choice == "quit" {
+        say("Goodbye.");
+        break;
+    } else {
+        say("Unknown command. Try deposit, withdraw, balance, or exit.");
+    }
+}
