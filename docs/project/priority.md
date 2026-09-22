@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.9.1**. **0.9.2** (positional construction) continues the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
+Current tagged version is **v0.9.2**. **0.9.3** (deep `clone()`) continues the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -715,7 +715,7 @@ Inheritance trees, abstract classes, generics on classes, operator overloading, 
 
 ## 0.9.x — ergonomics / OOP polish
 
-**Status: 0.9.0–0.9.2 implemented; 0.9.3+ drafted.**
+**Status: 0.9.0–0.9.3 implemented; further 0.9 polish optional.**
 
 **0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite.
 
@@ -726,7 +726,8 @@ Shape: finish day-to-day rough edges on the 0.8 OOP surface.
 | 0.9.0 | Compound assign on members (`this.x += 1`) | implemented (0.9.0) |
 | 0.9.1 | `priv` / field–method visibility | implemented (0.9.1) |
 | 0.9.2 | Positional construction `Point(3, 4)` | implemented (0.9.2) |
-| 0.9.3+ | Optional: properties, deep `clone`, `format` polish, thin stdlib | drafted |
+| 0.9.3 | Deep `clone()` (lists, hashes, class instances) | implemented (0.9.3) |
+| 0.9.4+ | Optional: properties, `format` polish, thin stdlib | drafted |
 
 ### 0.9.0 — compound assign on members
 
@@ -817,13 +818,28 @@ Rules:
 - Too many args or keyword args → **E3216** (use named `Name { field: value }` for kwargs)
 - Named construction remains fully supported and order-free
 
+### 0.9.3 — deep `clone()`
+
+`clone()` recursively copies nested structure.
+
+**Rules:**
+
+- Lists and hashes: deep copy; cycles reuse the in-progress clone (identity within one call)
+- Class instances: `.clone()` returns a new instance of the same class with deep-copied fields
+- Nested primitives are shared by value; unsupported top-level types still **E2609**
+- Replaces the previous shallow-copy behavior
+
+### 0.9.4+ (drafted)
+
+Optional further polish: properties `get`/`set`, richer `format()`, thin stdlib (dates/HTTP/regex / `mkdir -p`).
+
 ### Out of 0.9 (still held globally)
 
 Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product.
 
 ## Held (do not implement)
 
-Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.2** are implemented. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.3** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -831,6 +847,7 @@ Do not move global holds into 0.9 polish without an explicit series start. **0.8
 | Compound assign on members (`this.x += 1`) | implemented (**0.9.0**) |
 | `priv` / visibility | implemented (**0.9.1**) |
 | Positional construction `Point(3, 4)` | implemented (**0.9.2**) |
+| Deep `clone()` | implemented (**0.9.3**) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

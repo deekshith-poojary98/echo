@@ -551,12 +551,49 @@ def do_wait(seconds: object, location: SourceLocation | None = None) -> None:
     time.sleep(duration)
 
 
-def do_clone(value: object, location: SourceLocation | None = None) -> object:
+def do_clone(
+    value: object,
+    location: SourceLocation | None = None,
+    _memo: dict[int, object] | None = None,
+) -> object:
+    if isinstance(value, bool) or value is None or isinstance(value, (int, float, str)):
+        return value
+
+    if _memo is None:
+        _memo = {}
+    object_id = id(value)
+    cached = _memo.get(object_id)
+    if cached is not None:
+        return cached
+
     if isinstance(value, list):
-        return value.copy()
+        cloned: list = []
+        _memo[object_id] = cloned
+        cloned.extend(do_clone(item, location, _memo) for item in value)
+        return cloned
+
     if isinstance(value, dict):
-        return value.copy()
-    raise EchoTypeError("clone() can only be called on lists or hashes", location, code="E2609")
+        cloned_hash: dict = {}
+        _memo[object_id] = cloned_hash
+        for key, item in value.items():
+            cloned_hash[key] = do_clone(item, location, _memo)
+        return cloned_hash
+
+    from echo.runtime.instances import ClassInstance
+
+    if isinstance(value, ClassInstance):
+        fields: dict[str, object] = {}
+        cloned_instance = ClassInstance(value.class_name, fields, value.record)
+        _memo[object_id] = cloned_instance
+        for key, item in value.fields.items():
+            fields[key] = do_clone(item, location, _memo)
+        return cloned_instance
+
+    raise EchoTypeError(
+        "clone() can only be called on lists, hashes, or class instances",
+        location,
+        code="E2609",
+    )
 
 
 def do_zip(left: object, right: object, location: SourceLocation | None = None) -> list:

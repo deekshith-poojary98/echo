@@ -925,7 +925,7 @@ say(rangeListInclusive(start: 0, end: 5));
 ---
 
 ### `clone()`
-Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
+Returns a **deep** copy of the list. Nested lists and hashes are copied recursively; the clone does not share nested structure with the original.
 
 ```echo
 a: list = [1, 2, 3];
@@ -1069,7 +1069,7 @@ say(a);    // {"x": 1, "y": 99, "z": 3}
 ---
 
 ### `clone()` *(hash)*
-Returns a **shallow** copy of the hash.
+Returns a **deep** copy of the hash (nested lists/hashes copied recursively).
 
 ```echo
 original: hash = { name: "Ada" };
@@ -1079,6 +1079,8 @@ say(original["name"]);    // Ada
 say(copy["name"]);        // Echo
 ```
 
+Class instances also support `.clone()` (new instance, deep-copied fields).
+
 ---
 
 ## Notes
@@ -1087,7 +1089,7 @@ say(copy["name"]);        // Echo
 - Standalone collection calls use `items:` for the collection (`find`, `countOf`, `map`, `filter`, `reduce`, `forEach`, `flatMap`, `flatten`, `some`, `every`, `findIndex`, `unique`, `chunk`, `partition`, `mapValues`). `zip` uses `left:` / `right:`. `rangeList` / `rangeListInclusive` use `start:` / `end:`. `chunk` also uses `size:`. `partition` also uses `f:`.
 - Conversions (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work standalone and as methods.
 - Mutating list/hash methods interact with `watch` and `use mut`.
-- `clone()` is shallow for lists and hashes.
+- `clone()` is deep for lists, hashes, and class instances (0.9.3).
 
 ## Common Mistakes
 
@@ -1104,7 +1106,7 @@ say(copy["name"]);        // Echo
 - Treating unequal `zip` lengths as an error, or `unique` equating `true` and `1`
 - `chunk` with `size` `0`, `bool`, or float
 - Treating `rangeList(0, 5)` as inclusive (use `rangeListInclusive` or `0..5`)
-- Expecting hash `filter` / `mapValues` to mutate, or `clone()` to deep-copy
+- Expecting hash `filter` / `mapValues` to mutate
 
 ## See Also
 - [Lists](/core-concepts/lists)

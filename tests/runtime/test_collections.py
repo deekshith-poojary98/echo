@@ -58,7 +58,7 @@ say(format("Hello {}", "Echo"));
     assert result.lines == ["Echo-7-Echo", "Hello Echo"]
 
 
-def test_clone_is_shallow():
+def test_clone_is_deep():
     result = run_echo(
         """
 inner: list = [1];
@@ -66,10 +66,26 @@ outer: list = [inner];
 copied: list = outer.clone();
 inner.push(2);
 say(copied);
+say(outer);
 """
     )
     assert result.exit_code == 0
-    assert result.output.strip() == "[[1, 2]]"
+    assert result.lines == ["[[1]]", "[[1, 2]]"]
+
+
+def test_clone_hash_nested_is_deep():
+    result = run_echo(
+        """
+inner: hash = { n: 1 };
+outer: hash = { child: inner };
+copied: hash = outer.clone();
+inner["n"] = 9;
+say(copied["child"]["n"]);
+say(outer["child"]["n"]);
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["1", "9"]
 
 
 def test_string_reverse_does_not_mutate():

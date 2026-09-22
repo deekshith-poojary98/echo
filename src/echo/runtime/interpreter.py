@@ -531,6 +531,8 @@ class Interpreter:
                         )
                     self._require_method_runtime_visible(target.record, expression.name, expression.location)
                     return BoundMethod(method, target)
+                if expression.name == "clone":
+                    return BoundBuiltin("clone", target)
                 raise EchoRuntimeError(
                     f"Unknown field '{expression.name}' on {target.class_name}",
                     expression.location,
@@ -646,6 +648,15 @@ class Interpreter:
                         env,
                         expression.location,
                         callee.name,
+                    )
+                if callee.name == "clone":
+                    return self._call_builtin(
+                        "clone",
+                        expression.arguments,
+                        env,
+                        target,
+                        expression.location,
+                        callee.object,
                     )
                 raise EchoRuntimeError(
                     f"Unknown method '{callee.name}' on {target.class_name}",

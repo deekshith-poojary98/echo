@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.3
+
+Deep `clone()`. Fourth **0.9** ergonomics slice. Failure model unchanged.
+
+- `list.clone()` / `hash.clone()` recursively copy nested lists and hashes (cycle-safe)
+- Class instances support `.clone()` — new instance, same class, deep-copied fields
+- Top-level primitives stay shared by value; unsupported types still **E2609**
+
 ## 0.9.2
 
 Positional class construction. Third **0.9** ergonomics slice. Failure model unchanged.
