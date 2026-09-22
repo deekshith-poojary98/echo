@@ -552,18 +552,63 @@ class Interpreter:
                     code="E3211",
                 )
             values = {name: self.evaluate(value, env) for name, value in expression.fields}
-            default_env = record.closure if isinstance(record.closure, Environment) else env
-            for field_name, default_expr in record.field_defaults.items():
-                if field_name not in values:
-                    values[field_name] = self.evaluate(default_expr, default_env)  # type: ignore[arg-type]
-            for field_name, value in values.items():
-                expected = record.field_types.get(field_name)
-                if expected is not None:
-                    validate_type(field_name, value, expected, expression.location)  # type: ignore[arg-type]
-            return ClassInstance(expression.class_name, values, record)
+            return self._finish_construction(record, values, env, expression.location)
         if isinstance(expression, CallExpression):
             return self._call(expression, env)
         raise EchoRuntimeError(f"Unknown expression: {type(expression).__name__}", expression.location, code="E2798")
+
+    def _construct_positional(
+        self,
+        record: ClassRecord,
+        raw_args,
+        env: Environment,
+        location: SourceLocation,
+    ) -> object:
+        for argument in raw_args:
+            if argument.name is not None:
+                raise EchoRuntimeError(
+                    f"Positional construction of '{record.name}' does not take keyword arguments",
+                    location,
+                    help_text=f"Use '{record.name} {{ field: value, ... }}' for named fields.",
+                    code="E3216",
+                )
+        field_names = list(record.field_types.keys())
+        if len(raw_args) > len(field_names):
+            raise EchoRuntimeError(
+                f"Class '{record.name}' expects at most {len(field_names)} positional "
+                f"argument(s), got {len(raw_args)}",
+                location,
+                code="E3216",
+            )
+        values: dict[str, object] = {}
+        for index, field_name in enumerate(field_names):
+            if index < len(raw_args):
+                values[field_name] = self.evaluate(raw_args[index].value, env)
+            elif field_name not in record.field_defaults:
+                raise EchoRuntimeError(
+                    f"Class '{record.name}' is missing required field '{field_name}' "
+                    f"in positional construction",
+                    location,
+                    code="E3209",
+                )
+        return self._finish_construction(record, values, env, location)
+
+    def _finish_construction(
+        self,
+        record: ClassRecord,
+        values: dict[str, object],
+        env: Environment,
+        location: SourceLocation,
+    ) -> ClassInstance:
+        default_env = record.closure if isinstance(record.closure, Environment) else env
+        for field_name, default_expr in record.field_defaults.items():
+            if field_name not in values:
+                values[field_name] = self.evaluate(default_expr, default_env)  # type: ignore[arg-type]
+        for field_name, value in values.items():
+            expected = record.field_types.get(field_name)
+            if expected is not None:
+                validate_type(field_name, value, expected, location)  # type: ignore[arg-type]
+        return ClassInstance(record.name, values, record)
 
     def _call(self, expression: CallExpression, env: Environment) -> object:
         callee = expression.callee
@@ -620,6 +665,9 @@ class Interpreter:
                 return self._call_user_function(function, expression.arguments, env, expression.location)
             if callee.name in BUILTIN_NAMES:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
+            record = env.resolve_class(callee.name)
+            if record is not None:
+                return self._construct_positional(record, expression.arguments, env, expression.location)
             undefined_function(callee.name, expression.location)
         value = self.evaluate(callee, env)
         return self._call_value(value, expression.arguments, env, expression.location, None)

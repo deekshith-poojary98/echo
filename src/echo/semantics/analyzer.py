@@ -502,6 +502,49 @@ class SemanticAnalyzer:
             code="E3215",
         )
 
+    def _check_positional_construction(
+        self,
+        class_type: ClassType,
+        expression: CallExpression,
+        scope: Scope,
+    ) -> None:
+        for argument in expression.arguments:
+            if argument.name is not None:
+                raise SemanticError(
+                    f"Positional construction of '{class_type.name}' does not take keyword arguments",
+                    expression.location,
+                    help_text=f"Use '{class_type.name} {{ field: value, ... }}' for named fields.",
+                    code="E3216",
+                )
+        field_names = list(class_type.fields.keys())
+        n_args = len(expression.arguments)
+        if n_args > len(field_names):
+            raise SemanticError(
+                f"Class '{class_type.name}' expects at most {len(field_names)} positional "
+                f"argument(s), got {n_args}",
+                expression.location,
+                code="E3216",
+            )
+        for index, field_name in enumerate(field_names):
+            if index < n_args:
+                argument = expression.arguments[index]
+                self._expression(argument.value, scope)
+                self._check_typed_binding(
+                    argument.value,
+                    class_type.fields[field_name],
+                    scope,
+                    expression.location,
+                    field_name,
+                )
+            elif field_name not in class_type.default_fields:
+                raise SemanticError(
+                    f"Class '{class_type.name}' is missing required field '{field_name}' "
+                    f"in positional construction",
+                    expression.location,
+                    help_text="Pass a value for every field without a default, in declaration order.",
+                    code="E3209",
+                )
+
     def _class_method_type(self, expression: MemberExpression, scope: Scope) -> FunctionType | None:
         owner = self._expression_method_owner(expression.object, scope)
         if owner is None:
@@ -626,14 +669,17 @@ class SemanticAnalyzer:
         elif isinstance(expression, CallExpression):
             if isinstance(expression.callee, VariableExpression):
                 symbol = scope.resolve(expression.callee.name)
-                if symbol is None:
+                class_type = scope.classes.get(expression.callee.name)
+                if symbol is None and class_type is not None:
+                    self._check_positional_construction(class_type, expression, scope)
+                elif symbol is None:
                     raise SemanticError(
                         f"Function '{expression.callee.name}' is not defined",
                         expression.location,
                         help_text="Define the function with 'fn name(...) { ... }' before calling it.",
                         code="E1010",
                     )
-                if symbol.kind == SymbolKind.FUNCTION:
+                elif symbol.kind == SymbolKind.FUNCTION:
                     self._check_call_arity(symbol, expression, scope)
                 elif symbol.kind == SymbolKind.VARIABLE:
                     declared = symbol.declared_type

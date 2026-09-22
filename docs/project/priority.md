@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.9.0**. **0.9.1** (`priv` visibility) continues the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
+Current tagged version is **v0.9.1**. **0.9.2** (positional construction) continues the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -697,7 +697,7 @@ Does not require `implements` for assignability (inference stays).
 | Topic | Working assumption | Alternatives |
 | --- | --- | --- |
 | Keyword | `class` (struct-like) — locked | `struct` |
-| Construction call | `Point { x: 3, y: 4 }` — locked | `Point.new(...)`; positional `Point(3, 4)` |
+| Construction call | `Point { x: 3, y: 4 }` (locked) + positional `Point(3, 4)` in **0.9.2** | `Point.new(...)` still held |
 | Ctor field block | `new { ... }` — locked in **0.8.3** | keep bare fields forever |
 | Receiver name | `this` — locked | `self` |
 | Equality | field-wise `==` — locked | identity / `===` later |
@@ -715,7 +715,7 @@ Inheritance trees, abstract classes, generics on classes, operator overloading, 
 
 ## 0.9.x — ergonomics / OOP polish
 
-**Status: 0.9.0–0.9.1 implemented; 0.9.2+ drafted.**
+**Status: 0.9.0–0.9.2 implemented; 0.9.3+ drafted.**
 
 **0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite.
 
@@ -725,7 +725,7 @@ Shape: finish day-to-day rough edges on the 0.8 OOP surface.
 | --- | --- | --- |
 | 0.9.0 | Compound assign on members (`this.x += 1`) | implemented (0.9.0) |
 | 0.9.1 | `priv` / field–method visibility | implemented (0.9.1) |
-| 0.9.2 | One ctor convenience (positional *or* `Point.new` — pick one) | drafted |
+| 0.9.2 | Positional construction `Point(3, 4)` | implemented (0.9.2) |
 | 0.9.3+ | Optional: properties, deep `clone`, `format` polish, thin stdlib | drafted |
 
 ### 0.9.0 — compound assign on members
@@ -791,9 +791,31 @@ Rules:
 - Private methods do **not** satisfy `implements` / interface assignability
 - No module-private or subclass-private (no inheritance yet)
 
-### 0.9.2 — ctor convenience (drafted)
+### 0.9.2 — positional construction
 
-Pick **one**: positional `Point(3, 4)` **or** clearer factory/`Point.new` — not both in one slice.
+Convenience call form alongside named `Point { x: 3, y: 4 }`. **Not** `Point.new` (held).
+
+**Implemented spelling:**
+
+```echo
+class Point {
+    new {
+        x: int;
+        y: int = 0;
+    }
+}
+
+p: Point = Point(3, 4);
+q: Point = Point(5);
+```
+
+Rules:
+
+- `Name(args...)` when `Name` is a class (and not shadowed by a variable/function) constructs an instance
+- Arguments bind to `new { ... }` fields in **declaration order**
+- Trailing fields with defaults may be omitted; missing a required field → **E3209**
+- Too many args or keyword args → **E3216** (use named `Name { field: value }` for kwargs)
+- Named construction remains fully supported and order-free
 
 ### Out of 0.9 (still held globally)
 
@@ -801,13 +823,14 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## Held (do not implement)
 
-Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0** are implemented. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.2** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
 | Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.9** done |
 | Compound assign on members (`this.x += 1`) | implemented (**0.9.0**) |
 | `priv` / visibility | implemented (**0.9.1**) |
+| Positional construction `Point(3, 4)` | implemented (**0.9.2**) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

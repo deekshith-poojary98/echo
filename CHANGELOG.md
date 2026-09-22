@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.2
+
+Positional class construction. Third **0.9** ergonomics slice. Failure model unchanged.
+
+- `Point(3, 4)` maps arguments to `new { ... }` fields in declaration order
+- Trailing fields with defaults may be omitted (`Point(5)` when `y` defaults)
+- Keyword args are rejected on this form — use `Point { x: 3, y: 4 }` for named fields
+- Named construction unchanged; error code **E3216** for positional arity / kwargs misuse
+
 ## 0.9.1
 
 `priv` visibility on class fields and methods. Second **0.9** ergonomics slice. Failure model unchanged.
