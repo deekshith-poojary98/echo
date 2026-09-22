@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.8.8**. **0.8.9** (first PyPI release of `echolang`) is implemented (version + docs; upload via `./build.sh --release` when ready). **0.7 polish is complete** through 0.7.9. **0.8 OOP spine is complete** (0.8.0–0.8.2). **0.8.3–0.8.9** closes the OOP polish arc. Failure model stays abort + `*Or`.
+Current tagged version is **v0.8.9**. **0.9.0** (compound assign on members) opens the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.8.8**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.9** are implemented (0.8.9 not yet tagged / PyPI upload pending).
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current language version is **0.9.0**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.9** are implemented. **0.9.0** is implemented.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -358,7 +358,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 
 ## 0.8.x — OOP
 
-**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3–0.8.9 implemented (PyPI upload ops remaining).**
+**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3–0.8.9 implemented.**
 
 **0.7 is closed** (spine through 0.7.6; polish through 0.7.9). Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
 
@@ -393,7 +393,7 @@ Do not implement until explicitly started (`start 0.8.3`, etc.). Goal: make the 
 | 0.8.6 | Type methods (no `this`) / `Point.origin()` | implemented (0.8.6) |
 | 0.8.7 | Optional `implements` clause | implemented (0.8.7) |
 | 0.8.8 | Docs / examples / README release pass | implemented (0.8.8) |
-| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9; upload pending) |
+| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9) |
 
 ### 0.8.0 — nominal `class` + construction
 
@@ -711,16 +711,73 @@ Does not require `implements` for assignability (inference stays).
 
 ### Out of 0.8 (still held globally)
 
-Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, `priv`, and `match` / `Result` remain outside this spine.
+Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, and `match` / `Result` remain outside this spine. **`priv`** and member compound assign move to **0.9.x**.
+
+## 0.9.x — ergonomics / OOP polish
+
+**Status: 0.9.0 implemented; 0.9.1+ drafted.**
+
+**0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite.
+
+Shape: finish day-to-day rough edges on the 0.8 OOP surface.
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 0.9.0 | Compound assign on members (`this.x += 1`) | implemented (0.9.0) |
+| 0.9.1 | `priv` / field–method visibility | drafted |
+| 0.9.2 | One ctor convenience (positional *or* `Point.new` — pick one) | drafted |
+| 0.9.3+ | Optional: properties, deep `clone`, `format` polish, thin stdlib | drafted |
+
+### 0.9.0 — compound assign on members
+
+Same operators as simple-name compound assign (`+=` `-=` `*=` `/=` `%=`), on class fields.
+
+**Implemented spelling:**
+
+```echo
+class Counter {
+    new {
+        n: int;
+    }
+
+    fn bump(this) {
+        this.n += 1;
+    }
+}
+
+c: Counter = Counter { n: 10 };
+c.n *= 2;
+```
+
+Rules:
+
+- Target is **`name.field`** (same surface as `MemberAssignment`); object is a simple name (`this`, `c`, …)
+- Semantics: read field → binary op → write field (same as `x += 1` on locals)
+- Unknown field → **E2704**; non-class target → type error; `const` instance → existing const-mutation error
+- Does **not** add index compound assign (`xs[0] += 1`) or chained `a.b.c += 1` beyond one dot
+- Failure model unchanged
+
+### 0.9.1 — `priv` (drafted)
+
+Field and/or method visibility. Exact spelling TBD when started (`priv` vs `private`). Default remains public. No inheritance.
+
+### 0.9.2 — ctor convenience (drafted)
+
+Pick **one**: positional `Point(3, 4)` **or** clearer factory/`Point.new` — not both in one slice.
+
+### Out of 0.9 (still held globally)
+
+Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product.
 
 ## Held (do not implement)
 
-Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.9 are implemented**; PyPI upload / tag for **0.8.9** remain ops steps. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
 | Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.9** done |
-| Compound assign on members (`this.x += 1`) | drafted for next version (held until dogfooding ends) |
+| Compound assign on members (`this.x += 1`) | implemented (**0.9.0**) |
+| `priv` / visibility | drafted (**0.9.1**) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

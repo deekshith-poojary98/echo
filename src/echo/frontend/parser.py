@@ -36,6 +36,7 @@ from echo.frontend.ast.nodes import (
     LiteralExpression,
     LiteralPattern,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -168,6 +169,22 @@ class Parser:
                     object_token.location,
                     VariableExpression(object_token.location, object_token.lexeme),
                     field_token.lexeme,
+                    value,
+                )
+            if (
+                self._is_name(self._peek())
+                and self._peek_offset(1) is not None
+                and self._peek_offset(1).type in COMPOUND_OPS
+            ):
+                field_token = self._advance()
+                operator = self._advance()
+                value = self.parse_expression()
+                self._expect(TokenType.SEMICOLON, ";")
+                return MemberCompoundAssignment(
+                    object_token.location,
+                    VariableExpression(object_token.location, object_token.lexeme),
+                    field_token.lexeme,
+                    operator,
                     value,
                 )
             self.pos = saved

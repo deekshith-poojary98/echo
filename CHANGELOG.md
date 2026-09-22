@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+Compound assignment on class members. Opens the **0.9** ergonomics series. Failure model unchanged.
+
+- `this.x += 1`, `obj.field *= 2`, and the other compound ops (`-=` `/=` `%=`) on fields — same operators as simple names
+- Read-then-assign semantics; unknown field / non-class / `const` instance still error
+- Example: `examples/bank_account.echo` uses `+=` / `-=` on balance
+
 ## 0.8.9
 
 First public package release on PyPI (`echolang`). No new language syntax. Failure model unchanged.

@@ -52,7 +52,7 @@ Output:
 ## Assignment
 
 - `=`
-- Compound: `+=` `-=` `*=` `/=` `%=` (same type and mutability rules as `x = x + y`)
+- Compound: `+=` `-=` `*=` `/=` `%=` (same type and mutability rules as `x = x + y`; also on class fields: `this.x += 1`)
 - `arr[i] = value;`
 - `grid[r][c] = value;`
 

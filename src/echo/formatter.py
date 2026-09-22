@@ -34,6 +34,7 @@ from echo.frontend.ast.nodes import (
     LiteralExpression,
     LiteralPattern,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -149,6 +150,12 @@ class _Printer:
         if isinstance(statement, MemberAssignment):
             self._line(
                 f"{self._expr(statement.object)}.{statement.name} = {self._expr(statement.value)};"
+            )
+            return
+        if isinstance(statement, MemberCompoundAssignment):
+            self._line(
+                f"{self._expr(statement.object)}.{statement.name} {statement.operator.lexeme} "
+                f"{self._expr(statement.value)};"
             )
             return
         if isinstance(statement, ExpressionStatement):

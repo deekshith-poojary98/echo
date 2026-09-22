@@ -44,6 +44,7 @@ from echo.frontend.ast.nodes import (
     LiteralExpression,
     LiteralPattern,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     NamePattern,
     Pattern,
@@ -307,6 +308,24 @@ class Interpreter:
             if isinstance(statement.object, VariableExpression):
                 env.require_mutable(statement.object.name, statement.location)
             value = self.evaluate(statement.value, env)
+            self._member_assign(target, statement.name, value, statement.location)
+            if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
+                self._watch(statement.object.name, target, env, "modified by field assignment to")
+            return
+        if isinstance(statement, MemberCompoundAssignment):
+            target = self.evaluate(statement.object, env)
+            if isinstance(statement.object, VariableExpression):
+                env.require_mutable(statement.object.name, statement.location)
+            current = self._member_get(target, statement.name, statement.location)
+            rhs = self.evaluate(statement.value, env)
+            op = {
+                TokenType.PLUS_EQUAL: TokenType.PLUS,
+                TokenType.MINUS_EQUAL: TokenType.MINUS,
+                TokenType.STAR_EQUAL: TokenType.STAR,
+                TokenType.SLASH_EQUAL: TokenType.SLASH,
+                TokenType.PERCENT_EQUAL: TokenType.PERCENT,
+            }[statement.operator.type]
+            value = binary_op(op, current, rhs, statement.location)
             self._member_assign(target, statement.name, value, statement.location)
             if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
                 self._watch(statement.object.name, target, env, "modified by field assignment to")
@@ -1660,6 +1679,21 @@ class Interpreter:
             return
         if isinstance(pattern, NamePattern):
             self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)
+
+    def _member_get(self, target: object, name: str, location: SourceLocation) -> object:
+        if not isinstance(target, ClassInstance):
+            raise EchoTypeError(
+                f"Cannot read field on type {echo_type_name(target)}",
+                location,
+                code="E2704",
+            )
+        if name not in target.fields:
+            raise EchoRuntimeError(
+                f"Unknown field '{name}' on {target.class_name}",
+                location,
+                code="E2704",
+            )
+        return target.fields[name]
 
     def _member_assign(self, target: object, name: str, value: object, location: SourceLocation) -> None:
         require_unfrozen(target, location)

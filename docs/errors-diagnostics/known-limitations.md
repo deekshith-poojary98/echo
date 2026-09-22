@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.8.9**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, and nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, and interfaces (no inheritance). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.9.0**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), and compound assignment on members. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -8,13 +8,14 @@ What Echo still does **not** do. As of **0.8.9**, the language includes modules,
 - Host/stdlib, REPL, `check` / `test` / `fmt` / `lint`
 - 0.6–0.7: lambdas, collection helpers, `const`, destructuring, exact objects, unions, `switch`, range-as-value
 - 0.8: `class` + `new { ... }`, methods + `this`, unbound/type methods, `interface`, optional `implements`
+- 0.9.0: compound assignment on class fields (`this.x += 1`)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
 ## Current Limitations
 
 - No class inheritance (`extends`); shared behavior is interfaces + composition
-- Compound assignment (`+=` / `-=` / `*=` / `/=` / `%=`) works on simple names only — not on member fields (`this.x += 1` is not supported yet; use `this.x = this.x + 1`). Planned for the next version after 0.8.9
+- No field / method visibility (`priv`) yet — all members public (drafted for 0.9.1)
 - No generics
 - No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
 - No overloads

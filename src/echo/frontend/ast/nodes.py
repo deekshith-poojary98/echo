@@ -262,6 +262,14 @@ class MemberAssignment(Statement):
 
 
 @dataclass
+class MemberCompoundAssignment(Statement):
+    object: Expression
+    name: str
+    operator: Token
+    value: Expression
+
+
+@dataclass
 class DestructureDeclaration(Statement):
     pattern: Pattern
     initializer: Expression

@@ -30,6 +30,7 @@ from echo.frontend.ast.nodes import (
     ListLiteral,
     LiteralExpression,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     Parameter,
     Pattern,
@@ -195,6 +196,10 @@ class _Linter:
             self._expr(statement.value, scope)
             return
         if isinstance(statement, MemberAssignment):
+            self._expr(statement.object, scope)
+            self._expr(statement.value, scope)
+            return
+        if isinstance(statement, MemberCompoundAssignment):
             self._expr(statement.object, scope)
             self._expr(statement.value, scope)
             return

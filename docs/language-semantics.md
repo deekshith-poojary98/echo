@@ -130,6 +130,8 @@ Operators: `+`, `-`, `*`, `/`, `%`, unary `-`.
 
 Compound assignment: `+=`, `-=`, `*=`, `/=`, `%=`.
 `x += y` means `x = x + y` with the same type and mutability rules.
+On class fields, `this.x += y` / `obj.field += y` means the same read-then-assign on that field (0.9.0).
+On class fields, `this.x += y` / `obj.field += y` means the same read-then-assign on that field (0.9.0).
 
 ---
 

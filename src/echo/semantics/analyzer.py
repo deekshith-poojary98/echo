@@ -36,6 +36,7 @@ from echo.frontend.ast.nodes import (
     LiteralExpression,
     LiteralPattern,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -234,6 +235,11 @@ class SemanticAnalyzer:
                 self._expression(index, scope)
             self._expression(statement.value, scope)
         elif isinstance(statement, MemberAssignment):
+            self._expression(statement.object, scope)
+            self._expression(statement.value, scope)
+            if isinstance(statement.object, VariableExpression):
+                self._require_not_const_mutation(statement.object.name, statement, scope)
+        elif isinstance(statement, MemberCompoundAssignment):
             self._expression(statement.object, scope)
             self._expression(statement.value, scope)
             if isinstance(statement.object, VariableExpression):
