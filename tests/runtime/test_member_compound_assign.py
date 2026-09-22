@@ -1,4 +1,4 @@
-from tests.helpers import run_echo
+from helpers import run_echo
 
 
 def test_member_compound_assignment_on_class_field():
