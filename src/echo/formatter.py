@@ -195,7 +195,8 @@ class _Printer:
                 self._line("new {")
                 self._indent += 1
                 for field in statement.fields:
-                    line = f"{field.name}: {self._type(field.type)}"
+                    prefix = "priv " if field.private else ""
+                    line = f"{prefix}{field.name}: {self._type(field.type)}"
                     if field.default is not None:
                         line += f" = {self._expr(field.default)}"
                     self._line(f"{line};")
@@ -264,7 +265,8 @@ class _Printer:
 
     def _function(self, statement: FunctionDeclaration) -> None:
         params = ", ".join(self._param(param) for param in statement.parameters)
-        header = f"fn {statement.name}({params})"
+        prefix = "priv " if statement.private else ""
+        header = f"{prefix}fn {statement.name}({params})"
         if statement.return_type is not None:
             header += f" -> {self._type(statement.return_type)}"
         if statement.inline:

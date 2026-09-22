@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.9.0**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), and compound assignment on members. This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.9.1**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, and `priv` visibility. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -9,13 +9,13 @@ What Echo still does **not** do. As of **0.9.0**, the language includes modules,
 - 0.6–0.7: lambdas, collection helpers, `const`, destructuring, exact objects, unions, `switch`, range-as-value
 - 0.8: `class` + `new { ... }`, methods + `this`, unbound/type methods, `interface`, optional `implements`
 - 0.9.0: compound assignment on class fields (`this.x += 1`)
+- 0.9.1: `priv` on fields and methods (class-private)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
 ## Current Limitations
 
 - No class inheritance (`extends`); shared behavior is interfaces + composition
-- No field / method visibility (`priv`) yet — all members public (drafted for 0.9.1)
 - No generics
 - No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
 - No overloads

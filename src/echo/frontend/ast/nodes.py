@@ -47,6 +47,9 @@ class ClassType(TypeAnnotation):
     default_fields: frozenset[str] = field(default_factory=frozenset)
     type_methods: dict[str, FunctionType] = field(default_factory=dict)
     class_id: int = 0
+    private_fields: frozenset[str] = field(default_factory=frozenset)
+    private_methods: frozenset[str] = field(default_factory=frozenset)
+    private_type_methods: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass
@@ -335,6 +338,7 @@ class FunctionDeclaration(Statement):
     body: list[Statement] | Expression
     inline: bool
     return_type: TypeAnnotation | None = None
+    private: bool = False
 
 
 @dataclass
@@ -375,6 +379,7 @@ class ClassField:
     type: TypeAnnotation
     location: SourceLocation
     default: Expression | None = None
+    private: bool = False
 
 
 @dataclass

@@ -43,6 +43,7 @@ class TokenType(Enum):
     INTERFACE = auto()
     NEW = auto()
     IMPLEMENTS = auto()
+    PRIV = auto()
 
     PLUS = auto()
     MINUS = auto()
@@ -115,6 +116,7 @@ KEYWORDS: dict[str, TokenType] = {
     "interface": TokenType.INTERFACE,
     "new": TokenType.NEW,
     "implements": TokenType.IMPLEMENTS,
+    "priv": TokenType.PRIV,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "null": TokenType.NULL,

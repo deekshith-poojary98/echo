@@ -142,7 +142,7 @@
         },
         {
           "name": "storage.modifier.echo",
-          "match": "\\b(mut|watch|const|exact|class|interface|new|implements)\\b"
+          "match": "\\b(mut|watch|const|exact|class|interface|new|implements|priv)\\b"
         },
         {
           "name": "storage.type.function.echo",

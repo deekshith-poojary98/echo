@@ -179,6 +179,7 @@ class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
+        self._class_visibility_stack: list[int] = []
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -190,7 +191,7 @@ class Interpreter:
             return
         if isinstance(statement, ClassDeclaration):
             methods = {
-                method.name: EchoFunction(method, env)
+                method.name: EchoFunction(method, env, class_id=id(statement))
                 for method in statement.methods
             }
             from echo.frontend.ast.nodes import FunctionType, TypeName
@@ -220,6 +221,10 @@ class Interpreter:
                 method_types=typed,
                 class_id=id(statement),
                 closure=env,
+                private_fields=frozenset(field.name for field in statement.fields if field.private),
+                private_methods=frozenset(
+                    method.name for method in statement.methods if method.private
+                ),
             )
             env.define_class(statement.name, record)
             register_class_methods(statement.name, typed)
@@ -503,6 +508,7 @@ class Interpreter:
                 if record is not None and not env.is_defined(class_name):
                     method = self._record_method(record, expression.name)
                     if method is not None:
+                        self._require_method_runtime_visible(record, expression.name, expression.location)
                         return UnboundMethod(method, class_name)
                     raise EchoRuntimeError(
                         f"Unknown method '{expression.name}' on {class_name}",
@@ -512,6 +518,7 @@ class Interpreter:
             target = self.evaluate(expression.object, env)
             if isinstance(target, ClassInstance):
                 if expression.name in target.fields:
+                    self._require_field_runtime_visible(target, expression.name, expression.location)
                     return target.fields[expression.name]
                 method = self._instance_method(target, expression.name)
                 if method is not None:
@@ -522,6 +529,7 @@ class Interpreter:
                             expression.location,
                             code="E3213",
                         )
+                    self._require_method_runtime_visible(target.record, expression.name, expression.location)
                     return BoundMethod(method, target)
                 raise EchoRuntimeError(
                     f"Unknown field '{expression.name}' on {target.class_name}",
@@ -716,16 +724,7 @@ class Interpreter:
                     const=parameter.const,
                 )
 
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _call_method(
         self,
@@ -762,7 +761,7 @@ class Interpreter:
             if parameter.variadic:
                 if not isinstance(value, list):
                     raise EchoTypeError(
-                        f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                        f"Argument '{parameter.name}' in method '{declaration.name}' must be a list of "
                         f"{format_type(parameter.type)}, got {echo_type_name(value)}",
                         location,
                         code="E2706",
@@ -771,7 +770,7 @@ class Interpreter:
                     raise_exact_shape_error(item, parameter.type, location)
                     if not matches_type(item, parameter.type):
                         raise EchoTypeError(
-                            f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                            f"Argument '{parameter.name}' in method '{declaration.name}' must be a list of "
                             f"{format_type(parameter.type)}, got list",
                             location,
                             code="E2706",
@@ -781,7 +780,7 @@ class Interpreter:
                 if not matches_type(value, parameter.type):
                     label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
                     raise EchoTypeError(
-                        f"Argument {label} in function '{declaration.name}' must be of type "
+                        f"Argument {label} in method '{declaration.name}' must be of type "
                         f"{format_type(parameter.type)}, got {echo_type_name(value)}",
                         location,
                         code="E2706",
@@ -806,16 +805,7 @@ class Interpreter:
                     const=parameter.const,
                 )
 
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _call_method_values(
         self,
@@ -873,16 +863,7 @@ class Interpreter:
                     mutable=not parameter.const,
                     const=parameter.const,
                 )
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def call_function_with_values(self, function: object, values: list[object], location: SourceLocation | None = None) -> object:
         if isinstance(function, EchoBuiltin):
@@ -931,16 +912,7 @@ class Interpreter:
                     mutable=not parameter.const,
                     const=parameter.const,
                 )
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _call_builtin(
         self,
@@ -1665,6 +1637,8 @@ class Interpreter:
                 source_key = field.source_key()
                 if source_key not in mapping:
                     raise EchoRuntimeError(f"Key '{source_key}' not found in hash", location, code="E2711")
+                if isinstance(value, ClassInstance):
+                    self._require_field_runtime_visible(value, source_key, location)
                 self._bind_pattern_name(
                     field, mapping[source_key], env, declare=declare, const=const, location=location
                 )
@@ -1693,6 +1667,7 @@ class Interpreter:
                 location,
                 code="E2704",
             )
+        self._require_field_runtime_visible(target, name, location)
         return target.fields[name]
 
     def _member_assign(self, target: object, name: str, value: object, location: SourceLocation) -> None:
@@ -1709,11 +1684,67 @@ class Interpreter:
                 location,
                 code="E2704",
             )
+        self._require_field_runtime_visible(target, name, location)
         if target.record is not None:
             expected = target.record.field_types.get(name)
             if expected is not None:
                 validate_type(name, value, expected, location)
         target.fields[name] = value
+
+    def _run_with_class_visibility(
+        self,
+        class_id: int | None,
+        declaration: FunctionDeclaration,
+        new_env: Environment,
+        location: SourceLocation | None,
+    ) -> object:
+        pushed = False
+        if class_id is not None:
+            self._class_visibility_stack.append(class_id)
+            pushed = True
+        try:
+            if declaration.inline:
+                result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
+            else:
+                try:
+                    self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
+                    result = None
+                except ReturnValue as returned:
+                    result = returned.value
+            check_return(declaration.name, result, declaration.return_type, location)
+            return result
+        finally:
+            if pushed:
+                self._class_visibility_stack.pop()
+
+    def _require_field_runtime_visible(
+        self, target: ClassInstance, name: str, location: SourceLocation
+    ) -> None:
+        record = target.record
+        if record is None or name not in record.private_fields:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Field '{name}' is private on {target.class_name}",
+            location,
+            help_text="Private fields are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_method_runtime_visible(
+        self, record: ClassRecord | None, name: str, location: SourceLocation
+    ) -> None:
+        if record is None or name not in record.private_methods:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Method '{name}' is private on {record.name}",
+            location,
+            help_text="Private methods are only accessible inside methods of the same class.",
+            code="E3215",
+        )
 
     def _bind_pattern_name(
         self,

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.1
+
+`priv` visibility on class fields and methods. Second **0.9** ergonomics slice. Failure model unchanged.
+
+- Spelling: `priv field: T;` inside `new { ... }`, and `priv fn name(...)` for instance/type methods
+- Default remains public; private members are accessible only inside methods of the same class
+- Construction may still set private fields (`Point { x: 1 }` when `x` is `priv`)
+- Private methods do not satisfy `implements` / interface assignability
+- Error code **E3215**
+
 ## 0.9.0
 
 Compound assignment on class members. Opens the **0.9** ergonomics series. Failure model unchanged.

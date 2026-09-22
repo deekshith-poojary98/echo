@@ -35,7 +35,11 @@ def instance_implements_interface(value: object, interface: InterfaceType) -> bo
     actual = value.record.method_types
     for name, expected in interface.methods.items():
         method = actual.get(name)
-        if method is None or not type_assignable(method, expected):
+        if (
+            method is None
+            or name in value.record.private_methods
+            or not type_assignable(method, expected)
+        ):
             return False
     return True
 
@@ -51,11 +55,17 @@ def interface_assignable(actual: InterfaceType, expected: InterfaceType) -> bool
     return True
 
 
-def class_type_implements_interface(methods: dict[str, FunctionType], interface: InterfaceType) -> bool:
+def class_type_implements_interface(
+    methods: dict[str, FunctionType],
+    interface: InterfaceType,
+    *,
+    private_methods: frozenset[str] | set[str] | None = None,
+) -> bool:
     from echo.runtime.values import type_assignable
 
+    hidden = private_methods or set()
     for name, expected in interface.methods.items():
         method = methods.get(name)
-        if method is None or not type_assignable(method, expected):
+        if method is None or name in hidden or not type_assignable(method, expected):
             return False
     return True

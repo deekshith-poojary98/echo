@@ -12,6 +12,7 @@ from echo.runtime.values import format_type, matches_type, raise_exact_shape_err
 class EchoFunction:
     declaration: FunctionDeclaration
     closure: Environment
+    class_id: int | None = None
 
 
 @dataclass(frozen=True)

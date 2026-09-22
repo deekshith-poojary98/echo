@@ -496,8 +496,20 @@ class Parser:
         seen_methods: set[str] = set()
         saw_new = False
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            is_private = False
+            priv_location = None
+            if self._check(TokenType.PRIV):
+                priv_token = self._advance()
+                is_private = True
+                priv_location = priv_token.location
+                if not self._check(TokenType.FN) and not self._check(TokenType.NEW):
+                    raise ParseError(
+                        "'priv' must precede 'fn' or appear on a field inside 'new { ... }'",
+                        priv_location,
+                    )
             if self._check(TokenType.FN):
                 method = self._parse_method(name_token.lexeme)
+                method.private = is_private
                 if method.name in seen_methods:
                     raise ParseError(
                         f"Duplicate method '{method.name}' in class '{name_token.lexeme}'",
@@ -511,6 +523,11 @@ class Parser:
                 seen_methods.add(method.name)
                 methods.append(method)
                 continue
+            if is_private:
+                raise ParseError(
+                    "'priv' before 'new' is invalid; mark individual fields with 'priv'",
+                    priv_location,
+                )
             if self._check(TokenType.NEW):
                 if saw_new:
                     raise ParseError(
@@ -549,6 +566,7 @@ class Parser:
         self._expect(TokenType.LEFT_BRACE, "{")
         fields: list[ClassField] = []
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
+            is_private = bool(self._match(TokenType.PRIV))
             field_token = self._expect_name_token("class field name")
             if field_token.lexeme in seen_fields:
                 raise ParseError(
@@ -570,7 +588,13 @@ class Parser:
                 default = self.parse_expression()
             self._expect(TokenType.SEMICOLON, ";")
             fields.append(
-                ClassField(field_token.lexeme, field_type, field_token.location, default)
+                ClassField(
+                    field_token.lexeme,
+                    field_type,
+                    field_token.location,
+                    default,
+                    private=is_private,
+                )
             )
         self._expect(TokenType.RIGHT_BRACE, "}")
         return fields
