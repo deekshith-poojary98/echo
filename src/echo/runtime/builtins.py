@@ -5,6 +5,7 @@ import random
 import time
 from pathlib import Path
 
+from echo.core.dateutil import days, format_time, hours, minutes, parse_time
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
 from echo.core.jsonutil import parse_json, write_json
 from echo.core.lists import (
@@ -21,6 +22,7 @@ from echo.core.lists import (
     reverse_list,
     slice_sequence,
 )
+from echo.core.regexutil import regex_find, regex_match, regex_replace, regex_split
 from echo.core.strings import (
     apply_format,
     replace_first_string,
@@ -103,13 +105,24 @@ BUILTIN_NAMES = frozenset(
         "padStart",
         "padEnd",
         "replaceFirst",
+        "regexMatch",
+        "regexFind",
+        "regexReplace",
+        "regexSplit",
+        "formatTime",
+        "parseTime",
+        "days",
+        "hours",
+        "minutes",
         "fileExists",
         "cwd",
         "exit",
         "isDir",
         "listFiles",
         "mkdir",
+        "mkdirAll",
         "removeFile",
+        "removeTree",
         "copyFile",
         "pathJoin",
         "assert",
@@ -207,13 +220,24 @@ BUILTIN_PARAMS = {
     "padStart": ["width", "fill"],
     "padEnd": ["width", "fill"],
     "replaceFirst": ["old", "new"],
+    "regexMatch": ["pattern"],
+    "regexFind": ["pattern"],
+    "regexReplace": ["pattern", "replacement"],
+    "regexSplit": ["pattern"],
+    "formatTime": ["pattern"],
+    "parseTime": ["pattern"],
+    "days": [],
+    "hours": [],
+    "minutes": [],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
     "isDir": ["path"],
     "listFiles": ["path"],
     "mkdir": ["path"],
+    "mkdirAll": ["path"],
     "removeFile": ["path"],
+    "removeTree": ["path"],
     "copyFile": ["dest"],
     "pathJoin": ["part"],
     "assert": ["message"],
@@ -272,6 +296,15 @@ STANDALONE_PARAMS = {
     "padStart": ["value", "width", "fill"],
     "padEnd": ["value", "width", "fill"],
     "replaceFirst": ["value", "old", "new"],
+    "regexMatch": ["text", "pattern"],
+    "regexFind": ["text", "pattern"],
+    "regexReplace": ["text", "pattern", "replacement"],
+    "regexSplit": ["text", "pattern"],
+    "formatTime": ["secs", "pattern"],
+    "parseTime": ["text", "pattern"],
+    "days": ["count"],
+    "hours": ["count"],
+    "minutes": ["count"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -367,13 +400,24 @@ STANDALONE_MIN_ARGS = {
     "padStart": 3,
     "padEnd": 3,
     "replaceFirst": 3,
+    "regexMatch": 2,
+    "regexFind": 2,
+    "regexReplace": 3,
+    "regexSplit": 2,
+    "formatTime": 2,
+    "parseTime": 2,
+    "days": 1,
+    "hours": 1,
+    "minutes": 1,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
     "isDir": 1,
     "listFiles": 1,
     "mkdir": 1,
+    "mkdirAll": 1,
     "removeFile": 1,
+    "removeTree": 1,
     "copyFile": 2,
     "pathJoin": 2,
     "assert": 2,
@@ -551,12 +595,49 @@ def do_wait(seconds: object, location: SourceLocation | None = None) -> None:
     time.sleep(duration)
 
 
-def do_clone(value: object, location: SourceLocation | None = None) -> object:
+def do_clone(
+    value: object,
+    location: SourceLocation | None = None,
+    _memo: dict[int, object] | None = None,
+) -> object:
+    if isinstance(value, bool) or value is None or isinstance(value, (int, float, str)):
+        return value
+
+    if _memo is None:
+        _memo = {}
+    object_id = id(value)
+    cached = _memo.get(object_id)
+    if cached is not None:
+        return cached
+
     if isinstance(value, list):
-        return value.copy()
+        cloned: list = []
+        _memo[object_id] = cloned
+        cloned.extend(do_clone(item, location, _memo) for item in value)
+        return cloned
+
     if isinstance(value, dict):
-        return value.copy()
-    raise EchoTypeError("clone() can only be called on lists or hashes", location, code="E2609")
+        cloned_hash: dict = {}
+        _memo[object_id] = cloned_hash
+        for key, item in value.items():
+            cloned_hash[key] = do_clone(item, location, _memo)
+        return cloned_hash
+
+    from echo.runtime.instances import ClassInstance
+
+    if isinstance(value, ClassInstance):
+        fields: dict[str, object] = {}
+        cloned_instance = ClassInstance(value.class_name, fields, value.record)
+        _memo[object_id] = cloned_instance
+        for key, item in value.fields.items():
+            fields[key] = do_clone(item, location, _memo)
+        return cloned_instance
+
+    raise EchoTypeError(
+        "clone() can only be called on lists, hashes, or class instances",
+        location,
+        code="E2609",
+    )
 
 
 def do_zip(left: object, right: object, location: SourceLocation | None = None) -> list:
@@ -833,6 +914,47 @@ def do_replace_first(value: object, old: object, new: object, location: SourceLo
     return replace_first_string(require_string(value, "replaceFirst", location), old, new, location)
 
 
+def do_regex_match(text: object, pattern: object, location: SourceLocation | None = None) -> bool:
+    return regex_match(text, pattern, location)
+
+
+def do_regex_find(text: object, pattern: object, location: SourceLocation | None = None) -> str | None:
+    return regex_find(text, pattern, location)
+
+
+def do_regex_replace(
+    text: object,
+    pattern: object,
+    replacement: object,
+    location: SourceLocation | None = None,
+) -> str:
+    return regex_replace(text, pattern, replacement, location)
+
+
+def do_regex_split(text: object, pattern: object, location: SourceLocation | None = None) -> list[str]:
+    return regex_split(text, pattern, location)
+
+
+def do_format_time(secs: object, pattern: object, location: SourceLocation | None = None) -> str:
+    return format_time(secs, pattern, location)
+
+
+def do_parse_time(text: object, pattern: object, location: SourceLocation | None = None) -> int:
+    return parse_time(text, pattern, location)
+
+
+def do_days(count: object, location: SourceLocation | None = None) -> int:
+    return days(count, location)
+
+
+def do_hours(count: object, location: SourceLocation | None = None) -> int:
+    return hours(count, location)
+
+
+def do_minutes(count: object, location: SourceLocation | None = None) -> int:
+    return minutes(count, location)
+
+
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:
     if not host.allow_files:
         raise EchoRuntimeError("fileExists() is not available in this host", location, code="E2801")
@@ -901,6 +1023,25 @@ def do_mkdir(path: object, host: Host, location: SourceLocation | None = None) -
     return None
 
 
+def do_mkdir_all(path: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("mkdirAll() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("mkdirAll() path must be a string", location, code="E2802")
+    target = host.resolve_path(path)
+    if target.is_file():
+        raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
+    try:
+        host.mkdir_all(path)
+    except FileExistsError as exc:
+        raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803") from exc
+    except NotADirectoryError as exc:
+        raise EchoRuntimeError(f"parent path is not a directory: {path}", location, code="E2802") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot create directory: {path}", location, code="E2803") from exc
+    return None
+
+
 def do_remove_file(path: object, host: Host, location: SourceLocation | None = None) -> None:
     if not host.allow_files:
         raise EchoRuntimeError("removeFile() is not available in this host", location, code="E2801")
@@ -919,6 +1060,20 @@ def do_remove_file(path: object, host: Host, location: SourceLocation | None = N
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
     except OSError as exc:
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
+    return None
+
+
+def do_remove_tree(path: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("removeTree() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("removeTree() path must be a string", location, code="E2802")
+    try:
+        host.remove_tree(path)
+    except FileNotFoundError as exc:
+        raise EchoRuntimeError(f"path not found: {path}", location, code="E2802") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot remove path: {path}", location, code="E2803") from exc
     return None
 
 

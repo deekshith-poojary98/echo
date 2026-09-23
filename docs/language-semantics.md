@@ -69,7 +69,8 @@ Union types (`int | str`) accept a value assignable to any member. A union is
 assignable to another type only when every member is. Echo has no `null` type;
 `null` stays a `dynamic` value, so prefer `str | void` when a binding may be null.
 Unions are not Option — no `?`, no unwrap. `switch` type arms (0.7.6) dispatch on
-union members; `if type(x) == "..."` does not narrow bindings.
+union members. Simple-name guards `if type(x) == "..."` (0.9.8) narrow `x` in the
+`then` / matching `else if`, and exclude that member in `else`.
 
 ### Runtime checks
 
@@ -130,6 +131,8 @@ Operators: `+`, `-`, `*`, `/`, `%`, unary `-`.
 
 Compound assignment: `+=`, `-=`, `*=`, `/=`, `%=`.
 `x += y` means `x = x + y` with the same type and mutability rules.
+On class fields, `this.x += y` / `obj.field += y` means the same read-then-assign on that field (0.9.0).
+On class fields, `this.x += y` / `obj.field += y` means the same read-then-assign on that field (0.9.0).
 
 ---
 
@@ -435,6 +438,8 @@ It is an error if the value is not present.
 ### `format`
 
 `"Hello, {}".format(name)` substitutes positional placeholders.
+`"Hello, {name}!".format({ name: "Echo" })` uses a trailing hash for named
+placeholders. Mix both: `"{0} scored {points}".format("Ada", { points: 42 })`.
 Standalone `format(template, ...)` uses the first argument as the template
 and the remaining arguments as values.
 
@@ -569,4 +574,15 @@ v0.8.6 adds type methods (`fn origin() -> Point` with no `this`; call `Point.ori
 v0.8.7 adds optional `implements` (`class User implements Named`); inference without `implements` remains; failures **E3214**.
 v0.8.8 is a docs/README release pass (no language changes).
 v0.8.9 is the first public PyPI release of `echolang` (no language changes).
+v0.9.0 adds compound assign on class members (`this.x += 1`).
+v0.9.1 adds `priv` on fields and methods.
+v0.9.2 adds positional construction `Point(3, 4)`.
+v0.9.3 makes `clone()` deep for lists, hashes, and class instances.
+v0.9.4 adds named `format()` placeholders via a trailing hash.
+v0.9.5 adds class properties (`get name(this)` / `set name(this, value: T)`; soft keywords; field-style access).
+v0.9.6 adds `mkdirAll(path)` and `removeTree(path)` for recursive create/delete.
+v0.9.7 adds `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `re`).
+v0.9.8 narrows simple-name unions in `if type(x) == "..."` (and matching `else if` / excluding `else`).
+v0.9.9 adds UTC `formatTime` / `parseTime` and `days` / `hours` / `minutes` duration helpers.
+v1.0.0 is the stable release of the 0.8–0.9 surface (no language changes).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

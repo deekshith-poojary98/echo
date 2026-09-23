@@ -9,7 +9,7 @@ class Bank {
             say("Invalid amount. Enter a positive number.");
             return;
         }
-        this.availableBalance = this.availableBalance + amount;
+        this.availableBalance += amount;
         say("Deposited $${amount}.");
         this.showBalance();
     }
@@ -23,7 +23,7 @@ class Bank {
             say("Insufficient balance.");
             return;
         }
-        this.availableBalance = this.availableBalance - amount;
+        this.availableBalance -= amount;
         say("Withdrew $${amount}.");
         this.showBalance();
     }

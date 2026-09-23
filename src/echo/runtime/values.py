@@ -567,7 +567,11 @@ def type_assignable(actual: TypeAnnotation | None, expected: TypeAnnotation | No
     if isinstance(actual, ClassType) and isinstance(expected, InterfaceType):
         from echo.runtime.class_registry import class_type_implements_interface
 
-        return class_type_implements_interface(actual.methods, expected)
+        return class_type_implements_interface(
+            actual.methods,
+            expected,
+            private_methods=actual.private_methods,
+        )
 
     if isinstance(actual, InterfaceType) and isinstance(expected, InterfaceType):
         from echo.runtime.class_registry import interface_assignable

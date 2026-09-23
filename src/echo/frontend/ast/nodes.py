@@ -47,6 +47,13 @@ class ClassType(TypeAnnotation):
     default_fields: frozenset[str] = field(default_factory=frozenset)
     type_methods: dict[str, FunctionType] = field(default_factory=dict)
     class_id: int = 0
+    private_fields: frozenset[str] = field(default_factory=frozenset)
+    private_methods: frozenset[str] = field(default_factory=frozenset)
+    private_type_methods: frozenset[str] = field(default_factory=frozenset)
+    getters: dict[str, FunctionType] = field(default_factory=dict)
+    setters: dict[str, FunctionType] = field(default_factory=dict)
+    private_getters: frozenset[str] = field(default_factory=frozenset)
+    private_setters: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass
@@ -262,6 +269,14 @@ class MemberAssignment(Statement):
 
 
 @dataclass
+class MemberCompoundAssignment(Statement):
+    object: Expression
+    name: str
+    operator: Token
+    value: Expression
+
+
+@dataclass
 class DestructureDeclaration(Statement):
     pattern: Pattern
     initializer: Expression
@@ -327,6 +342,7 @@ class FunctionDeclaration(Statement):
     body: list[Statement] | Expression
     inline: bool
     return_type: TypeAnnotation | None = None
+    private: bool = False
 
 
 @dataclass
@@ -367,6 +383,7 @@ class ClassField:
     type: TypeAnnotation
     location: SourceLocation
     default: Expression | None = None
+    private: bool = False
 
 
 @dataclass
@@ -375,6 +392,8 @@ class ClassDeclaration(Statement):
     fields: list[ClassField]
     methods: list[FunctionDeclaration] = field(default_factory=list)
     implements: list[str] = field(default_factory=list)
+    getters: list[FunctionDeclaration] = field(default_factory=list)
+    setters: list[FunctionDeclaration] = field(default_factory=list)
 
 
 @dataclass

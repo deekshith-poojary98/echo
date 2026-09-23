@@ -1,5 +1,106 @@
 # Changelog
 
+## 1.0.0
+
+Stable release. Marks the completed **0.8** OOP spine and **0.9** ergonomics / stdlib series as the public 1.0 language surface. No new language syntax. Failure model unchanged.
+
+- Version **1.0.0** — same capabilities as **0.9.9**
+- Preferred CLI remains **`elang`** (also `echolang`, `echo`); package **`echolang`** on PyPI
+- Held items (inheritance, generics, packages, async, `try` / `catch`, HTTP, LSP-as-product) stay held
+
+## 0.9.9
+
+Thin dates builtins. Tenth **0.9** slice (scripting stdlib); closes the **0.9.x** series. Failure model unchanged.
+
+- `formatTime(secs, pattern) -> str` — format unix seconds as UTC (`strftime`)
+- `parseTime(text, pattern) -> int` — parse UTC text to unix seconds (`strptime`); naive patterns are treated as UTC
+- `days(n)` / `hours(n)` / `minutes(n) -> int` — duration helpers in seconds
+- Method form: `stamp.formatTime(pattern)`, `"…".parseTime(pattern)`, `1.days()`
+- Bad types / invalid parse or format → **E2851**; no date object type; no local-timezone calendars; HTTP stays held
+
+## 0.9.8
+
+Union narrowing in `if type(...)`. Ninth **0.9** ergonomics slice. Failure model unchanged.
+
+- `if (type(x) == "int") { ... }` narrows a simple-name union binding in the `then` branch
+- Matching `else if (type(x) == "...")` narrows the same way; `else` excludes the guarded member
+- `"int" == type(x)` is accepted; only simple names (not expressions) are refined
+- Static assign of a union to a narrower member type is rejected (**E2001**) without a guard; `dynamic` still skips the static check
+- Does not replace `switch` type arms; no full flow-sensitive typing
+
+## 0.9.7
+
+Regex builtins. Eighth **0.9** slice (scripting stdlib). Failure model unchanged.
+
+- `regexMatch(text, pattern) -> bool` — search anywhere (`re.search`)
+- `regexFind(text, pattern)` — first match string, or `null`
+- `regexReplace(text, pattern, replacement) -> str` — replace all; `\1`-style groups allowed
+- `regexSplit(text, pattern) -> list` — split on pattern
+- Invalid pattern / non-string args → **E2850**; method form on strings works
+- No regex object type; dialect is Python `re`
+
+## 0.9.6
+
+Recursive filesystem create/delete. Seventh **0.9** slice (scripting stdlib). Failure model unchanged.
+
+- `mkdirAll(path)` — create directory and parents; existing directory is OK; file in the way aborts
+- `removeTree(path)` — delete a file or directory tree; missing path aborts
+- Existing `mkdir` / `removeFile` unchanged; playground `allow_files=False` denies both new builtins (**E2801**)
+
+## 0.9.5
+
+Class properties (`get` / `set`). Sixth **0.9** ergonomics slice. Failure model unchanged.
+
+- Soft keywords: `get name(this) -> T { ... }` and `set name(this, value: T) { ... }`
+- Field-style access: `obj.name` invokes the getter; `obj.name = v` / `obj.name += v` invoke the setter
+- Get-only and set-only properties allowed (**E3217** for the missing side)
+- `priv get` / `priv set` for per-accessor visibility (**E3215**)
+- Property names cannot clash with fields or methods; `get`/`set` are not hard keywords (`fn set` still works)
+
+## 0.9.4
+
+Named `format()` placeholders. Fifth **0.9** ergonomics slice. Failure model unchanged.
+
+- `{name}` placeholders resolve against a trailing hash: `"Hello {name}!".format({ name: "Echo" })`
+- Mix with positional args: `"{0} scored {points}".format("Ada", { points: 42 })`
+- Standalone `format(template, ...)` supports the same rules
+- Missing trailing hash → **E2306**; missing key → **E2307**; no width/precision specs yet
+
+## 0.9.3
+
+Deep `clone()`. Fourth **0.9** ergonomics slice. Failure model unchanged.
+
+- `list.clone()` / `hash.clone()` recursively copy nested lists and hashes (cycle-safe)
+- Class instances support `.clone()` — new instance, same class, deep-copied fields
+- Top-level primitives stay shared by value; unsupported types still **E2609**
+
+## 0.9.2
+
+Positional class construction. Third **0.9** ergonomics slice. Failure model unchanged.
+
+- `Point(3, 4)` maps arguments to `new { ... }` fields in declaration order
+- Trailing fields with defaults may be omitted (`Point(5)` when `y` defaults)
+- Keyword args are rejected on this form — use `Point { x: 3, y: 4 }` for named fields
+- Named construction unchanged; error code **E3216** for positional arity / kwargs misuse
+
+## 0.9.1
+
+`priv` visibility on class fields and methods. Second **0.9** ergonomics slice. Failure model unchanged.
+
+- Spelling: `priv field: T;` inside `new { ... }`, and `priv fn name(...)` for instance/type methods
+- Default remains public; private members are accessible only inside methods of the same class
+- Construction may still set private fields (`Point { x: 1 }` when `x` is `priv`)
+- Private methods do not satisfy `implements` / interface assignability
+- Error code **E3215**
+
+## 0.9.0
+
+Compound assignment on class members. Opens the **0.9** ergonomics series. Failure model unchanged.
+
+- `this.x += 1`, `obj.field *= 2`, and the other compound ops (`-=` `/=` `%=`) on fields — same operators as simple names
+- Read-then-assign semantics; unknown field / non-class / `const` instance still error
+- Example: `examples/bank_account.echo` uses `+=` / `-=` on balance
+
 ## 0.8.9
 
 First public package release on PyPI (`echolang`). No new language syntax. Failure model unchanged.

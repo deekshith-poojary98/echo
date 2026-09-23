@@ -36,6 +36,7 @@ from echo.frontend.ast.nodes import (
     LiteralExpression,
     LiteralPattern,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     NamePattern,
     ObjectType,
@@ -66,6 +67,7 @@ from echo.frontend.ast.nodes import (
     hash_pattern_fixed,
     hash_pattern_rest,
 )
+from echo.frontend.tokens import TokenType
 from echo.runtime.builtins import (
     MUTATING_METHODS,
     builtin_names,
@@ -94,6 +96,7 @@ class SemanticAnalyzer:
         self._dependencies: Mapping[str, ModuleSymbols] = {}
         self._pending_exports: list[ExportDeclaration] = []
         self._return_types: list[TypeAnnotation | None] = []
+        self._enclosing_class: ClassType | None = None
 
     def analyze(
         self,
@@ -106,6 +109,7 @@ class SemanticAnalyzer:
         self._dependencies = dependencies or {}
         self._pending_exports = []
         self._return_types = []
+        self._enclosing_class = None
         if scope is None:
             scope = self.module_scope(program.location)
         self._statements(program.statements, scope)
@@ -238,13 +242,20 @@ class SemanticAnalyzer:
             self._expression(statement.value, scope)
             if isinstance(statement.object, VariableExpression):
                 self._require_not_const_mutation(statement.object.name, statement, scope)
+            self._require_field_visible(statement.object, statement.name, statement.location, scope)
+            self._require_setter_visible(statement.object, statement.name, statement.location, scope)
+        elif isinstance(statement, MemberCompoundAssignment):
+            self._expression(statement.object, scope)
+            self._expression(statement.value, scope)
+            if isinstance(statement.object, VariableExpression):
+                self._require_not_const_mutation(statement.object.name, statement, scope)
+            self._require_field_visible(statement.object, statement.name, statement.location, scope)
+            self._require_getter_visible(statement.object, statement.name, statement.location, scope)
+            self._require_setter_visible(statement.object, statement.name, statement.location, scope)
         elif isinstance(statement, ExpressionStatement):
             self._expression(statement.expression, scope)
         elif isinstance(statement, IfStatement):
-            self._expression(statement.condition, scope)
-            self._statements(statement.then_branch, Scope(scope))
-            if statement.else_branch:
-                self._statements(statement.else_branch, Scope(scope))
+            self._if_statement(statement, scope)
         elif isinstance(statement, SwitchStatement):
             self._switch(statement, scope)
         elif isinstance(statement, WhileStatement):
@@ -347,6 +358,123 @@ class SemanticAnalyzer:
                 if scope.resolve(name) is None:
                     raise SemanticError(f"Cannot watch undefined variable '{name}'", statement.location, code="E1007")
 
+    def _if_statement(self, statement: IfStatement, scope: Scope) -> None:
+        self._expression(statement.condition, scope)
+        then_scope = Scope(scope)
+        else_scope = Scope(scope)
+        guard = self._type_equality_guard(statement.condition)
+        if guard is not None:
+            name, type_name = guard
+            symbol = scope.resolve(name)
+            if symbol is not None and symbol.declared_type is not None:
+                declared = self._resolve_type(symbol.declared_type, scope)
+                then_type = self._narrow_to_type_name(declared, type_name, scope)
+                else_type = self._exclude_type_name(declared, type_name, scope)
+                if then_type is not None:
+                    then_scope = self._scope_with_refined_binding(scope, symbol, then_type)
+                if else_type is not None:
+                    else_scope = self._scope_with_refined_binding(scope, symbol, else_type)
+        self._statements(statement.then_branch, then_scope)
+        if statement.else_branch:
+            self._statements(statement.else_branch, else_scope)
+
+    def _type_equality_guard(self, condition: Expression) -> tuple[str, str] | None:
+        if not isinstance(condition, BinaryExpression):
+            return None
+        if condition.operator.type != TokenType.EQUAL_EQUAL:
+            return None
+        left, right = condition.left, condition.right
+        call, literal = None, None
+        if isinstance(left, CallExpression) and isinstance(right, StringLiteralExpression):
+            call, literal = left, right
+        elif isinstance(right, CallExpression) and isinstance(left, StringLiteralExpression):
+            call, literal = right, left
+        else:
+            return None
+        if not isinstance(call.callee, VariableExpression) or call.callee.name != "type":
+            return None
+        if len(call.arguments) != 1 or call.arguments[0].name is not None:
+            return None
+        target = call.arguments[0].value
+        if not isinstance(target, VariableExpression):
+            return None
+        return target.name, literal.value
+
+    def _scope_with_refined_binding(self, scope: Scope, symbol: Symbol, refined: TypeAnnotation) -> Scope:
+        child = Scope(scope)
+        child.define(
+            Symbol(
+                symbol.name,
+                symbol.kind,
+                symbol.location,
+                refined,
+                mutable=symbol.mutable,
+                param_count=symbol.param_count,
+                param_names=symbol.param_names,
+                param_types=symbol.param_types,
+                param_defaults=symbol.param_defaults,
+                variadic=symbol.variadic,
+                builtin=symbol.builtin,
+                imported=symbol.imported,
+                const=symbol.const,
+            )
+        )
+        return child
+
+    def _narrow_to_type_name(
+        self,
+        declared: TypeAnnotation,
+        type_name: str,
+        scope: Scope,
+    ) -> TypeAnnotation | None:
+        members = (
+            flatten_union_members(declared.members)
+            if isinstance(declared, UnionType)
+            else [declared]
+        )
+        matched = [member for member in members if self._member_matches_type_name(member, type_name, scope)]
+        if not matched:
+            return None
+        if len(matched) == 1:
+            return matched[0]
+        return UnionType(declared.location, matched)
+
+    def _exclude_type_name(
+        self,
+        declared: TypeAnnotation,
+        type_name: str,
+        scope: Scope,
+    ) -> TypeAnnotation | None:
+        if not isinstance(declared, UnionType):
+            return None
+        members = flatten_union_members(declared.members)
+        remaining = [member for member in members if not self._member_matches_type_name(member, type_name, scope)]
+        if not remaining or len(remaining) == len(members):
+            return None
+        if len(remaining) == 1:
+            return remaining[0]
+        return UnionType(declared.location, remaining)
+
+    def _member_matches_type_name(
+        self,
+        member: TypeAnnotation,
+        type_name: str,
+        scope: Scope,
+    ) -> bool:
+        if isinstance(member, TypeName):
+            if type_name == "hash" and member.name in {"hash", "dynamic"}:
+                return member.name == "hash"
+            return member.name == type_name
+        if isinstance(member, ObjectType):
+            return type_name == "hash"
+        if isinstance(member, FunctionType):
+            return type_name == "fn"
+        if isinstance(member, ClassType):
+            return member.name == type_name
+        if isinstance(member, InterfaceType):
+            return member.name == type_name
+        return False
+
     def _switch(self, statement: SwitchStatement, scope: Scope) -> None:
         self._expression(statement.discriminant, scope)
         has_else = False
@@ -443,6 +571,135 @@ class SemanticAnalyzer:
         if isinstance(expression, ClassConstruction):
             return scope.classes.get(expression.class_name)
         return None
+
+    def _require_field_visible(
+        self,
+        object_expr: Expression,
+        field_name: str,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
+        owner = self._expression_class_type(object_expr, scope)
+        if owner is None or field_name not in owner.private_fields:
+            return
+        if self._enclosing_class is not None and self._enclosing_class.class_id == owner.class_id:
+            return
+        raise SemanticError(
+            f"Field '{field_name}' is private on {owner.name}",
+            location,
+            help_text="Private fields are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_method_visible(
+        self,
+        object_expr: Expression,
+        method_name: str,
+        location: SourceLocation,
+        scope: Scope,
+        *,
+        unbound: bool = False,
+    ) -> None:
+        if unbound:
+            owner = self._bare_class_type(object_expr, scope)
+        else:
+            owner = self._expression_class_type(object_expr, scope)
+        if owner is None:
+            return
+        is_private = (
+            method_name in owner.private_methods or method_name in owner.private_type_methods
+        )
+        if not is_private:
+            return
+        if self._enclosing_class is not None and self._enclosing_class.class_id == owner.class_id:
+            return
+        raise SemanticError(
+            f"Method '{method_name}' is private on {owner.name}",
+            location,
+            help_text="Private methods are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_getter_visible(
+        self,
+        object_expr: Expression,
+        name: str,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
+        owner = self._expression_class_type(object_expr, scope)
+        if owner is None or name not in owner.private_getters:
+            return
+        if self._enclosing_class is not None and self._enclosing_class.class_id == owner.class_id:
+            return
+        raise SemanticError(
+            f"Getter '{name}' is private on {owner.name}",
+            location,
+            help_text="Private getters are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_setter_visible(
+        self,
+        object_expr: Expression,
+        name: str,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
+        owner = self._expression_class_type(object_expr, scope)
+        if owner is None or name not in owner.private_setters:
+            return
+        if self._enclosing_class is not None and self._enclosing_class.class_id == owner.class_id:
+            return
+        raise SemanticError(
+            f"Setter '{name}' is private on {owner.name}",
+            location,
+            help_text="Private setters are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _check_positional_construction(
+        self,
+        class_type: ClassType,
+        expression: CallExpression,
+        scope: Scope,
+    ) -> None:
+        for argument in expression.arguments:
+            if argument.name is not None:
+                raise SemanticError(
+                    f"Positional construction of '{class_type.name}' does not take keyword arguments",
+                    expression.location,
+                    help_text=f"Use '{class_type.name} {{ field: value, ... }}' for named fields.",
+                    code="E3216",
+                )
+        field_names = list(class_type.fields.keys())
+        n_args = len(expression.arguments)
+        if n_args > len(field_names):
+            raise SemanticError(
+                f"Class '{class_type.name}' expects at most {len(field_names)} positional "
+                f"argument(s), got {n_args}",
+                expression.location,
+                code="E3216",
+            )
+        for index, field_name in enumerate(field_names):
+            if index < n_args:
+                argument = expression.arguments[index]
+                self._expression(argument.value, scope)
+                self._check_typed_binding(
+                    argument.value,
+                    class_type.fields[field_name],
+                    scope,
+                    expression.location,
+                    field_name,
+                )
+            elif field_name not in class_type.default_fields:
+                raise SemanticError(
+                    f"Class '{class_type.name}' is missing required field '{field_name}' "
+                    f"in positional construction",
+                    expression.location,
+                    help_text="Pass a value for every field without a default, in declaration order.",
+                    code="E3209",
+                )
 
     def _class_method_type(self, expression: MemberExpression, scope: Scope) -> FunctionType | None:
         owner = self._expression_method_owner(expression.object, scope)
@@ -568,14 +825,17 @@ class SemanticAnalyzer:
         elif isinstance(expression, CallExpression):
             if isinstance(expression.callee, VariableExpression):
                 symbol = scope.resolve(expression.callee.name)
-                if symbol is None:
+                class_type = scope.classes.get(expression.callee.name)
+                if symbol is None and class_type is not None:
+                    self._check_positional_construction(class_type, expression, scope)
+                elif symbol is None:
                     raise SemanticError(
                         f"Function '{expression.callee.name}' is not defined",
                         expression.location,
                         help_text="Define the function with 'fn name(...) { ... }' before calling it.",
                         code="E1010",
                     )
-                if symbol.kind == SymbolKind.FUNCTION:
+                elif symbol.kind == SymbolKind.FUNCTION:
                     self._check_call_arity(symbol, expression, scope)
                 elif symbol.kind == SymbolKind.VARIABLE:
                     declared = symbol.declared_type
@@ -608,6 +868,13 @@ class SemanticAnalyzer:
             elif isinstance(expression.callee, MemberExpression):
                 unbound = self._unbound_class_method_type(expression.callee, scope)
                 if unbound is not None:
+                    self._require_method_visible(
+                        expression.callee.object,
+                        expression.callee.name,
+                        expression.location,
+                        scope,
+                        unbound=True,
+                    )
                     self._check_function_type_arity(unbound, expression)
                 else:
                     bare = self._bare_class_type(expression.callee.object, scope)
@@ -632,6 +899,12 @@ class SemanticAnalyzer:
                         )
                     method_type = self._class_method_type(expression.callee, scope)
                     if method_type is not None:
+                        self._require_method_visible(
+                            expression.callee.object,
+                            expression.callee.name,
+                            expression.location,
+                            scope,
+                        )
                         self._check_function_type_arity(method_type, expression)
             else:
                 self._expression(expression.callee, scope)
@@ -641,7 +914,13 @@ class SemanticAnalyzer:
         elif isinstance(expression, MemberExpression):
             unbound = self._unbound_class_method_type(expression, scope)
             if unbound is not None:
-                pass
+                self._require_method_visible(
+                    expression.object,
+                    expression.name,
+                    expression.location,
+                    scope,
+                    unbound=True,
+                )
             else:
                 bare = self._bare_class_type(expression.object, scope)
                 if bare is not None:
@@ -660,6 +939,28 @@ class SemanticAnalyzer:
                         help_text="Type methods have no 'this'; use the class name.",
                         code="E3213",
                     )
+                if isinstance(owner, ClassType):
+                    if expression.name in owner.methods:
+                        self._require_method_visible(
+                            expression.object,
+                            expression.name,
+                            expression.location,
+                            scope,
+                        )
+                    elif expression.name in owner.getters:
+                        self._require_getter_visible(
+                            expression.object,
+                            expression.name,
+                            expression.location,
+                            scope,
+                        )
+                    elif expression.name in owner.fields:
+                        self._require_field_visible(
+                            expression.object,
+                            expression.name,
+                            expression.location,
+                            scope,
+                        )
         elif isinstance(expression, ClassConstruction):
             class_type = scope.classes.get(expression.class_name)
             if class_type is None:
@@ -1052,6 +1353,8 @@ class SemanticAnalyzer:
     def _class_type(self, statement: ClassDeclaration) -> ClassType:
         methods: dict[str, FunctionType] = {}
         type_methods: dict[str, FunctionType] = {}
+        private_methods: set[str] = set()
+        private_type_methods: set[str] = set()
         for method in statement.methods:
             return_type = method.return_type or TypeName(method.location, "void")
             if method.parameters and method.parameters[0].name == "this":
@@ -1062,6 +1365,8 @@ class SemanticAnalyzer:
                     return_type,
                     any(parameter.variadic for parameter in rest),
                 )
+                if method.private:
+                    private_methods.add(method.name)
             else:
                 type_methods[method.name] = FunctionType(
                     method.location,
@@ -1069,6 +1374,27 @@ class SemanticAnalyzer:
                     return_type,
                     any(parameter.variadic for parameter in method.parameters),
                 )
+                if method.private:
+                    private_type_methods.add(method.name)
+        getters: dict[str, FunctionType] = {}
+        setters: dict[str, FunctionType] = {}
+        private_getters: set[str] = set()
+        private_setters: set[str] = set()
+        for getter in statement.getters:
+            return_type = getter.return_type or TypeName(getter.location, "void")
+            getters[getter.name] = FunctionType(getter.location, [], return_type, False)
+            if getter.private:
+                private_getters.add(getter.name)
+        for setter in statement.setters:
+            value_type = setter.parameters[1].type
+            setters[setter.name] = FunctionType(
+                setter.location,
+                [value_type],
+                TypeName(setter.location, "void"),
+                False,
+            )
+            if setter.private:
+                private_setters.add(setter.name)
         return ClassType(
             statement.location,
             statement.name,
@@ -1077,6 +1403,13 @@ class SemanticAnalyzer:
             frozenset(field.name for field in statement.fields if field.default is not None),
             type_methods,
             id(statement),
+            frozenset(field.name for field in statement.fields if field.private),
+            frozenset(private_methods),
+            frozenset(private_type_methods),
+            getters,
+            setters,
+            frozenset(private_getters),
+            frozenset(private_setters),
         )
 
     def _interface_type(self, statement: InterfaceDeclaration) -> InterfaceType:
@@ -1348,9 +1681,26 @@ class SemanticAnalyzer:
         location: SourceLocation,
         name: str,
     ) -> None:
+        if expected is None:
+            return
         if isinstance(expected, UnionType):
             self._check_value_against_union(expression, expected, scope, location, name)
             return
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is not None and symbol.declared_type is not None:
+                actual = self._resolve_type(symbol.declared_type, scope)
+                if isinstance(actual, TypeName) and actual.name == "dynamic":
+                    return
+                if isinstance(expected, TypeName) and expected.name == "dynamic":
+                    return
+                if type_assignable(actual, expected):
+                    return
+                raise SemanticError(
+                    f"Cannot assign {format_type(actual)} to {format_type(expected)} variable '{name}'",
+                    location,
+                    code="E2001",
+                )
         if not isinstance(expected, ObjectType):
             return
         if isinstance(expression, HashLiteral):
@@ -1592,10 +1942,13 @@ class SemanticAnalyzer:
             {},
             frozenset(default_fields),
             class_id=id(statement),
+            private_fields=frozenset(field.name for field in statement.fields if field.private),
         )
         scope.classes[statement.name] = class_type
         methods: dict[str, FunctionType] = {}
         type_methods: dict[str, FunctionType] = {}
+        private_methods: set[str] = set()
+        private_type_methods: set[str] = set()
         for method in statement.methods:
             is_instance = bool(method.parameters) and method.parameters[0].name == "this"
             if is_instance:
@@ -1614,6 +1967,8 @@ class SemanticAnalyzer:
                     return_type,
                     any(parameter.variadic for parameter in rest),
                 )
+                if method.private:
+                    private_methods.add(method.name)
             else:
                 for parameter in method.parameters:
                     if parameter.pattern is None:
@@ -1627,20 +1982,79 @@ class SemanticAnalyzer:
                     return_type,
                     any(parameter.variadic for parameter in method.parameters),
                 )
+                if method.private:
+                    private_type_methods.add(method.name)
         class_type.methods = methods
         class_type.type_methods = type_methods
+        class_type.private_methods = frozenset(private_methods)
+        class_type.private_type_methods = frozenset(private_type_methods)
+        getters: dict[str, FunctionType] = {}
+        setters: dict[str, FunctionType] = {}
+        private_getters: set[str] = set()
+        private_setters: set[str] = set()
+        for getter in statement.getters:
+            this_param = getter.parameters[0]
+            this_param.type = class_type
+            if getter.return_type is not None:
+                getter.return_type = self._resolve_type(getter.return_type, scope)
+            return_type = getter.return_type or TypeName(getter.location, "void")
+            getters[getter.name] = FunctionType(getter.location, [], return_type, False)
+            if getter.private:
+                private_getters.add(getter.name)
+        for setter in statement.setters:
+            this_param = setter.parameters[0]
+            this_param.type = class_type
+            value_param = setter.parameters[1]
+            value_param.type = self._resolve_type(value_param.type, scope)
+            setters[setter.name] = FunctionType(
+                setter.location,
+                [value_param.type],
+                TypeName(setter.location, "void"),
+                False,
+            )
+            if setter.private:
+                private_setters.add(setter.name)
+        class_type.getters = getters
+        class_type.setters = setters
+        class_type.private_getters = frozenset(private_getters)
+        class_type.private_setters = frozenset(private_setters)
         register_class_methods(statement.name, methods)
         self._check_implements(statement, class_type, scope)
-        for method in statement.methods:
-            self._analyze_callable(
-                method.parameters,
-                method.body,
-                method.inline,
-                method.return_type,
-                method.location,
-                method.name,
-                scope,
-            )
+        previous_class = self._enclosing_class
+        self._enclosing_class = class_type
+        try:
+            for method in statement.methods:
+                self._analyze_callable(
+                    method.parameters,
+                    method.body,
+                    method.inline,
+                    method.return_type,
+                    method.location,
+                    method.name,
+                    scope,
+                )
+            for getter in statement.getters:
+                self._analyze_callable(
+                    getter.parameters,
+                    getter.body,
+                    getter.inline,
+                    getter.return_type,
+                    getter.location,
+                    getter.name,
+                    scope,
+                )
+            for setter in statement.setters:
+                self._analyze_callable(
+                    setter.parameters,
+                    setter.body,
+                    setter.inline,
+                    setter.return_type,
+                    setter.location,
+                    setter.name,
+                    scope,
+                )
+        finally:
+            self._enclosing_class = previous_class
         if exported:
             self.module_symbols.classes[statement.name] = class_type
 
@@ -1669,11 +2083,15 @@ class SemanticAnalyzer:
                 )
             for method_name, expected in interface.methods.items():
                 actual = class_type.methods.get(method_name)
-                if actual is None:
+                if actual is None or method_name in class_type.private_methods:
                     raise SemanticError(
                         f"Class '{statement.name}' does not implement interface '{name}': "
-                        f"missing method '{method_name}'",
+                        f"missing method '{method_name}'"
+                        if actual is None
+                        else f"Class '{statement.name}' does not implement interface '{name}': "
+                        f"method '{method_name}' is private",
                         statement.location,
+                        help_text="Interface methods must be public instance methods.",
                         code="E3214",
                     )
                 if not type_assignable(actual, expected):
@@ -1772,6 +2190,13 @@ class SemanticAnalyzer:
                 type_annotation.default_fields,
                 type_methods,
                 type_annotation.class_id,
+                type_annotation.private_fields,
+                type_annotation.private_methods,
+                type_annotation.private_type_methods,
+                type_annotation.getters,
+                type_annotation.setters,
+                type_annotation.private_getters,
+                type_annotation.private_setters,
             )
         if isinstance(type_annotation, InterfaceType):
             existing = scope.interfaces.get(type_annotation.name)

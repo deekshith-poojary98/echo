@@ -67,7 +67,7 @@ elang path/to/file.echo
 
 - `src/echo/` — frontend, semantics, modules, runtime, CLI
 - `docs/` — VitePress site (this is the docs source)
-- `docs/language-semantics.md` — language contract (v0.2 base; additive through 0.8.x)
+- `docs/language-semantics.md` — language contract (v0.2 base; additive through 1.0.0)
 - `docs/module-semantics.md` — v0.3 module contract
 - `*.echo` / `examples/` — sample programs (including `examples/classes_and_interfaces.echo`)
 

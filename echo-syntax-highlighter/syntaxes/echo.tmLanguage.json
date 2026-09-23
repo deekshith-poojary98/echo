@@ -109,7 +109,7 @@
       ]
     },
     "function-definitions": {
-      "match": "\\b(fn)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "\\b(fn|get|set)\\s+([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": { "name": "storage.type.function.echo" },
         "2": { "name": "entity.name.function.echo" }
@@ -142,11 +142,11 @@
         },
         {
           "name": "storage.modifier.echo",
-          "match": "\\b(mut|watch|const|exact|class|interface|new|implements)\\b"
+          "match": "\\b(mut|watch|const|exact|class|interface|new|implements|priv)\\b"
         },
         {
           "name": "storage.type.function.echo",
-          "match": "\\bfn\\b"
+          "match": "\\b(fn|get|set)\\b"
         },
         {
           "name": "keyword.declaration.type.echo",
@@ -172,7 +172,7 @@
     },
     "builtins": {
       "name": "support.function.builtin.echo",
-                    "match": "\\b(abs|args|asBool|asFloat|asFloatOr|asInt|asIntOr|ask|assert|asString|ceil|chunk|clone|contains|copyFile|countOf|cwd|default|empty|endsWith|ensure|env|envOr|eprint|every|exit|expect|expectEq|expectNeq|fail|fileExists|filter|find|findIndex|flatMap|flatten|floor|forEach|format|has|indexOf|insertAt|isDir|join|keys|lastIndexOf|length|listFiles|lowerCase|map|mapValues|max|merge|min|mkdir|now|order|padEnd|padStart|pairs|parseJson|parseJsonOr|partition|pathJoin|pull|push|random|randomInt|rangeList|rangeListInclusive|readFile|readFileOr|readLine|reduce|removeFile|removeValue|repeat|replace|replaceFirst|reverse|run|say|slice|some|split|startsWith|take|take_last|trim|type|unique|upperCase|values|wait|wipe|writeFile|writeJson|zip)\\b"
+                    "match": "\\b(abs|args|asBool|asFloat|asFloatOr|asInt|asIntOr|ask|assert|asString|ceil|chunk|clone|contains|copyFile|countOf|cwd|days|default|empty|endsWith|ensure|env|envOr|eprint|every|exit|expect|expectEq|expectNeq|fail|fileExists|filter|find|findIndex|flatMap|flatten|floor|forEach|format|formatTime|has|hours|indexOf|insertAt|isDir|join|keys|lastIndexOf|length|listFiles|lowerCase|map|mapValues|max|merge|min|minutes|mkdir|mkdirAll|now|order|padEnd|padStart|pairs|parseJson|parseJsonOr|parseTime|partition|pathJoin|pull|push|random|randomInt|rangeList|rangeListInclusive|readFile|readFileOr|readLine|reduce|regexFind|regexMatch|regexReplace|regexSplit|removeFile|removeTree|removeValue|repeat|replace|replaceFirst|reverse|run|say|slice|some|split|startsWith|take|take_last|trim|type|unique|upperCase|values|wait|wipe|writeFile|writeJson|zip)\\b"
     },
     "function-calls": {
       "name": "entity.name.function.echo",

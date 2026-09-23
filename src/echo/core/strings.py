@@ -4,7 +4,52 @@ from echo.errors import EchoIndexError, EchoRuntimeError, EchoTypeError, SourceL
 from echo.runtime.values import stringify
 
 
+def _is_named_placeholder(placeholder: str) -> bool:
+    if not placeholder or not (placeholder[0].isalpha() or placeholder[0] == "_"):
+        return False
+    return all(ch.isalnum() or ch == "_" for ch in placeholder)
+
+
+def _split_format_args(
+    template: str,
+    values: list[object],
+    location: SourceLocation | None,
+) -> tuple[list[object], dict[object, object] | None]:
+    """Positional args plus optional trailing hash for named placeholders."""
+    needs_named = False
+    i = 0
+    while i < len(template):
+        if template[i] == "{":
+            if i + 1 < len(template) and template[i + 1] == "{":
+                i += 2
+                continue
+            end = template.find("}", i + 1)
+            if end == -1:
+                break
+            placeholder = template[i + 1 : end].strip()
+            if placeholder and not placeholder.isdecimal() and _is_named_placeholder(placeholder):
+                needs_named = True
+                break
+            i = end + 1
+            continue
+        if template[i] == "}" and i + 1 < len(template) and template[i + 1] == "}":
+            i += 2
+            continue
+        i += 1
+
+    if not needs_named:
+        return values, None
+    if not values or not isinstance(values[-1], dict):
+        raise EchoRuntimeError(
+            "format() named placeholders require a trailing hash argument",
+            location,
+            code="E2306",
+        )
+    return list(values[:-1]), values[-1]
+
+
 def apply_format(template: str, values: list[object], location: SourceLocation | None = None) -> str:
+    positional, named = _split_format_args(template, values, location)
     result = ""
     auto_index = 0
     i = 0
@@ -21,24 +66,44 @@ def apply_format(template: str, values: list[object], location: SourceLocation |
             if placeholder == "":
                 arg_index = auto_index
                 auto_index += 1
-            else:
-                if not placeholder.isdecimal():
-                    raise EchoRuntimeError(
-                        "format() placeholders must be '{}' or numeric indexes like '{0}'",
+                if arg_index >= len(positional):
+                    raise EchoIndexError(
+                        f"format() placeholder index {arg_index} out of range",
                         location,
-                        code="E2302",
+                        code="E2303",
                     )
+                result += stringify(positional[arg_index])
+            elif placeholder.isdecimal():
                 try:
                     arg_index = int(placeholder)
                 except ValueError as exc:
                     raise EchoRuntimeError(
-                        "format() placeholders must be '{}' or numeric indexes like '{0}'",
+                        "format() placeholders must be '{}', '{0}', or '{name}'",
                         location,
                         code="E2302",
                     ) from exc
-            if arg_index >= len(values):
-                raise EchoIndexError(f"format() placeholder index {arg_index} out of range", location, code="E2303")
-            result += stringify(values[arg_index])
+                if arg_index >= len(positional):
+                    raise EchoIndexError(
+                        f"format() placeholder index {arg_index} out of range",
+                        location,
+                        code="E2303",
+                    )
+                result += stringify(positional[arg_index])
+            elif _is_named_placeholder(placeholder):
+                assert named is not None
+                if placeholder not in named:
+                    raise EchoRuntimeError(
+                        f"format() missing named placeholder '{placeholder}'",
+                        location,
+                        code="E2307",
+                    )
+                result += stringify(named[placeholder])
+            else:
+                raise EchoRuntimeError(
+                    "format() placeholders must be '{}', '{0}', or '{name}'",
+                    location,
+                    code="E2302",
+                )
             i = end + 1
             continue
         if template[i] == "}":

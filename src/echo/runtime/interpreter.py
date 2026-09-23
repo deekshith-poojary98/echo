@@ -44,6 +44,7 @@ from echo.frontend.ast.nodes import (
     LiteralExpression,
     LiteralPattern,
     MemberAssignment,
+    MemberCompoundAssignment,
     MemberExpression,
     NamePattern,
     Pattern,
@@ -90,6 +91,7 @@ from echo.runtime.builtins import (
     do_contains,
     do_copy_file,
     do_cwd,
+    do_days,
     do_ends_with,
     do_env,
     do_env_or,
@@ -101,7 +103,9 @@ from echo.runtime.builtins import (
     do_file_exists,
     do_flatten,
     do_floor,
+    do_format_time,
     do_has,
+    do_hours,
     do_index_of,
     do_is_dir,
     do_join,
@@ -111,12 +115,15 @@ from echo.runtime.builtins import (
     do_max,
     do_merge,
     do_min,
+    do_minutes,
     do_mkdir,
+    do_mkdir_all,
     do_now,
     do_pad_end,
     do_pad_start,
     do_parse_json,
     do_parse_json_or,
+    do_parse_time,
     do_path_join,
     do_random,
     do_random_int,
@@ -125,7 +132,12 @@ from echo.runtime.builtins import (
     do_read_file,
     do_read_file_or,
     do_read_line,
+    do_regex_find,
+    do_regex_match,
+    do_regex_replace,
+    do_regex_split,
     do_remove_file,
+    do_remove_tree,
     do_repeat,
     do_replace,
     do_replace_first,
@@ -178,6 +190,7 @@ class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
+        self._class_visibility_stack: list[int] = []
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -189,8 +202,16 @@ class Interpreter:
             return
         if isinstance(statement, ClassDeclaration):
             methods = {
-                method.name: EchoFunction(method, env)
+                method.name: EchoFunction(method, env, class_id=id(statement))
                 for method in statement.methods
+            }
+            getters = {
+                getter.name: EchoFunction(getter, env, class_id=id(statement))
+                for getter in statement.getters
+            }
+            setters = {
+                setter.name: EchoFunction(setter, env, class_id=id(statement))
+                for setter in statement.setters
             }
             from echo.frontend.ast.nodes import FunctionType, TypeName
             from echo.runtime.class_registry import register_class_methods
@@ -219,6 +240,18 @@ class Interpreter:
                 method_types=typed,
                 class_id=id(statement),
                 closure=env,
+                private_fields=frozenset(field.name for field in statement.fields if field.private),
+                private_methods=frozenset(
+                    method.name for method in statement.methods if method.private
+                ),
+                getters=getters,
+                setters=setters,
+                private_getters=frozenset(
+                    getter.name for getter in statement.getters if getter.private
+                ),
+                private_setters=frozenset(
+                    setter.name for setter in statement.setters if setter.private
+                ),
             )
             env.define_class(statement.name, record)
             register_class_methods(statement.name, typed)
@@ -307,6 +340,24 @@ class Interpreter:
             if isinstance(statement.object, VariableExpression):
                 env.require_mutable(statement.object.name, statement.location)
             value = self.evaluate(statement.value, env)
+            self._member_assign(target, statement.name, value, statement.location)
+            if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
+                self._watch(statement.object.name, target, env, "modified by field assignment to")
+            return
+        if isinstance(statement, MemberCompoundAssignment):
+            target = self.evaluate(statement.object, env)
+            if isinstance(statement.object, VariableExpression):
+                env.require_mutable(statement.object.name, statement.location)
+            current = self._member_get(target, statement.name, statement.location)
+            rhs = self.evaluate(statement.value, env)
+            op = {
+                TokenType.PLUS_EQUAL: TokenType.PLUS,
+                TokenType.MINUS_EQUAL: TokenType.MINUS,
+                TokenType.STAR_EQUAL: TokenType.STAR,
+                TokenType.SLASH_EQUAL: TokenType.SLASH,
+                TokenType.PERCENT_EQUAL: TokenType.PERCENT,
+            }[statement.operator.type]
+            value = binary_op(op, current, rhs, statement.location)
             self._member_assign(target, statement.name, value, statement.location)
             if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
                 self._watch(statement.object.name, target, env, "modified by field assignment to")
@@ -484,6 +535,7 @@ class Interpreter:
                 if record is not None and not env.is_defined(class_name):
                     method = self._record_method(record, expression.name)
                     if method is not None:
+                        self._require_method_runtime_visible(record, expression.name, expression.location)
                         return UnboundMethod(method, class_name)
                     raise EchoRuntimeError(
                         f"Unknown method '{expression.name}' on {class_name}",
@@ -493,7 +545,22 @@ class Interpreter:
             target = self.evaluate(expression.object, env)
             if isinstance(target, ClassInstance):
                 if expression.name in target.fields:
+                    self._require_field_runtime_visible(target, expression.name, expression.location)
                     return target.fields[expression.name]
+                if target.record is not None and expression.name in target.record.getters:
+                    self._require_getter_runtime_visible(target.record, expression.name, expression.location)
+                    return self._call_accessor(
+                        target.record.getters[expression.name],  # type: ignore[arg-type]
+                        target,
+                        [],
+                        expression.location,
+                    )
+                if target.record is not None and expression.name in target.record.setters:
+                    raise EchoRuntimeError(
+                        f"Property '{expression.name}' on {target.class_name} is write-only",
+                        expression.location,
+                        code="E3217",
+                    )
                 method = self._instance_method(target, expression.name)
                 if method is not None:
                     if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
@@ -503,7 +570,10 @@ class Interpreter:
                             expression.location,
                             code="E3213",
                         )
+                    self._require_method_runtime_visible(target.record, expression.name, expression.location)
                     return BoundMethod(method, target)
+                if expression.name == "clone":
+                    return BoundBuiltin("clone", target)
                 raise EchoRuntimeError(
                     f"Unknown field '{expression.name}' on {target.class_name}",
                     expression.location,
@@ -525,18 +595,63 @@ class Interpreter:
                     code="E3211",
                 )
             values = {name: self.evaluate(value, env) for name, value in expression.fields}
-            default_env = record.closure if isinstance(record.closure, Environment) else env
-            for field_name, default_expr in record.field_defaults.items():
-                if field_name not in values:
-                    values[field_name] = self.evaluate(default_expr, default_env)  # type: ignore[arg-type]
-            for field_name, value in values.items():
-                expected = record.field_types.get(field_name)
-                if expected is not None:
-                    validate_type(field_name, value, expected, expression.location)  # type: ignore[arg-type]
-            return ClassInstance(expression.class_name, values, record)
+            return self._finish_construction(record, values, env, expression.location)
         if isinstance(expression, CallExpression):
             return self._call(expression, env)
         raise EchoRuntimeError(f"Unknown expression: {type(expression).__name__}", expression.location, code="E2798")
+
+    def _construct_positional(
+        self,
+        record: ClassRecord,
+        raw_args,
+        env: Environment,
+        location: SourceLocation,
+    ) -> object:
+        for argument in raw_args:
+            if argument.name is not None:
+                raise EchoRuntimeError(
+                    f"Positional construction of '{record.name}' does not take keyword arguments",
+                    location,
+                    help_text=f"Use '{record.name} {{ field: value, ... }}' for named fields.",
+                    code="E3216",
+                )
+        field_names = list(record.field_types.keys())
+        if len(raw_args) > len(field_names):
+            raise EchoRuntimeError(
+                f"Class '{record.name}' expects at most {len(field_names)} positional "
+                f"argument(s), got {len(raw_args)}",
+                location,
+                code="E3216",
+            )
+        values: dict[str, object] = {}
+        for index, field_name in enumerate(field_names):
+            if index < len(raw_args):
+                values[field_name] = self.evaluate(raw_args[index].value, env)
+            elif field_name not in record.field_defaults:
+                raise EchoRuntimeError(
+                    f"Class '{record.name}' is missing required field '{field_name}' "
+                    f"in positional construction",
+                    location,
+                    code="E3209",
+                )
+        return self._finish_construction(record, values, env, location)
+
+    def _finish_construction(
+        self,
+        record: ClassRecord,
+        values: dict[str, object],
+        env: Environment,
+        location: SourceLocation,
+    ) -> ClassInstance:
+        default_env = record.closure if isinstance(record.closure, Environment) else env
+        for field_name, default_expr in record.field_defaults.items():
+            if field_name not in values:
+                values[field_name] = self.evaluate(default_expr, default_env)  # type: ignore[arg-type]
+        for field_name, value in values.items():
+            expected = record.field_types.get(field_name)
+            if expected is not None:
+                validate_type(field_name, value, expected, location)  # type: ignore[arg-type]
+        return ClassInstance(record.name, values, record)
 
     def _call(self, expression: CallExpression, env: Environment) -> object:
         callee = expression.callee
@@ -575,6 +690,15 @@ class Interpreter:
                         expression.location,
                         callee.name,
                     )
+                if callee.name == "clone":
+                    return self._call_builtin(
+                        "clone",
+                        expression.arguments,
+                        env,
+                        target,
+                        expression.location,
+                        callee.object,
+                    )
                 raise EchoRuntimeError(
                     f"Unknown method '{callee.name}' on {target.class_name}",
                     expression.location,
@@ -593,6 +717,9 @@ class Interpreter:
                 return self._call_user_function(function, expression.arguments, env, expression.location)
             if callee.name in BUILTIN_NAMES:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
+            record = env.resolve_class(callee.name)
+            if record is not None:
+                return self._construct_positional(record, expression.arguments, env, expression.location)
             undefined_function(callee.name, expression.location)
         value = self.evaluate(callee, env)
         return self._call_value(value, expression.arguments, env, expression.location, None)
@@ -697,16 +824,7 @@ class Interpreter:
                     const=parameter.const,
                 )
 
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _call_method(
         self,
@@ -743,7 +861,7 @@ class Interpreter:
             if parameter.variadic:
                 if not isinstance(value, list):
                     raise EchoTypeError(
-                        f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                        f"Argument '{parameter.name}' in method '{declaration.name}' must be a list of "
                         f"{format_type(parameter.type)}, got {echo_type_name(value)}",
                         location,
                         code="E2706",
@@ -752,7 +870,7 @@ class Interpreter:
                     raise_exact_shape_error(item, parameter.type, location)
                     if not matches_type(item, parameter.type):
                         raise EchoTypeError(
-                            f"Argument '{parameter.name}' in function '{declaration.name}' must be a list of "
+                            f"Argument '{parameter.name}' in method '{declaration.name}' must be a list of "
                             f"{format_type(parameter.type)}, got list",
                             location,
                             code="E2706",
@@ -762,7 +880,7 @@ class Interpreter:
                 if not matches_type(value, parameter.type):
                     label = "destructuring parameter" if parameter.pattern is not None else f"'{parameter.name}'"
                     raise EchoTypeError(
-                        f"Argument {label} in function '{declaration.name}' must be of type "
+                        f"Argument {label} in method '{declaration.name}' must be of type "
                         f"{format_type(parameter.type)}, got {echo_type_name(value)}",
                         location,
                         code="E2706",
@@ -787,16 +905,7 @@ class Interpreter:
                     const=parameter.const,
                 )
 
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _call_method_values(
         self,
@@ -854,16 +963,7 @@ class Interpreter:
                     mutable=not parameter.const,
                     const=parameter.const,
                 )
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def call_function_with_values(self, function: object, values: list[object], location: SourceLocation | None = None) -> object:
         if isinstance(function, EchoBuiltin):
@@ -912,16 +1012,7 @@ class Interpreter:
                     mutable=not parameter.const,
                     const=parameter.const,
                 )
-        if declaration.inline:
-            result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
-        else:
-            try:
-                self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
-                result = None
-            except ReturnValue as returned:
-                result = returned.value
-        check_return(declaration.name, result, declaration.return_type, location)
-        return result
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _call_builtin(
         self,
@@ -1146,6 +1237,37 @@ class Interpreter:
             old = args[0] if target is not None else _nth(args, 1, method, location)
             new = args[1] if target is not None else _nth(args, 2, method, location)
             return do_replace_first(value, old, new, location)
+        if method == "regexMatch":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_regex_match(text, pattern, location)
+        if method == "regexFind":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_regex_find(text, pattern, location)
+        if method == "regexReplace":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            replacement = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_regex_replace(text, pattern, replacement, location)
+        if method == "regexSplit":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_regex_split(text, pattern, location)
+        if method == "formatTime":
+            secs = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_format_time(secs, pattern, location)
+        if method == "parseTime":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_parse_time(text, pattern, location)
+        if method == "days":
+            return do_days(target if target is not None else _first(args, method, location), location)
+        if method == "hours":
+            return do_hours(target if target is not None else _first(args, method, location), location)
+        if method == "minutes":
+            return do_minutes(target if target is not None else _first(args, method, location), location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":
@@ -1161,8 +1283,12 @@ class Interpreter:
             return do_list_files(target if target is not None else _first(args, method, location), self.host, location)
         if method == "mkdir":
             return do_mkdir(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "mkdirAll":
+            return do_mkdir_all(target if target is not None else _first(args, method, location), self.host, location)
         if method == "removeFile":
             return do_remove_file(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "removeTree":
+            return do_remove_tree(target if target is not None else _first(args, method, location), self.host, location)
         if method == "abs":
             return do_abs(target if target is not None else _first(args, method, location), location)
         if method == "min":
@@ -1646,6 +1772,8 @@ class Interpreter:
                 source_key = field.source_key()
                 if source_key not in mapping:
                     raise EchoRuntimeError(f"Key '{source_key}' not found in hash", location, code="E2711")
+                if isinstance(value, ClassInstance):
+                    self._require_field_runtime_visible(value, source_key, location)
                 self._bind_pattern_name(
                     field, mapping[source_key], env, declare=declare, const=const, location=location
                 )
@@ -1661,6 +1789,36 @@ class Interpreter:
         if isinstance(pattern, NamePattern):
             self._bind_pattern_name(pattern, value, env, declare=declare, const=const, location=location)
 
+    def _member_get(self, target: object, name: str, location: SourceLocation) -> object:
+        if not isinstance(target, ClassInstance):
+            raise EchoTypeError(
+                f"Cannot read field on type {echo_type_name(target)}",
+                location,
+                code="E2704",
+            )
+        if name in target.fields:
+            self._require_field_runtime_visible(target, name, location)
+            return target.fields[name]
+        if target.record is not None and name in target.record.getters:
+            self._require_getter_runtime_visible(target.record, name, location)
+            return self._call_accessor(
+                target.record.getters[name],  # type: ignore[arg-type]
+                target,
+                [],
+                location,
+            )
+        if target.record is not None and name in target.record.setters:
+            raise EchoRuntimeError(
+                f"Property '{name}' on {target.class_name} is write-only",
+                location,
+                code="E3217",
+            )
+        raise EchoRuntimeError(
+            f"Unknown field '{name}' on {target.class_name}",
+            location,
+            code="E2704",
+        )
+
     def _member_assign(self, target: object, name: str, value: object, location: SourceLocation) -> None:
         require_unfrozen(target, location)
         if not isinstance(target, ClassInstance):
@@ -1669,17 +1827,164 @@ class Interpreter:
                 location,
                 code="E2704",
             )
-        if name not in target.fields:
-            raise EchoRuntimeError(
-                f"Unknown field '{name}' on {target.class_name}",
+        if target.record is not None and name in target.record.setters:
+            self._require_setter_runtime_visible(target.record, name, location)
+            self._call_accessor(
+                target.record.setters[name],  # type: ignore[arg-type]
+                target,
+                [value],
                 location,
-                code="E2704",
             )
-        if target.record is not None:
-            expected = target.record.field_types.get(name)
-            if expected is not None:
-                validate_type(name, value, expected, location)
-        target.fields[name] = value
+            return
+        if name in target.fields:
+            self._require_field_runtime_visible(target, name, location)
+            if target.record is not None:
+                expected = target.record.field_types.get(name)
+                if expected is not None:
+                    validate_type(name, value, expected, location)
+            target.fields[name] = value
+            return
+        if target.record is not None and name in target.record.getters:
+            raise EchoRuntimeError(
+                f"Property '{name}' on {target.class_name} is read-only",
+                location,
+                code="E3217",
+            )
+        raise EchoRuntimeError(
+            f"Unknown field '{name}' on {target.class_name}",
+            location,
+            code="E2704",
+        )
+
+    def _call_accessor(
+        self,
+        function: EchoFunction,
+        receiver: object,
+        values: list[object],
+        location: SourceLocation,
+    ) -> object:
+        declaration = function.declaration
+        rest = declaration.parameters[1:]
+        if len(values) != len(rest):
+            raise EchoRuntimeError(
+                f"Property '{declaration.name}' expected {len(rest)} value(s), got {len(values)}",
+                location,
+                code="E3217",
+            )
+        new_env = Environment(parent=function.closure, is_function=True)
+        new_env.function_name = declaration.name
+        this_param = declaration.parameters[0]
+        raise_exact_shape_error(receiver, this_param.type, location)
+        if not matches_type(receiver, this_param.type):
+            raise EchoTypeError(
+                f"Argument 'this' in property '{declaration.name}' must be of type "
+                f"{format_type(this_param.type)}, got {echo_type_name(receiver)}",
+                location,
+                code="E2706",
+            )
+        new_env.define("this", receiver, this_param.type, mutable=True, const=False)
+        for parameter, value in zip(rest, values, strict=True):
+            raise_exact_shape_error(value, parameter.type, location)
+            if not matches_type(value, parameter.type):
+                raise EchoTypeError(
+                    f"Argument '{parameter.name}' in property '{declaration.name}' must be of type "
+                    f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                    location,
+                    code="E2706",
+                )
+            if parameter.const:
+                freeze(value)
+            new_env.define(
+                parameter.name,
+                value,
+                parameter.type,
+                mutable=not parameter.const,
+                const=parameter.const,
+            )
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
+
+    def _run_with_class_visibility(
+        self,
+        class_id: int | None,
+        declaration: FunctionDeclaration,
+        new_env: Environment,
+        location: SourceLocation | None,
+    ) -> object:
+        pushed = False
+        if class_id is not None:
+            self._class_visibility_stack.append(class_id)
+            pushed = True
+        try:
+            if declaration.inline:
+                result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
+            else:
+                try:
+                    self._execute_block(declaration.body, new_env)  # type: ignore[arg-type]
+                    result = None
+                except ReturnValue as returned:
+                    result = returned.value
+            check_return(declaration.name, result, declaration.return_type, location)
+            return result
+        finally:
+            if pushed:
+                self._class_visibility_stack.pop()
+
+    def _require_field_runtime_visible(
+        self, target: ClassInstance, name: str, location: SourceLocation
+    ) -> None:
+        record = target.record
+        if record is None or name not in record.private_fields:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Field '{name}' is private on {target.class_name}",
+            location,
+            help_text="Private fields are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_method_runtime_visible(
+        self, record: ClassRecord | None, name: str, location: SourceLocation
+    ) -> None:
+        if record is None or name not in record.private_methods:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Method '{name}' is private on {record.name}",
+            location,
+            help_text="Private methods are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_getter_runtime_visible(
+        self, record: ClassRecord | None, name: str, location: SourceLocation
+    ) -> None:
+        if record is None or name not in record.private_getters:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Getter '{name}' is private on {record.name}",
+            location,
+            help_text="Private getters are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_setter_runtime_visible(
+        self, record: ClassRecord | None, name: str, location: SourceLocation
+    ) -> None:
+        if record is None or name not in record.private_setters:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Setter '{name}' is private on {record.name}",
+            location,
+            help_text="Private setters are only accessible inside methods of the same class.",
+            code="E3215",
+        )
 
     def _bind_pattern_name(
         self,

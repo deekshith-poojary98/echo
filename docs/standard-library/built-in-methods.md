@@ -249,11 +249,25 @@ Creates the leaf directory only. Does not create missing parents. Existing direc
 mkdir("out");
 ```
 
+### `mkdirAll(path)`
+Creates the directory and any missing parents (`mkdir -p`). An existing directory is a no-op success. A file in the way aborts. The playground host denies this.
+
+```echo
+mkdirAll("out/nested/deep");
+```
+
 ### `removeFile(path)`
 Deletes a file. Missing paths and directories abort. The playground host denies this.
 
 ```echo
 removeFile("scratch.txt");
+```
+
+### `removeTree(path)`
+Deletes a file or an entire directory tree. Missing paths abort. The playground host denies this.
+
+```echo
+removeTree("out");
 ```
 
 ### `copyFile(src, dest)`
@@ -283,6 +297,25 @@ Returns the current unix time as an `int` number of seconds. Takes no arguments.
 
 ```echo
 stamp: int = now();
+```
+
+### `formatTime(secs, pattern)` / `parseTime(text, pattern)`
+UTC format and parse for unix seconds. Patterns use Python `strftime` / `strptime`. Naive parse results are treated as UTC. No date object type and no local-timezone calendars.
+
+```echo
+stamp: int = parseTime("2020-01-02T03:04:05Z", "%Y-%m-%dT%H:%M:%SZ");
+say(formatTime(stamp, "%Y-%m-%d"));
+say(stamp.formatTime("%H:%M"));
+```
+
+Bad types or invalid text/pattern → **E2851**.
+
+### `days(n)` / `hours(n)` / `minutes(n)`
+Duration helpers that return seconds as `int`. `n` must be an `int`.
+
+```echo
+later: int = now() + hours(2) + minutes(30);
+say(days(1));   // 86400
 ```
 
 ### `assert(cond, message)`
@@ -450,6 +483,22 @@ Replaces the first non-overlapping occurrence of `old` with `new`. `old` must be
 say("foo foo".replaceFirst("foo", "bar"));    // bar foo
 ```
 
+### `regexMatch(pattern)` / `regexFind(pattern)` / `regexReplace(pattern, replacement)` / `regexSplit(pattern)`
+Thin Python-`re` wrappers for scripting. Patterns are strings. Invalid patterns abort (**E2850**).
+
+- `regexMatch` — `true` if the pattern matches anywhere
+- `regexFind` — first match as a string, or `null`
+- `regexReplace` — replace all matches; backrefs like `\1` work in the replacement
+- `regexSplit` — split into a list of strings
+
+```echo
+say(regexMatch("hello 42", "\\d+"));           // true
+say(regexFind("hello 42", "\\d+"));            // 42
+say(regexReplace("a1b2", "\\d", "X"));         // aXbX
+say(regexSplit("a,b,c", ","));                 // ["a", "b", "c"]
+say("abc123".regexFind("[0-9]+"));             // 123
+```
+
 ### `join(separator)`
 Joins a list of strings with `separator` and returns a string. `separator` may be empty. An empty list is `""`. Non-string items or a non-string separator are type errors.
 
@@ -459,11 +508,13 @@ say(join(["x", "y"], ""));         // xy
 ```
 
 ### `format(...)`
-Performs template string substitution. Use `{}` for sequential placeholders or `{0}`, `{1}`, ... for positional ones. To include literal braces, use doubled braces in the format template.
+Performs template string substitution. Use `{}` for sequential placeholders, `{0}`, `{1}`, ... for positional ones, or `{name}` for named ones filled from a trailing hash. To include literal braces, use doubled braces in the format template.
 
 ```echo
 say("Hello, {}!".format("Echo"));           // Hello, Echo!
 say("{0} + {1} = {2}".format(1, 2, 3));    // 1 + 2 = 3
+say("Hello, {name}!".format({ name: "Echo" }));  // Hello, Echo!
+say("{0} scored {points}".format("Ada", { points: 42 }));
 say("{{literal braces}}".format());         // {literal braces}
 ```
 
@@ -925,7 +976,7 @@ say(rangeListInclusive(start: 0, end: 5));
 ---
 
 ### `clone()`
-Returns a **shallow** copy of the list. Modifications to the clone do not affect the original, but nested objects are shared.
+Returns a **deep** copy of the list. Nested lists and hashes are copied recursively; the clone does not share nested structure with the original.
 
 ```echo
 a: list = [1, 2, 3];
@@ -1069,7 +1120,7 @@ say(a);    // {"x": 1, "y": 99, "z": 3}
 ---
 
 ### `clone()` *(hash)*
-Returns a **shallow** copy of the hash.
+Returns a **deep** copy of the hash (nested lists/hashes copied recursively).
 
 ```echo
 original: hash = { name: "Ada" };
@@ -1079,6 +1130,8 @@ say(original["name"]);    // Ada
 say(copy["name"]);        // Echo
 ```
 
+Class instances also support `.clone()` (new instance, deep-copied fields).
+
 ---
 
 ## Notes
@@ -1087,7 +1140,8 @@ say(copy["name"]);        // Echo
 - Standalone collection calls use `items:` for the collection (`find`, `countOf`, `map`, `filter`, `reduce`, `forEach`, `flatMap`, `flatten`, `some`, `every`, `findIndex`, `unique`, `chunk`, `partition`, `mapValues`). `zip` uses `left:` / `right:`. `rangeList` / `rangeListInclusive` use `start:` / `end:`. `chunk` also uses `size:`. `partition` also uses `f:`.
 - Conversions (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work standalone and as methods.
 - Mutating list/hash methods interact with `watch` and `use mut`.
-- `clone()` is shallow for lists and hashes.
+- `clone()` is deep for lists, hashes, and class instances (0.9.3).
+- Named `format()` placeholders use a trailing hash (0.9.4).
 
 ## Common Mistakes
 
@@ -1104,7 +1158,7 @@ say(copy["name"]);        // Echo
 - Treating unequal `zip` lengths as an error, or `unique` equating `true` and `1`
 - `chunk` with `size` `0`, `bool`, or float
 - Treating `rangeList(0, 5)` as inclusive (use `rangeListInclusive` or `0..5`)
-- Expecting hash `filter` / `mapValues` to mutate, or `clone()` to deep-copy
+- Expecting hash `filter` / `mapValues` to mutate
 
 ## See Also
 - [Lists](/core-concepts/lists)

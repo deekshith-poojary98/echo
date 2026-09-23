@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.8.8**. **0.8.9** (first PyPI release of `echolang`) is implemented (version + docs; upload via `./build.sh --release` when ready). **0.7 polish is complete** through 0.7.9. **0.8 OOP spine is complete** (0.8.0–0.8.2). **0.8.3–0.8.9** closes the OOP polish arc. Failure model stays abort + `*Or`.
+Current tagged version is **v1.0.0**. The **0.8** OOP spine and **0.9** ergonomics / stdlib series are complete; **1.0.0** is the stable release of that surface. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -104,7 +104,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current tag is **v0.8.8**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.9** are implemented (0.8.9 not yet tagged / PyPI upload pending).
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current language version is **0.9.0**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.9** are implemented. **0.9.0** is implemented.
 
 **0.6.0** shipped all three language items in **one** release:
 
@@ -358,7 +358,7 @@ These are spelling / tightness knobs. They do not add versions and they do not r
 
 ## 0.8.x — OOP
 
-**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3–0.8.9 implemented (PyPI upload ops remaining).**
+**Status: spine 0.8.0–0.8.2 implemented; polish 0.8.3–0.8.9 implemented.**
 
 **0.7 is closed** (spine through 0.7.6; polish through 0.7.9). Records stay hashes + `exact { ... }` + aliases. **0.8 adds nominal types with behavior** — not “methods on type aliases,” and not classical Java (no inheritance-first design).
 
@@ -393,7 +393,7 @@ Do not implement until explicitly started (`start 0.8.3`, etc.). Goal: make the 
 | 0.8.6 | Type methods (no `this`) / `Point.origin()` | implemented (0.8.6) |
 | 0.8.7 | Optional `implements` clause | implemented (0.8.7) |
 | 0.8.8 | Docs / examples / README release pass | implemented (0.8.8) |
-| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9; upload pending) |
+| 0.8.9 | First PyPI release (`echolang`) | implemented (0.8.9) |
 
 ### 0.8.0 — nominal `class` + construction
 
@@ -697,7 +697,7 @@ Does not require `implements` for assignability (inference stays).
 | Topic | Working assumption | Alternatives |
 | --- | --- | --- |
 | Keyword | `class` (struct-like) — locked | `struct` |
-| Construction call | `Point { x: 3, y: 4 }` — locked | `Point.new(...)`; positional `Point(3, 4)` |
+| Construction call | `Point { x: 3, y: 4 }` (locked) + positional `Point(3, 4)` in **0.9.2** | `Point.new(...)` still held |
 | Ctor field block | `new { ... }` — locked in **0.8.3** | keep bare fields forever |
 | Receiver name | `this` — locked | `self` |
 | Equality | field-wise `==` — locked | identity / `===` later |
@@ -707,20 +707,288 @@ Does not require `implements` for assignability (inference stays).
 | `implements` | optional in **0.8.7** — locked; inference remains | required always |
 | Inheritance | never in 0.8 | single `extends` later series |
 | Class vs exact hash | strictly nominal | convert helpers later |
-| First PyPI version | **0.8.9** | 1.0.0 |
+| First PyPI version | **0.8.9** (first upload) | wait for 1.0.0 |
+| Stable public version | **1.0.0** | keep pre-1.0 forever |
 
 ### Out of 0.8 (still held globally)
 
-Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, `priv`, and `match` / `Result` remain outside this spine.
+Inheritance trees, abstract classes, generics on classes, operator overloading, inner classes, and `match` / `Result` remain outside this spine. **`priv`**, member compound assign, and properties move to **0.9.x**.
+
+## 0.9.x — ergonomics / OOP polish
+
+**Status: 0.9.0–0.9.9 implemented; closed by stable release 1.0.0.**
+
+**0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite. Thin stdlib slices and one analyzer nit close the series.
+
+Shape: finish day-to-day rough edges on the 0.8 OOP surface, then a short scripting/stdlib tail.
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 0.9.0 | Compound assign on members (`this.x += 1`) | implemented (0.9.0) |
+| 0.9.1 | `priv` / field–method visibility | implemented (0.9.1) |
+| 0.9.2 | Positional construction `Point(3, 4)` | implemented (0.9.2) |
+| 0.9.3 | Deep `clone()` (lists, hashes, class instances) | implemented (0.9.3) |
+| 0.9.4 | Named `format()` placeholders via trailing hash | implemented (0.9.4) |
+| 0.9.5 | Class properties `get` / `set` | implemented (0.9.5) |
+| 0.9.6 | `mkdirAll` / `removeTree` | implemented (0.9.6) |
+| 0.9.7 | Regex builtins | implemented (0.9.7) |
+| 0.9.8 | Union narrowing in `if type(...)` | implemented (0.9.8) |
+| 0.9.9 | Thin dates builtins | implemented (0.9.9) |
+| 1.0.0 | Stable release (0.9.9 surface) | implemented (1.0.0) |
+
+### 0.9.0 — compound assign on members
+
+Same operators as simple-name compound assign (`+=` `-=` `*=` `/=` `%=`), on class fields.
+
+**Implemented spelling:**
+
+```echo
+class Counter {
+    new {
+        n: int;
+    }
+
+    fn bump(this) {
+        this.n += 1;
+    }
+}
+
+c: Counter = Counter { n: 10 };
+c.n *= 2;
+```
+
+Rules:
+
+- Target is **`name.field`** (same surface as `MemberAssignment`); object is a simple name (`this`, `c`, …)
+- Semantics: read field → binary op → write field (same as `x += 1` on locals)
+- Unknown field → **E2704**; non-class target → type error; `const` instance → existing const-mutation error
+- Does **not** add index compound assign (`xs[0] += 1`) or chained `a.b.c += 1` beyond one dot
+- Failure model unchanged
+
+### 0.9.1 — `priv`
+
+Class-private fields and methods. Keyword is **`priv`** (not `private`). Default remains public. No inheritance.
+
+**Implemented spelling:**
+
+```echo
+class Counter {
+    new {
+        priv n: int = 0;
+        label: str;
+    }
+
+    priv fn bump(this) {
+        this.n += 1;
+    }
+
+    fn tick(this) {
+        this.bump();
+    }
+}
+
+c: Counter = Counter { label: "a" };
+c.tick();
+```
+
+Rules:
+
+- `priv` on a field inside `new { ... }`, or before `fn` for instance/type methods
+- Access only inside methods of the **same class** (by class identity); outside → **E3215**
+- Construction may still name private fields to initialize them
+- Private methods do **not** satisfy `implements` / interface assignability
+- No module-private or subclass-private (no inheritance yet)
+
+### 0.9.2 — positional construction
+
+Convenience call form alongside named `Point { x: 3, y: 4 }`. **Not** `Point.new` (held).
+
+**Implemented spelling:**
+
+```echo
+class Point {
+    new {
+        x: int;
+        y: int = 0;
+    }
+}
+
+p: Point = Point(3, 4);
+q: Point = Point(5);
+```
+
+Rules:
+
+- `Name(args...)` when `Name` is a class (and not shadowed by a variable/function) constructs an instance
+- Arguments bind to `new { ... }` fields in **declaration order**
+- Trailing fields with defaults may be omitted; missing a required field → **E3209**
+- Too many args or keyword args → **E3216** (use named `Name { field: value }` for kwargs)
+- Named construction remains fully supported and order-free
+
+### 0.9.3 — deep `clone()`
+
+`clone()` recursively copies nested structure.
+
+**Rules:**
+
+- Lists and hashes: deep copy; cycles reuse the in-progress clone (identity within one call)
+- Class instances: `.clone()` returns a new instance of the same class with deep-copied fields
+- Nested primitives are shared by value; unsupported top-level types still **E2609**
+- Replaces the previous shallow-copy behavior
+
+### 0.9.4 — named `format()` placeholders
+
+Named placeholders resolve against a trailing hash argument (Echo has no kwargs).
+
+**Implemented spelling:**
+
+```echo
+say("Hello, {name}!".format({ name: "Echo" }));
+say("{0} scored {points}".format("Ada", { points: 42 }));
+say(format("{greeting}!", { greeting: "Hi" }));
+```
+
+Rules:
+
+- Placeholders: `{}`, `{0}` / `{1}` / …, or `{identifier}`
+- If the template uses any named placeholder, the **last** argument must be a hash
+- Positional values are the preceding arguments (auto `{}` and `{n}` index into those)
+- Missing trailing hash → **E2306**; missing key → **E2307**; invalid placeholder still **E2302**
+- No width / precision / alignment specs
+- Failure model unchanged
+
+### 0.9.5 — class properties `get` / `set`
+
+Computed fields with field-style read/write. Soft keywords (not reserved identifiers).
+
+**Implemented spelling:**
+
+```echo
+class Counter {
+    new {
+        priv n: int = 0;
+    }
+
+    get count(this) -> int {
+        return this.n;
+    }
+
+    set count(this, value: int) {
+        this.n = value;
+    }
+}
+
+c: Counter = Counter {};
+c.count = 10;
+say(c.count);
+c.count += 1;
+```
+
+Rules:
+
+- `get name(this) -> T` / `set name(this, value: T)` — parallel to `fn name(this)`
+- `obj.name` invokes the getter; `obj.name = v` and compound assign invoke the setter
+- Get-only or set-only allowed; missing side → **E3217**
+- `priv get` / `priv set` for per-accessor visibility → **E3215** outside the class
+- Name cannot clash with a field or method; get and set may share a name
+- Does not add properties to interfaces; does not change construction (properties are not fields)
+- Failure model unchanged
+
+### 0.9.6 — `mkdirAll` / `removeTree`
+
+Scripting filesystem gaps. Failure model unchanged.
+
+**Implemented spelling:**
+
+```echo
+mkdirAll("out/nested/deep");
+removeTree("out");
+```
+
+Rules:
+
+- `mkdirAll(path)` creates parents; existing directory succeeds; file in the way → **E2803**
+- `removeTree(path)` deletes a file or directory tree; missing path → **E2802**
+- `mkdir` / `removeFile` unchanged
+- Restricted host (`allow_files=False`) denies both → **E2801**
+- No shell; no globbing
+
+### 0.9.7 — regex builtins
+
+Thin Python-`re` wrappers. No regex object type.
+
+**Implemented spelling:**
+
+```echo
+say(regexMatch("hello 42", "\\d+"));
+say(regexFind("hello 42", "\\d+"));
+say(regexReplace("a1b2", "\\d", "X"));
+say(regexSplit("a,b,c", ","));
+say("abc123".regexFind("[0-9]+"));
+```
+
+Rules:
+
+- `regexMatch` → bool (search anywhere)
+- `regexFind` → match string or `null`
+- `regexReplace` → replace all; `\1`-style groups in replacement
+- `regexSplit` → list of strings
+- Invalid pattern / bad types → **E2850**
+- Failure model unchanged
+
+### 0.9.8 — union narrowing in `if type(...)`
+
+Today unions only narrow cleanly in `switch` type arms. Dogfood wants `if type(x) == "int" { ... }`.
+
+**Implemented:**
+
+- Narrow inside the `then` (and matching `else if type(...)`) when the discriminant is a simple name
+- `else` excludes the guarded union member
+- Static assign of a union to a narrower member without a guard is **E2001**
+- Does not replace `switch`; no full flow-sensitive typing
+- Failure model unchanged
+
+### 0.9.9 — thin dates
+
+Beyond `now()` / `wait`. Instant + format/parse enough for scripts — not a calendar product.
+
+**Implemented:**
+
+- `formatTime(secs, pattern) -> str` / `parseTime(text, pattern) -> int` — UTC via Python `strftime` / `strptime`; naive parse is UTC
+- `days(n)` / `hours(n)` / `minutes(n)` — seconds helpers
+- Bad input → **E2851**; no date object type; no cron / locale calendars
+- HTTP stays **held**
+
+### 1.0.0 — stable release
+
+**Implemented.** No new language syntax. Public surface is **0.9.9**. Failure model unchanged.
+
+- Version **1.0.0**; preferred CLI remains **`elang`**
+- Marks the completed 0.8 + 0.9 work as the stable release line
+- Held items stay held until a new series is drafted
+
+### Out of 0.9 (still held globally)
+
+Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, HTTP builtins, `Point.new` (positional construction shipped instead).
 
 ## Held (do not implement)
 
-Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.9 are implemented**; PyPI upload / tag for **0.8.9** remain ops steps. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, and stable **1.0.0** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
 | Classes / OOP | spine **0.8.0–0.8.2** + polish **0.8.3–0.8.9** done |
-| Compound assign on members (`this.x += 1`) | drafted for next version (held until dogfooding ends) |
+| Compound assign on members (`this.x += 1`) | implemented (**0.9.0**) |
+| `priv` / visibility | implemented (**0.9.1**) |
+| Positional construction `Point(3, 4)` | implemented (**0.9.2**) |
+| Deep `clone()` | implemented (**0.9.3**) |
+| Named `format()` placeholders | implemented (**0.9.4**) |
+| Class properties `get` / `set` | implemented (**0.9.5**) |
+| `mkdirAll` / `removeTree` | implemented (**0.9.6**) |
+| Regex builtins | implemented (**0.9.7**) |
+| Union narrowing in `if type(...)` | implemented (**0.9.8**) |
+| Thin dates builtins | implemented (**0.9.9**) |
+| Stable release | implemented (**1.0.0**) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |
@@ -736,7 +1004,6 @@ Do not move global holds into 0.7/0.8 polish. **0.8.0–0.8.9 are implemented**;
 | Multi-path `echo check` | implemented (0.5.9) |
 | Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
-| Dates, HTTP, regex | held |
-| `mkdir -p` / recursive delete | held |
+| HTTP builtins | held |
 | Test DSL (`test "name" { }`) | held |
 | String `map` / `filter` over graphemes | skipped (awkward) |
