@@ -1,11 +1,12 @@
 # Strings and Interpolation
 
-Quotes, escapes, `${...}` interpolation, and positional `format`.
+Quotes, escapes, `${...}` interpolation, and `format` (positional + named).
 
 ```echo
 name: str = "Echo";
 message: str = "Hello, ${name}!";
 formatted: str = "Score: {}".format(42);
+named: str = "Score: {score}".format({ score: 42 });
 ```
 
 ```echo
@@ -19,6 +20,7 @@ say("Count: ${count}");
 say("OK: ${ok}");
 say("Missing: ${missing}");
 say("Hello, {}!".format(name));
+say("Hello, {who}!".format({ who: name }));
 ```
 
 ```text
@@ -26,6 +28,7 @@ Name: Echo
 Count: 5
 OK: true
 Missing: null
+Hello, Echo!
 Hello, Echo!
 ```
 
@@ -54,7 +57,7 @@ Supported escapes:
 \"
 \'
 \n
-	
+\t
 \r
 ```
 
@@ -68,8 +71,16 @@ Supported placeholders:
 {}
 {0}
 {1}
+{name}
 {{
 }}
+```
+
+Named placeholders take values from a trailing hash:
+
+```echo
+say("Hello, {name}!".format({ name: "Echo" }));
+say("{0} scored {points}".format("Ada", { points: 42 }));
 ```
 
 ## Common Mistakes
@@ -84,9 +95,13 @@ This is not supported.
 ### Assuming single quotes are raw strings
 Echo still processes escapes and interpolation tokenization.
 
+### Named placeholder without a trailing hash
+```echo
+say("{name}".format("Echo"));  // error — pass { name: "Echo" }
+```
+
 ## Current Limitation
-- `format()` only supports positional placeholders.
-- No named formatting.
+- `format()` has no width / precision / alignment specs.
 - No raw string syntax.
 - Invalid characters inside ``${...}`` may fail later than expected.
 

@@ -437,6 +437,8 @@ It is an error if the value is not present.
 ### `format`
 
 `"Hello, {}".format(name)` substitutes positional placeholders.
+`"Hello, {name}!".format({ name: "Echo" })` uses a trailing hash for named
+placeholders. Mix both: `"{0} scored {points}".format("Ada", { points: 42 })`.
 Standalone `format(template, ...)` uses the first argument as the template
 and the remaining arguments as values.
 

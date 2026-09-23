@@ -828,7 +828,7 @@ interpolation, indexing, `split`, `replace` / `replaceFirst`, `contains`,
 `slice` / slice syntax, `startsWith` / `endsWith`, `indexOf` / `lastIndexOf`,
 `repeat`, `padStart` / `padEnd`, `join`.
 
-**Limitations.** No regex. `format` is positional placeholders only.
+**Limitations.** No regex. `format` has no width / precision / alignment specs.
 
 **Priority.** Frozen.
 

@@ -459,11 +459,13 @@ say(join(["x", "y"], ""));         // xy
 ```
 
 ### `format(...)`
-Performs template string substitution. Use `{}` for sequential placeholders or `{0}`, `{1}`, ... for positional ones. To include literal braces, use doubled braces in the format template.
+Performs template string substitution. Use `{}` for sequential placeholders, `{0}`, `{1}`, ... for positional ones, or `{name}` for named ones filled from a trailing hash. To include literal braces, use doubled braces in the format template.
 
 ```echo
 say("Hello, {}!".format("Echo"));           // Hello, Echo!
 say("{0} + {1} = {2}".format(1, 2, 3));    // 1 + 2 = 3
+say("Hello, {name}!".format({ name: "Echo" }));  // Hello, Echo!
+say("{0} scored {points}".format("Ada", { points: 42 }));
 say("{{literal braces}}".format());         // {literal braces}
 ```
 
@@ -1090,6 +1092,7 @@ Class instances also support `.clone()` (new instance, deep-copied fields).
 - Conversions (`asInt`, `asIntOr`, `asFloat`, `asFloatOr`, `asBool`, `asString`, `type`) work standalone and as methods.
 - Mutating list/hash methods interact with `watch` and `use mut`.
 - `clone()` is deep for lists, hashes, and class instances (0.9.3).
+- Named `format()` placeholders use a trailing hash (0.9.4).
 
 ## Common Mistakes
 

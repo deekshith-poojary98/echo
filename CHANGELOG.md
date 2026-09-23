@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.4
+
+Named `format()` placeholders. Fifth **0.9** ergonomics slice. Failure model unchanged.
+
+- `{name}` placeholders resolve against a trailing hash: `"Hello {name}!".format({ name: "Echo" })`
+- Mix with positional args: `"{0} scored {points}".format("Ada", { points: 42 })`
+- Standalone `format(template, ...)` supports the same rules
+- Missing trailing hash → **E2306**; missing key → **E2307**; no width/precision specs yet
+
 ## 0.9.3
 
 Deep `clone()`. Fourth **0.9** ergonomics slice. Failure model unchanged.
