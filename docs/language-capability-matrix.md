@@ -258,8 +258,9 @@ Union aliases accept a value assignable to any member; a union assigned to a
 narrower type requires every member to be assignable. Echo has no `null` type
 member — prefer `str | void` when a binding may hold `null`.
 
-**Limitations.** No nominal types and no methods on aliases. No control-flow
-narrowing on unions via `if type(x) == "..."` yet (`switch` type arms ship in 0.7.6).
+**Limitations.** No nominal types and no methods on aliases. Control-flow
+narrowing on unions via simple-name `if type(x) == "..."` ships in 0.9.8
+(`switch` type arms remain in 0.7.6).
 
 **Priority.** Frozen.
 

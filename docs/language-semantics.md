@@ -69,7 +69,8 @@ Union types (`int | str`) accept a value assignable to any member. A union is
 assignable to another type only when every member is. Echo has no `null` type;
 `null` stays a `dynamic` value, so prefer `str | void` when a binding may be null.
 Unions are not Option — no `?`, no unwrap. `switch` type arms (0.7.6) dispatch on
-union members; `if type(x) == "..."` does not narrow bindings.
+union members. Simple-name guards `if type(x) == "..."` (0.9.8) narrow `x` in the
+`then` / matching `else if`, and exclude that member in `else`.
 
 ### Runtime checks
 
@@ -581,4 +582,5 @@ v0.9.4 adds named `format()` placeholders via a trailing hash.
 v0.9.5 adds class properties (`get name(this)` / `set name(this, value: T)`; soft keywords; field-style access).
 v0.9.6 adds `mkdirAll(path)` and `removeTree(path)` for recursive create/delete.
 v0.9.7 adds `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `re`).
+v0.9.8 narrows simple-name unions in `if type(x) == "..."` (and matching `else if` / excluding `else`).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.9.7**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, and regex builtins. This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.9.8**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, and union narrowing in `if type(...)`. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -16,6 +16,7 @@ What Echo still does **not** do. As of **0.9.7**, the language includes modules,
 - 0.9.5: class properties `get` / `set` (soft keywords; field-style access)
 - 0.9.6: `mkdirAll(path)` / `removeTree(path)` for recursive create/delete
 - 0.9.7: `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `re`)
+- 0.9.8: union narrowing in `if type(x) == "..."` (and matching `else if`)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -28,7 +29,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
 - Nested collections inside a frozen list/hash are not recursively frozen; a nested value reached through a different mutable name can still be mutated
 - Open object type aliases accept extra fields; use `exact { ... }` to reject them
-- Union types do not narrow in `if type(x) == "..."`; use `switch` type arms. `null` is not a type — use `str | void` when needed
+- `null` is not a type — use `str | void` when a binding may hold `null`. Full flow-sensitive typing beyond simple-name `if type(...)` guards is not implemented
 - Hash runtime indexing only supports string keys
 - `format()` has no width / precision / alignment specs
 - Properties are not part of interfaces (`implements` still checks methods only)

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.8
+
+Union narrowing in `if type(...)`. Ninth **0.9** ergonomics slice. Failure model unchanged.
+
+- `if (type(x) == "int") { ... }` narrows a simple-name union binding in the `then` branch
+- Matching `else if (type(x) == "...")` narrows the same way; `else` excludes the guarded member
+- `"int" == type(x)` is accepted; only simple names (not expressions) are refined
+- Static assign of a union to a narrower member type is rejected (**E2001**) without a guard; `dynamic` still skips the static check
+- Does not replace `switch` type arms; no full flow-sensitive typing
+
 ## 0.9.7
 
 Regex builtins. Eighth **0.9** slice (scripting stdlib). Failure model unchanged.

@@ -67,6 +67,7 @@ from echo.frontend.ast.nodes import (
     hash_pattern_fixed,
     hash_pattern_rest,
 )
+from echo.frontend.tokens import TokenType
 from echo.runtime.builtins import (
     MUTATING_METHODS,
     builtin_names,
@@ -254,10 +255,7 @@ class SemanticAnalyzer:
         elif isinstance(statement, ExpressionStatement):
             self._expression(statement.expression, scope)
         elif isinstance(statement, IfStatement):
-            self._expression(statement.condition, scope)
-            self._statements(statement.then_branch, Scope(scope))
-            if statement.else_branch:
-                self._statements(statement.else_branch, Scope(scope))
+            self._if_statement(statement, scope)
         elif isinstance(statement, SwitchStatement):
             self._switch(statement, scope)
         elif isinstance(statement, WhileStatement):
@@ -359,6 +357,123 @@ class SemanticAnalyzer:
             for name in statement.names:
                 if scope.resolve(name) is None:
                     raise SemanticError(f"Cannot watch undefined variable '{name}'", statement.location, code="E1007")
+
+    def _if_statement(self, statement: IfStatement, scope: Scope) -> None:
+        self._expression(statement.condition, scope)
+        then_scope = Scope(scope)
+        else_scope = Scope(scope)
+        guard = self._type_equality_guard(statement.condition)
+        if guard is not None:
+            name, type_name = guard
+            symbol = scope.resolve(name)
+            if symbol is not None and symbol.declared_type is not None:
+                declared = self._resolve_type(symbol.declared_type, scope)
+                then_type = self._narrow_to_type_name(declared, type_name, scope)
+                else_type = self._exclude_type_name(declared, type_name, scope)
+                if then_type is not None:
+                    then_scope = self._scope_with_refined_binding(scope, symbol, then_type)
+                if else_type is not None:
+                    else_scope = self._scope_with_refined_binding(scope, symbol, else_type)
+        self._statements(statement.then_branch, then_scope)
+        if statement.else_branch:
+            self._statements(statement.else_branch, else_scope)
+
+    def _type_equality_guard(self, condition: Expression) -> tuple[str, str] | None:
+        if not isinstance(condition, BinaryExpression):
+            return None
+        if condition.operator.type != TokenType.EQUAL_EQUAL:
+            return None
+        left, right = condition.left, condition.right
+        call, literal = None, None
+        if isinstance(left, CallExpression) and isinstance(right, StringLiteralExpression):
+            call, literal = left, right
+        elif isinstance(right, CallExpression) and isinstance(left, StringLiteralExpression):
+            call, literal = right, left
+        else:
+            return None
+        if not isinstance(call.callee, VariableExpression) or call.callee.name != "type":
+            return None
+        if len(call.arguments) != 1 or call.arguments[0].name is not None:
+            return None
+        target = call.arguments[0].value
+        if not isinstance(target, VariableExpression):
+            return None
+        return target.name, literal.value
+
+    def _scope_with_refined_binding(self, scope: Scope, symbol: Symbol, refined: TypeAnnotation) -> Scope:
+        child = Scope(scope)
+        child.define(
+            Symbol(
+                symbol.name,
+                symbol.kind,
+                symbol.location,
+                refined,
+                mutable=symbol.mutable,
+                param_count=symbol.param_count,
+                param_names=symbol.param_names,
+                param_types=symbol.param_types,
+                param_defaults=symbol.param_defaults,
+                variadic=symbol.variadic,
+                builtin=symbol.builtin,
+                imported=symbol.imported,
+                const=symbol.const,
+            )
+        )
+        return child
+
+    def _narrow_to_type_name(
+        self,
+        declared: TypeAnnotation,
+        type_name: str,
+        scope: Scope,
+    ) -> TypeAnnotation | None:
+        members = (
+            flatten_union_members(declared.members)
+            if isinstance(declared, UnionType)
+            else [declared]
+        )
+        matched = [member for member in members if self._member_matches_type_name(member, type_name, scope)]
+        if not matched:
+            return None
+        if len(matched) == 1:
+            return matched[0]
+        return UnionType(declared.location, matched)
+
+    def _exclude_type_name(
+        self,
+        declared: TypeAnnotation,
+        type_name: str,
+        scope: Scope,
+    ) -> TypeAnnotation | None:
+        if not isinstance(declared, UnionType):
+            return None
+        members = flatten_union_members(declared.members)
+        remaining = [member for member in members if not self._member_matches_type_name(member, type_name, scope)]
+        if not remaining or len(remaining) == len(members):
+            return None
+        if len(remaining) == 1:
+            return remaining[0]
+        return UnionType(declared.location, remaining)
+
+    def _member_matches_type_name(
+        self,
+        member: TypeAnnotation,
+        type_name: str,
+        scope: Scope,
+    ) -> bool:
+        if isinstance(member, TypeName):
+            if type_name == "hash" and member.name in {"hash", "dynamic"}:
+                return member.name == "hash"
+            return member.name == type_name
+        if isinstance(member, ObjectType):
+            return type_name == "hash"
+        if isinstance(member, FunctionType):
+            return type_name == "fn"
+        if isinstance(member, ClassType):
+            return member.name == type_name
+        if isinstance(member, InterfaceType):
+            return member.name == type_name
+        return False
 
     def _switch(self, statement: SwitchStatement, scope: Scope) -> None:
         self._expression(statement.discriminant, scope)
@@ -1566,9 +1681,26 @@ class SemanticAnalyzer:
         location: SourceLocation,
         name: str,
     ) -> None:
+        if expected is None:
+            return
         if isinstance(expected, UnionType):
             self._check_value_against_union(expression, expected, scope, location, name)
             return
+        if isinstance(expression, VariableExpression):
+            symbol = scope.resolve(expression.name)
+            if symbol is not None and symbol.declared_type is not None:
+                actual = self._resolve_type(symbol.declared_type, scope)
+                if isinstance(actual, TypeName) and actual.name == "dynamic":
+                    return
+                if isinstance(expected, TypeName) and expected.name == "dynamic":
+                    return
+                if type_assignable(actual, expected):
+                    return
+                raise SemanticError(
+                    f"Cannot assign {format_type(actual)} to {format_type(expected)} variable '{name}'",
+                    location,
+                    code="E2001",
+                )
         if not isinstance(expected, ObjectType):
             return
         if isinstance(expression, HashLiteral):
