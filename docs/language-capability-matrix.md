@@ -724,7 +724,7 @@ no twin. There is no implicit `str + int`.
 **Echo status.** Supported (0.4+).
 
 Builtins: `readFile` / `readFileOr`, `writeFile`, `fileExists`, `isDir`,
-`listFiles`, `mkdir`, `removeFile`, `copyFile`, `cwd`, `pathJoin`. UTF-8 text
+`listFiles`, `mkdir`, `mkdirAll`, `removeFile`, `removeTree`, `copyFile`, `cwd`, `pathJoin`. UTF-8 text
 for read/write. Hosts may deny files (`E2801`); the playground does.
 
 **Current syntax.** Standalone calls (not `file.read()` namespaces).

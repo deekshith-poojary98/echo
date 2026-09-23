@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.6
+
+Recursive filesystem create/delete. Seventh **0.9** slice (scripting stdlib). Failure model unchanged.
+
+- `mkdirAll(path)` — create directory and parents; existing directory is OK; file in the way aborts
+- `removeTree(path)` — delete a file or directory tree; missing path aborts
+- Existing `mkdir` / `removeFile` unchanged; playground `allow_files=False` denies both new builtins (**E2801**)
+
 ## 0.9.5
 
 Class properties (`get` / `set`). Sixth **0.9** ergonomics slice. Failure model unchanged.

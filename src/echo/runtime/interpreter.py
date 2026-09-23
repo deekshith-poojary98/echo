@@ -113,6 +113,7 @@ from echo.runtime.builtins import (
     do_merge,
     do_min,
     do_mkdir,
+    do_mkdir_all,
     do_now,
     do_pad_end,
     do_pad_start,
@@ -127,6 +128,7 @@ from echo.runtime.builtins import (
     do_read_file_or,
     do_read_line,
     do_remove_file,
+    do_remove_tree,
     do_repeat,
     do_replace,
     do_replace_first,
@@ -1241,8 +1243,12 @@ class Interpreter:
             return do_list_files(target if target is not None else _first(args, method, location), self.host, location)
         if method == "mkdir":
             return do_mkdir(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "mkdirAll":
+            return do_mkdir_all(target if target is not None else _first(args, method, location), self.host, location)
         if method == "removeFile":
             return do_remove_file(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "removeTree":
+            return do_remove_tree(target if target is not None else _first(args, method, location), self.host, location)
         if method == "abs":
             return do_abs(target if target is not None else _first(args, method, location), location)
         if method == "min":

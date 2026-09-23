@@ -109,7 +109,9 @@ BUILTIN_NAMES = frozenset(
         "isDir",
         "listFiles",
         "mkdir",
+        "mkdirAll",
         "removeFile",
+        "removeTree",
         "copyFile",
         "pathJoin",
         "assert",
@@ -213,7 +215,9 @@ BUILTIN_PARAMS = {
     "isDir": ["path"],
     "listFiles": ["path"],
     "mkdir": ["path"],
+    "mkdirAll": ["path"],
     "removeFile": ["path"],
+    "removeTree": ["path"],
     "copyFile": ["dest"],
     "pathJoin": ["part"],
     "assert": ["message"],
@@ -373,7 +377,9 @@ STANDALONE_MIN_ARGS = {
     "isDir": 1,
     "listFiles": 1,
     "mkdir": 1,
+    "mkdirAll": 1,
     "removeFile": 1,
+    "removeTree": 1,
     "copyFile": 2,
     "pathJoin": 2,
     "assert": 2,
@@ -938,6 +944,25 @@ def do_mkdir(path: object, host: Host, location: SourceLocation | None = None) -
     return None
 
 
+def do_mkdir_all(path: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("mkdirAll() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("mkdirAll() path must be a string", location, code="E2802")
+    target = host.resolve_path(path)
+    if target.is_file():
+        raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
+    try:
+        host.mkdir_all(path)
+    except FileExistsError as exc:
+        raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803") from exc
+    except NotADirectoryError as exc:
+        raise EchoRuntimeError(f"parent path is not a directory: {path}", location, code="E2802") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot create directory: {path}", location, code="E2803") from exc
+    return None
+
+
 def do_remove_file(path: object, host: Host, location: SourceLocation | None = None) -> None:
     if not host.allow_files:
         raise EchoRuntimeError("removeFile() is not available in this host", location, code="E2801")
@@ -956,6 +981,20 @@ def do_remove_file(path: object, host: Host, location: SourceLocation | None = N
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
     except OSError as exc:
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
+    return None
+
+
+def do_remove_tree(path: object, host: Host, location: SourceLocation | None = None) -> None:
+    if not host.allow_files:
+        raise EchoRuntimeError("removeTree() is not available in this host", location, code="E2801")
+    if not isinstance(path, str):
+        raise EchoTypeError("removeTree() path must be a string", location, code="E2802")
+    try:
+        host.remove_tree(path)
+    except FileNotFoundError as exc:
+        raise EchoRuntimeError(f"path not found: {path}", location, code="E2802") from exc
+    except OSError as exc:
+        raise EchoRuntimeError(f"cannot remove path: {path}", location, code="E2803") from exc
     return None
 
 

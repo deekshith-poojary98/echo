@@ -50,10 +50,25 @@ class Host:
     def mkdir(self, path: str) -> None:
         self.resolve_path(path).mkdir()
 
+    def mkdir_all(self, path: str) -> None:
+        target = self.resolve_path(path)
+        if target.is_file():
+            raise FileExistsError(path)
+        target.mkdir(parents=True, exist_ok=True)
+
     def remove_file(self, path: str) -> None:
         target = self.resolve_path(path)
         if target.is_dir():
             raise IsADirectoryError(path)
+        target.unlink()
+
+    def remove_tree(self, path: str) -> None:
+        target = self.resolve_path(path)
+        if not target.exists():
+            raise FileNotFoundError(path)
+        if target.is_dir():
+            shutil.rmtree(target)
+            return
         target.unlink()
 
     def copy_file(self, src: str, dest: str) -> None:

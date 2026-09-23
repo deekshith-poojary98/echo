@@ -249,11 +249,25 @@ Creates the leaf directory only. Does not create missing parents. Existing direc
 mkdir("out");
 ```
 
+### `mkdirAll(path)`
+Creates the directory and any missing parents (`mkdir -p`). An existing directory is a no-op success. A file in the way aborts. The playground host denies this.
+
+```echo
+mkdirAll("out/nested/deep");
+```
+
 ### `removeFile(path)`
 Deletes a file. Missing paths and directories abort. The playground host denies this.
 
 ```echo
 removeFile("scratch.txt");
+```
+
+### `removeTree(path)`
+Deletes a file or an entire directory tree. Missing paths abort. The playground host denies this.
+
+```echo
+removeTree("out");
 ```
 
 ### `copyFile(src, dest)`

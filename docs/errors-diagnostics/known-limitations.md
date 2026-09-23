@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.9.5**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, and class properties (`get` / `set`). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.9.6**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), and recursive `mkdirAll` / `removeTree`. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -14,6 +14,7 @@ What Echo still does **not** do. As of **0.9.5**, the language includes modules,
 - 0.9.3: deep `clone()` for lists, hashes, and class instances
 - 0.9.4: named `format()` placeholders via trailing hash
 - 0.9.5: class properties `get` / `set` (soft keywords; field-style access)
+- 0.9.6: `mkdirAll(path)` / `removeTree(path)` for recursive create/delete
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -31,7 +32,6 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - `format()` has no width / precision / alignment specs
 - Properties are not part of interfaces (`implements` still checks methods only)
 - Interpolation tokenization is not fully strict
-- No `mkdir -p` or recursive delete
 - No dates, HTTP, or regex builtins
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
 

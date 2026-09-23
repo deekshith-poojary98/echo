@@ -12,7 +12,7 @@ Already in the language or CLI:
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
 - Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3); field defaults (0.8.4); unbound methods (0.8.5); type methods (0.8.6); optional `implements` (0.8.7); docs/README release pass (0.8.8); first PyPI package `echolang` (0.8.9)
-- Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5)
+- Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5); `mkdirAll` / `removeTree` (0.9.6)
 
 ## Next
 
@@ -26,7 +26,10 @@ Already in the language or CLI:
 | 0.9.3 | Deep `clone()` | implemented (0.9.3) |
 | 0.9.4 | Named `format()` placeholders via trailing hash | implemented (0.9.4) |
 | 0.9.5 | Class properties `get` / `set` | implemented (0.9.5) |
-| 0.9.6+ | Optional: thin stdlib | drafted |
+| 0.9.6 | `mkdirAll` / `removeTree` | implemented (0.9.6) |
+| 0.9.7 | Regex builtins | drafted |
+| 0.9.8 | Union narrowing in `if type(...)` | drafted |
+| 0.9.9 | Thin dates builtins | drafted |
 
 Details: [Priority — 0.9.x](/project/priority).
 
@@ -37,8 +40,7 @@ Not near-term. Do not treat these as upcoming releases unless a draft series exi
 - Generics, async, VM / JIT, packages
 - `try` / `catch`, `Result` / `Option`, user-level recovery syntax
 - Overloading, LSP
-- Dates / HTTP / regex builtins
-- `mkdir -p` / recursive delete
+- HTTP builtins (dates / regex drafted under **0.9.7–0.9.9**; `mkdirAll` / `removeTree` shipped in **0.9.6**)
 - Test DSL (`test "name" { }`)
 - Class inheritance (out of 0.8; interfaces only; not the 0.9 ergonomics spine)
 

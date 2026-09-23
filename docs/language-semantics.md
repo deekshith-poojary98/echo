@@ -579,4 +579,5 @@ v0.9.2 adds positional construction `Point(3, 4)`.
 v0.9.3 makes `clone()` deep for lists, hashes, and class instances.
 v0.9.4 adds named `format()` placeholders via a trailing hash.
 v0.9.5 adds class properties (`get name(this)` / `set name(this, value: T)`; soft keywords; field-style access).
+v0.9.6 adds `mkdirAll(path)` and `removeTree(path)` for recursive create/delete.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).
