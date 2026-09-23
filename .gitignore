@@ -176,3 +176,6 @@ docs/.vitepress/cache/
 docs/.vitepress/dist/
 docs/public/echo-runtime/
 
+
+# Local planning notes (not for remote)
+nice-to-have.md
