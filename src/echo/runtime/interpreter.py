@@ -1754,7 +1754,14 @@ class Interpreter:
             self.execute_statement(statement, env)
 
     def _watch(self, name: str, value: object, env: Environment, action: str = "changed to") -> None:
-        print(f"WATCH: {name} {action} {value} (in {env.current_function_name()})")
+        # stringify() already handles cycles and converts RecursionError on
+        # extreme nesting into EchoRuntimeError. Watch must not abort the
+        # assignment that triggered it, so fall back to a placeholder.
+        try:
+            rendered = stringify(value)
+        except EchoRuntimeError:
+            rendered = "<nested too deeply>"
+        print(f"WATCH: {name} {action} {rendered} (in {env.current_function_name()})")
 
 
 def _first(args: list[object], method: str, location: SourceLocation) -> object:

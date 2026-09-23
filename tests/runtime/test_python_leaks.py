@@ -350,6 +350,54 @@ say("reached");
     assert "reached" not in result.lines
 
 
+def test_watch_cyclic_class_instance_does_not_leak_python():
+    result = run_echo(
+        """
+class Node {
+    new {
+        next: dynamic = null;
+    }
+}
+n: Node = Node {};
+watch n;
+n.next = n;
+say("done");
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert "ClassInstance" not in result.output
+    assert "WATCH: n modified by field assignment to Node {next: Node {...}} (in global)" in result.output
+    assert result.lines[-1] == "done"
+
+
+def test_watch_deeply_nested_class_instance_does_not_leak_python():
+    result = run_echo(
+        """
+class Box {
+    new {
+        inner: dynamic = null;
+    }
+}
+deep: Box = Box {};
+for i: int in 1..1200 {
+    nxt: Box = Box {};
+    nxt.inner = deep;
+    deep = nxt;
+}
+n: Box = Box {};
+watch n;
+n = deep;
+say("done");
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert "ClassInstance" not in result.output
+    assert "WATCH: n changed to <nested too deeply> (in global)" in result.output
+    assert result.lines[-1] == "done"
+
+
 def test_parse_json_direct_nested_too_deeply_is_echo_error():
     payload = "[" * 2000 + "]" * 2000
     try:
