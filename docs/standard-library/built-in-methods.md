@@ -299,6 +299,25 @@ Returns the current unix time as an `int` number of seconds. Takes no arguments.
 stamp: int = now();
 ```
 
+### `formatTime(secs, pattern)` / `parseTime(text, pattern)`
+UTC format and parse for unix seconds. Patterns use Python `strftime` / `strptime`. Naive parse results are treated as UTC. No date object type and no local-timezone calendars.
+
+```echo
+stamp: int = parseTime("2020-01-02T03:04:05Z", "%Y-%m-%dT%H:%M:%SZ");
+say(formatTime(stamp, "%Y-%m-%d"));
+say(stamp.formatTime("%H:%M"));
+```
+
+Bad types or invalid text/pattern → **E2851**.
+
+### `days(n)` / `hours(n)` / `minutes(n)`
+Duration helpers that return seconds as `int`. `n` must be an `int`.
+
+```echo
+later: int = now() + hours(2) + minutes(30);
+say(days(1));   // 86400
+```
+
 ### `assert(cond, message)`
 Aborts with an Echo error when `cond` is falsy. `message` must be a `str`. Truthy values continue.
 

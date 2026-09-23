@@ -94,7 +94,7 @@ Distinctive on purpose:
 | Union types | Usability | Supported (0.7.5) | Frozen | 0.7.5 |
 | Collection operations | Usability | Supported through 0.6.9 HOFs; range expr 0.7.4 | Frozen | 0.7.4 |
 | String utilities | Usability | Supported (0.4+) | Frozen | Done |
-| Date / time | Usability | Missing (`now` / `wait` only) | Later | Later (library) |
+| Date / time | Usability | Supported thin UTC (`formatTime` / `parseTime`, 0.9.9) | Frozen | 0.9.9 |
 | Environment variables | Usability | Supported (0.4) | Frozen | Done |
 | Program CLI arguments | Usability | Supported (0.4) | Frozen | Done |
 | Default / variadic args | Usability | Supported (0.6.0) | Frozen | 0.6.0 |
@@ -841,13 +841,13 @@ interpolation, indexing, `split`, `replace` / `replaceFirst`, `contains`,
 
 **What it means.** Instants, durations, formatting, clocks.
 
-**Echo status.** Missing (`now()` and `wait(seconds)` only).
+**Echo status.** Supported thin surface (0.9.9): unix `int` seconds via `now()`, UTC `formatTime` / `parseTime`, and `days` / `hours` / `minutes` helpers.
 
-No calendar, formatting, or duration type.
+No date object type, local-timezone calendars, or locale-heavy formatting.
 
-**Priority.** Later. Library, not syntax.
+**Priority.** Frozen for this thin cut.
 
-**Possible version.** Later.
+**Possible version.** Done (0.9.9).
 
 ---
 
@@ -1174,14 +1174,15 @@ Capability comparison only. Echo is not trying to become these languages.
 
 ### Still open (usability / ecosystem)
 
-1. Date / time library (beyond `now` / `wait`)
-2. Package manager / non-sibling module paths
-3. Language server / richer editor support
-4. Optional sugar still held where listed in priority
+1. Package manager / non-sibling module paths
+2. Language server / richer editor support
+3. Optional sugar still held where listed in priority
+4. HTTP builtins (held)
 
 ### Shipped that used to be holes
 
 args, env, files, JSON, string/collection helpers, conversion, failure-model
+thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
 destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5).
 

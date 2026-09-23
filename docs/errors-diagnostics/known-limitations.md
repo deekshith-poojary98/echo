@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.9.8**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, and union narrowing in `if type(...)`. This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **0.9.9**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, and thin UTC dates (`formatTime` / `parseTime` / duration helpers). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -17,6 +17,7 @@ What Echo still does **not** do. As of **0.9.8**, the language includes modules,
 - 0.9.6: `mkdirAll(path)` / `removeTree(path)` for recursive create/delete
 - 0.9.7: `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `re`)
 - 0.9.8: union narrowing in `if type(x) == "..."` (and matching `else if`)
+- 0.9.9: `formatTime` / `parseTime` (UTC) plus `days` / `hours` / `minutes`
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -34,7 +35,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - `format()` has no width / precision / alignment specs
 - Properties are not part of interfaces (`implements` still checks methods only)
 - Interpolation tokenization is not fully strict
-- No dates or HTTP builtins
+- No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only); no HTTP builtins
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
 
 ## Why this page exists

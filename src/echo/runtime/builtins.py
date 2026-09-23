@@ -5,6 +5,7 @@ import random
 import time
 from pathlib import Path
 
+from echo.core.dateutil import days, format_time, hours, minutes, parse_time
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
 from echo.core.jsonutil import parse_json, write_json
 from echo.core.lists import (
@@ -108,6 +109,11 @@ BUILTIN_NAMES = frozenset(
         "regexFind",
         "regexReplace",
         "regexSplit",
+        "formatTime",
+        "parseTime",
+        "days",
+        "hours",
+        "minutes",
         "fileExists",
         "cwd",
         "exit",
@@ -218,6 +224,11 @@ BUILTIN_PARAMS = {
     "regexFind": ["pattern"],
     "regexReplace": ["pattern", "replacement"],
     "regexSplit": ["pattern"],
+    "formatTime": ["pattern"],
+    "parseTime": ["pattern"],
+    "days": [],
+    "hours": [],
+    "minutes": [],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
@@ -289,6 +300,11 @@ STANDALONE_PARAMS = {
     "regexFind": ["text", "pattern"],
     "regexReplace": ["text", "pattern", "replacement"],
     "regexSplit": ["text", "pattern"],
+    "formatTime": ["secs", "pattern"],
+    "parseTime": ["text", "pattern"],
+    "days": ["count"],
+    "hours": ["count"],
+    "minutes": ["count"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -388,6 +404,11 @@ STANDALONE_MIN_ARGS = {
     "regexFind": 2,
     "regexReplace": 3,
     "regexSplit": 2,
+    "formatTime": 2,
+    "parseTime": 2,
+    "days": 1,
+    "hours": 1,
+    "minutes": 1,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
@@ -912,6 +933,26 @@ def do_regex_replace(
 
 def do_regex_split(text: object, pattern: object, location: SourceLocation | None = None) -> list[str]:
     return regex_split(text, pattern, location)
+
+
+def do_format_time(secs: object, pattern: object, location: SourceLocation | None = None) -> str:
+    return format_time(secs, pattern, location)
+
+
+def do_parse_time(text: object, pattern: object, location: SourceLocation | None = None) -> int:
+    return parse_time(text, pattern, location)
+
+
+def do_days(count: object, location: SourceLocation | None = None) -> int:
+    return days(count, location)
+
+
+def do_hours(count: object, location: SourceLocation | None = None) -> int:
+    return hours(count, location)
+
+
+def do_minutes(count: object, location: SourceLocation | None = None) -> int:
+    return minutes(count, location)
 
 
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:

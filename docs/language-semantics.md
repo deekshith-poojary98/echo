@@ -583,4 +583,5 @@ v0.9.5 adds class properties (`get name(this)` / `set name(this, value: T)`; sof
 v0.9.6 adds `mkdirAll(path)` and `removeTree(path)` for recursive create/delete.
 v0.9.7 adds `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `re`).
 v0.9.8 narrows simple-name unions in `if type(x) == "..."` (and matching `else if` / excluding `else`).
+v0.9.9 adds UTC `formatTime` / `parseTime` and `days` / `hours` / `minutes` duration helpers.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

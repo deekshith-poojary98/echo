@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.9
+
+Thin dates builtins. Tenth **0.9** slice (scripting stdlib); closes the **0.9.x** series. Failure model unchanged.
+
+- `formatTime(secs, pattern) -> str` — format unix seconds as UTC (`strftime`)
+- `parseTime(text, pattern) -> int` — parse UTC text to unix seconds (`strptime`); naive patterns are treated as UTC
+- `days(n)` / `hours(n)` / `minutes(n) -> int` — duration helpers in seconds
+- Method form: `stamp.formatTime(pattern)`, `"…".parseTime(pattern)`, `1.days()`
+- Bad types / invalid parse or format → **E2851**; no date object type; no local-timezone calendars; HTTP stays held
+
 ## 0.9.8
 
 Union narrowing in `if type(...)`. Ninth **0.9** ergonomics slice. Failure model unchanged.

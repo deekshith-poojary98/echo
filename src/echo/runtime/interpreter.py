@@ -91,6 +91,7 @@ from echo.runtime.builtins import (
     do_contains,
     do_copy_file,
     do_cwd,
+    do_days,
     do_ends_with,
     do_env,
     do_env_or,
@@ -102,7 +103,9 @@ from echo.runtime.builtins import (
     do_file_exists,
     do_flatten,
     do_floor,
+    do_format_time,
     do_has,
+    do_hours,
     do_index_of,
     do_is_dir,
     do_join,
@@ -112,6 +115,7 @@ from echo.runtime.builtins import (
     do_max,
     do_merge,
     do_min,
+    do_minutes,
     do_mkdir,
     do_mkdir_all,
     do_now,
@@ -119,6 +123,7 @@ from echo.runtime.builtins import (
     do_pad_start,
     do_parse_json,
     do_parse_json_or,
+    do_parse_time,
     do_path_join,
     do_random,
     do_random_int,
@@ -1249,6 +1254,20 @@ class Interpreter:
             text = target if target is not None else _nth(args, 0, method, location)
             pattern = args[0] if target is not None else _nth(args, 1, method, location)
             return do_regex_split(text, pattern, location)
+        if method == "formatTime":
+            secs = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_format_time(secs, pattern, location)
+        if method == "parseTime":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_parse_time(text, pattern, location)
+        if method == "days":
+            return do_days(target if target is not None else _first(args, method, location), location)
+        if method == "hours":
+            return do_hours(target if target is not None else _first(args, method, location), location)
+        if method == "minutes":
+            return do_minutes(target if target is not None else _first(args, method, location), location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":
