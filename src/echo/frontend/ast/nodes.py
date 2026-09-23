@@ -50,6 +50,10 @@ class ClassType(TypeAnnotation):
     private_fields: frozenset[str] = field(default_factory=frozenset)
     private_methods: frozenset[str] = field(default_factory=frozenset)
     private_type_methods: frozenset[str] = field(default_factory=frozenset)
+    getters: dict[str, FunctionType] = field(default_factory=dict)
+    setters: dict[str, FunctionType] = field(default_factory=dict)
+    private_getters: frozenset[str] = field(default_factory=frozenset)
+    private_setters: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass
@@ -388,6 +392,8 @@ class ClassDeclaration(Statement):
     fields: list[ClassField]
     methods: list[FunctionDeclaration] = field(default_factory=list)
     implements: list[str] = field(default_factory=list)
+    getters: list[FunctionDeclaration] = field(default_factory=list)
+    setters: list[FunctionDeclaration] = field(default_factory=list)
 
 
 @dataclass

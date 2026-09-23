@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.5
+
+Class properties (`get` / `set`). Sixth **0.9** ergonomics slice. Failure model unchanged.
+
+- Soft keywords: `get name(this) -> T { ... }` and `set name(this, value: T) { ... }`
+- Field-style access: `obj.name` invokes the getter; `obj.name = v` / `obj.name += v` invoke the setter
+- Get-only and set-only properties allowed (**E3217** for the missing side)
+- `priv get` / `priv set` for per-accessor visibility (**E3215**)
+- Property names cannot clash with fields or methods; `get`/`set` are not hard keywords (`fn set` still works)
+
 ## 0.9.4
 
 Named `format()` placeholders. Fifth **0.9** ergonomics slice. Failure model unchanged.

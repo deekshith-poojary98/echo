@@ -242,12 +242,15 @@ class SemanticAnalyzer:
             if isinstance(statement.object, VariableExpression):
                 self._require_not_const_mutation(statement.object.name, statement, scope)
             self._require_field_visible(statement.object, statement.name, statement.location, scope)
+            self._require_setter_visible(statement.object, statement.name, statement.location, scope)
         elif isinstance(statement, MemberCompoundAssignment):
             self._expression(statement.object, scope)
             self._expression(statement.value, scope)
             if isinstance(statement.object, VariableExpression):
                 self._require_not_const_mutation(statement.object.name, statement, scope)
             self._require_field_visible(statement.object, statement.name, statement.location, scope)
+            self._require_getter_visible(statement.object, statement.name, statement.location, scope)
+            self._require_setter_visible(statement.object, statement.name, statement.location, scope)
         elif isinstance(statement, ExpressionStatement):
             self._expression(statement.expression, scope)
         elif isinstance(statement, IfStatement):
@@ -499,6 +502,44 @@ class SemanticAnalyzer:
             f"Method '{method_name}' is private on {owner.name}",
             location,
             help_text="Private methods are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_getter_visible(
+        self,
+        object_expr: Expression,
+        name: str,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
+        owner = self._expression_class_type(object_expr, scope)
+        if owner is None or name not in owner.private_getters:
+            return
+        if self._enclosing_class is not None and self._enclosing_class.class_id == owner.class_id:
+            return
+        raise SemanticError(
+            f"Getter '{name}' is private on {owner.name}",
+            location,
+            help_text="Private getters are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_setter_visible(
+        self,
+        object_expr: Expression,
+        name: str,
+        location: SourceLocation,
+        scope: Scope,
+    ) -> None:
+        owner = self._expression_class_type(object_expr, scope)
+        if owner is None or name not in owner.private_setters:
+            return
+        if self._enclosing_class is not None and self._enclosing_class.class_id == owner.class_id:
+            return
+        raise SemanticError(
+            f"Setter '{name}' is private on {owner.name}",
+            location,
+            help_text="Private setters are only accessible inside methods of the same class.",
             code="E3215",
         )
 
@@ -786,6 +827,13 @@ class SemanticAnalyzer:
                 if isinstance(owner, ClassType):
                     if expression.name in owner.methods:
                         self._require_method_visible(
+                            expression.object,
+                            expression.name,
+                            expression.location,
+                            scope,
+                        )
+                    elif expression.name in owner.getters:
+                        self._require_getter_visible(
                             expression.object,
                             expression.name,
                             expression.location,
@@ -1213,6 +1261,25 @@ class SemanticAnalyzer:
                 )
                 if method.private:
                     private_type_methods.add(method.name)
+        getters: dict[str, FunctionType] = {}
+        setters: dict[str, FunctionType] = {}
+        private_getters: set[str] = set()
+        private_setters: set[str] = set()
+        for getter in statement.getters:
+            return_type = getter.return_type or TypeName(getter.location, "void")
+            getters[getter.name] = FunctionType(getter.location, [], return_type, False)
+            if getter.private:
+                private_getters.add(getter.name)
+        for setter in statement.setters:
+            value_type = setter.parameters[1].type
+            setters[setter.name] = FunctionType(
+                setter.location,
+                [value_type],
+                TypeName(setter.location, "void"),
+                False,
+            )
+            if setter.private:
+                private_setters.add(setter.name)
         return ClassType(
             statement.location,
             statement.name,
@@ -1224,6 +1291,10 @@ class SemanticAnalyzer:
             frozenset(field.name for field in statement.fields if field.private),
             frozenset(private_methods),
             frozenset(private_type_methods),
+            getters,
+            setters,
+            frozenset(private_getters),
+            frozenset(private_setters),
         )
 
     def _interface_type(self, statement: InterfaceDeclaration) -> InterfaceType:
@@ -1785,6 +1856,36 @@ class SemanticAnalyzer:
         class_type.type_methods = type_methods
         class_type.private_methods = frozenset(private_methods)
         class_type.private_type_methods = frozenset(private_type_methods)
+        getters: dict[str, FunctionType] = {}
+        setters: dict[str, FunctionType] = {}
+        private_getters: set[str] = set()
+        private_setters: set[str] = set()
+        for getter in statement.getters:
+            this_param = getter.parameters[0]
+            this_param.type = class_type
+            if getter.return_type is not None:
+                getter.return_type = self._resolve_type(getter.return_type, scope)
+            return_type = getter.return_type or TypeName(getter.location, "void")
+            getters[getter.name] = FunctionType(getter.location, [], return_type, False)
+            if getter.private:
+                private_getters.add(getter.name)
+        for setter in statement.setters:
+            this_param = setter.parameters[0]
+            this_param.type = class_type
+            value_param = setter.parameters[1]
+            value_param.type = self._resolve_type(value_param.type, scope)
+            setters[setter.name] = FunctionType(
+                setter.location,
+                [value_param.type],
+                TypeName(setter.location, "void"),
+                False,
+            )
+            if setter.private:
+                private_setters.add(setter.name)
+        class_type.getters = getters
+        class_type.setters = setters
+        class_type.private_getters = frozenset(private_getters)
+        class_type.private_setters = frozenset(private_setters)
         register_class_methods(statement.name, methods)
         self._check_implements(statement, class_type, scope)
         previous_class = self._enclosing_class
@@ -1798,6 +1899,26 @@ class SemanticAnalyzer:
                     method.return_type,
                     method.location,
                     method.name,
+                    scope,
+                )
+            for getter in statement.getters:
+                self._analyze_callable(
+                    getter.parameters,
+                    getter.body,
+                    getter.inline,
+                    getter.return_type,
+                    getter.location,
+                    getter.name,
+                    scope,
+                )
+            for setter in statement.setters:
+                self._analyze_callable(
+                    setter.parameters,
+                    setter.body,
+                    setter.inline,
+                    setter.return_type,
+                    setter.location,
+                    setter.name,
                     scope,
                 )
         finally:
@@ -1940,6 +2061,10 @@ class SemanticAnalyzer:
                 type_annotation.private_fields,
                 type_annotation.private_methods,
                 type_annotation.private_type_methods,
+                type_annotation.getters,
+                type_annotation.setters,
+                type_annotation.private_getters,
+                type_annotation.private_setters,
             )
         if isinstance(type_annotation, InterfaceType):
             existing = scope.interfaces.get(type_annotation.name)

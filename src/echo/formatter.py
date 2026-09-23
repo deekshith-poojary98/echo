@@ -204,6 +204,10 @@ class _Printer:
                 self._line("}")
             for method in statement.methods:
                 self._function(method)
+            for getter in statement.getters:
+                self._property_accessor(getter, "get")
+            for setter in statement.setters:
+                self._property_accessor(setter, "set")
             self._indent -= 1
             self._write("}")
             self._newline()
@@ -267,6 +271,20 @@ class _Printer:
         params = ", ".join(self._param(param) for param in statement.parameters)
         prefix = "priv " if statement.private else ""
         header = f"{prefix}fn {statement.name}({params})"
+        if statement.return_type is not None:
+            header += f" -> {self._type(statement.return_type)}"
+        if statement.inline:
+            assert isinstance(statement.body, Expression)
+            self._line(f"{header} => {self._expr(statement.body)};")
+            return
+        self._write(f"{header} ")
+        assert isinstance(statement.body, list)
+        self._block(statement.body)
+
+    def _property_accessor(self, statement: FunctionDeclaration, kind: str) -> None:
+        params = ", ".join(self._param(param) for param in statement.parameters)
+        prefix = "priv " if statement.private else ""
+        header = f"{prefix}{kind} {statement.name}({params})"
         if statement.return_type is not None:
             header += f" -> {self._type(statement.return_type)}"
         if statement.inline:

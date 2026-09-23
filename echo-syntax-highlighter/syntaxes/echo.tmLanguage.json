@@ -109,7 +109,7 @@
       ]
     },
     "function-definitions": {
-      "match": "\\b(fn)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "\\b(fn|get|set)\\s+([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": { "name": "storage.type.function.echo" },
         "2": { "name": "entity.name.function.echo" }
@@ -146,7 +146,7 @@
         },
         {
           "name": "storage.type.function.echo",
-          "match": "\\bfn\\b"
+          "match": "\\b(fn|get|set)\\b"
         },
         {
           "name": "keyword.declaration.type.echo",

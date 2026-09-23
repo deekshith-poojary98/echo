@@ -12,7 +12,7 @@ Already in the language or CLI:
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
 - Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3); field defaults (0.8.4); unbound methods (0.8.5); type methods (0.8.6); optional `implements` (0.8.7); docs/README release pass (0.8.8); first PyPI package `echolang` (0.8.9)
-- Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4)
+- Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5)
 
 ## Next
 
@@ -25,7 +25,8 @@ Already in the language or CLI:
 | 0.9.2 | Positional construction `Point(3, 4)` | implemented (0.9.2) |
 | 0.9.3 | Deep `clone()` | implemented (0.9.3) |
 | 0.9.4 | Named `format()` placeholders via trailing hash | implemented (0.9.4) |
-| 0.9.5+ | Optional: properties, thin stdlib | drafted |
+| 0.9.5 | Class properties `get` / `set` | implemented (0.9.5) |
+| 0.9.6+ | Optional: thin stdlib | drafted |
 
 Details: [Priority — 0.9.x](/project/priority).
 

@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.9.3**. **0.9.4** (named `format` placeholders) continues the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
+Current tagged version is **v0.9.4**. **0.9.5** (class properties `get`/`set`) continues the **0.9 ergonomics** series. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -711,11 +711,11 @@ Does not require `implements` for assignability (inference stays).
 
 ### Out of 0.8 (still held globally)
 
-Inheritance trees, abstract classes, generics on classes, operator overloading, properties/`get`/`set`, inner classes, and `match` / `Result` remain outside this spine. **`priv`** and member compound assign move to **0.9.x**.
+Inheritance trees, abstract classes, generics on classes, operator overloading, inner classes, and `match` / `Result` remain outside this spine. **`priv`**, member compound assign, and properties move to **0.9.x**.
 
 ## 0.9.x — ergonomics / OOP polish
 
-**Status: 0.9.0–0.9.4 implemented; further 0.9 polish optional.**
+**Status: 0.9.0–0.9.5 implemented; further 0.9 polish optional.**
 
 **0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite.
 
@@ -728,7 +728,8 @@ Shape: finish day-to-day rough edges on the 0.8 OOP surface.
 | 0.9.2 | Positional construction `Point(3, 4)` | implemented (0.9.2) |
 | 0.9.3 | Deep `clone()` (lists, hashes, class instances) | implemented (0.9.3) |
 | 0.9.4 | Named `format()` placeholders via trailing hash | implemented (0.9.4) |
-| 0.9.5+ | Optional: properties, thin stdlib | drafted |
+| 0.9.5 | Class properties `get` / `set` | implemented (0.9.5) |
+| 0.9.6+ | Optional: thin stdlib | drafted |
 
 ### 0.9.0 — compound assign on members
 
@@ -851,9 +852,46 @@ Rules:
 - No width / precision / alignment specs
 - Failure model unchanged
 
-### 0.9.5+ (drafted)
+### 0.9.5 — class properties `get` / `set`
 
-Optional further polish: properties `get`/`set`, thin stdlib (dates/HTTP/regex / `mkdir -p`).
+Computed fields with field-style read/write. Soft keywords (not reserved identifiers).
+
+**Implemented spelling:**
+
+```echo
+class Counter {
+    new {
+        priv n: int = 0;
+    }
+
+    get count(this) -> int {
+        return this.n;
+    }
+
+    set count(this, value: int) {
+        this.n = value;
+    }
+}
+
+c: Counter = Counter {};
+c.count = 10;
+say(c.count);
+c.count += 1;
+```
+
+Rules:
+
+- `get name(this) -> T` / `set name(this, value: T)` — parallel to `fn name(this)`
+- `obj.name` invokes the getter; `obj.name = v` and compound assign invoke the setter
+- Get-only or set-only allowed; missing side → **E3217**
+- `priv get` / `priv set` for per-accessor visibility → **E3215** outside the class
+- Name cannot clash with a field or method; get and set may share a name
+- Does not add properties to interfaces; does not change construction (properties are not fields)
+- Failure model unchanged
+
+### 0.9.6+ (drafted)
+
+Optional further polish: thin stdlib (dates/HTTP/regex / `mkdir -p`).
 
 ### Out of 0.9 (still held globally)
 
@@ -861,7 +899,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## Held (do not implement)
 
-Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.4** are implemented. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.5** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -871,6 +909,7 @@ Do not move global holds into 0.9 polish without an explicit series start. **0.8
 | Positional construction `Point(3, 4)` | implemented (**0.9.2**) |
 | Deep `clone()` | implemented (**0.9.3**) |
 | Named `format()` placeholders | implemented (**0.9.4**) |
+| Class properties `get` / `set` | implemented (**0.9.5**) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

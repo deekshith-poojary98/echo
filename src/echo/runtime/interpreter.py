@@ -194,6 +194,14 @@ class Interpreter:
                 method.name: EchoFunction(method, env, class_id=id(statement))
                 for method in statement.methods
             }
+            getters = {
+                getter.name: EchoFunction(getter, env, class_id=id(statement))
+                for getter in statement.getters
+            }
+            setters = {
+                setter.name: EchoFunction(setter, env, class_id=id(statement))
+                for setter in statement.setters
+            }
             from echo.frontend.ast.nodes import FunctionType, TypeName
             from echo.runtime.class_registry import register_class_methods
 
@@ -224,6 +232,14 @@ class Interpreter:
                 private_fields=frozenset(field.name for field in statement.fields if field.private),
                 private_methods=frozenset(
                     method.name for method in statement.methods if method.private
+                ),
+                getters=getters,
+                setters=setters,
+                private_getters=frozenset(
+                    getter.name for getter in statement.getters if getter.private
+                ),
+                private_setters=frozenset(
+                    setter.name for setter in statement.setters if setter.private
                 ),
             )
             env.define_class(statement.name, record)
@@ -520,6 +536,20 @@ class Interpreter:
                 if expression.name in target.fields:
                     self._require_field_runtime_visible(target, expression.name, expression.location)
                     return target.fields[expression.name]
+                if target.record is not None and expression.name in target.record.getters:
+                    self._require_getter_runtime_visible(target.record, expression.name, expression.location)
+                    return self._call_accessor(
+                        target.record.getters[expression.name],  # type: ignore[arg-type]
+                        target,
+                        [],
+                        expression.location,
+                    )
+                if target.record is not None and expression.name in target.record.setters:
+                    raise EchoRuntimeError(
+                        f"Property '{expression.name}' on {target.class_name} is write-only",
+                        expression.location,
+                        code="E3217",
+                    )
                 method = self._instance_method(target, expression.name)
                 if method is not None:
                     if not method.declaration.parameters or method.declaration.parameters[0].name != "this":
@@ -1720,14 +1750,28 @@ class Interpreter:
                 location,
                 code="E2704",
             )
-        if name not in target.fields:
-            raise EchoRuntimeError(
-                f"Unknown field '{name}' on {target.class_name}",
+        if name in target.fields:
+            self._require_field_runtime_visible(target, name, location)
+            return target.fields[name]
+        if target.record is not None and name in target.record.getters:
+            self._require_getter_runtime_visible(target.record, name, location)
+            return self._call_accessor(
+                target.record.getters[name],  # type: ignore[arg-type]
+                target,
+                [],
                 location,
-                code="E2704",
             )
-        self._require_field_runtime_visible(target, name, location)
-        return target.fields[name]
+        if target.record is not None and name in target.record.setters:
+            raise EchoRuntimeError(
+                f"Property '{name}' on {target.class_name} is write-only",
+                location,
+                code="E3217",
+            )
+        raise EchoRuntimeError(
+            f"Unknown field '{name}' on {target.class_name}",
+            location,
+            code="E2704",
+        )
 
     def _member_assign(self, target: object, name: str, value: object, location: SourceLocation) -> None:
         require_unfrozen(target, location)
@@ -1737,18 +1781,81 @@ class Interpreter:
                 location,
                 code="E2704",
             )
-        if name not in target.fields:
-            raise EchoRuntimeError(
-                f"Unknown field '{name}' on {target.class_name}",
+        if target.record is not None and name in target.record.setters:
+            self._require_setter_runtime_visible(target.record, name, location)
+            self._call_accessor(
+                target.record.setters[name],  # type: ignore[arg-type]
+                target,
+                [value],
                 location,
-                code="E2704",
             )
-        self._require_field_runtime_visible(target, name, location)
-        if target.record is not None:
-            expected = target.record.field_types.get(name)
-            if expected is not None:
-                validate_type(name, value, expected, location)
-        target.fields[name] = value
+            return
+        if name in target.fields:
+            self._require_field_runtime_visible(target, name, location)
+            if target.record is not None:
+                expected = target.record.field_types.get(name)
+                if expected is not None:
+                    validate_type(name, value, expected, location)
+            target.fields[name] = value
+            return
+        if target.record is not None and name in target.record.getters:
+            raise EchoRuntimeError(
+                f"Property '{name}' on {target.class_name} is read-only",
+                location,
+                code="E3217",
+            )
+        raise EchoRuntimeError(
+            f"Unknown field '{name}' on {target.class_name}",
+            location,
+            code="E2704",
+        )
+
+    def _call_accessor(
+        self,
+        function: EchoFunction,
+        receiver: object,
+        values: list[object],
+        location: SourceLocation,
+    ) -> object:
+        declaration = function.declaration
+        rest = declaration.parameters[1:]
+        if len(values) != len(rest):
+            raise EchoRuntimeError(
+                f"Property '{declaration.name}' expected {len(rest)} value(s), got {len(values)}",
+                location,
+                code="E3217",
+            )
+        new_env = Environment(parent=function.closure, is_function=True)
+        new_env.function_name = declaration.name
+        this_param = declaration.parameters[0]
+        raise_exact_shape_error(receiver, this_param.type, location)
+        if not matches_type(receiver, this_param.type):
+            raise EchoTypeError(
+                f"Argument 'this' in property '{declaration.name}' must be of type "
+                f"{format_type(this_param.type)}, got {echo_type_name(receiver)}",
+                location,
+                code="E2706",
+            )
+        new_env.define("this", receiver, this_param.type, mutable=True, const=False)
+        for parameter, value in zip(rest, values, strict=True):
+            raise_exact_shape_error(value, parameter.type, location)
+            if not matches_type(value, parameter.type):
+                raise EchoTypeError(
+                    f"Argument '{parameter.name}' in property '{declaration.name}' must be of type "
+                    f"{format_type(parameter.type)}, got {echo_type_name(value)}",
+                    location,
+                    code="E2706",
+                )
+            if parameter.const:
+                freeze(value)
+            new_env.define(
+                parameter.name,
+                value,
+                parameter.type,
+                mutable=not parameter.const,
+                const=parameter.const,
+            )
+        return self._run_with_class_visibility(function.class_id, declaration, new_env, location)
 
     def _run_with_class_visibility(
         self,
@@ -1802,6 +1909,34 @@ class Interpreter:
             f"Method '{name}' is private on {record.name}",
             location,
             help_text="Private methods are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_getter_runtime_visible(
+        self, record: ClassRecord | None, name: str, location: SourceLocation
+    ) -> None:
+        if record is None or name not in record.private_getters:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Getter '{name}' is private on {record.name}",
+            location,
+            help_text="Private getters are only accessible inside methods of the same class.",
+            code="E3215",
+        )
+
+    def _require_setter_runtime_visible(
+        self, record: ClassRecord | None, name: str, location: SourceLocation
+    ) -> None:
+        if record is None or name not in record.private_setters:
+            return
+        if record.class_id in self._class_visibility_stack:
+            return
+        raise EchoRuntimeError(
+            f"Setter '{name}' is private on {record.name}",
+            location,
+            help_text="Private setters are only accessible inside methods of the same class.",
             code="E3215",
         )
 

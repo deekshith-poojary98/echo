@@ -492,8 +492,12 @@ class Parser:
         self._expect(TokenType.LEFT_BRACE, "{")
         fields: list[ClassField] = []
         methods: list[FunctionDeclaration] = []
+        getters: list[FunctionDeclaration] = []
+        setters: list[FunctionDeclaration] = []
         seen_fields: set[str] = set()
         seen_methods: set[str] = set()
+        seen_getters: set[str] = set()
+        seen_setters: set[str] = set()
         saw_new = False
         while not self._check(TokenType.RIGHT_BRACE) and not self._check(TokenType.EOF):
             is_private = False
@@ -502,9 +506,13 @@ class Parser:
                 priv_token = self._advance()
                 is_private = True
                 priv_location = priv_token.location
-                if not self._check(TokenType.FN) and not self._check(TokenType.NEW):
+                if (
+                    not self._check(TokenType.FN)
+                    and not self._check(TokenType.NEW)
+                    and not self._is_property_keyword()
+                ):
                     raise ParseError(
-                        "'priv' must precede 'fn' or appear on a field inside 'new { ... }'",
+                        "'priv' must precede 'fn', 'get', 'set', or appear on a field inside 'new { ... }'",
                         priv_location,
                     )
             if self._check(TokenType.FN):
@@ -520,8 +528,44 @@ class Parser:
                         f"Method '{method.name}' conflicts with a field in class '{name_token.lexeme}'",
                         method.location,
                     )
+                if method.name in seen_getters or method.name in seen_setters:
+                    raise ParseError(
+                        f"Method '{method.name}' conflicts with a property in class '{name_token.lexeme}'",
+                        method.location,
+                    )
                 seen_methods.add(method.name)
                 methods.append(method)
+                continue
+            if self._is_property_keyword():
+                kind = self._peek().lexeme
+                accessor = self._parse_property_accessor(name_token.lexeme, kind)
+                accessor.private = is_private
+                if accessor.name in seen_fields:
+                    raise ParseError(
+                        f"Property '{accessor.name}' conflicts with a field in class '{name_token.lexeme}'",
+                        accessor.location,
+                    )
+                if accessor.name in seen_methods:
+                    raise ParseError(
+                        f"Property '{accessor.name}' conflicts with a method in class '{name_token.lexeme}'",
+                        accessor.location,
+                    )
+                if kind == "get":
+                    if accessor.name in seen_getters:
+                        raise ParseError(
+                            f"Duplicate getter '{accessor.name}' in class '{name_token.lexeme}'",
+                            accessor.location,
+                        )
+                    seen_getters.add(accessor.name)
+                    getters.append(accessor)
+                else:
+                    if accessor.name in seen_setters:
+                        raise ParseError(
+                            f"Duplicate setter '{accessor.name}' in class '{name_token.lexeme}'",
+                            accessor.location,
+                        )
+                    seen_setters.add(accessor.name)
+                    setters.append(accessor)
                 continue
             if is_private:
                 raise ParseError(
@@ -540,6 +584,7 @@ class Parser:
                         name_token.lexeme,
                         seen_fields,
                         seen_methods,
+                        seen_getters | seen_setters,
                     )
                 )
                 continue
@@ -554,14 +599,24 @@ class Parser:
                 unexpected.location,
             )
         self._expect(TokenType.RIGHT_BRACE, "}")
-        return ClassDeclaration(token.location, name_token.lexeme, fields, methods, implements)
+        return ClassDeclaration(
+            token.location,
+            name_token.lexeme,
+            fields,
+            methods,
+            implements,
+            getters,
+            setters,
+        )
 
     def _parse_class_new_block(
         self,
         class_name: str,
         seen_fields: set[str],
         seen_methods: set[str],
+        seen_properties: set[str] | None = None,
     ) -> list[ClassField]:
+        property_names = seen_properties or set()
         self._expect(TokenType.NEW, "new")
         self._expect(TokenType.LEFT_BRACE, "{")
         fields: list[ClassField] = []
@@ -576,6 +631,11 @@ class Parser:
             if field_token.lexeme in seen_methods:
                 raise ParseError(
                     f"Field '{field_token.lexeme}' conflicts with a method in class '{class_name}'",
+                    field_token.location,
+                )
+            if field_token.lexeme in property_names:
+                raise ParseError(
+                    f"Field '{field_token.lexeme}' conflicts with a property in class '{class_name}'",
                     field_token.location,
                 )
             seen_fields.add(field_token.lexeme)
@@ -616,6 +676,60 @@ class Parser:
         body = self._parse_block_body()
         self._expect(TokenType.RIGHT_BRACE, "}")
         return FunctionDeclaration(fn_token.location, name, parameters, body, False, return_type)
+
+    def _parse_property_accessor(self, class_name: str, kind: str) -> FunctionDeclaration:
+        kw_token = self._advance()
+        name = self._expect_name("getter name" if kind == "get" else "setter name")
+        self._expect(TokenType.LEFT_PAREN, "(")
+        parameters = self._parse_parameters(receiver_class=class_name, allow_omit_this=False)
+        self._expect(TokenType.RIGHT_PAREN, ")")
+        if not parameters or parameters[0].name != "this":
+            raise ParseError(
+                f"{kind} '{name}' must take 'this' as its first parameter",
+                kw_token.location,
+            )
+        if kind == "get":
+            if len(parameters) != 1:
+                raise ParseError(
+                    f"get '{name}' must take only 'this'",
+                    kw_token.location,
+                )
+        else:
+            if len(parameters) != 2:
+                raise ParseError(
+                    f"set '{name}' must take 'this' and exactly one value parameter",
+                    kw_token.location,
+                )
+            if parameters[1].variadic:
+                raise ParseError(
+                    f"set '{name}' value parameter cannot be variadic",
+                    kw_token.location,
+                )
+            if parameters[1].pattern is not None:
+                raise ParseError(
+                    f"set '{name}' value parameter cannot be a destructuring pattern",
+                    kw_token.location,
+                )
+        return_type = None
+        if self._match(TokenType.ARROW):
+            return_type = self._parse_type()
+            if kind == "set":
+                raise ParseError(
+                    f"set '{name}' cannot declare a return type",
+                    kw_token.location,
+                )
+        if self._match(TokenType.FAT_ARROW):
+            body_expr = self.parse_expression()
+            self._expect(TokenType.SEMICOLON, ";")
+            return FunctionDeclaration(kw_token.location, name, parameters, body_expr, True, return_type)
+        self._expect(TokenType.LEFT_BRACE, "{")
+        body = self._parse_block_body()
+        self._expect(TokenType.RIGHT_BRACE, "}")
+        return FunctionDeclaration(kw_token.location, name, parameters, body, False, return_type)
+
+    def _is_property_keyword(self) -> bool:
+        token = self._peek()
+        return self._is_name(token) and token.lexeme in {"get", "set"}
 
     def parse_interface(self) -> InterfaceDeclaration:
         token = self._expect(TokenType.INTERFACE, "interface")

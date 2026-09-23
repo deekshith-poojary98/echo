@@ -25,6 +25,10 @@ class ClassRecord:
     closure: object | None = None
     private_fields: frozenset[str] = field(default_factory=frozenset)
     private_methods: frozenset[str] = field(default_factory=frozenset)
+    getters: dict[str, object] = field(default_factory=dict)
+    setters: dict[str, object] = field(default_factory=dict)
+    private_getters: frozenset[str] = field(default_factory=frozenset)
+    private_setters: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass

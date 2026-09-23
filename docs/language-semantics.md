@@ -573,4 +573,10 @@ v0.8.6 adds type methods (`fn origin() -> Point` with no `this`; call `Point.ori
 v0.8.7 adds optional `implements` (`class User implements Named`); inference without `implements` remains; failures **E3214**.
 v0.8.8 is a docs/README release pass (no language changes).
 v0.8.9 is the first public PyPI release of `echolang` (no language changes).
+v0.9.0 adds compound assign on class members (`this.x += 1`).
+v0.9.1 adds `priv` on fields and methods.
+v0.9.2 adds positional construction `Point(3, 4)`.
+v0.9.3 makes `clone()` deep for lists, hashes, and class instances.
+v0.9.4 adds named `format()` placeholders via a trailing hash.
+v0.9.5 adds class properties (`get name(this)` / `set name(this, value: T)`; soft keywords; field-style access).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).
