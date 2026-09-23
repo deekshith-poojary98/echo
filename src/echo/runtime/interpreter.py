@@ -127,6 +127,10 @@ from echo.runtime.builtins import (
     do_read_file,
     do_read_file_or,
     do_read_line,
+    do_regex_find,
+    do_regex_match,
+    do_regex_replace,
+    do_regex_split,
     do_remove_file,
     do_remove_tree,
     do_repeat,
@@ -1228,6 +1232,23 @@ class Interpreter:
             old = args[0] if target is not None else _nth(args, 1, method, location)
             new = args[1] if target is not None else _nth(args, 2, method, location)
             return do_replace_first(value, old, new, location)
+        if method == "regexMatch":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_regex_match(text, pattern, location)
+        if method == "regexFind":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_regex_find(text, pattern, location)
+        if method == "regexReplace":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            replacement = args[1] if target is not None else _nth(args, 2, method, location)
+            return do_regex_replace(text, pattern, replacement, location)
+        if method == "regexSplit":
+            text = target if target is not None else _nth(args, 0, method, location)
+            pattern = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_regex_split(text, pattern, location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":

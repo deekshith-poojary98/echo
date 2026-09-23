@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.9.5**. **0.9.6** (`mkdirAll` / `removeTree`) continues the drafted **0.9.6–0.9.9** tail. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
+Current tagged version is **v0.9.6**. **0.9.7** (regex builtins) continues the **0.9.6–0.9.9** stdlib/language tail. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -715,7 +715,7 @@ Inheritance trees, abstract classes, generics on classes, operator overloading, 
 
 ## 0.9.x — ergonomics / OOP polish
 
-**Status: 0.9.0–0.9.6 implemented; 0.9.7–0.9.9 drafted.**
+**Status: 0.9.0–0.9.7 implemented; 0.9.8–0.9.9 drafted.**
 
 **0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite. Thin stdlib slices and one analyzer nit close the series.
 
@@ -730,7 +730,7 @@ Shape: finish day-to-day rough edges on the 0.8 OOP surface, then a short script
 | 0.9.4 | Named `format()` placeholders via trailing hash | implemented (0.9.4) |
 | 0.9.5 | Class properties `get` / `set` | implemented (0.9.5) |
 | 0.9.6 | `mkdirAll` / `removeTree` | implemented (0.9.6) |
-| 0.9.7 | Regex builtins | drafted |
+| 0.9.7 | Regex builtins | implemented (0.9.7) |
 | 0.9.8 | Union narrowing in `if type(...)` | drafted |
 | 0.9.9 | Thin dates builtins | drafted |
 
@@ -913,13 +913,26 @@ Rules:
 
 ### 0.9.7 — regex builtins
 
-Thin match/replace surface for scripting. Not a regex dialect redesign.
+Thin Python-`re` wrappers. No regex object type.
 
-**Drafted surface:**
+**Implemented spelling:**
 
-- Match / find / replace on strings (exact API at implement time)
-- Abort on invalid pattern; optional `*Or` twin if it matches existing recovery style
-- No full regex object type unless needed for capture groups
+```echo
+say(regexMatch("hello 42", "\\d+"));
+say(regexFind("hello 42", "\\d+"));
+say(regexReplace("a1b2", "\\d", "X"));
+say(regexSplit("a,b,c", ","));
+say("abc123".regexFind("[0-9]+"));
+```
+
+Rules:
+
+- `regexMatch` → bool (search anywhere)
+- `regexFind` → match string or `null`
+- `regexReplace` → replace all; `\1`-style groups in replacement
+- `regexSplit` → list of strings
+- Invalid pattern / bad types → **E2850**
+- Failure model unchanged
 
 ### 0.9.8 — union narrowing in `if type(...)`
 
@@ -947,7 +960,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## Held (do not implement)
 
-Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.6** are implemented; **0.9.7–0.9.9** are drafted. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.7** are implemented; **0.9.8–0.9.9** are drafted. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -959,7 +972,7 @@ Do not move global holds into 0.9 polish without an explicit series start. **0.8
 | Named `format()` placeholders | implemented (**0.9.4**) |
 | Class properties `get` / `set` | implemented (**0.9.5**) |
 | `mkdirAll` / `removeTree` | implemented (**0.9.6**) |
-| Regex builtins | drafted (**0.9.7**) |
+| Regex builtins | implemented (**0.9.7**) |
 | Union narrowing in `if type(...)` | drafted (**0.9.8**) |
 | Thin dates builtins | drafted (**0.9.9**) |
 | Generics | held |

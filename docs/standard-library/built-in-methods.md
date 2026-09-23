@@ -464,6 +464,22 @@ Replaces the first non-overlapping occurrence of `old` with `new`. `old` must be
 say("foo foo".replaceFirst("foo", "bar"));    // bar foo
 ```
 
+### `regexMatch(pattern)` / `regexFind(pattern)` / `regexReplace(pattern, replacement)` / `regexSplit(pattern)`
+Thin Python-`re` wrappers for scripting. Patterns are strings. Invalid patterns abort (**E2850**).
+
+- `regexMatch` — `true` if the pattern matches anywhere
+- `regexFind` — first match as a string, or `null`
+- `regexReplace` — replace all matches; backrefs like `\1` work in the replacement
+- `regexSplit` — split into a list of strings
+
+```echo
+say(regexMatch("hello 42", "\\d+"));           // true
+say(regexFind("hello 42", "\\d+"));            // 42
+say(regexReplace("a1b2", "\\d", "X"));         // aXbX
+say(regexSplit("a,b,c", ","));                 // ["a", "b", "c"]
+say("abc123".regexFind("[0-9]+"));             // 123
+```
+
 ### `join(separator)`
 Joins a list of strings with `separator` and returns a string. `separator` may be empty. An empty list is `""`. Non-string items or a non-string separator are type errors.
 

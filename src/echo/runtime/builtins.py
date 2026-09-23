@@ -21,6 +21,7 @@ from echo.core.lists import (
     reverse_list,
     slice_sequence,
 )
+from echo.core.regexutil import regex_find, regex_match, regex_replace, regex_split
 from echo.core.strings import (
     apply_format,
     replace_first_string,
@@ -103,6 +104,10 @@ BUILTIN_NAMES = frozenset(
         "padStart",
         "padEnd",
         "replaceFirst",
+        "regexMatch",
+        "regexFind",
+        "regexReplace",
+        "regexSplit",
         "fileExists",
         "cwd",
         "exit",
@@ -209,6 +214,10 @@ BUILTIN_PARAMS = {
     "padStart": ["width", "fill"],
     "padEnd": ["width", "fill"],
     "replaceFirst": ["old", "new"],
+    "regexMatch": ["pattern"],
+    "regexFind": ["pattern"],
+    "regexReplace": ["pattern", "replacement"],
+    "regexSplit": ["pattern"],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
@@ -276,6 +285,10 @@ STANDALONE_PARAMS = {
     "padStart": ["value", "width", "fill"],
     "padEnd": ["value", "width", "fill"],
     "replaceFirst": ["value", "old", "new"],
+    "regexMatch": ["text", "pattern"],
+    "regexFind": ["text", "pattern"],
+    "regexReplace": ["text", "pattern", "replacement"],
+    "regexSplit": ["text", "pattern"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -371,6 +384,10 @@ STANDALONE_MIN_ARGS = {
     "padStart": 3,
     "padEnd": 3,
     "replaceFirst": 3,
+    "regexMatch": 2,
+    "regexFind": 2,
+    "regexReplace": 3,
+    "regexSplit": 2,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
@@ -874,6 +891,27 @@ def do_pad_end(value: object, width: object, fill: object, location: SourceLocat
 
 def do_replace_first(value: object, old: object, new: object, location: SourceLocation | None = None) -> str:
     return replace_first_string(require_string(value, "replaceFirst", location), old, new, location)
+
+
+def do_regex_match(text: object, pattern: object, location: SourceLocation | None = None) -> bool:
+    return regex_match(text, pattern, location)
+
+
+def do_regex_find(text: object, pattern: object, location: SourceLocation | None = None) -> str | None:
+    return regex_find(text, pattern, location)
+
+
+def do_regex_replace(
+    text: object,
+    pattern: object,
+    replacement: object,
+    location: SourceLocation | None = None,
+) -> str:
+    return regex_replace(text, pattern, replacement, location)
+
+
+def do_regex_split(text: object, pattern: object, location: SourceLocation | None = None) -> list[str]:
+    return regex_split(text, pattern, location)
 
 
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:

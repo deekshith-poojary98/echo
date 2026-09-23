@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.7
+
+Regex builtins. Eighth **0.9** slice (scripting stdlib). Failure model unchanged.
+
+- `regexMatch(text, pattern) -> bool` — search anywhere (`re.search`)
+- `regexFind(text, pattern)` — first match string, or `null`
+- `regexReplace(text, pattern, replacement) -> str` — replace all; `\1`-style groups allowed
+- `regexSplit(text, pattern) -> list` — split on pattern
+- Invalid pattern / non-string args → **E2850**; method form on strings works
+- No regex object type; dialect is Python `re`
+
 ## 0.9.6
 
 Recursive filesystem create/delete. Seventh **0.9** slice (scripting stdlib). Failure model unchanged.
