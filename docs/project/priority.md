@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v0.9.8**. **0.9.9** (thin dates) closes the **0.9.6–0.9.9** stdlib/language tail. **0.8 OOP spine is complete** (0.8.0–0.8.9). Failure model stays abort + `*Or`.
+Current tagged version is **v1.0.0**. The **0.8** OOP spine and **0.9** ergonomics / stdlib series are complete; **1.0.0** is the stable release of that surface. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -707,7 +707,8 @@ Does not require `implements` for assignability (inference stays).
 | `implements` | optional in **0.8.7** — locked; inference remains | required always |
 | Inheritance | never in 0.8 | single `extends` later series |
 | Class vs exact hash | strictly nominal | convert helpers later |
-| First PyPI version | **0.8.9** | 1.0.0 |
+| First PyPI version | **0.8.9** (first upload) | wait for 1.0.0 |
+| Stable public version | **1.0.0** | keep pre-1.0 forever |
 
 ### Out of 0.8 (still held globally)
 
@@ -715,7 +716,7 @@ Inheritance trees, abstract classes, generics on classes, operator overloading, 
 
 ## 0.9.x — ergonomics / OOP polish
 
-**Status: 0.9.0–0.9.9 implemented.**
+**Status: 0.9.0–0.9.9 implemented; closed by stable release 1.0.0.**
 
 **0.8 is closed.** **0.9** is small language ergonomics from dogfooding — not inheritance, packages, generics, or a failure-model rewrite. Thin stdlib slices and one analyzer nit close the series.
 
@@ -733,6 +734,7 @@ Shape: finish day-to-day rough edges on the 0.8 OOP surface, then a short script
 | 0.9.7 | Regex builtins | implemented (0.9.7) |
 | 0.9.8 | Union narrowing in `if type(...)` | implemented (0.9.8) |
 | 0.9.9 | Thin dates builtins | implemented (0.9.9) |
+| 1.0.0 | Stable release (0.9.9 surface) | implemented (1.0.0) |
 
 ### 0.9.0 — compound assign on members
 
@@ -957,13 +959,21 @@ Beyond `now()` / `wait`. Instant + format/parse enough for scripts — not a cal
 - Bad input → **E2851**; no date object type; no cron / locale calendars
 - HTTP stays **held**
 
+### 1.0.0 — stable release
+
+**Implemented.** No new language syntax. Public surface is **0.9.9**. Failure model unchanged.
+
+- Version **1.0.0**; preferred CLI remains **`elang`**
+- Marks the completed 0.8 + 0.9 work as the stable release line
+- Held items stay held until a new series is drafted
+
 ### Out of 0.9 (still held globally)
 
 Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, HTTP builtins, `Point.new` (positional construction shipped instead).
 
 ## Held (do not implement)
 
-Do not move global holds into 0.9 polish without an explicit series start. **0.8.0–0.8.9** and **0.9.0–0.9.9** are implemented. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, and stable **1.0.0** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -978,6 +988,7 @@ Do not move global holds into 0.9 polish without an explicit series start. **0.8
 | Regex builtins | implemented (**0.9.7**) |
 | Union narrowing in `if type(...)` | implemented (**0.9.8**) |
 | Thin dates builtins | implemented (**0.9.9**) |
+| Stable release | implemented (**1.0.0**) |
 | Generics | held |
 | Async | held |
 | VM / JIT | held |

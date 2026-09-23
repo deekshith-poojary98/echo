@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **0.9.9**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, and thin UTC dates (`formatTime` / `parseTime` / duration helpers). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **1.0.0**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, and thin UTC dates (`formatTime` / `parseTime` / duration helpers). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -18,6 +18,7 @@ What Echo still does **not** do. As of **0.9.9**, the language includes modules,
 - 0.9.7: `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `re`)
 - 0.9.8: union narrowing in `if type(x) == "..."` (and matching `else if`)
 - 0.9.9: `formatTime` / `parseTime` (UTC) plus `days` / `hours` / `minutes`
+- 1.0.0: stable release (same surface as 0.9.9)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 

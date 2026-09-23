@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0
+
+Stable release. Marks the completed **0.8** OOP spine and **0.9** ergonomics / stdlib series as the public 1.0 language surface. No new language syntax. Failure model unchanged.
+
+- Version **1.0.0** — same capabilities as **0.9.9**
+- Preferred CLI remains **`elang`** (also `echolang`, `echo`); package **`echolang`** on PyPI
+- Held items (inheritance, generics, packages, async, `try` / `catch`, HTTP, LSP-as-product) stay held
+
 ## 0.9.9
 
 Thin dates builtins. Tenth **0.9** slice (scripting stdlib); closes the **0.9.x** series. Failure model unchanged.
