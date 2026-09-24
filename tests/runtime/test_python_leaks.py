@@ -428,6 +428,32 @@ say(xs);
     assert "nested too deeply" in result.output
 
 
+def test_clone_nested_too_deeply_is_echo_error_not_python():
+    result = run_echo(
+        """
+xs: list = [];
+for i: int in 1..1200 {
+    nxt: list = [];
+    nxt.push(xs);
+    xs = nxt;
+}
+xs.clone();
+say("reached");
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "reached" not in result.lines
+
+
+def test_regex_replace_invalid_group_is_echo_error_not_python():
+    result = run_echo('say(regexReplace("hello", "(h)", "\\\\2"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "invalid regex replacement" in result.output
+
+
 def test_equality_nested_too_deeply_is_echo_error_not_python():
     result = run_echo(
         """
