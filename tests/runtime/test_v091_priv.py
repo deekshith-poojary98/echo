@@ -129,3 +129,110 @@ say(p.y);
     )
     assert result.exit_code == 0
     assert result.lines == ["7", "4"]
+
+
+def test_hash_rest_omits_priv_fields_outside_class():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+        label: str = "public";
+    }
+}
+
+v: Vault = Vault {};
+{ label: str, rest: dynamic... } = v;
+say(label);
+say(rest.has("secret"));
+say(rest.has("label"));
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["public", "false", "false"]
+
+
+def test_named_priv_destructure_is_e3215():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+    }
+}
+
+v: Vault = Vault {};
+{ secret: str } = v;
+say(secret);
+"""
+    )
+    assert result.exit_code != 0
+    assert "private" in result.output.lower() or "E3215" in result.output
+
+
+def test_switch_named_priv_field_is_e3215():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+        label: str = "public";
+    }
+}
+
+v: Vault = Vault {};
+switch v {
+    { secret: str } { say(secret); }
+    else { say("else"); }
+}
+"""
+    )
+    assert result.exit_code != 0
+    assert "private" in result.output.lower() or "E3215" in result.output
+
+
+def test_switch_rest_omits_priv_fields_outside_class():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+        label: str = "public";
+    }
+}
+
+v: Vault = Vault {};
+switch v {
+    { label: str, rest: dynamic... } {
+        say(label);
+        say(rest.has("secret"));
+    }
+    else { say("else"); }
+}
+"""
+    )
+    assert result.exit_code == 0
+    assert result.lines == ["public", "false"]
+
+
+def test_hash_rest_includes_priv_fields_inside_method():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+        label: str = "public";
+    }
+
+    fn dump(this) {
+        { label: str, rest: dynamic... } = this;
+        say(rest["secret"]);
+    }
+}
+
+v: Vault = Vault {};
+v.dump();
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "s3cret"
