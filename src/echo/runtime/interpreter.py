@@ -1686,12 +1686,14 @@ class Interpreter:
                 source_key = field.source_key()
                 if source_key not in mapping:
                     return False
+                if isinstance(value, ClassInstance):
+                    self._require_field_runtime_visible(value, source_key, location)
                 if field.declared_type is not None and not matches_type(mapping[source_key], field.declared_type):
                     return False
                 self._bind_pattern_name(field, mapping[source_key], env, declare=True, const=False, location=location)
                 taken.add(source_key)
             if rest is not None:
-                rest_value = {key: item for key, item in mapping.items() if key not in taken}
+                rest_value = self._visible_hash_rest(value, mapping, taken)
                 if rest.declared_type is not None:
                     for item in rest_value.values():
                         if not matches_type(item, rest.declared_type):
@@ -1779,7 +1781,7 @@ class Interpreter:
                 )
                 taken.add(source_key)
             if rest is not None:
-                rest_value = {key: item for key, item in mapping.items() if key not in taken}
+                rest_value = self._visible_hash_rest(value, mapping, taken)
                 if rest.declared_type is not None:
                     for item in rest_value.values():
                         if not matches_type(item, rest.declared_type):
@@ -1929,13 +1931,29 @@ class Interpreter:
             if pushed:
                 self._class_visibility_stack.pop()
 
+    def _is_field_runtime_visible(self, target: ClassInstance, name: str) -> bool:
+        record = target.record
+        if record is None or name not in record.private_fields:
+            return True
+        return record.class_id in self._class_visibility_stack
+
+    def _visible_hash_rest(
+        self, value: object, mapping: dict[str, object], taken: set[str]
+    ) -> dict[str, object]:
+        instance = value if isinstance(value, ClassInstance) else None
+        rest_value: dict[str, object] = {}
+        for key, item in mapping.items():
+            if key in taken:
+                continue
+            if instance is not None and not self._is_field_runtime_visible(instance, key):
+                continue
+            rest_value[key] = item
+        return rest_value
+
     def _require_field_runtime_visible(
         self, target: ClassInstance, name: str, location: SourceLocation
     ) -> None:
-        record = target.record
-        if record is None or name not in record.private_fields:
-            return
-        if record.class_id in self._class_visibility_stack:
+        if self._is_field_runtime_visible(target, name):
             return
         raise EchoRuntimeError(
             f"Field '{name}' is private on {target.class_name}",
