@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **1.1.7**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), Base64 helpers (`base64Encode` / `base64Decode`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **1.1.8**, the language includes modules, CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), Base64 helpers (`base64Encode` / `base64Decode`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -27,6 +27,7 @@ What Echo still does **not** do. As of **1.1.7**, the language includes modules,
 - 1.1.5: playground host-policy docs (CLI vs playground `Host`)
 - 1.1.6: `tools/sync_builtins.py` + builtin inventory page
 - 1.1.7: `base64Encode` / `base64Decode` (**E2854**)
+- 1.1.8: `elang builtins` (+ `-V` / help epilog)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 

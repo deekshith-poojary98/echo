@@ -32,7 +32,7 @@ Already in the language or CLI:
 | 1.1.5 | Docs generator or playground HTTP policy | implemented (1.1.5 — playground host policy) |
 | 1.1.6 | Thin docs generator / builtin sync | implemented (1.1.6) |
 | 1.1.7 | `base64Encode` / `base64Decode` | implemented (1.1.7) |
-| 1.1.8 | CLI builtin inventory polish | drafted |
+| 1.1.8 | CLI builtin inventory polish | implemented (1.1.8) |
 | 1.1.9 | Series close (docs / examples) | drafted |
 
 Details: [Priority — 1.1.x](/project/priority).

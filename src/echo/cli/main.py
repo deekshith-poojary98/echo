@@ -32,6 +32,7 @@ from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
 from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
+from echo.runtime.builtins import builtin_names
 from echo.semantics.analyzer import SemanticAnalyzer
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
@@ -174,10 +175,25 @@ def main(argv: list[str] | None = None) -> int:
         return _main_fmt(raw[1:])
     if raw[:1] == ["lint"]:
         return _main_lint(raw[1:])
-    parser = argparse.ArgumentParser(description="Run an Echo source file")
+    if raw[:1] == ["builtins"]:
+        return _main_builtins(raw[1:])
+    parser = argparse.ArgumentParser(
+        description="Run an Echo source file",
+        epilog=(
+            "Subcommands: check, test, fmt, lint, builtins.\n"
+            "Use 'elang <subcommand> -h' for details. "
+            "'elang --version' prints the interpreter version."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
-    parser.add_argument("--version", action="store_true", help="Print the Echo version and exit")
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="store_true",
+        help="Print the Echo version and exit",
+    )
     if "--" in raw:
         split_at = raw.index("--")
         interpreter_argv, program_args = raw[:split_at], raw[split_at + 1 :]
@@ -363,6 +379,26 @@ def _main_check(argv: list[str]) -> int:
             if code != 0:
                 status = code
     return status
+
+
+def _main_builtins(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="echo builtins",
+        description="List Echo prelude builtin names (from builtin_names())",
+    )
+    parser.add_argument(
+        "--count",
+        action="store_true",
+        help="Print only the number of builtins",
+    )
+    args = parser.parse_args(argv)
+    names = sorted(builtin_names())
+    if args.count:
+        print(len(names))
+        return 0
+    for name in names:
+        print(name)
+    return 0
 
 
 def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:

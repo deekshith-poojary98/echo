@@ -30,6 +30,26 @@ elang program.echo --plain
 
 `--plain` drops Rich panels for simple text diagnostics.
 
+### Version
+
+```bash
+elang --version
+elang -V
+```
+
+Prints `Echo <version>` and exits 0.
+
+### List prelude builtins
+
+```bash
+elang builtins
+elang builtins --count
+```
+
+Prints every prelude builtin name (sorted), one per line — same set as `builtin_names()` / the generated [builtin inventory](/reference/builtin-inventory). `--count` prints only the number. First argv token must be the word `builtins`; `elang builtins.echo` still runs that file.
+
+Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`.
+
 ### Analyze without running
 
 ```bash

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.8
+
+CLI builtin inventory polish. Eighth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- `elang builtins` lists sorted prelude names; `--count` prints the total
+- Top-level `-h` epilog lists subcommands; `-V` is a short alias for `--version`
+
 ## 1.1.7
 
 `base64Encode` / `base64Decode`. Seventh **1.1** slice. Failure model unchanged.
