@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **1.0.0**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, and thin UTC dates (`formatTime` / `parseTime` / duration helpers). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **1.1.9**, the language includes modules, CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), Base64 helpers (`base64Encode` / `base64Decode`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -19,6 +19,16 @@ What Echo still does **not** do. As of **1.0.0**, the language includes modules,
 - 0.9.8: union narrowing in `if type(x) == "..."` (and matching `else if`)
 - 0.9.9: `formatTime` / `parseTime` (UTC) plus `days` / `hours` / `minutes`
 - 1.0.0: stable release (same surface as 0.9.9)
+- 1.1.0: `httpGet` / `httpPost` with `Host.allow_http`
+- 1.1.1: request headers, `httpOk` / `httpRedirect`, `httpGetOr` / `httpPostOr`
+- 1.1.2: `urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`
+- 1.1.3: `watch` source locations + `Watched:` dump on abort
+- 1.1.4: error-message / code pass (**E2801**, **E2850**–**E2853** documented)
+- 1.1.5: playground host-policy docs (CLI vs playground `Host`)
+- 1.1.6: `tools/sync_builtins.py` + builtin inventory page
+- 1.1.7: `base64Encode` / `base64Decode` (**E2854**)
+- 1.1.8: `elang builtins` (+ `-V` / help epilog)
+- 1.1.9: series close (README / examples / playground docs for full **1.1** surface)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -36,7 +46,8 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - `format()` has no width / precision / alignment specs
 - Properties are not part of interfaces (`implements` still checks methods only)
 - Interpolation tokenization is not fully strict
-- No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only); no HTTP builtins
+- No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only)
+- HTTP is thin (no cookies/session client, no multipart); playground denies HTTP (`allow_http=False`)
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
 
 ## Why this page exists

@@ -46,7 +46,7 @@ say("Hello, Echo!");
 
 ## Next
 
-- [Playground](/playground)
+- [Playground](/playground) — browser demo; files / `run` / HTTP are denied there (**E2801**)
 - [Installation](/getting-started/installation)
 - [Getting Started / Language Tour](/getting-started/tour)
 - [Syntax Basics](/getting-started/syntax-basics)

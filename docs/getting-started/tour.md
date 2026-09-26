@@ -22,6 +22,7 @@ say("Version:", version);
 - Declarations and parameters need types. A `return` requires a return type annotation on the function.
 - Abort is the default on failure; inquiry and `*Or` twins cover expected absence — see [Failure model](/failure-model).
 - Classes and interfaces ship (0.8.x): `new { ... }` fields, methods, type methods, unbound methods, optional `implements`. Class inheritance does not.
+- Scripting helpers through **1.1.x**: HTTP (host-gated), URL / Base64, regex, UTC dates. List prelude names with `elang builtins`.
 - Comments:
 
 ```echo

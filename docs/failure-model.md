@@ -22,11 +22,12 @@ That is the default for host and stdlib builtins.
 Exceptions already shipped (this note does not change them):
 
 - Inquiry: `fileExists`, `isDir`, `has`, `contains`, `find` (`-1`)
-- Fallback twin: `envOr(name, fallback)`, `readFileOr(path, fallback)`, `parseJsonOr(text, fallback)`, `asIntOr(value, fallback)`, `asFloatOr(value, fallback)`
+- Fallback twin: `envOr(name, fallback)`, `readFileOr(path, fallback)`, `parseJsonOr(text, fallback)`, `asIntOr(value, fallback)`, `asFloatOr(value, fallback)`, `httpGetOr` / `httpPostOr` (1.1.1)
 - Status value: `run` → `{ "code", "stdout", "stderr" }` (non-zero is not an Echo error)
 - Programmer abort: `assert(cond, message)`, `fail(message)`, `exit(code)`
 - Test-only continue: `expect` / `expectEq` / `expectNeq` under `echo test` (0.5.6). They record and continue in that runner; outside `echo test` they abort like `assert`. This is not `try` / `catch` and not user-level recovery.
-- Host policy: `allow_files=False` / `allow_run=False` always abort (`E2801`)
+- Host policy: `allow_files=False` / `allow_run=False` / `allow_http=False` always abort (`E2801`)
+- HTTP status: non-2xx from `httpGet` / `httpPost` still returns the response hash (not an Echo error)
 
 `default()` is truthiness. It is not error handling. Do not overload it.
 
@@ -115,15 +116,16 @@ Do **not** change `readFile` to return a hash or `null` on failure. The aborting
 
 ---
 
-## Shipped stdlib twins (0.5.3)
+## Shipped stdlib twins (0.5.3 + 1.1.1)
 
-`readFileOr`, `parseJsonOr`, `asIntOr`, `asFloatOr`. Builtins only — not a language revision.
+`readFileOr`, `parseJsonOr`, `asIntOr`, `asFloatOr` (0.5.3). `httpGetOr` / `httpPostOr` (1.1.1). Builtins only — not a language revision.
 
 | Twin | Fallback | Still abort |
 | --- | --- | --- |
 | `readFileOr(path, fallback)` | missing file, invalid UTF-8, directory, other read OSError that `readFile` reports as cannot-read | host deny (`E2801`); non-`str` path |
 | `parseJsonOr(text, fallback)` | invalid JSON | non-`str` text |
 | `asIntOr(value, fallback)` / `asFloatOr(value, fallback)` | unparseable `str`, `null`, list, hash, and other “cannot convert” values | `bool` (no twin); success still returns the number |
+| `httpGetOr` / `httpPostOr` | network / timeout / invalid or empty URL (`E2852` runtime) | host deny (`E2801`); type errors (`E2852` type) |
 
 ---
 

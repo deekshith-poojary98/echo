@@ -145,6 +145,21 @@ say("Hello, \${name}!");
 `,
   },
   {
+    id: 'urls',
+    label: 'URL & Base64',
+    source: `payload: str = "echo lang";
+encoded: str = base64Encode(payload);
+say("base64:", encoded);
+say("roundtrip:", base64Decode(encoded));
+
+query: str = urlQuery({ q: payload, page: "1" });
+path: str = urlJoin("https://example.com/search", "?" + query);
+say("url:", path);
+say("ok status:", httpOk(200));
+say("redirect:", httpRedirect(302));
+`,
+  },
+  {
     id: 'bank',
     label: 'Bank account',
     source: bankSource,
@@ -606,6 +621,9 @@ onUnmounted(() => {
         </button>
       </div>
     </header>
+    <p class="echo-playground__policy">
+      No files, processes, or HTTP here — denied builtins abort with E2801. CLI allows them by default.
+    </p>
 
     <div
       ref="workspaceEl"

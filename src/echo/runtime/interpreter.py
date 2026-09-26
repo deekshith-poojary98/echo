@@ -106,6 +106,12 @@ from echo.runtime.builtins import (
     do_format_time,
     do_has,
     do_hours,
+    do_http_get,
+    do_http_get_or,
+    do_http_ok,
+    do_http_post,
+    do_http_post_or,
+    do_http_redirect,
     do_index_of,
     do_is_dir,
     do_join,
@@ -147,6 +153,12 @@ from echo.runtime.builtins import (
     do_split,
     do_starts_with,
     do_unique,
+    do_url_decode,
+    do_url_encode,
+    do_url_join,
+    do_url_query,
+    do_base64_decode,
+    do_base64_encode,
     do_wait,
     do_write_file,
     do_write_json,
@@ -191,6 +203,7 @@ class Interpreter:
         self.host = host or Host()
         self.test_session = test_session
         self._class_visibility_stack: list[int] = []
+        self._watched: list[tuple[Environment, str]] = []
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -268,7 +281,7 @@ class Interpreter:
             value = self.evaluate(statement.initializer, env)
             validate_type(statement.name, value, statement.declared_type, statement.location)
             if env.is_watched(statement.name):
-                self._watch(statement.name, value, env)
+                self._watch(statement.name, value, env, location=statement.location)
             if statement.const:
                 freeze(value)
             env.define(
@@ -304,7 +317,7 @@ class Interpreter:
         if isinstance(statement, AssignmentStatement):
             value = self.evaluate(statement.value, env)
             if env.is_watched(statement.name):
-                self._watch(statement.name, value, env)
+                self._watch(statement.name, value, env, location=statement.location)
             env.assign(statement.name, value, statement.location)
             return
         if isinstance(statement, CompoundAssignment):
@@ -319,7 +332,7 @@ class Interpreter:
             }[statement.operator.type]
             value = binary_op(op, current, rhs, statement.location)
             if env.is_watched(statement.name):
-                self._watch(statement.name, value, env)
+                self._watch(statement.name, value, env, location=statement.location)
             env.assign(statement.name, value, statement.location)
             return
         if isinstance(statement, IndexAssignment):
@@ -333,7 +346,13 @@ class Interpreter:
             value = self.evaluate(statement.value, env)
             self._index_assign(inner, final_key, value, statement.location)
             if env.is_watched(statement.name):
-                self._watch(statement.name, container, env, "modified by index assignment to")
+                self._watch(
+                    statement.name,
+                    container,
+                    env,
+                    "modified by index assignment to",
+                    location=statement.location,
+                )
             return
         if isinstance(statement, MemberAssignment):
             target = self.evaluate(statement.object, env)
@@ -342,7 +361,13 @@ class Interpreter:
             value = self.evaluate(statement.value, env)
             self._member_assign(target, statement.name, value, statement.location)
             if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
-                self._watch(statement.object.name, target, env, "modified by field assignment to")
+                self._watch(
+                    statement.object.name,
+                    target,
+                    env,
+                    "modified by field assignment to",
+                    location=statement.location,
+                )
             return
         if isinstance(statement, MemberCompoundAssignment):
             target = self.evaluate(statement.object, env)
@@ -360,7 +385,13 @@ class Interpreter:
             value = binary_op(op, current, rhs, statement.location)
             self._member_assign(target, statement.name, value, statement.location)
             if isinstance(statement.object, VariableExpression) and env.is_watched(statement.object.name):
-                self._watch(statement.object.name, target, env, "modified by field assignment to")
+                self._watch(
+                    statement.object.name,
+                    target,
+                    env,
+                    "modified by field assignment to",
+                    location=statement.location,
+                )
             return
         if isinstance(statement, ExpressionStatement):
             self.evaluate(statement.expression, env)
@@ -461,6 +492,7 @@ class Interpreter:
         if isinstance(statement, WatchStatement):
             for name in statement.names:
                 env.watch(name, statement.location)
+                self._watched.append((env, name))
             return
         raise EchoRuntimeError(f"Unknown statement: {type(statement).__name__}", statement.location, code="E2799")
 
@@ -1036,7 +1068,13 @@ class Interpreter:
         result = self._dispatch_builtin(method, target, evaluated, env, location)
 
         if method in MUTATING_METHODS and isinstance(target_expr, VariableExpression) and env.is_watched(target_expr.name):
-            self._watch(target_expr.name, env.get(target_expr.name, location), env, f"modified by {method}() to")
+            self._watch(
+                target_expr.name,
+                env.get(target_expr.name, location),
+                env,
+                f"modified by {method}() to",
+                location=location,
+            )
         return result
 
     def _invoke_builtin_values(
@@ -1268,6 +1306,86 @@ class Interpreter:
             return do_hours(target if target is not None else _first(args, method, location), location)
         if method == "minutes":
             return do_minutes(target if target is not None else _first(args, method, location), location)
+        if method == "httpGet":
+            url = target if target is not None else _nth(args, 0, method, location)
+            headers = None
+            if target is not None:
+                if len(args) > 1:
+                    raise ArgumentError("httpGet() expected at most 1 argument(s)", location, code="E2604")
+                if args:
+                    headers = args[0]
+            else:
+                if len(args) > 2:
+                    raise ArgumentError("httpGet() expected at most 2 argument(s)", location, code="E2604")
+                if len(args) >= 2:
+                    headers = args[1]
+            return do_http_get(url, self.host, location, headers=headers)
+        if method == "httpPost":
+            url = target if target is not None else _nth(args, 0, method, location)
+            body = args[0] if target is not None else _nth(args, 1, method, location)
+            headers = None
+            if target is not None:
+                if len(args) > 2:
+                    raise ArgumentError("httpPost() expected at most 2 argument(s)", location, code="E2604")
+                if len(args) >= 2:
+                    headers = args[1]
+            else:
+                if len(args) > 3:
+                    raise ArgumentError("httpPost() expected at most 3 argument(s)", location, code="E2604")
+                if len(args) >= 3:
+                    headers = args[2]
+            return do_http_post(url, body, self.host, location, headers=headers)
+        if method == "httpGetOr":
+            url = target if target is not None else _nth(args, 0, method, location)
+            headers = None
+            if target is not None:
+                fallback = _nth(args, 0, method, location)
+                if len(args) > 2:
+                    raise ArgumentError("httpGetOr() expected at most 2 argument(s)", location, code="E2604")
+                if len(args) >= 2:
+                    headers = args[1]
+            else:
+                fallback = _nth(args, 1, method, location)
+                if len(args) > 3:
+                    raise ArgumentError("httpGetOr() expected at most 3 argument(s)", location, code="E2604")
+                if len(args) >= 3:
+                    headers = args[2]
+            return do_http_get_or(url, fallback, self.host, location, headers=headers)
+        if method == "httpPostOr":
+            url = target if target is not None else _nth(args, 0, method, location)
+            body = args[0] if target is not None else _nth(args, 1, method, location)
+            headers = None
+            if target is not None:
+                fallback = _nth(args, 1, method, location)
+                if len(args) > 3:
+                    raise ArgumentError("httpPostOr() expected at most 3 argument(s)", location, code="E2604")
+                if len(args) >= 3:
+                    headers = args[2]
+            else:
+                fallback = _nth(args, 2, method, location)
+                if len(args) > 4:
+                    raise ArgumentError("httpPostOr() expected at most 4 argument(s)", location, code="E2604")
+                if len(args) >= 4:
+                    headers = args[3]
+            return do_http_post_or(url, body, fallback, self.host, location, headers=headers)
+        if method == "httpOk":
+            return do_http_ok(target if target is not None else _first(args, method, location), location)
+        if method == "httpRedirect":
+            return do_http_redirect(target if target is not None else _first(args, method, location), location)
+        if method == "urlEncode":
+            return do_url_encode(target if target is not None else _first(args, method, location), location)
+        if method == "urlDecode":
+            return do_url_decode(target if target is not None else _first(args, method, location), location)
+        if method == "urlJoin":
+            base = target if target is not None else _nth(args, 0, method, location)
+            path = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_url_join(base, path, location)
+        if method == "urlQuery":
+            return do_url_query(target if target is not None else _first(args, method, location), location)
+        if method == "base64Encode":
+            return do_base64_encode(target if target is not None else _first(args, method, location), location)
+        if method == "base64Decode":
+            return do_base64_decode(target if target is not None else _first(args, method, location), location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":
@@ -2023,13 +2141,13 @@ class Interpreter:
             if declared_type is not None:
                 validate_type(pattern.name, value, declared_type, location)
             if env.is_watched(pattern.name):
-                self._watch(pattern.name, value, env)
+                self._watch(pattern.name, value, env, location=location)
             if const:
                 freeze(value)
             env.define(pattern.name, value, declared_type, mutable=not const, const=const)
             return
         if env.is_watched(pattern.name):
-            self._watch(pattern.name, value, env)
+            self._watch(pattern.name, value, env, location=location)
         env.assign(pattern.name, value, location)
 
     def _index_assign(self, target: object, index: object, value: object, location: SourceLocation) -> None:
@@ -2076,7 +2194,14 @@ class Interpreter:
         for statement in statements:
             self.execute_statement(statement, env)
 
-    def _watch(self, name: str, value: object, env: Environment, action: str = "changed to") -> None:
+    def _watch(
+        self,
+        name: str,
+        value: object,
+        env: Environment,
+        action: str = "changed to",
+        location: SourceLocation | None = None,
+    ) -> None:
         # stringify() already handles cycles and converts RecursionError on
         # extreme nesting into EchoRuntimeError. Watch must not abort the
         # assignment that triggered it, so fall back to a placeholder.
@@ -2084,7 +2209,34 @@ class Interpreter:
             rendered = stringify(value)
         except EchoRuntimeError:
             rendered = "<nested too deeply>"
-        print(f"WATCH: {name} {action} {rendered} (in {env.current_function_name()})")
+        where = f" (in {env.current_function_name()})"
+        at = f" at {location}" if location is not None else ""
+        print(f"WATCH: {name} {action} {rendered}{where}{at}")
+
+    def watched_snapshot(self, env: Environment | None = None) -> list[tuple[str, str]]:
+        snapshot: list[tuple[str, str]] = []
+        seen: set[str] = set()
+        entries = list(self._watched)
+        if not entries:
+            root = env or getattr(self, "global_env", None)
+            if root is not None:
+                for name in root.all_watched_names():
+                    entries.append((root, name))
+        for watch_env, name in entries:
+            if name in seen:
+                continue
+            seen.add(name)
+            try:
+                value = watch_env.get(name, None)
+            except EchoRuntimeError:
+                rendered = "<unavailable>"
+            else:
+                try:
+                    rendered = stringify(value)
+                except EchoRuntimeError:
+                    rendered = "<nested too deeply>"
+            snapshot.append((name, rendered))
+        return snapshot
 
 
 def _first(args: list[object], method: str, location: SourceLocation) -> object:

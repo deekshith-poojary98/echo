@@ -170,6 +170,16 @@ say(y.default(0));          // 5
 
 These talk to the process, not new language syntax. They abort with Echo errors.
 
+| Flag / policy | CLI / default `Host` | Browser playground |
+| --- | --- | --- |
+| `allow_files` | `True` | `False` → **E2801** |
+| `allow_run` | `True` | `False` → **E2801** |
+| `allow_http` | `True` | `False` → **E2801** |
+| Environment | process env | empty (`environ={}`) |
+| `args()` | CLI program args | `[]` |
+
+URL helpers and `httpOk` / `httpRedirect` do not need network access and stay available in the playground. Live `httpGet` / `httpPost` do not.
+
 ### `args()`
 Returns the program argument list as `str` values. Does not include the source path or interpreter flags such as `--plain`.
 
@@ -291,6 +301,66 @@ Runs `command` with a list of string arguments. Empty `args` is allowed. Does no
 proc: hash = run("true", []);
 say(proc["code"]);
 ```
+
+### `httpGet(url)` / `httpPost(url, body)`
+HTTP request helpers. Return a hash `{ "status": int, "body": str, "headers": hash }`. `url` and `body` are strings. Optional trailing `headers` hash (string → string). Non-2xx responses still return the hash. Network failures and bad types abort (**E2852**). The playground host denies these (`allow_http=False` → **E2801**).
+
+```echo
+resp: hash = httpGet("https://example.com/", { Accept: "application/json" });
+say(resp["status"]);
+created: hash = httpPost("https://example.com/items", "hello", { "Content-Type": "text/plain" });
+```
+
+### `httpGetOr(url, fallback)` / `httpPostOr(url, body, fallback)`
+Same requests as `httpGet` / `httpPost`, but network failures (**E2852** runtime) return `fallback` instead of aborting. Optional trailing `headers` hash. Host deny (**E2801**) and type errors still abort.
+
+```echo
+resp: dynamic = httpGetOr("https://example.com/", { status: 0, body: "", headers: {} });
+```
+
+### `httpOk(status|resp)` / `httpRedirect(status|resp)`
+`true` when the status is 2xx or 3xx. Accepts an `int` status or a response hash with an `int` `status` field.
+
+```echo
+if (httpOk(resp)) {
+    say(resp["body"]);
+}
+```
+
+### `urlEncode(text)` / `urlDecode(text)`
+Percent-encode / decode a string (spaces become `%20`).
+
+```echo
+say(urlEncode("a b"));   // a%20b
+say(urlDecode("a%20b")); // a b
+```
+
+### `urlJoin(base, path)`
+Join a base URL with a relative path (same rules as Python `urllib.parse.urljoin`).
+
+```echo
+say(urlJoin("https://example.com/api/", "users"));
+```
+
+### `urlQuery(params)`
+Encode a hash of string keys/values as a query string (`application/x-www-form-urlencoded`).
+
+```echo
+say(urlQuery({ q: "echo lang", page: "1" }));
+```
+
+Bad types for URL helpers → **E2853**.
+
+### `base64Encode(text)` / `base64Decode(text)`
+Encode / decode a UTF-8 string as standard Base64 (stdlib `base64`). Method form works on strings.
+
+```echo
+say(base64Encode("hello"));   // aGVsbG8=
+say(base64Decode("aGVsbG8=")); // hello
+say("echo".base64Encode());
+```
+
+Bad types or invalid Base64 text → **E2854**.
 
 ### `now()`
 Returns the current unix time as an `int` number of seconds. Takes no arguments.

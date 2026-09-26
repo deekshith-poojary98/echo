@@ -88,24 +88,25 @@ The grammar does **not** invent syntax Echo does not have (`try`/`catch`, hex/bi
 
 ## Keep the builtin list in sync
 
-Builtin names are a **manual** list in `syntaxes/echo.tmLanguage.json`, under the `builtins` repository pattern (`support.function.builtin.echo`).
+Builtin names are generated from runtime by `tools/sync_builtins.py` (TextMate `builtins` match + playground `BUILTINS` + `docs/reference/builtin-inventory.md`).
 
 When Echo gains or renames a builtin:
 
-1. Read `BUILTIN_NAMES` in `src/echo/runtime/builtins.py`.
-2. Add any reserved names that are not in that set yet.
-3. Put the names in the `builtins` `match` regex, **alphabetically**, each followed by `\\s*(?=\\()` so only calls highlight as builtins.
-4. Run the sync test:
+1. Add it to `BUILTIN_NAMES` in `src/echo/runtime/builtins.py` (and wire the builtin).
+2. Run:
 
 ```bash
-python -m pytest echo-syntax-highlighter/tests/test_grammar_sync.py -q
+python tools/sync_builtins.py
+python -m pytest echo-syntax-highlighter/tests/test_grammar_sync.py tests/runtime/test_v116_docs_generator.py -q
 ```
+
+Or CI-style: `python tools/sync_builtins.py --check`.
 
 Keywords and type names come from `src/echo/frontend/tokens.py` (`KEYWORDS`, `TYPE_NAMES`). Number, string, comment, and interpolation rules must match `src/echo/frontend/lexer.py`.
 
 The docs site imports this grammar directly (`docs/.vitepress/config.ts`). Updating the JSON updates markdown Echo fences; you do not copy the file into `docs/`.
 
-The playground editor uses a separate CodeMirror stream parser (`docs/.vitepress/theme/echoLanguage.ts`), not this TextMate file. Keep its `BUILTINS` set in the same alphabetical order as this grammar.
+The playground editor uses a separate CodeMirror stream parser (`docs/.vitepress/theme/echoLanguage.ts`); `sync_builtins.py` keeps its `BUILTINS` set aligned with this grammar.
 
 ## License
 

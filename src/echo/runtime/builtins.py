@@ -6,8 +6,11 @@ import time
 from pathlib import Path
 
 from echo.core.dateutil import days, format_time, hours, minutes, parse_time
+from echo.core.base64util import base64_decode, base64_encode
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
+from echo.core.httputil import http_get, http_ok, http_post, http_redirect
 from echo.core.jsonutil import parse_json, write_json
+from echo.core.urlutil import url_decode, url_encode, url_join, url_query
 from echo.core.lists import (
     count_of,
     empty,
@@ -114,6 +117,18 @@ BUILTIN_NAMES = frozenset(
         "days",
         "hours",
         "minutes",
+        "httpGet",
+        "httpPost",
+        "httpGetOr",
+        "httpPostOr",
+        "httpOk",
+        "httpRedirect",
+        "urlEncode",
+        "urlDecode",
+        "urlJoin",
+        "urlQuery",
+        "base64Encode",
+        "base64Decode",
         "fileExists",
         "cwd",
         "exit",
@@ -229,6 +244,18 @@ BUILTIN_PARAMS = {
     "days": [],
     "hours": [],
     "minutes": [],
+    "httpGet": ["headers"],
+    "httpPost": ["body", "headers"],
+    "httpGetOr": ["fallback", "headers"],
+    "httpPostOr": ["body", "fallback", "headers"],
+    "httpOk": [],
+    "httpRedirect": [],
+    "urlEncode": [],
+    "urlDecode": [],
+    "urlJoin": ["path"],
+    "urlQuery": [],
+    "base64Encode": [],
+    "base64Decode": [],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
@@ -305,6 +332,18 @@ STANDALONE_PARAMS = {
     "days": ["count"],
     "hours": ["count"],
     "minutes": ["count"],
+    "httpGet": ["url", "headers"],
+    "httpPost": ["url", "body", "headers"],
+    "httpGetOr": ["url", "fallback", "headers"],
+    "httpPostOr": ["url", "body", "fallback", "headers"],
+    "httpOk": ["status"],
+    "httpRedirect": ["status"],
+    "urlEncode": ["text"],
+    "urlDecode": ["text"],
+    "urlJoin": ["base", "path"],
+    "urlQuery": ["params"],
+    "base64Encode": ["text"],
+    "base64Decode": ["text"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -409,6 +448,18 @@ STANDALONE_MIN_ARGS = {
     "days": 1,
     "hours": 1,
     "minutes": 1,
+    "httpGet": 1,
+    "httpPost": 2,
+    "httpGetOr": 2,
+    "httpPostOr": 3,
+    "httpOk": 1,
+    "httpRedirect": 1,
+    "urlEncode": 1,
+    "urlDecode": 1,
+    "urlJoin": 2,
+    "urlQuery": 1,
+    "base64Encode": 1,
+    "base64Decode": 1,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
@@ -966,6 +1017,109 @@ def do_hours(count: object, location: SourceLocation | None = None) -> int:
 
 def do_minutes(count: object, location: SourceLocation | None = None) -> int:
     return minutes(count, location)
+
+
+def do_http_get(
+    url: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> dict[str, object]:
+    if not host.allow_http:
+        raise EchoRuntimeError("httpGet() is not available in this host", location, code="E2801")
+    return http_get(url, headers, location=location, timeout=host.http_timeout)
+
+
+def do_http_post(
+    url: object,
+    body: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> dict[str, object]:
+    if not host.allow_http:
+        raise EchoRuntimeError("httpPost() is not available in this host", location, code="E2801")
+    return http_post(url, body, headers, location=location, timeout=host.http_timeout)
+
+
+def do_http_get_or(
+    url: object,
+    fallback: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> object:
+    if not host.allow_http:
+        raise EchoRuntimeError("httpGetOr() is not available in this host", location, code="E2801")
+    try:
+        return http_get(
+            url,
+            headers,
+            location=location,
+            timeout=host.http_timeout,
+            builtin="httpGetOr",
+        )
+    except EchoRuntimeError as exc:
+        if exc.code == "E2852" and not isinstance(exc, EchoTypeError):
+            return fallback
+        raise
+
+
+def do_http_post_or(
+    url: object,
+    body: object,
+    fallback: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> object:
+    if not host.allow_http:
+        raise EchoRuntimeError("httpPostOr() is not available in this host", location, code="E2801")
+    try:
+        return http_post(
+            url,
+            body,
+            headers,
+            location=location,
+            timeout=host.http_timeout,
+            builtin="httpPostOr",
+        )
+    except EchoRuntimeError as exc:
+        if exc.code == "E2852" and not isinstance(exc, EchoTypeError):
+            return fallback
+        raise
+
+
+def do_http_ok(value: object, location: SourceLocation | None = None) -> bool:
+    return http_ok(value, location)
+
+
+def do_http_redirect(value: object, location: SourceLocation | None = None) -> bool:
+    return http_redirect(value, location)
+
+
+def do_url_encode(text: object, location: SourceLocation | None = None) -> str:
+    return url_encode(text, location)
+
+
+def do_url_decode(text: object, location: SourceLocation | None = None) -> str:
+    return url_decode(text, location)
+
+
+def do_url_join(base: object, path: object, location: SourceLocation | None = None) -> str:
+    return url_join(base, path, location)
+
+
+def do_url_query(params: object, location: SourceLocation | None = None) -> str:
+    return url_query(params, location)
+
+
+def do_base64_encode(text: object, location: SourceLocation | None = None) -> str:
+    return base64_encode(text, location)
+
+
+def do_base64_decode(text: object, location: SourceLocation | None = None) -> str:
+    return base64_decode(text, location)
 
 
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:

@@ -30,6 +30,26 @@ elang program.echo --plain
 
 `--plain` drops Rich panels for simple text diagnostics.
 
+### Version
+
+```bash
+elang --version
+elang -V
+```
+
+Prints `Echo <version>` and exits 0.
+
+### List prelude builtins
+
+```bash
+elang builtins
+elang builtins --count
+```
+
+Prints every prelude builtin name (sorted), one per line — same set as `builtin_names()` / the generated [builtin inventory](/reference/builtin-inventory). `--count` prints only the number. First argv token must be the word `builtins`; `elang builtins.echo` still runs that file.
+
+Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`.
+
 ### Analyze without running
 
 ```bash
@@ -202,9 +222,11 @@ Unused parameters are `unused-local`. `unused-export` and `redundant-parens` are
 
 - The file passed to the CLI is the entry module when it contains `import`.
 - Errors are reported by category: syntax, semantic, name, type, argument, index, mutation, or execution.
+- The [browser playground](/playground) uses a restricted `Host`: `allow_files=False`, `allow_run=False`, `allow_http=False`, and an empty environment. Denied builtins abort with **E2801**. The CLI defaults to allowing those operations. Details: [Host builtins](/standard-library/built-in-methods#host).
 
 ## See Also
 
 - [Quick Start](/getting-started/quick-start)
+- [Playground](/playground)
 - [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting)
 - [Known Limitations](/errors-diagnostics/known-limitations)

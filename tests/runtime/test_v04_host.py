@@ -620,4 +620,4 @@ def test_host_run_process_respects_allow_run():
 
 def test_playground_worker_uses_restricted_host():
     worker = (REPO_ROOT / "docs" / "public" / "echo-playground-worker.js").read_text(encoding="utf-8")
-    assert "Host(allow_files=False, allow_run=False, environ={})" in worker
+    assert "Host(allow_files=False, allow_run=False, allow_http=False, environ={})" in worker

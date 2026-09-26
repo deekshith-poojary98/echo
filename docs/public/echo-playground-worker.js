@@ -51,7 +51,7 @@ def run_echo(source):
         tokens = Lexer().tokenize(source, filename="<playground>")
         program = Parser(tokens).parse()
         SemanticAnalyzer().analyze(program)
-        Interpreter(Host(allow_files=False, allow_run=False, environ={})).execute(program)
+        Interpreter(Host(allow_files=False, allow_run=False, allow_http=False, environ={})).execute(program)
         return json.dumps({"ok": True, "output": stdout.getvalue()})
     except EchoExit as exc:
         payload = {"ok": exc.code == 0, "output": stdout.getvalue()}

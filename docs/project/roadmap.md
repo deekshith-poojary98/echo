@@ -7,17 +7,35 @@ Public status page for what ships today. The ordered implementation plan lives u
 Already in the language or CLI:
 
 - File modules: `import` / `export` (v0.3)
-- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`
+- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
 - Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3); field defaults (0.8.4); unbound methods (0.8.5); type methods (0.8.6); optional `implements` (0.8.7); docs/README release pass (0.8.8); first PyPI package `echolang` (0.8.9)
 - Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5); `mkdirAll` / `removeTree` (0.9.6); regex builtins (0.9.7); union narrowing in `if type(...)` (0.9.8); thin dates `formatTime` / `parseTime` / duration helpers (0.9.9)
 - Stable release **1.0.0** (same surface as 0.9.9)
+- **1.1.x** complete (**1.1.0–1.1.9**): HTTP + URL + Base64, watch/abort polish, error-code docs, playground host policy, builtin sync, `elang builtins`, series docs/examples
 
 ## Next
 
-No open **0.9.x** items. Further work needs a new drafted series in [Priority](/project/priority). Held items below stay held.
+**1.1.x** is complete. Later candidates (not drafted as a series yet): packages / stdlib-module imports, YAML, LSP. See [Priority](/project/priority) holds.
+
+### Closed — 1.1.x HTTP + polish
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 1.1.0 | `httpGet` / `httpPost` + `allow_http` host flag | implemented (1.1.0) |
+| 1.1.1 | HTTP headers / status helpers / `*Or` twins | implemented (1.1.1) |
+| 1.1.2 | YAML or URL helpers (only if still tiny) | implemented (1.1.2 — URL only) |
+| 1.1.3 | `watch` / abort diagnostics polish | implemented (1.1.3) |
+| 1.1.4 | Error-message / code pass | implemented (1.1.4) |
+| 1.1.5 | Docs generator or playground HTTP policy | implemented (1.1.5 — playground host policy) |
+| 1.1.6 | Thin docs generator / builtin sync | implemented (1.1.6) |
+| 1.1.7 | `base64Encode` / `base64Decode` | implemented (1.1.7) |
+| 1.1.8 | CLI builtin inventory polish | implemented (1.1.8) |
+| 1.1.9 | Series close (docs / examples) | implemented (1.1.9) |
+
+Details: [Priority — 1.1.x](/project/priority).
 
 ### Closed — 0.9.x ergonomics / OOP polish
 
@@ -46,9 +64,11 @@ Not near-term. Do not treat these as upcoming releases unless a draft series exi
 - Generics, async, VM / JIT, packages
 - `try` / `catch`, `Result` / `Option`, user-level recovery syntax
 - Overloading, LSP
-- HTTP builtins (dates shipped in **0.9.9**; regex in **0.9.7**; `mkdirAll` / `removeTree` in **0.9.6**)
+- YAML (deferred; needs a dependency)
 - Test DSL (`test "name" { }`)
-- Class inheritance (out of 0.8; interfaces only; not the 0.9 ergonomics spine)
+- Class inheritance (out of 0.8; interfaces only)
+
+**1.1.x** (HTTP through series docs) is closed above — do not re-list those as held.
 
 See [Known Limitations](/errors-diagnostics/known-limitations) and [failure model](/failure-model).
 

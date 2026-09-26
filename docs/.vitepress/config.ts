@@ -94,6 +94,7 @@ export default defineConfig({
           { text: 'Operators', link: '/reference/operators' },
           { text: 'Loops Reference', link: '/reference/loops-reference' },
           { text: 'CLI and Execution Model', link: '/reference/cli-and-execution-model' },
+          { text: 'Builtin Inventory', link: '/reference/builtin-inventory' },
           { text: 'Failure Model', link: '/failure-model' }
         ]
       },

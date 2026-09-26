@@ -15,7 +15,7 @@ def _require_secs(value: object, method: str, location: SourceLocation | None) -
 
 def _require_count(value: object, method: str, location: SourceLocation | None) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
-        raise EchoTypeError(f"{method}() requires an int", location, code="E2851")
+        raise EchoTypeError(f"{method}() count must be an int", location, code="E2851")
     return value
 
 

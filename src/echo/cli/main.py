@@ -32,6 +32,7 @@ from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
 from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
+from echo.runtime.builtins import builtin_names
 from echo.semantics.analyzer import SemanticAnalyzer
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
@@ -45,16 +46,18 @@ except ImportError:
 
 
 def run_source(source: str, filename: str = "<input>", *, plain: bool = True, host: Host | None = None) -> int:
+    interpreter = Interpreter(host=host)
     try:
         tokens = Lexer().tokenize(source, filename=filename)
         program = Parser(tokens).parse()
         SemanticAnalyzer().analyze(program)
-        Interpreter(host=host).execute(program)
+        interpreter.execute(program)
         return 0
     except EchoExit as exc:
         return exc.code
     except EchoError as exc:
         _print_error(exc, source, plain)
+        _print_watched(interpreter, plain)
         return 1
 
 
@@ -83,19 +86,21 @@ def run_file(source_path: str, plain: bool = False, host: Host | None = None) ->
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
         return 1
     source = file_path.read_text(encoding="utf-8")
+    interpreter = Interpreter(host=host)
     try:
         tokens = Lexer().tokenize(source, filename=str(file_path))
         program = Parser(tokens).parse()
         if _has_imports(program):
-            ModuleLoader().load(file_path, host=host)
+            ModuleLoader().load(file_path, host=host, interpreter=interpreter)
         else:
             SemanticAnalyzer().analyze(program)
-            Interpreter(host=host).execute(program)
+            interpreter.execute(program)
         return 0
     except EchoExit as exc:
         return exc.code
     except EchoError as exc:
         _print_error(exc, _error_source(exc, source), plain)
+        _print_watched(interpreter, plain)
         return 1
 
 
@@ -143,6 +148,16 @@ def _print_error(error: EchoError, source: str, plain: bool) -> None:
         _print_plain_error("Hint", help_text, plain)
 
 
+def _print_watched(interpreter: Interpreter, plain: bool) -> None:
+    snapshot = interpreter.watched_snapshot()
+    if not snapshot:
+        return
+    lines = ["Watched:"]
+    for name, rendered in snapshot:
+        lines.append(f"  {name} = {rendered}")
+    _print_plain_error("Watch", "\n".join(lines), plain)
+
+
 def _print_plain_error(title: str, message: str, plain: bool) -> None:
     if not plain and Console is not None and Panel is not None:
         Console().print(Panel(message, title=title, border_style="red", expand=False))
@@ -160,10 +175,25 @@ def main(argv: list[str] | None = None) -> int:
         return _main_fmt(raw[1:])
     if raw[:1] == ["lint"]:
         return _main_lint(raw[1:])
-    parser = argparse.ArgumentParser(description="Run an Echo source file")
+    if raw[:1] == ["builtins"]:
+        return _main_builtins(raw[1:])
+    parser = argparse.ArgumentParser(
+        description="Run an Echo source file",
+        epilog=(
+            "Subcommands: check, test, fmt, lint, builtins.\n"
+            "Use 'elang <subcommand> -h' for details. "
+            "'elang --version' prints the interpreter version."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
-    parser.add_argument("--version", action="store_true", help="Print the Echo version and exit")
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="store_true",
+        help="Print the Echo version and exit",
+    )
     if "--" in raw:
         split_at = raw.index("--")
         interpreter_argv, program_args = raw[:split_at], raw[split_at + 1 :]
@@ -214,6 +244,7 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
             return exc.code
         except EchoError as exc:
             _print_error(exc, source, plain)
+            _print_watched(interpreter, plain)
         except KeyboardInterrupt:
             print()
         except Exception:
@@ -348,6 +379,26 @@ def _main_check(argv: list[str]) -> int:
             if code != 0:
                 status = code
     return status
+
+
+def _main_builtins(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="echo builtins",
+        description="List Echo prelude builtin names (from builtin_names())",
+    )
+    parser.add_argument(
+        "--count",
+        action="store_true",
+        help="Print only the number of builtins",
+    )
+    args = parser.parse_args(argv)
+    names = sorted(builtin_names())
+    if args.count:
+        print(len(names))
+        return 0
+    for name in names:
+        print(name)
+    return 0
 
 
 def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:

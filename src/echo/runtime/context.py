@@ -164,6 +164,18 @@ class Environment:
             current = current.parent
         return False
 
+    def all_watched_names(self) -> list[str]:
+        names: list[str] = []
+        seen: set[str] = set()
+        current: Environment | None = self
+        while current:
+            for name in sorted(current.watched):
+                if name not in seen:
+                    seen.add(name)
+                    names.append(name)
+            current = current.parent
+        return names
+
     def current_function_name(self) -> str:
         current: Environment | None = self
         while current:

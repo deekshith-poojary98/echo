@@ -1,5 +1,91 @@
 # Changelog
 
+## 1.1.9
+
+Series close (docs / examples). Closes the **1.1.x** series. No new language syntax. Failure model unchanged.
+
+- README + language tour + mini-programs reflect the full **1.1** surface (HTTP, URL, Base64, `elang builtins`)
+- Example `examples/url_and_base64.echo` (playground-safe); playground “URL & Base64” demo updated
+- Capability matrix / roadmap / known limitations mark **1.1.x** complete through **1.1.9**
+
+## 1.1.8
+
+CLI builtin inventory polish. Eighth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- `elang builtins` lists sorted prelude names; `--count` prints the total
+- Top-level `-h` epilog lists subcommands; `-V` is a short alias for `--version`
+
+## 1.1.7
+
+`base64Encode` / `base64Decode`. Seventh **1.1** slice. Failure model unchanged.
+
+- `base64Encode(text)` / `base64Decode(text)` — UTF-8 ↔ standard Base64 via stdlib `base64`
+- Method form on strings; bad types or invalid Base64 → **E2854**
+- No new PyPI deps
+
+## 1.1.6
+
+Thin docs generator / builtin sync. Sixth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- `tools/sync_builtins.py` generates `docs/reference/builtin-inventory.md` and refreshes TextMate + playground `BUILTINS` from `builtin_names()`
+- `--check` mode fails CI-style when those surfaces drift
+- Tests require every runtime builtin to appear in built-in-methods docs
+
+## 1.1.5
+
+Playground HTTP / host-policy docs. Fifth **1.1** slice (extended series continues through **1.1.9**). No new language syntax. Failure model unchanged.
+
+- Document CLI vs playground `Host` flags (`allow_files` / `allow_run` / `allow_http`, empty env)
+- Playground page and UI note that files, processes, and HTTP are denied (**E2801**)
+- Playground example for URL helpers + `httpOk` / `httpRedirect` (no live HTTP)
+- Defaults unchanged: playground stays locked down; CLI stays permissive
+
+## 1.1.4
+
+Error-message / code pass. Fifth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- Document host / scripting codes **E2801**, **E2850**–**E2853** in errors-and-troubleshooting
+- Document `httpGetOr` / `httpPostOr` in the failure-model twins table
+- Align URL / duration type-error wording with HTTP / regex style (`… must be a …`)
+
+## 1.1.3
+
+`watch` / abort diagnostics polish. Fourth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- `watch` mutation lines include a source location (`at file:line:col`)
+- On abort, CLI and `echo test` dump current watched bindings under a `Watched:` section
+- Empty watch set prints nothing extra
+
+## 1.1.2
+
+Thin URL helpers. Third **1.1** slice. Failure model unchanged. YAML deferred (no stdlib YAML; would need a dependency).
+
+- `urlEncode(text)` / `urlDecode(text)` — percent-encoding via `urllib.parse`
+- `urlJoin(base, path)` — resolve a relative path against a base URL
+- `urlQuery(params)` — encode a string→string hash as an `application/x-www-form-urlencoded` query
+- Method form works; bad types → **E2853**
+
+## 1.1.1
+
+HTTP request headers, status helpers, and `*Or` twins. Second **1.1** slice. Failure model unchanged.
+
+- Optional trailing headers hash: `httpGet(url, headers)`, `httpPost(url, body, headers)`
+- `httpGetOr(url, fallback[, headers])` / `httpPostOr(url, body, fallback[, headers])` — network failures return fallback; type / host-deny errors still abort
+- `httpOk(status|resp)` / `httpRedirect(status|resp)` — 2xx / 3xx checks on an int or response hash
+- Custom `Content-Type` in headers overrides the POST default (`text/plain; charset=utf-8`)
+- Response hash shape unchanged; still **E2801** / **E2852**
+
+## 1.1.0
+
+HTTP GET/POST builtins. Opens the **1.1.x** series (HTTP + post-1.0 polish). Failure model unchanged.
+
+- `httpGet(url) -> hash` with `{ status: int, body: str, headers: hash }`
+- `httpPost(url, body) -> hash` — same shape; body is `str` (`text/plain; charset=utf-8`)
+- Method form: `"https://…".httpGet()`, `"https://…".httpPost(body)`
+- `Host.allow_http` defaults `True`; playground sets `False` → **E2801**
+- Network / bad URL / bad types → **E2852**; non-2xx status returns the hash (does not abort)
+- stdlib `urllib` only; no custom request headers yet (**1.1.1**)
+
 ## 1.0.0
 
 Stable release. Marks the completed **0.8** OOP spine and **0.9** ergonomics / stdlib series as the public 1.0 language surface. No new language syntax. Failure model unchanged.
