@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.4
+
+Peel URL + Base64 into `std/url` and `std/base64`. Fifth **2.0** slice. Failure model unchanged.
+
+- `import urlEncode / urlDecode / urlJoin / urlQuery from "std/url"`
+- `import base64Encode / base64Decode from "std/base64"`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+
 ## 2.0.3
 
 Peel HTTP into `std/http`. Fourth **2.0** slice. Failure model unchanged. Host `allow_http` unchanged.

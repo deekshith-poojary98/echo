@@ -1,0 +1,8 @@
+// Echo std/url (2.0.4).
+// Canonical home for URL helpers. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export urlEncode: dynamic = urlEncode;
+export urlDecode: dynamic = urlDecode;
+export urlJoin: dynamic = urlJoin;
+export urlQuery: dynamic = urlQuery;

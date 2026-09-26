@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **2.0.3**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports including `std/http`, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins; also `import … from "std/http"`), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), Base64 helpers (`base64Encode` / `base64Decode`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** and module **E3001**–**E3005** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **2.0.4**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports including `std/http` / `std/url` / `std/base64`, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins; also `import … from "std/http"`), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`; also `std/url`), Base64 helpers (`base64Encode` / `base64Decode`; also `std/base64`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** and module **E3001**–**E3005** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -33,6 +33,7 @@ What Echo still does **not** do. As of **2.0.3**, the language includes modules 
 - 2.0.1: clearer **E3001**–**E3003** diagnostics (looked-for path, import location, nested cycle labels)
 - 2.0.2: `import … from "std/…"` from the Echo install tree (seed `std/meta`)
 - 2.0.3: HTTP family via `std/http` (prelude names still work)
+- 2.0.4: URL + Base64 via `std/url` / `std/base64` (prelude dual-path)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -53,7 +54,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only)
 - HTTP is thin (no cookies/session client, no multipart); playground denies HTTP (`allow_http=False`)
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
-- No package registry yet (`std/…` search path + `std/http` shipped in **2.0.2**–**2.0.3**; further peels **2.0.4+**)
+- No package registry yet (`std/http` / `std/url` / `std/base64` shipped in **2.0.2**–**2.0.4**; further peels **2.0.5+**)
 
 ## Why this page exists
 

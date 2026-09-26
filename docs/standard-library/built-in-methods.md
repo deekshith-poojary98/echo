@@ -329,7 +329,7 @@ if (httpOk(resp)) {
 ```
 
 ### `urlEncode(text)` / `urlDecode(text)`
-Percent-encode / decode a string (spaces become `%20`).
+Percent-encode / decode a string (spaces become `%20`). Also importable from `"std/url"` (**2.0.4**; prelude names remain).
 
 ```echo
 say(urlEncode("a b"));   // a%20b
@@ -353,7 +353,7 @@ say(urlQuery({ q: "echo lang", page: "1" }));
 Bad types for URL helpers → **E2853**.
 
 ### `base64Encode(text)` / `base64Decode(text)`
-Encode / decode a UTF-8 string as standard Base64 (stdlib `base64`). Method form works on strings.
+Encode / decode a UTF-8 string as standard Base64 (stdlib `base64`). Method form works on strings. Also importable from `"std/base64"` (**2.0.4**; prelude names remain).
 
 ```echo
 say(base64Encode("hello"));   // aGVsbG8=

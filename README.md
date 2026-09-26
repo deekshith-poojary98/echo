@@ -26,7 +26,7 @@ for i: int in 0..10 by 2 {
 - File modules: `export` / `import name from "module"` (sibling, `./…`, `../…`, nested `"lib/math"`, reserved `"std/…"`)
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
 - Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
-- Thin scripting stdlib: files, JSON, regex, UTC dates, HTTP (`httpGet` / `httpPost`, also `std/http`, host-gated), URL helpers, Base64
+- Thin scripting stdlib: files, JSON, regex, UTC dates, HTTP (`std/http` + prelude), URL (`std/url`), Base64 (`std/base64`), host-gated where noted
 - CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`
 
 ## What you do not
