@@ -202,9 +202,11 @@ Unused parameters are `unused-local`. `unused-export` and `redundant-parens` are
 
 - The file passed to the CLI is the entry module when it contains `import`.
 - Errors are reported by category: syntax, semantic, name, type, argument, index, mutation, or execution.
+- The [browser playground](/playground) uses a restricted `Host`: `allow_files=False`, `allow_run=False`, `allow_http=False`, and an empty environment. Denied builtins abort with **E2801**. The CLI defaults to allowing those operations. Details: [Host builtins](/standard-library/built-in-methods#host).
 
 ## See Also
 
 - [Quick Start](/getting-started/quick-start)
+- [Playground](/playground)
 - [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting)
 - [Known Limitations](/errors-diagnostics/known-limitations)

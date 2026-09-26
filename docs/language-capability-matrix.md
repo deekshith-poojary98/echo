@@ -1180,14 +1180,15 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Docs generator or playground HTTP policy (drafted **1.1.5**; error-code docs shipped in **1.1.4**)
+4. Docs generator / YAML (deferred from **1.1**; playground host policy shipped in **1.1.5**)
 
 ### Shipped that used to be holes
 
 args, env, files, JSON, string/collection helpers, conversion, failure-model
 thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
-destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5).
+destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5);
+HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**).
 
 ### Not holes (held)
 

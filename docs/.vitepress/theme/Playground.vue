@@ -145,6 +145,17 @@ say("Hello, \${name}!");
 `,
   },
   {
+    id: 'urls',
+    label: 'URL helpers',
+    source: `q: str = urlQuery({ q: "echo lang", page: "1" });
+say(urlEncode("a b/c"));
+say(urlJoin("https://example.com/api/", "users"));
+say(q);
+say(httpOk(200));
+say(httpRedirect(302));
+`,
+  },
+  {
     id: 'bank',
     label: 'Bank account',
     source: bankSource,
@@ -606,6 +617,9 @@ onUnmounted(() => {
         </button>
       </div>
     </header>
+    <p class="echo-playground__policy">
+      No files, processes, or HTTP here — denied builtins abort with E2801. CLI allows them by default.
+    </p>
 
     <div
       ref="workspaceEl"

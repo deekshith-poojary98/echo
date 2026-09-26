@@ -683,6 +683,16 @@ body:has(.echo-playground) {
   background: var(--vp-c-bg-alt);
 }
 
+.echo-playground__policy {
+  margin: 0;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
 .echo-playground__identity {
   display: flex;
   align-items: baseline;

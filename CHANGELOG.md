@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.5
+
+Playground HTTP / host-policy docs. Closes the **1.1.x** series. No new language syntax. Failure model unchanged.
+
+- Document CLI vs playground `Host` flags (`allow_files` / `allow_run` / `allow_http`, empty env)
+- Playground page and UI note that files, processes, and HTTP are denied (**E2801**)
+- Playground example for URL helpers + `httpOk` / `httpRedirect` (no live HTTP)
+- Defaults unchanged: playground stays locked down; CLI stays permissive
+
 ## 1.1.4
 
 Error-message / code pass. Fifth **1.1** slice. No new language syntax. Failure model unchanged.

@@ -170,6 +170,16 @@ say(y.default(0));          // 5
 
 These talk to the process, not new language syntax. They abort with Echo errors.
 
+| Flag / policy | CLI / default `Host` | Browser playground |
+| --- | --- | --- |
+| `allow_files` | `True` | `False` → **E2801** |
+| `allow_run` | `True` | `False` → **E2801** |
+| `allow_http` | `True` | `False` → **E2801** |
+| Environment | process env | empty (`environ={}`) |
+| `args()` | CLI program args | `[]` |
+
+URL helpers and `httpOk` / `httpRedirect` do not need network access and stay available in the playground. Live `httpGet` / `httpPost` do not.
+
 ### `args()`
 Returns the program argument list as `str` values. Does not include the source path or interpreter flags such as `--plain`.
 

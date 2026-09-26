@@ -14,12 +14,13 @@ Already in the language or CLI:
 - Nominal `class` + construction (0.8.0); methods + `this` (0.8.1); `interface` (0.8.2); explicit `new { ... }` fields (0.8.3); field defaults (0.8.4); unbound methods (0.8.5); type methods (0.8.6); optional `implements` (0.8.7); docs/README release pass (0.8.8); first PyPI package `echolang` (0.8.9)
 - Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5); `mkdirAll` / `removeTree` (0.9.6); regex builtins (0.9.7); union narrowing in `if type(...)` (0.9.8); thin dates `formatTime` / `parseTime` / duration helpers (0.9.9)
 - Stable release **1.0.0** (same surface as 0.9.9)
+- **1.1.x** complete: HTTP + URL helpers, watch/abort polish, error-code docs, playground host policy (**1.1.0–1.1.5**)
 
 ## Next
 
-**1.1.x** is in progress in [Priority](/project/priority). **1.1.0–1.1.4** ship HTTP + URL helpers + watch/abort polish + error-code docs.
+**1.1.x** is complete. Later candidates (not drafted as a series yet): packages / stdlib-module imports, YAML, LSP, docs generator. See [Priority](/project/priority) holds.
 
-### Drafted — 1.1.x HTTP + polish
+### Closed — 1.1.x HTTP + polish
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -28,7 +29,7 @@ Already in the language or CLI:
 | 1.1.2 | YAML or URL helpers (only if still tiny) | implemented (1.1.2 — URL only) |
 | 1.1.3 | `watch` / abort diagnostics polish | implemented (1.1.3) |
 | 1.1.4 | Error-message / code pass | implemented (1.1.4) |
-| 1.1.5 | Docs generator or playground HTTP policy | drafted |
+| 1.1.5 | Docs generator or playground HTTP policy | implemented (1.1.5 — playground host policy) |
 
 Details: [Priority — 1.1.x](/project/priority).
 
