@@ -593,4 +593,5 @@ v1.1.2 adds `urlEncode` / `urlDecode` / `urlJoin` / `urlQuery` (YAML deferred).
 v1.1.3 polishes `watch` locations and dumps watched bindings on abort.
 v1.1.4 documents **E2801** / **E2850**–**E2853** and aligns a few type-error messages.
 v1.1.5 documents playground host policy (files / `run` / HTTP denied; CLI permissive).
+v1.1.6 adds `tools/sync_builtins.py` and the generated builtin inventory page.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

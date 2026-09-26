@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **1.1.5**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2853** codes, and playground host-policy docs. This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **1.1.6**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2853** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -24,7 +24,8 @@ What Echo still does **not** do. As of **1.1.5**, the language includes modules,
 - 1.1.2: `urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`
 - 1.1.3: `watch` source locations + `Watched:` dump on abort
 - 1.1.4: error-message / code pass (**E2801**, **E2850**–**E2853** documented)
-- 1.1.5: playground host-policy docs (CLI vs playground `Host`; series complete)
+- 1.1.5: playground host-policy docs (CLI vs playground `Host`)
+- 1.1.6: `tools/sync_builtins.py` + builtin inventory page
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 

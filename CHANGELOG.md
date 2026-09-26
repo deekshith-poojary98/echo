@@ -1,8 +1,16 @@
 # Changelog
 
+## 1.1.6
+
+Thin docs generator / builtin sync. Sixth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- `tools/sync_builtins.py` generates `docs/reference/builtin-inventory.md` and refreshes TextMate + playground `BUILTINS` from `builtin_names()`
+- `--check` mode fails CI-style when those surfaces drift
+- Tests require every runtime builtin to appear in built-in-methods docs
+
 ## 1.1.5
 
-Playground HTTP / host-policy docs. Closes the **1.1.x** series. No new language syntax. Failure model unchanged.
+Playground HTTP / host-policy docs. Fifth **1.1** slice (extended series continues through **1.1.9**). No new language syntax. Failure model unchanged.
 
 - Document CLI vs playground `Host` flags (`allow_files` / `allow_run` / `allow_http`, empty env)
 - Playground page and UI note that files, processes, and HTTP are denied (**E2801**)

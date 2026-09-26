@@ -1180,7 +1180,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Docs generator / YAML (deferred from **1.1**; playground host policy shipped in **1.1.5**)
+4. Docs generator / YAML (deferred; builtin inventory sync shipped in **1.1.6**; playground host policy in **1.1.5**)
 
 ### Shipped that used to be holes
 

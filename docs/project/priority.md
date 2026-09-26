@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.4**. The **1.1.x** series is complete through **1.1.5**. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.5**. The **1.1.x** series continues; **1.1.6** is implemented. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -973,11 +973,11 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## 1.1.x — HTTP + post-1.0 polish
 
-**Status: 1.1.0–1.1.5 implemented (series complete).**
+**Status: 1.1.0–1.1.6 implemented; 1.1.7–1.1.9 drafted.**
 
-**1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics.
+**1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics; close with docs sync / base64 / CLI inventory / series docs.
 
-Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny YAML or URL helpers, watch/abort polish, error-message pass, docs/playground policy.
+Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny YAML or URL helpers, watch/abort polish, error-message pass, docs/playground policy; then **1.1.6–1.1.9** polish closeout (stdlib-only; no new PyPI deps).
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -987,6 +987,10 @@ Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny 
 | 1.1.3 | `watch` / abort diagnostics polish | implemented (1.1.3) |
 | 1.1.4 | Error-message / code pass | implemented (1.1.4) |
 | 1.1.5 | Docs generator or playground HTTP policy | implemented (1.1.5 — playground host policy) |
+| 1.1.6 | Thin docs generator / builtin sync | implemented (1.1.6) |
+| 1.1.7 | `base64Encode` / `base64Decode` | drafted |
+| 1.1.8 | CLI builtin inventory polish | drafted |
+| 1.1.9 | Series close (docs / examples) | drafted |
 
 ### 1.1.0 — `httpGet` / `httpPost` + `allow_http`
 
@@ -1053,11 +1057,34 @@ Rules:
 - Document CLI vs playground `Host` flags and empty env
 - Playground page + UI policy note; URL-helpers example that runs without network
 - Worker defaults unchanged (`allow_files` / `allow_run` / `allow_http` all `False`)
-- Docs generator stays deferred
+- Docs generator stays deferred to **1.1.6**
+
+### 1.1.6 — thin docs generator / builtin sync
+
+**Implemented.** Generate/check the prelude builtin inventory from `builtin_names()` so docs and highlighters cannot drift.
+
+- `tools/sync_builtins.py` (+ `--check`) updates:
+  - `docs/reference/builtin-inventory.md`
+  - TextMate builtins match
+  - playground `echoLanguage.ts` `BUILTINS` set
+- Tests assert `--check` is clean and every builtin appears in built-in-methods
+- No new language syntax; no new PyPI deps
+
+### 1.1.7 — `base64Encode` / `base64Decode`
+
+Thin stdlib `base64` helpers for HTTP/scripting. Bad types → **E2854**. No new PyPI deps.
+
+### 1.1.8 — CLI builtin inventory polish
+
+`elang builtins` (or equivalent) listing prelude names; tighten help / version discoverability.
+
+### 1.1.9 — series close (docs / examples)
+
+README + capability matrix + playground/examples pass for the full **1.1** surface. Closes **1.1.x**.
 
 ### Out of 1.1 (still held globally)
 
-Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, `Point.new`.
+Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, `Point.new`, YAML (needs a dependency).
 
 ## Held (do not implement)
 
@@ -1092,6 +1119,6 @@ Do not move global holds into a new series without an explicit series start. **0
 | Multi-path `echo check` | implemented (0.5.9) |
 | Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
-| HTTP builtins | **1.1.0–1.1.5** series complete (playground policy in **1.1.5**) |
+| HTTP builtins | **1.1.0–1.1.6** implemented; **1.1.7–1.1.9** drafted |
 | Test DSL (`test "name" { }`) | held |
 | String `map` / `filter` over graphemes | skipped (awkward) |

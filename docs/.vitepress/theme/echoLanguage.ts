@@ -37,7 +37,8 @@ const TYPES = new Set(['int', 'float', 'str', 'bool', 'list', 'hash', 'dynamic',
 const LITERALS = new Set(['true', 'false', 'null'])
 
 // Keep in sync with BUILTIN_NAMES in src/echo/runtime/builtins.py
-// (and echo-syntax-highlighter/syntaxes/echo.tmLanguage.json). Names highlight as values and calls.
+// (and echo-syntax-highlighter/syntaxes/echo.tmLanguage.json).
+// Prefer: python tools/sync_builtins.py
 const BUILTINS = new Set([
   'abs',
   'args',
@@ -46,9 +47,9 @@ const BUILTINS = new Set([
   'asFloatOr',
   'asInt',
   'asIntOr',
+  'asString',
   'ask',
   'assert',
-  'asString',
   'ceil',
   'chunk',
   'clone',
