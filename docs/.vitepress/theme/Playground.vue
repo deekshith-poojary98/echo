@@ -146,13 +146,17 @@ say("Hello, \${name}!");
   },
   {
     id: 'urls',
-    label: 'URL helpers',
-    source: `q: str = urlQuery({ q: "echo lang", page: "1" });
-say(urlEncode("a b/c"));
-say(urlJoin("https://example.com/api/", "users"));
-say(q);
-say(httpOk(200));
-say(httpRedirect(302));
+    label: 'URL & Base64',
+    source: `payload: str = "echo lang";
+encoded: str = base64Encode(payload);
+say("base64:", encoded);
+say("roundtrip:", base64Decode(encoded));
+
+query: str = urlQuery({ q: payload, page: "1" });
+path: str = urlJoin("https://example.com/search", "?" + query);
+say("url:", path);
+say("ok status:", httpOk(200));
+say("redirect:", httpRedirect(302));
 `,
   },
   {

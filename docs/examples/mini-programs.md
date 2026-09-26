@@ -62,8 +62,20 @@ elang examples/bank_account.echo
 
 Commands: `deposit` / `withdraw` / `balance` / `exit` (short: `d` `w` `b` `q`). Amounts use `asFloatOr`.
 
+### URL and Base64
+
+`examples/url_and_base64.echo` builds a query URL and round-trips Base64 (no network). Also in the [playground](/playground?example=urls).
+
+```bash
+elang examples/url_and_base64.echo
+```
+
+Uses `urlQuery` / `urlJoin`, `base64Encode` / `base64Decode`, and `httpOk` / `httpRedirect` (status helpers only). Live `httpGet` needs the CLI host (`allow_http=True`); the playground denies it (**E2801**).
+
 ## See Also
 
 - [Control Flow](/getting-started/control-flow)
 - [Lists](/core-concepts/lists)
 - [Hashes](/core-concepts/hashes)
+- [Built-in Methods](/standard-library/built-in-methods)
+- [Builtin Inventory](/reference/builtin-inventory)

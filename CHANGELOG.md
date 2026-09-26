@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.9
+
+Series close (docs / examples). Closes the **1.1.x** series. No new language syntax. Failure model unchanged.
+
+- README + language tour + mini-programs reflect the full **1.1** surface (HTTP, URL, Base64, `elang builtins`)
+- Example `examples/url_and_base64.echo` (playground-safe); playground “URL & Base64” demo updated
+- Capability matrix / roadmap / known limitations mark **1.1.x** complete through **1.1.9**
+
 ## 1.1.8
 
 CLI builtin inventory polish. Eighth **1.1** slice. No new language syntax. Failure model unchanged.

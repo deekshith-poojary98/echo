@@ -26,11 +26,12 @@ for i: int in 0..10 by 2 {
 - File modules: `export` / `import name from "module"`
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
 - Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
-- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`
+- Thin scripting stdlib: files, JSON, regex, UTC dates, HTTP (`httpGet` / `httpPost`, host-gated), URL helpers, Base64
+- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`
 
 ## What you do not
 
-- No class inheritance (`extends`), no generics, no `try` / `catch`
+- No class inheritance (`extends`), no generics, no `try` / `catch`, no packages yet
 - Type inference is limited — you still declare types
 - See [Known Limitations](https://deekshith-poojary98.github.io/echo/errors-diagnostics/known-limitations) and [failure model](https://deekshith-poojary98.github.io/echo/failure-model)
 
@@ -47,6 +48,7 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 pipx install echolang
 elang --version
+elang builtins --count
 ```
 
 From GitHub instead of PyPI:
@@ -67,9 +69,10 @@ elang path/to/file.echo
 
 - `src/echo/` — frontend, semantics, modules, runtime, CLI
 - `docs/` — VitePress site (this is the docs source)
-- `docs/language-semantics.md` — language contract (v0.2 base; additive through 1.0.0)
+- `docs/language-semantics.md` — language contract (v0.2 base; additive through **1.1.x**)
 - `docs/module-semantics.md` — v0.3 module contract
-- `*.echo` / `examples/` — sample programs (including `examples/classes_and_interfaces.echo`)
+- `docs/reference/builtin-inventory.md` — generated prelude list (`python tools/sync_builtins.py`)
+- `*.echo` / `examples/` — sample programs (including `examples/url_and_base64.echo`)
 
 ## License / contributing
 

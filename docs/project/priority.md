@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.7**. The **1.1.x** series continues; **1.1.8** is implemented. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.8**. The **1.1.x** series is complete through **1.1.9**. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -973,7 +973,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## 1.1.x — HTTP + post-1.0 polish
 
-**Status: 1.1.0–1.1.8 implemented; 1.1.9 drafted.**
+**Status: 1.1.0–1.1.9 implemented (series complete).**
 
 **1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics; close with docs sync / base64 / CLI inventory / series docs.
 
@@ -990,7 +990,7 @@ Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny 
 | 1.1.6 | Thin docs generator / builtin sync | implemented (1.1.6) |
 | 1.1.7 | `base64Encode` / `base64Decode` | implemented (1.1.7) |
 | 1.1.8 | CLI builtin inventory polish | implemented (1.1.8) |
-| 1.1.9 | Series close (docs / examples) | drafted |
+| 1.1.9 | Series close (docs / examples) | implemented (1.1.9) |
 
 ### 1.1.0 — `httpGet` / `httpPost` + `allow_http`
 
@@ -1088,7 +1088,11 @@ Rules:
 
 ### 1.1.9 — series close (docs / examples)
 
-README + capability matrix + playground/examples pass for the full **1.1** surface. Closes **1.1.x**.
+**Implemented.** README + capability matrix + playground/examples pass for the full **1.1** surface. Closes **1.1.x**.
+
+- README / language tour / mini-programs cover HTTP, URL, Base64, and `elang builtins`
+- `examples/url_and_base64.echo` + playground “URL & Base64” demo (no live HTTP)
+- No new language syntax; failure model unchanged
 
 ### Out of 1.1 (still held globally)
 
@@ -1096,7 +1100,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, and stable **1.0.0** are implemented. **1.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, and **1.1.0–1.1.9** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -1127,6 +1131,6 @@ Do not move global holds into a new series without an explicit series start. **0
 | Multi-path `echo check` | implemented (0.5.9) |
 | Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
-| HTTP builtins | **1.1.0–1.1.8** implemented; **1.1.9** drafted |
+| HTTP builtins | **1.1.0–1.1.9** series complete |
 | Test DSL (`test "name" { }`) | held |
 | String `map` / `filter` over graphemes | skipped (awkward) |
