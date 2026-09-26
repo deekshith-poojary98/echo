@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.1
+
+YAML `yamlParseOr` + docs. Second **2.1** slice. Failure model unchanged.
+
+- `yamlParseOr(text, fallback)` — invalid YAML returns `fallback`; non-`str` text still aborts (**E2855**)
+- Method form: `text.yamlParseOr(fallback)`
+- Documented in failure-model twins table and built-in methods; `std/yaml` exports the twin
+
 ## 2.1.0
 
 YAML helpers. First **2.1** slice. Failure model unchanged. Depends on PyYAML.

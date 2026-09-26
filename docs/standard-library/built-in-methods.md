@@ -429,11 +429,12 @@ say(writeJson(data));
 
 ---
 
-### `yamlParse(text)` / `yamlWrite(value)`
-YAML mappings become hashes, sequences become lists, whole numbers become `int`, other finite numbers become `float`, timestamps become ISO strings. Invalid YAML or bad types abort with **E2855**. Also `import yamlParse from "std/yaml"`.
+### `yamlParse(text)` / `yamlParseOr(text, fallback)` / `yamlWrite(value)`
+YAML mappings become hashes, sequences become lists, whole numbers become `int`, other finite numbers become `float`, timestamps become ISO strings. Invalid YAML or bad types abort `yamlParse` with **E2855**. `yamlParseOr` returns `fallback` for invalid YAML; non-string text is still a type error. Also `import … from "std/yaml"`.
 
 ```echo
 data: dynamic = yamlParse("n: 1\nok: true");
+maybe: dynamic = yamlParseOr(": [", null);
 say(yamlWrite(data));
 say("name: Echo".yamlParse()["name"]);
 ```

@@ -51,7 +51,7 @@ Host / scripting stdlib:
 | `E2852` | HTTP — bad types, empty URL, network / timeout / invalid URL (non-2xx still returns the response hash) |
 | `E2853` | URL helpers — bad types (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`) |
 | `E2854` | Base64 helpers — bad types or invalid Base64 text |
-| `E2855` | YAML helpers — bad types or invalid YAML |
+| `E2855` | YAML helpers — bad types or invalid YAML (`yamlParseOr` falls back on invalid YAML) |
 
 `httpGetOr` / `httpPostOr`: network / empty-URL **E2852** runtime failures return `fallback`; type errors and host deny (**E2801**) still abort.
 

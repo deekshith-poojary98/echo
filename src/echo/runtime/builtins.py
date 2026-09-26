@@ -99,6 +99,7 @@ BUILTIN_NAMES = frozenset(
         "parseJsonOr",
         "writeJson",
         "yamlParse",
+        "yamlParseOr",
         "yamlWrite",
         "asIntOr",
         "asFloatOr",
@@ -230,6 +231,7 @@ BUILTIN_PARAMS = {
     "parseJsonOr": ["text", "fallback"],
     "writeJson": ["value"],
     "yamlParse": ["text"],
+    "yamlParseOr": ["text", "fallback"],
     "yamlWrite": ["value"],
     "join": ["separator"],
     "startsWith": ["prefix"],
@@ -317,6 +319,7 @@ STANDALONE_PARAMS = {
     "envOr": ["name", "fallback"],
     "readFileOr": ["path", "fallback"],
     "parseJsonOr": ["text", "fallback"],
+    "yamlParseOr": ["text", "fallback"],
     "asIntOr": ["value", "fallback"],
     "asFloatOr": ["value", "fallback"],
     "join": ["items", "separator"],
@@ -418,6 +421,7 @@ PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
         "parseJsonOr",
         "writeJson",
         "yamlParse",
+        "yamlParseOr",
         "yamlWrite",
         "env",
         "envOr",
@@ -494,6 +498,7 @@ STANDALONE_MIN_ARGS = {
     "parseJsonOr": 2,
     "writeJson": 1,
     "yamlParse": 1,
+    "yamlParseOr": 2,
     "yamlWrite": 1,
     "join": 2,
     "startsWith": 2,
@@ -1009,6 +1014,17 @@ def do_write_json(value: object, location: SourceLocation | None = None) -> str:
 
 def do_yaml_parse(text: object, location: SourceLocation | None = None) -> object:
     return parse_yaml(text, location)
+
+
+def do_yaml_parse_or(text: object, fallback: object, location: SourceLocation | None = None) -> object:
+    if not isinstance(text, str):
+        raise EchoTypeError("yamlParseOr() requires a string", location, code="E2855")
+    try:
+        return parse_yaml(text, location)
+    except EchoTypeError:
+        raise
+    except EchoRuntimeError:
+        return fallback
 
 
 def do_yaml_write(value: object, location: SourceLocation | None = None) -> str:

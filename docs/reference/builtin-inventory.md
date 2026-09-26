@@ -11,7 +11,7 @@ Do not edit by hand — run `python tools/sync_builtins.py` after adding a built
 Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
 
 
-**Count:** 123
+**Count:** 124
 
 | Name |
 | --- |
@@ -136,5 +136,6 @@ Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
 | `writeFile` |
 | `writeJson` |
 | `yamlParse` |
+| `yamlParseOr` |
 | `yamlWrite` |
 | `zip` |

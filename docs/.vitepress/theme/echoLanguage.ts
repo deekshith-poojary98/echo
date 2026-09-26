@@ -161,6 +161,7 @@ const BUILTINS = new Set([
   'writeFile',
   'writeJson',
   'yamlParse',
+  'yamlParseOr',
   'yamlWrite',
   'zip',
 ])

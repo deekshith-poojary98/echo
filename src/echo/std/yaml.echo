@@ -3,4 +3,5 @@
 // for a compatibility window (see 2.0.7 prelude policy).
 
 export yamlParse: dynamic = yamlParse;
+export yamlParseOr: dynamic = yamlParseOr;
 export yamlWrite: dynamic = yamlWrite;

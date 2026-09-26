@@ -609,4 +609,5 @@ v2.0.7 documents core vs peeled prelude and adds optional `--require-std` / `Hos
 v2.0.8 adds multi-file / `std/…` examples and playground `std/…` import support.
 v2.0.9 closes the **2.0.x** series (path resolution + std modules, not a package manager).
 v2.1.0 adds `yamlParse` / `yamlWrite` (**E2855**) and `std/yaml` (PyYAML).
+v2.1.1 adds `yamlParseOr` (invalid YAML → fallback; non-`str` still aborts).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).
