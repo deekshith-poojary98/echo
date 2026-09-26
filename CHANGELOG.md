@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.8
+
+Docs generator expansion. Ninth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `tools/sync_builtins.py` also generates `docs/reference/std-inventory.md` (modules + exports)
+- `--check` covers std inventory drift; VitePress nav links the page
+- Builtin inventory cross-links to std inventory
+
 ## 2.1.7
 
 CLI std inventory. Eighth **2.1** slice. Failure model unchanged. No new language syntax.

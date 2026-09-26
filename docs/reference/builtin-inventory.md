@@ -9,6 +9,7 @@ Auto-generated from `builtin_names()` by `tools/sync_builtins.py`.
 Do not edit by hand — run `python tools/sync_builtins.py` after adding a builtin.
 
 Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
+Install-tree modules: [Std Inventory](/reference/std-inventory).
 
 
 **Count:** 125

@@ -106,7 +106,7 @@ Distinctive on purpose:
 | Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
 | Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8), `--json` (0.6.9) | Tooling | 0.6.9 |
 | Debugger | Ecosystem | Partial (`watch` + abort `Stack:` + `trace`) | Tooling | 2.1.5 |
-| Documentation generator | Ecosystem | Missing | Tooling | Later |
+| Documentation generator | Ecosystem | Partial (builtin + std inventories) | Tooling | 2.1.8 |
 | IDE support | Ecosystem | Partial (tasks + thin LSP client **2.1.4**) | Tooling | 2.1.4 |
 | Language server | Ecosystem | Missing | Tooling | Later |
 | REPL | Ecosystem | Supported (0.5.0) | Tooling | Done |
@@ -1034,14 +1034,13 @@ No stepper, breakpoints, or interactive inspector.
 
 ### Documentation generator
 
-**Status.** Missing.
+**Status.** Partial — `tools/sync_builtins.py` generates Builtin Inventory (**1.1.6**)
+and Std Inventory (**2.1.8**). No docstring extract / API generator for arbitrary
+Echo modules.
 
-VitePress documents the language for humans. There is no docstring
-extract / API generator for Echo modules.
+**Priority.** Tooling. Inventories ship; richer extract later.
 
-**Priority.** Later.
-
-**Possible version.** Later. Needs richer modules first.
+**Possible version.** Done enough through **2.1.8**.
 
 ---
 
@@ -1199,7 +1198,7 @@ HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-co
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
 `std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
 docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**);
-`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**); abort `Stack:` + `trace` (**2.1.5**); further std peel math/random/now/wait/run (**2.1.6**); `elang std` inventory (**2.1.7**).
+`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**); abort `Stack:` + `trace` (**2.1.5**); further std peel math/random/now/wait/run (**2.1.6**); `elang std` inventory (**2.1.7**); generated Std Inventory docs (**2.1.8**).
 
 ### Not holes (held)
 

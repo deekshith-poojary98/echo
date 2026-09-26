@@ -69,7 +69,8 @@ elang path/to/file.echo
 - `docs/` — VitePress site (this is the docs source)
 - `docs/language-semantics.md` — language contract (v0.2 base; additive through **2.0.x**)
 - `docs/module-semantics.md` — v0.3 module contract (+ **2.0** path / std notes)
-- `docs/reference/builtin-inventory.md` — generated prelude list (`python tools/sync_builtins.py`)
+- `docs/reference/builtin-inventory.md` — generated prelude list
+- `docs/reference/std-inventory.md` — generated `std/…` modules + exports (`python tools/sync_builtins.py`)
 - `examples/` — sample programs (`std_imports.echo`, `modules_demo/`, …)
 
 ## License / contributing

@@ -4,7 +4,7 @@ TextMate grammar, **LSP client** (`elang lsp`), and **editor tasks** for **Echo*
 
 **Live** hover, go-to-definition, and analyzer diagnostics come from `elang lsp` (**2.1.4**). **Echo: Check / Lint / Test** tasks and problem matchers remain for on-demand CLI runs and as a fallback if the language server does not start.
 
-Tracks Echo **v2.1.7**.
+Tracks Echo **v2.1.8**.
 
 ## Install
 
@@ -95,7 +95,7 @@ The grammar does **not** invent syntax Echo does not have (`try`/`catch`, hex/bi
 
 ## Keep the builtin list in sync
 
-Builtin names are generated from runtime by `tools/sync_builtins.py` (TextMate `builtins` match + playground `BUILTINS` + `docs/reference/builtin-inventory.md`).
+Builtin names are generated from runtime by `tools/sync_builtins.py` (TextMate `builtins` match + playground `BUILTINS` + `docs/reference/builtin-inventory.md` + `docs/reference/std-inventory.md`).
 
 When Echo gains or renames a builtin:
 
