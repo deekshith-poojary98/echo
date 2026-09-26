@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
-from echo.errors import EchoError, EchoExit, ModuleLoadError
+from echo.errors import EchoError, EchoExit, ModuleLoadError, ModuleResolveError, SourceLocation
 from echo.frontend.ast.nodes import ImportDeclaration
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
@@ -72,7 +72,7 @@ class ModuleLoader:
             self._discover_imports(module)
             module.discovered = True
         for name in self._import_names(module):
-            dependency = module.specifiers.get(name) or self.resolver.resolve(module.path, name)
+            dependency = module.specifiers.get(name) or self._resolve(module, name)
             if dependency not in module.dependencies:
                 module.dependencies.append(dependency)
             module.specifiers.setdefault(name, dependency)
@@ -84,9 +84,25 @@ class ModuleLoader:
         for statement in module.ast.statements:
             if not isinstance(statement, ImportDeclaration):
                 continue
-            dependency = self.resolver.resolve(module.path, statement.module)
+            dependency = self._resolve(module, statement.module, statement.location)
             module.imported_bindings.append((statement.name, dependency))
             module.specifiers[statement.module] = dependency
+
+    def _resolve(
+        self,
+        module: Module,
+        specifier: str,
+        location: SourceLocation | None = None,
+    ) -> Path:
+        try:
+            return self.resolver.resolve(module.path, specifier)
+        except ModuleResolveError as exc:
+            raise ModuleResolveError(
+                exc.message,
+                location=location if location is not None else exc.location,
+                help_text=exc.help_text,
+                code=exc.code,
+            ) from None
 
     def _import_names(self, module: Module) -> list[str]:
         names: list[str] = []

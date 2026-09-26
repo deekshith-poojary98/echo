@@ -477,7 +477,7 @@ Valid specifier rules (2.0.0):
 * no absolute paths, drive letters, backslashes, empty segments, or trailing `/`;
 * no explicit `.echo` suffix in the specifier.
 
-Missing files are **E3002**. Invalid specifier shape is **E3001**.
+Missing files are **E3002** (includes a looked-for path hint and the importing line). Invalid specifier shape is **E3001** (with a specific hint). Circular dependencies are **E3003** (path labels stay unique for nested same-basename modules).
 
 The resolver operates on the importing module’s location.
 

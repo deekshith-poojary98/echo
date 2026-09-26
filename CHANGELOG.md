@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.1
+
+Import cycle / resolver diagnostics polish. Second **2.0** slice. No new language syntax. Failure model unchanged.
+
+- **E3002** names the looked-for path (`looked for lib/nope.echo`) and points at the importing `import` line
+- **E3001** adds specific hints (omit `.echo`, relative paths only, `..` only at the start)
+- **E3003** cycle labels distinguish nested same-basename modules (`lib/a.echo -> pkg/a.echo`, not `a.echo -> a.echo`)
+- Document module codes **E3001**–**E3005** in errors-and-troubleshooting
+
 ## 2.0.0
 
 Relative / nested import paths. Opens the **2.0.x** series (modules beyond siblings + stdlib peel). Selective `import` / explicit `export` unchanged. Failure model unchanged. No package registry.

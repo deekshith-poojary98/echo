@@ -1192,7 +1192,7 @@ thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
 destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5);
 HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**);
-relative / nested import paths (**2.0.0**).
+relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**).
 
 ### Not holes (held)
 

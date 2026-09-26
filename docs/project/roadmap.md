@@ -6,7 +6,7 @@ Public status page for what ships today. The ordered implementation plan lives u
 
 Already in the language or CLI:
 
-- File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**)
+- File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**); cycle / resolver diagnostics polish (**2.0.1**)
 - REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
@@ -18,14 +18,14 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** is complete. **2.0.0** (relative / nested import paths) shipped. Remaining **2.0.x** (stdlib peel) and **2.1.x** (YAML + LSP stub) are drafted in [Priority](/project/priority).
+**1.1.x** is complete. **2.0.0**–**2.0.1** shipped. Remaining **2.0.x** (stdlib peel) and **2.1.x** (YAML + LSP stub) are drafted in [Priority](/project/priority).
 
 ### In progress — 2.0.x modules + stdlib peel
 
 | Version | Item | Status |
 | --- | --- | --- |
 | 2.0.0 | Relative / nested import paths | done |
-| 2.0.1 | Import cycle / resolver diagnostics polish | drafted |
+| 2.0.1 | Import cycle / resolver diagnostics polish | done |
 | 2.0.2 | Stdlib search path: `import … from "std/…"` | drafted |
 | 2.0.3 | Peel HTTP into `std/http` | drafted |
 | 2.0.4 | Peel URL + Base64 | drafted |

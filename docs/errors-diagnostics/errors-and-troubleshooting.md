@@ -68,6 +68,16 @@ List HOF callbacks:
 
 `chunk` size not an `int` `>= 1` → `E2842`. `rangeList` / `rangeListInclusive` non-int bounds → `E2843`. `flatten` top-level non-list → `E2846`.
 
+Modules (file imports):
+
+| Code | Surface |
+| --- | --- |
+| `E3001` | Invalid module specifier (`.echo` suffix, absolute path, mid-path `..`, empty / trailing `/`) |
+| `E3002` | Module file not found — includes a `looked for …` hint and the importing line |
+| `E3003` | Circular dependency — chain uses nested path labels when basenames collide |
+| `E3004` | Internal graph entry missing (not a normal user import) |
+| `E3005` | Module load / export failure |
+
 `const`: reassignment **E3201**; mutate through the const name **E3202**; mutate a frozen value via another name / parameter **E3203**; `use mut` on const **E3204**.
 
 Destructuring: length mismatch **E3205**; list pattern on non-list **E3206**; hash pattern on non-hash **E3207**. Missing hash keys → **E2711**. Exact extras / missing → **E3208** / **E3209**.

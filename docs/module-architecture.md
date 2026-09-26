@@ -96,8 +96,9 @@ The resolver looks under the importing file’s directory (and parents when
 The resolver:
 
 * canonicalizes the resulting path;
-* reports module-not-found when the file is absent (**E3002**);
-* rejects invalid specifier shape (**E3001**), including an explicit `.echo` suffix and absolute paths;
+* reports module-not-found when the file is absent (**E3002**), including a looked-for path hint;
+* rejects invalid specifier shape (**E3001**), including an explicit `.echo` suffix and absolute paths, with specific hints;
+* attaches the importing `import` location when resolution fails during load;
 * does **not** parse, analyze, or execute modules;
 * does **not** interpret `use`.
 
@@ -117,7 +118,8 @@ The graph:
 * deduplicates nodes by canonical path;
 * detects direct, indirect, and longer cycles before any module is exposed;
 * produces a dependency-first initialization order;
-* places the entry module last among the modules it depends on.
+* places the entry module last among the modules it depends on;
+* formats **E3003** cycle chains with nested path labels when basenames collide.
 
 The graph does **not** execute modules and does **not** bind names.
 

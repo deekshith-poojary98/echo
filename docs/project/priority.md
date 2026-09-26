@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.9**. **2.0.0** (nested / relative imports) is in progress on this branch; remaining **2.0.x** / **2.1.x** are drafted below. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.9**. **2.0.0**–**2.0.1** are implemented on this branch; remaining **2.0.x** / **2.1.x** are drafted below. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -1100,7 +1100,7 @@ Inheritance, generics, async, VM, `try`/`catch`, `Result`/`Option`, overloading,
 
 ## 2.0.x — Modules beyond siblings + stdlib peel
 
-**Status: in progress (2.0.0 shipped).**
+**Status: in progress (2.0.0–2.0.1 shipped).**
 
 **1.1.x is closed.** **2.0** is the module-resolution and stdlib-module jump — not a package registry, not generics, not a failure-model rewrite. Sibling `import name from "mod"` stays valid. Failure model unchanged.
 
@@ -1109,7 +1109,7 @@ Shape: nested/relative paths first; then a fixed `std/…` search path; peel pre
 | Version | Item | Status |
 | --- | --- | --- |
 | 2.0.0 | Relative / nested import paths (`"./math"`, `"lib/math"`) | done |
-| 2.0.1 | Import cycle / resolver diagnostics polish | drafted |
+| 2.0.1 | Import cycle / resolver diagnostics polish | done |
 | 2.0.2 | Stdlib search path: `import … from "std/…"` | drafted |
 | 2.0.3 | Peel HTTP family into `std/http` (prelude dual-path) | drafted |
 | 2.0.4 | Peel URL + Base64 into `std/url` / `std/base64` (or `std/net`) | drafted |
@@ -1125,7 +1125,7 @@ Shape: nested/relative paths first; then a fixed `std/…` search path; peel pre
 
 ### 2.0.1 — import cycle / resolver diagnostics polish
 
-Clearer module-not-found and cycle diagnostics for the new path forms. Module identity remains the canonical file path.
+**Done.** Clearer module-not-found and cycle diagnostics for nested / relative path forms. **E3002** reports the looked-for path and import location; **E3001** carries specific hints; **E3003** cycle chains use path labels that stay unique when basenames collide. Module identity remains the canonical file path.
 
 ### 2.0.2 — stdlib search path
 
@@ -1230,7 +1230,7 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, and **1.1.0–1.1.9** are implemented. **2.0.0** is implemented; remaining **2.0.x** / **2.1.x** are drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, and **1.1.0–1.1.9** are implemented. **2.0.0**–**2.0.1** are implemented; remaining **2.0.x** / **2.1.x** are drafted above. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
