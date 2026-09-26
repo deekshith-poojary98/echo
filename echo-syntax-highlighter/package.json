@@ -2,7 +2,7 @@
   "name": "echo-syntax-highlighter",
   "displayName": "Echo Syntax Highlighter",
   "description": "Syntax highlighting, tasks, and Problems panel matchers for Echo (.echo files). Not a language server.",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
   "icon": "images/icon.png",

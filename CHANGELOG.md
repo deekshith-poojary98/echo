@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.3
+
+`watch` / abort diagnostics polish. Fourth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- `watch` mutation lines include a source location (`at file:line:col`)
+- On abort, CLI and `echo test` dump current watched bindings under a `Watched:` section
+- Empty watch set prints nothing extra
+
 ## 1.1.2
 
 Thin URL helpers. Third **1.1** slice. Failure model unchanged. YAML deferred (no stdlib YAML; would need a dependency).

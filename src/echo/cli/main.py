@@ -45,16 +45,18 @@ except ImportError:
 
 
 def run_source(source: str, filename: str = "<input>", *, plain: bool = True, host: Host | None = None) -> int:
+    interpreter = Interpreter(host=host)
     try:
         tokens = Lexer().tokenize(source, filename=filename)
         program = Parser(tokens).parse()
         SemanticAnalyzer().analyze(program)
-        Interpreter(host=host).execute(program)
+        interpreter.execute(program)
         return 0
     except EchoExit as exc:
         return exc.code
     except EchoError as exc:
         _print_error(exc, source, plain)
+        _print_watched(interpreter, plain)
         return 1
 
 
@@ -83,19 +85,21 @@ def run_file(source_path: str, plain: bool = False, host: Host | None = None) ->
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
         return 1
     source = file_path.read_text(encoding="utf-8")
+    interpreter = Interpreter(host=host)
     try:
         tokens = Lexer().tokenize(source, filename=str(file_path))
         program = Parser(tokens).parse()
         if _has_imports(program):
-            ModuleLoader().load(file_path, host=host)
+            ModuleLoader().load(file_path, host=host, interpreter=interpreter)
         else:
             SemanticAnalyzer().analyze(program)
-            Interpreter(host=host).execute(program)
+            interpreter.execute(program)
         return 0
     except EchoExit as exc:
         return exc.code
     except EchoError as exc:
         _print_error(exc, _error_source(exc, source), plain)
+        _print_watched(interpreter, plain)
         return 1
 
 
@@ -141,6 +145,16 @@ def _print_error(error: EchoError, source: str, plain: bool) -> None:
     _print_plain_error(title, message, plain)
     if help_text:
         _print_plain_error("Hint", help_text, plain)
+
+
+def _print_watched(interpreter: Interpreter, plain: bool) -> None:
+    snapshot = interpreter.watched_snapshot()
+    if not snapshot:
+        return
+    lines = ["Watched:"]
+    for name, rendered in snapshot:
+        lines.append(f"  {name} = {rendered}")
+    _print_plain_error("Watch", "\n".join(lines), plain)
 
 
 def _print_plain_error(title: str, message: str, plain: bool) -> None:
@@ -214,6 +228,7 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
             return exc.code
         except EchoError as exc:
             _print_error(exc, source, plain)
+            _print_watched(interpreter, plain)
         except KeyboardInterrupt:
             print()
         except Exception:

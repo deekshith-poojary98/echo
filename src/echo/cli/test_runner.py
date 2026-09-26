@@ -91,9 +91,27 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
             env = Environment()
             interpreter.execute(program, env)
     except EchoExit as exc:
-        return [_result_from_finish(display, session.take(), abort=None, exit_code=exc.code, source=source)]
+        return [
+            _result_from_finish(
+                display,
+                session.take(),
+                abort=None,
+                exit_code=exc.code,
+                source=source,
+                interpreter=interpreter,
+            )
+        ]
     except EchoError as exc:
-        return [_result_from_finish(display, session.take(), abort=exc, exit_code=None, source=source)]
+        return [
+            _result_from_finish(
+                display,
+                session.take(),
+                abort=exc,
+                exit_code=None,
+                source=source,
+                interpreter=interpreter,
+            )
+        ]
 
     test_fns = discover_test_functions(program)
     all_test_fns = test_fns
@@ -136,12 +154,26 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
             interpreter.call_function_with_values(function, [], declaration.location)
         except EchoExit as exc:
             results.append(
-                _result_from_finish(name, session.take(), abort=None, exit_code=exc.code, source=source)
+                _result_from_finish(
+                    name,
+                    session.take(),
+                    abort=None,
+                    exit_code=exc.code,
+                    source=source,
+                    interpreter=interpreter,
+                )
             )
             continue
         except EchoError as exc:
             results.append(
-                _result_from_finish(name, session.take(), abort=exc, exit_code=None, source=source)
+                _result_from_finish(
+                    name,
+                    session.take(),
+                    abort=exc,
+                    exit_code=None,
+                    source=source,
+                    interpreter=interpreter,
+                )
             )
             continue
         results.append(
@@ -206,12 +238,15 @@ def _result_from_finish(
     abort: EchoError | None,
     exit_code: int | None,
     source: str,
+    interpreter: Interpreter | None = None,
 ) -> TestUnitResult:
     details: list[str] = []
     for failure in failures:
         details.extend(_expect_lines(failure))
     if abort is not None:
         details.extend(_error_lines(abort, source))
+        if interpreter is not None:
+            details.extend(_watched_lines(interpreter))
     elif exit_code is not None and exit_code != 0:
         details.append(f"exit code {exit_code}")
     passed = abort is None and (exit_code is None or exit_code == 0) and not failures
@@ -263,6 +298,16 @@ def _error_lines(error: EchoError, source: str) -> list[str]:
     lines = message.splitlines()
     if help_text:
         lines.append(f"Hint: {help_text}")
+    return lines
+
+
+def _watched_lines(interpreter: Interpreter) -> list[str]:
+    snapshot = interpreter.watched_snapshot()
+    if not snapshot:
+        return []
+    lines = ["Watched:"]
+    for name, rendered in snapshot:
+        lines.append(f"  {name} = {rendered}")
     return lines
 
 

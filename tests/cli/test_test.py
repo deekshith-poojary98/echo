@@ -13,6 +13,27 @@ def _run_main(argv: list[str]) -> tuple[int, str]:
     return code, stdout.getvalue()
 
 
+def test_fail_dumps_watched_bindings(tmp_path):
+    app = tmp_path / "watch_abort_test.echo"
+    app.write_text(
+        """
+fn testWatchedAbort() {
+    count: int = 7;
+    watch count;
+    fail("boom");
+}
+""",
+        encoding="utf-8",
+    )
+    code, output = _run_main(["test", str(app), "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "Watched:" in output
+    assert "count = 7" in output
+    assert "FAIL" in output
+
+
 def test_expect_failure_continues_in_one_unit(tmp_path):
     app = tmp_path / "cont_test.echo"
     app.write_text(

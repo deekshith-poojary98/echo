@@ -680,11 +680,14 @@ watch counter;
 ```
 
 Reports assignment and mutating operations, including indexed assignment.
+Mutation lines include a source location. On abort, CLI / `echo test` dump
+watched bindings under `Watched:`.
 
 **Limitations.** Not a stepper. No breakpoints, `trace`, or `profile`.
 Those are ecosystem / vision items.
 
-**Priority.** Frozen as a fundamental. Richer observability is later.
+**Priority.** Frozen as a fundamental; **1.1.3** is diagnostics polish only.
+Richer observability is later.
 
 **Possible version.** Done.
 
@@ -1177,7 +1180,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. `watch` / abort diagnostics polish (drafted **1.1.3**; URL helpers shipped in **1.1.2**; YAML deferred)
+4. Error-message / code pass (drafted **1.1.4**; `watch` / abort diagnostics shipped in **1.1.3**)
 
 ### Shipped that used to be holes
 

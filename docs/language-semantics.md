@@ -484,7 +484,9 @@ watch counter;
 ```
 
 Reports changes to the named binding from assignment and mutating operations,
-including indexed assignment.
+including indexed assignment. Mutation lines include a source location
+(`at file:line:col`). On abort, the CLI and `echo test` dump current watched
+bindings under a `Watched:` section.
 
 ---
 
@@ -588,4 +590,5 @@ v1.0.0 is the stable release of the 0.8–0.9 surface (no language changes).
 v1.1.0 adds `httpGet` / `httpPost` (host-gated via `allow_http`; response hash `{ status, body, headers }`).
 v1.1.1 adds optional request headers, `httpOk` / `httpRedirect`, and `httpGetOr` / `httpPostOr`.
 v1.1.2 adds `urlEncode` / `urlDecode` / `urlJoin` / `urlQuery` (YAML deferred).
+v1.1.3 polishes `watch` locations and dumps watched bindings on abort.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).
