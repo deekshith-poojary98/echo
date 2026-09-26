@@ -26,7 +26,7 @@ Exceptions already shipped (this note does not change them):
 - Status value: `run` → `{ "code", "stdout", "stderr" }` (non-zero is not an Echo error)
 - Programmer abort: `assert(cond, message)`, `fail(message)`, `exit(code)`
 - Test-only continue: `expect` / `expectEq` / `expectNeq` under `echo test` (0.5.6). They record and continue in that runner; outside `echo test` they abort like `assert`. This is not `try` / `catch` and not user-level recovery.
-- Host policy: `allow_files=False` / `allow_run=False` always abort (`E2801`)
+- Host policy: `allow_files=False` / `allow_run=False` / `allow_http=False` always abort (`E2801`)
 
 `default()` is truthiness. It is not error handling. Do not overload it.
 

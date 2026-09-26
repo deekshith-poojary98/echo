@@ -1,10 +1,10 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.0.0**. The **0.8** OOP spine and **0.9** ergonomics / stdlib series are complete; **1.0.0** is the stable release of that surface. Failure model stays abort + `*Or`.
+Current tagged version is **v1.0.0**. The next series is **1.1.x** (HTTP + post-1.0 polish); **1.1.0** is implemented. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
-Status values: `pending` / `in progress` / `implemented (version)` / `held`.
+Status values: `pending` / `drafted` / `in progress` / `implemented (version)` / `held`.
 
 ## Implement now (0.5.x — completed)
 
@@ -957,7 +957,7 @@ Beyond `now()` / `wait`. Instant + format/parse enough for scripts — not a cal
 - `formatTime(secs, pattern) -> str` / `parseTime(text, pattern) -> int` — UTC via Python `strftime` / `strptime`; naive parse is UTC
 - `days(n)` / `hours(n)` / `minutes(n)` — seconds helpers
 - Bad input → **E2851**; no date object type; no cron / locale calendars
-- HTTP stays **held**
+- HTTP moved to **1.1.x** (drafted under **1.1.0**)
 
 ### 1.0.0 — stable release
 
@@ -965,15 +965,92 @@ Beyond `now()` / `wait`. Instant + format/parse enough for scripts — not a cal
 
 - Version **1.0.0**; preferred CLI remains **`elang`**
 - Marks the completed 0.8 + 0.9 work as the stable release line
-- Held items stay held until a new series is drafted
+- Next series is **1.1.x** (drafted below)
 
 ### Out of 0.9 (still held globally)
 
-Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, HTTP builtins, `Point.new` (positional construction shipped instead).
+Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, `Point.new` (positional construction shipped instead). HTTP builtins are drafted under **1.1.x**, not held forever.
+
+## 1.1.x — HTTP + post-1.0 polish
+
+**Status: 1.1.0 implemented; 1.1.1–1.1.5 drafted.**
+
+**1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics.
+
+Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny YAML or URL helpers, watch/abort polish, error-message pass, docs/playground policy.
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 1.1.0 | `httpGet` / `httpPost` + `allow_http` host flag | implemented (1.1.0) |
+| 1.1.1 | HTTP headers / status helpers / `*Or` twins | drafted |
+| 1.1.2 | YAML or URL helpers (only if still tiny) | drafted |
+| 1.1.3 | `watch` / abort diagnostics polish | drafted |
+| 1.1.4 | Error-message / code pass | drafted |
+| 1.1.5 | Docs generator or playground HTTP policy | drafted |
+
+### 1.1.0 — `httpGet` / `httpPost` + `allow_http`
+
+**Implemented.** Minimal HTTP for scripts. Stdlib/`urllib` only. No custom request headers yet (that is **1.1.1**).
+
+**Spelling:**
+
+```echo
+resp: hash = httpGet("https://example.com/");
+say(resp["status"]);
+say(resp["body"]);
+
+posted: hash = httpPost("https://example.com/api", "{\"ok\": true}");
+```
+
+Rules:
+
+- `httpGet(url) -> hash { status: int, body: str, headers: hash }`
+- `httpPost(url, body: str) ->` same shape
+- `Host.allow_http` default `True`; playground `False` → **E2801** when denied
+- Network / URL errors → **E2852**; non-2xx status returns the hash (does not abort)
+- No custom request headers yet (**1.1.1**); urllib/stdlib only; no new PyPI deps
+- Failure model unchanged
+
+### 1.1.1 — HTTP headers / status helpers / `*Or` twins
+
+Extend the 1.1.0 surface without changing the response hash shape.
+
+Rules (drafted):
+
+- Request headers on get/post (hash of string → string)
+- Thin status helpers (e.g. ok / redirect checks) if they stay tiny
+- `httpGetOr` / `httpPostOr` twins matching existing `*Or` conventions
+- Still no new PyPI deps; failure model unchanged
+
+### 1.1.2 — YAML or URL helpers (only if still tiny)
+
+Optional thin helpers only if the slice stays small. Skip or shrink if scope grows.
+
+Rules (drafted):
+
+- Prefer stdlib / already-available tooling; no heavy YAML product
+- URL join / encode helpers only if they stay one-file thin
+- Else defer; do not force either into this slot
+
+### 1.1.3 — `watch` / abort diagnostics polish
+
+Tighten existing diagnostics around `watch` and abort paths. No new language syntax.
+
+### 1.1.4 — error-message / code pass
+
+Consistency pass on Echo error messages and codes. Document any new **E28xx** codes introduced in 1.1.0–1.1.3.
+
+### 1.1.5 — docs generator or playground HTTP policy
+
+Either a thin docs generator slice or playground-facing HTTP / host-policy docs and defaults. Complements `allow_http` from **1.1.0**.
+
+### Out of 1.1 (still held globally)
+
+Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, overloading, LSP-as-product, `Point.new`.
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, and stable **1.0.0** are implemented. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, and stable **1.0.0** are implemented. **1.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -1004,6 +1081,6 @@ Do not move global holds into a new series without an explicit series start. **0
 | Multi-path `echo check` | implemented (0.5.9) |
 | Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
-| HTTP builtins | held |
+| HTTP builtins | **1.1.0** implemented; headers/`*Or` drafted under **1.1.1** |
 | Test DSL (`test "name" { }`) | held |
 | String `map` / `filter` over graphemes | skipped (awkward) |

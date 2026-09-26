@@ -1177,7 +1177,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. HTTP builtins (held)
+4. HTTP request headers / `*Or` twins (drafted **1.1.1**; thin `httpGet` / `httpPost` shipped in **1.1.0**)
 
 ### Shipped that used to be holes
 

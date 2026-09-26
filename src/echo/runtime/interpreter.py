@@ -106,6 +106,8 @@ from echo.runtime.builtins import (
     do_format_time,
     do_has,
     do_hours,
+    do_http_get,
+    do_http_post,
     do_index_of,
     do_is_dir,
     do_join,
@@ -1268,6 +1270,12 @@ class Interpreter:
             return do_hours(target if target is not None else _first(args, method, location), location)
         if method == "minutes":
             return do_minutes(target if target is not None else _first(args, method, location), location)
+        if method == "httpGet":
+            return do_http_get(target if target is not None else _first(args, method, location), self.host, location)
+        if method == "httpPost":
+            url = target if target is not None else _nth(args, 0, method, location)
+            body = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_http_post(url, body, self.host, location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":

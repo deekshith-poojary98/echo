@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+HTTP GET/POST builtins. Opens the **1.1.x** series (HTTP + post-1.0 polish). Failure model unchanged.
+
+- `httpGet(url) -> hash` with `{ status: int, body: str, headers: hash }`
+- `httpPost(url, body) -> hash` — same shape; body is `str` (`text/plain; charset=utf-8`)
+- Method form: `"https://…".httpGet()`, `"https://…".httpPost(body)`
+- `Host.allow_http` defaults `True`; playground sets `False` → **E2801**
+- Network / bad URL / bad types → **E2852**; non-2xx status returns the hash (does not abort)
+- stdlib `urllib` only; no custom request headers yet (**1.1.1**)
+
 ## 1.0.0
 
 Stable release. Marks the completed **0.8** OOP spine and **0.9** ergonomics / stdlib series as the public 1.0 language surface. No new language syntax. Failure model unchanged.

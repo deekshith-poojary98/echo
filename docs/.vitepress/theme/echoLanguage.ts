@@ -82,6 +82,8 @@ const BUILTINS = new Set([
   'formatTime',
   'has',
   'hours',
+  'httpGet',
+  'httpPost',
   'indexOf',
   'insertAt',
   'isDir',

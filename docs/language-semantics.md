@@ -585,4 +585,5 @@ v0.9.7 adds `regexMatch` / `regexFind` / `regexReplace` / `regexSplit` (Python `
 v0.9.8 narrows simple-name unions in `if type(x) == "..."` (and matching `else if` / excluding `else`).
 v0.9.9 adds UTC `formatTime` / `parseTime` and `days` / `hours` / `minutes` duration helpers.
 v1.0.0 is the stable release of the 0.8–0.9 surface (no language changes).
+v1.1.0 adds `httpGet` / `httpPost` (host-gated via `allow_http`; response hash `{ status, body, headers }`).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

@@ -292,6 +292,16 @@ proc: hash = run("true", []);
 say(proc["code"]);
 ```
 
+### `httpGet(url)` / `httpPost(url, body)`
+HTTP request helpers. Return a hash `{ "status": int, "body": str, "headers": hash }`. `url` and `body` are strings. Non-2xx responses still return the hash. Network failures and bad types abort (**E2852**). The playground host denies these (`allow_http=False` → **E2801**). No custom request headers yet.
+
+```echo
+resp: hash = httpGet("https://example.com/");
+say(resp["status"]);
+say(resp["body"]);
+created: hash = httpPost("https://example.com/items", "hello");
+```
+
 ### `now()`
 Returns the current unix time as an `int` number of seconds. Takes no arguments.
 
