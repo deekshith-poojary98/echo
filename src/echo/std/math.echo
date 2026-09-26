@@ -1,0 +1,9 @@
+// Echo std/math (2.1.6).
+// Canonical home for numeric helpers. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export abs: dynamic = abs;
+export floor: dynamic = floor;
+export ceil: dynamic = ceil;
+export min: dynamic = min;
+export max: dynamic = max;

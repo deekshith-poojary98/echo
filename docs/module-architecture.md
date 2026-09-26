@@ -69,8 +69,8 @@ Each module record holds:
 Identity is the canonical path, not the import specifier string.
 
 Two imports that resolve to the same canonical path are one module.
-v0.3 has a single specifier form, so this is demonstrated when two
-modules import the same sibling name.
+Bare `"math"` and `"./math"` from the same importer are therefore one
+module (2.0.0).
 
 Initialization state exists so a module is never exposed to an importer
 while still initializing, and is never treated as initialized after
@@ -80,24 +80,29 @@ failure.
 
 ## 4. ModuleResolver
 
-**Input:** importer canonical path + bare module name.
+**Input:** importer canonical path + module specifier string.
 
 **Output:** canonical absolute path of the dependency, or a resolver error.
 
 Given importer `/project/app.echo` and name `math`, the resolver yields
-`/project/math.echo`.
+`/project/math.echo`. Nested `"lib/math"` yields `/project/lib/math.echo`.
+Leading `./` / `../` are allowed; mid-path `..` is not.
+Reserved `"std/meta"` yields a file under the Echo install `std/` tree
+(**2.0.2**), not `/project/std/meta.echo`.
 
 The `.echo` extension is implied and is not written in the specifier.
 
-The resolver looks only beside the importing file.
+The resolver looks under the importing file’s directory (and parents when
+`../` is used), except for the reserved `std/…` prefix.
 
 The resolver:
 
 * canonicalizes the resulting path;
-* reports module-not-found when the sibling file is absent;
+* reports module-not-found when the file is absent (**E3002**), including a looked-for path hint;
+* rejects invalid specifier shape (**E3001**), including an explicit `.echo` suffix and absolute paths, with specific hints;
+* attaches the importing `import` location when resolution fails during load;
 * does **not** parse, analyze, or execute modules;
-* does **not** interpret `use`;
-* does **not** accept `"math.echo"`, `"./math"`, `"../math"`, or subdirectory specifiers.
+* does **not** interpret `use`.
 
 The resolver answers only: *which file is this import?*
 
@@ -115,7 +120,8 @@ The graph:
 * deduplicates nodes by canonical path;
 * detects direct, indirect, and longer cycles before any module is exposed;
 * produces a dependency-first initialization order;
-* places the entry module last among the modules it depends on.
+* places the entry module last among the modules it depends on;
+* formats **E3003** cycle chains with nested path labels when basenames collide.
 
 The graph does **not** execute modules and does **not** bind names.
 
@@ -264,20 +270,24 @@ Forbidden crossings:
 
 ## 11. Explicit Non-Goals
 
-These are outside the v0.3 architecture:
+These are outside the module architecture:
 
 * import aliases (`import add as plus from "math"`);
 * module namespaces (`math.add()`);
-* packages or package-resolution semantics;
-* standard-library module paths;
+* packages or package-resolution semantics (beyond the fixed `std/…` install tree);
+* third-party / registry module paths;
 * dynamic / runtime imports;
-* alternate specifiers (`"math.echo"`, `"./math"`, `"../math"`, `"lib/math"`);
+* explicit `.echo` suffixes or absolute paths in specifiers;
 * extra filesystem names or symbolic links as another way to spell a module;
 * circular-import recovery or partial initialization;
 * wildcard imports;
 * re-exporting.
 
-No component may grow a hook for these features in order to make an
+Relative `./` / `../` and nested segments (`"lib/math"`) shipped in **2.0.0**.
+`std/…` install-tree paths shipped in **2.0.2**; peels + require-std through **2.0.7**; docs / series close **2.0.8**–**2.0.9**.
+No package registry.
+
+No component may grow a hook for the remaining non-goals in order to make an
 import “more convenient.”
 
 ---
@@ -293,9 +303,11 @@ above. None of these tests require a new language rule.
 * CLI file is the entry module
 * `.echo` extension is implied
 * relative imports resolve beside the importer
-* missing sibling is not found in another directory
+* nested / `./` / `../` path forms resolve (2.0.0)
+* `std/…` resolves from the Echo install tree (2.0.2)
+* missing sibling is not found in another directory (bare name still local)
 * resolved absolute path defines module identity
-* equivalent sibling imports resolve to one module identity
+* equivalent path forms that hit the same file are one module identity
 
 ### Exports and selective imports — Semantic Analyzer + Interpreter
 

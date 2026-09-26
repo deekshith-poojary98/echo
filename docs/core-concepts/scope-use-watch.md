@@ -40,7 +40,10 @@ Import an outer variable for mutation inside a function.
 
 ### `watch`
 
-Mark a variable for change reporting.
+Mark a variable for change reporting. Mutation lines include a source
+location. On abort, CLI / `echo test` also dump watched bindings under
+`Watched:` and active call frames under `Stack:` (when the failure is
+inside a call). Use `trace(value)` to print a value without changing it.
 
 ### Shadowing
 

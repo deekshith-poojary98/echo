@@ -1,5 +1,177 @@
 # Changelog
 
+## 2.1.9
+
+Series close (docs / examples). Closes the **2.1.x** series. No new language syntax. Failure model unchanged.
+
+- Public message: **2.1 = YAML + LSP stub + std maturity on 2.0 modules**
+- README + matrix + roadmap / known limitations mark **2.1.0–2.1.9** complete
+- Example `examples/yaml_and_math.echo` (playground-safe YAML + `std/math` + `trace`); playground **YAML & math** demo
+- Mini-programs + playground page note the full **2.1** surface
+
+## 2.1.8
+
+Docs generator expansion. Ninth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `tools/sync_builtins.py` also generates `docs/reference/std-inventory.md` (modules + exports)
+- `--check` covers std inventory drift; VitePress nav links the page
+- Builtin inventory cross-links to std inventory
+
+## 2.1.7
+
+CLI std inventory. Eighth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `elang std` lists install-tree `std/…` modules (honors `ECHO_STD_ROOT`)
+- `--count`, `--exports` (export names per module), `--path` (resolved std root)
+- Pairs with `elang builtins`; help epilog includes `std`
+
+## 2.1.6
+
+Further std peel. Seventh **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `std/math` — `abs` / `floor` / `ceil` / `min` / `max`
+- `std/random` — `random` / `randomInt`
+- `std/time` also exports `now` / `wait`; `std/os` also exports `run`
+- Prelude dual-path unchanged; `--require-std` hides the new peeled names too
+
+## 2.1.5
+
+Debugger polish beyond `watch`. Sixth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- On abort, CLI / `echo test` print a `Stack:` dump of active call frames (newest first); top-level aborts omit the section
+- `trace(value)` / `value.trace()` prints `TRACE: …` and returns the value unchanged
+- Not a stepper / breakpoints product
+
+## 2.1.4
+
+Editor LSP client. Fifth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- VS Code / Cursor extension starts `elang lsp` via `vscode-languageclient` (hover, go-to-definition, live diagnostics)
+- Setting `echo.lsp.enabled` (default true); CLI path still `echo.path`
+- Task problem matchers and Check / Lint / Test commands remain as a fallback
+- Extension folder: run `npm install` once after clone
+
+## 2.1.3
+
+LSP goto-definition. Fourth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `textDocument/definition` for local bindings (functions, params, variables) and imported names
+- Import targets resolve via the **2.0** module resolver (`std/…` and relative paths)
+- Builtins still have no source location (hover remains the surface)
+
+## 2.1.2
+
+Thin LSP stub. Third **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `elang lsp` — stdio JSON-RPC language server
+- `textDocument/publishDiagnostics` from Lexer / Parser / SemanticAnalyzer (and `ModuleLoader.check` when the file exists on disk)
+- `textDocument/hover` for prelude builtins (signature via `format_type`)
+- Not a full IDE language server; goto-def and editor client follow in **2.1.3** / **2.1.4**
+
+## 2.1.1
+
+YAML `yamlParseOr` + docs. Second **2.1** slice. Failure model unchanged.
+
+- `yamlParseOr(text, fallback)` — invalid YAML returns `fallback`; non-`str` text still aborts (**E2855**)
+- Method form: `text.yamlParseOr(fallback)`
+- Documented in failure-model twins table and built-in methods; `std/yaml` exports the twin
+
+## 2.1.0
+
+YAML helpers. First **2.1** slice. Failure model unchanged. Depends on PyYAML.
+
+- `yamlParse(text)` / `yamlWrite(value)` — YAML ↔ Echo hashes / lists / scalars
+- Method form: `"n: 1".yamlParse()`; bad types or invalid YAML → **E2855**
+- Canonical import: `import yamlParse from "std/yaml"` (prelude dual-path; peeled under `--require-std`)
+- `yamlParseOr` deferred to **2.1.1**
+
+## 2.0.9
+
+Series close (docs). Closes the **2.0.x** series. No new language syntax. Failure model unchanged.
+
+- Public message: **2.0 = path resolution + std modules, not a package manager**
+- README + module-semantics + capability matrix mark **2.0.0–2.0.9** complete
+- Roadmap / priority / known limitations move next work to **2.1.x** (YAML + LSP stub)
+
+## 2.0.8
+
+Docs / examples / playground for multi-file + `std/…`. Ninth **2.0** slice. Failure model unchanged. Playground still denies files / `run` / HTTP.
+
+- `examples/std_imports.echo` + playground **std/… imports** demo
+- `examples/modules_demo/` nested + `./` + `std/meta` CLI demo
+- Playground worker loads `std/*.echo` and supports `import … from "std/…"`
+- Mini-programs + playground page note multi-file vs `std/…`
+
+## 2.0.7
+
+Prelude policy (core vs std). Eighth **2.0** slice. Failure model unchanged. Default prelude unchanged.
+
+- Document **core** prelude vs peeled **std/…** families (`PEELED_STD_BUILTIN_NAMES`)
+- Optional `Host.require_std` / CLI `--require-std` hides peeled names from the prelude; import them from `std/…` instead
+- `elang check --require-std` and `elang builtins --require-std` honor the same policy
+- Install-tree `std/…` modules always see the full builtin set so dual-path re-exports keep working
+- Method form on values (e.g. `"x".regexMatch(...)`) is unchanged
+
+## 2.0.6
+
+Peel regex + dates into `std/re` and `std/time`. Seventh **2.0** slice. Failure model unchanged.
+
+- `std/re` — `regexMatch` / `regexFind` / `regexReplace` / `regexSplit`
+- `std/time` — `formatTime` / `parseTime` / `days` / `hours` / `minutes`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+
+## 2.0.5
+
+Peel files / JSON / env into `std/fs`, `std/json`, and `std/os`. Sixth **2.0** slice. Failure model unchanged. Host `allow_files` / `allow_run` unchanged.
+
+- `std/fs` — `readFile` / `readFileOr` / `writeFile` / `fileExists` / `isDir` / `listFiles` / `mkdir` / `mkdirAll` / `removeFile` / `removeTree` / `copyFile` / `pathJoin` / `cwd`
+- `std/json` — `parseJson` / `parseJsonOr` / `writeJson`
+- `std/os` — `env` / `envOr` / `args`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+
+## 2.0.4
+
+Peel URL + Base64 into `std/url` and `std/base64`. Fifth **2.0** slice. Failure model unchanged.
+
+- `import urlEncode / urlDecode / urlJoin / urlQuery from "std/url"`
+- `import base64Encode / base64Decode from "std/base64"`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+
+## 2.0.3
+
+Peel HTTP into `std/http`. Fourth **2.0** slice. Failure model unchanged. Host `allow_http` unchanged.
+
+- `import httpGet / httpPost / httpGetOr / httpPostOr / httpOk / httpRedirect from "std/http"`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+- Method form on strings and existing HTTP semantics unchanged
+
+## 2.0.2
+
+Stdlib search path. Third **2.0** slice. Selective `import` / `export` unchanged. Failure model unchanged. No package registry.
+
+- `import … from "std/…"` resolves from the Echo install tree (`echo/std/`), not the importer’s directory
+- Seed module `std/meta` (`stdOk`, `stdName`) proves the path; builtin peels start in **2.0.3**
+- `"./std/…"` still resolves beside the importer; bare `"std"` is **E3001**
+- Override root with `ECHO_STD_ROOT` or `ModuleResolver(std_root=…)` (tests / packaging)
+
+## 2.0.1
+
+Import cycle / resolver diagnostics polish. Second **2.0** slice. No new language syntax. Failure model unchanged.
+
+- **E3002** names the looked-for path (`looked for lib/nope.echo`) and points at the importing `import` line
+- **E3001** adds specific hints (omit `.echo`, relative paths only, `..` only at the start)
+- **E3003** cycle labels distinguish nested same-basename modules (`lib/a.echo -> pkg/a.echo`, not `a.echo -> a.echo`)
+- Document module codes **E3001**–**E3005** in errors-and-troubleshooting
+
+## 2.0.0
+
+Relative / nested import paths. Opens the **2.0.x** series (modules beyond siblings + stdlib peel). Selective `import` / explicit `export` unchanged. Failure model unchanged. No package registry.
+
+- Specifiers may use `"./…"`, `"../…"`, and nested segments (`"lib/math"` → `lib/math.echo` beside the importer)
+- Bare sibling names (`"math"`) stay valid; `.echo` is still implied and must not appear in the specifier
+- Absolute paths, mid-path `..`, empty segments, and trailing `/` are **E3001**; missing files remain **E3002**
+- Module identity remains the canonical absolute file path (bare and `./` forms that resolve to the same file are one module)
+
 ## 1.1.9
 
 Series close (docs / examples). Closes the **1.1.x** series. No new language syntax. Failure model unchanged.

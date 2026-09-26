@@ -16,6 +16,7 @@ class Host:
     allow_files: bool = True
     allow_run: bool = True
     allow_http: bool = True
+    require_std: bool = False
     cwd: Path | None = None
     http_timeout: float = 30.0
 

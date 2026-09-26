@@ -29,7 +29,7 @@ Runtime failures that still abort as Echo errors:
 - `chunk()` size (`E2842`); `rangeList` / `rangeListInclusive` bounds (`E2843`)
 - Hash `mapValues` (`E2844`–`E2845`); list `flatten` (`E2846`); list `partition` (`E2847`–`E2848`; non-`bool` is `E2831`)
 - Host deny for files / run / HTTP (`E2801`)
-- Regex builtins (`E2850`); date helpers (`E2851`); HTTP (`E2852`); URL helpers (`E2853`); Base64 helpers (`E2854`)
+- Regex builtins (`E2850`); date helpers (`E2851`); HTTP (`E2852`); URL helpers (`E2853`); Base64 helpers (`E2854`); YAML helpers (`E2855`)
 - `const` reassignment / mutation (`E3201`–`E3204`)
 - Destructuring length / shape (`E3205`–`E3207`); missing hash keys reuse **E2711**
 - Exact object shape: extra field **E3208**, missing field **E3209**
@@ -51,6 +51,7 @@ Host / scripting stdlib:
 | `E2852` | HTTP — bad types, empty URL, network / timeout / invalid URL (non-2xx still returns the response hash) |
 | `E2853` | URL helpers — bad types (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`) |
 | `E2854` | Base64 helpers — bad types or invalid Base64 text |
+| `E2855` | YAML helpers — bad types or invalid YAML (`yamlParseOr` falls back on invalid YAML) |
 
 `httpGetOr` / `httpPostOr`: network / empty-URL **E2852** runtime failures return `fallback`; type errors and host deny (**E2801**) still abort.
 
@@ -67,6 +68,16 @@ List HOF callbacks:
 | hash `mapValues` | `E2844` | not unary → `E2845` | |
 
 `chunk` size not an `int` `>= 1` → `E2842`. `rangeList` / `rangeListInclusive` non-int bounds → `E2843`. `flatten` top-level non-list → `E2846`.
+
+Modules (file imports):
+
+| Code | Surface |
+| --- | --- |
+| `E3001` | Invalid module specifier (`.echo` suffix, absolute path, mid-path `..`, empty / trailing `/`) |
+| `E3002` | Module file not found — includes a `looked for …` hint and the importing line |
+| `E3003` | Circular dependency — chain uses nested path labels when basenames collide |
+| `E3004` | Internal graph entry missing (not a normal user import) |
+| `E3005` | Module load / export failure |
 
 `const`: reassignment **E3201**; mutate through the const name **E3202**; mutate a frozen value via another name / parameter **E3203**; `use mut` on const **E3204**.
 

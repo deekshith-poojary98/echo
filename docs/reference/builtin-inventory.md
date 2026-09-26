@@ -9,9 +9,10 @@ Auto-generated from `builtin_names()` by `tools/sync_builtins.py`.
 Do not edit by hand — run `python tools/sync_builtins.py` after adding a builtin.
 
 Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
+Install-tree modules: [Std Inventory](/reference/std-inventory).
 
 
-**Count:** 121
+**Count:** 125
 
 | Name |
 | --- |
@@ -122,6 +123,7 @@ Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
 | `startsWith` |
 | `take` |
 | `take_last` |
+| `trace` |
 | `trim` |
 | `type` |
 | `unique` |
@@ -135,4 +137,7 @@ Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
 | `wipe` |
 | `writeFile` |
 | `writeJson` |
+| `yamlParse` |
+| `yamlParseOr` |
+| `yamlWrite` |
 | `zip` |

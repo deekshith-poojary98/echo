@@ -71,10 +71,12 @@ from echo.frontend.tokens import TokenType
 from echo.runtime.builtins import (
     MUTATING_METHODS,
     builtin_names,
+    prelude_builtin_names,
     resolve_builtin_args,
     standalone_min_args,
 )
 from echo.runtime.builtin_types import builtin_fn_type, builtin_method_fn_type
+from echo.runtime.host import Host
 from echo.runtime.functions import bind_arguments
 from echo.runtime.class_registry import register_class_methods
 from echo.runtime.values import (
@@ -116,9 +118,12 @@ class SemanticAnalyzer:
         return program
 
     @staticmethod
-    def module_scope(location: SourceLocation) -> Scope:
+    def module_scope(
+        location: SourceLocation,
+        names: frozenset[str] | None = None,
+    ) -> Scope:
         scope = Scope()
-        for name in builtin_names():
+        for name in names if names is not None else builtin_names():
             signature = builtin_fn_type(name)
             param_types = list(signature.param_types)
             scope.define(
@@ -136,6 +141,14 @@ class SemanticAnalyzer:
                 )
             )
         return scope
+
+    @staticmethod
+    def prelude_scope(location: SourceLocation, host: Host | None = None) -> Scope:
+        require_std = bool(host.require_std) if host is not None else False
+        return SemanticAnalyzer.module_scope(
+            location,
+            names=prelude_builtin_names(require_std=require_std),
+        )
 
     def collect_symbols(self, program: Program) -> ModuleSymbols:
         return self._collect_symbols(program)

@@ -1,10 +1,10 @@
 # Echo Syntax Highlighter
 
-TextMate grammar plus **editor tasks** for **Echo** (`.echo` files) in VS Code and Cursor. The docs site also imports this grammar for Echo code fences (Shiki).
+TextMate grammar, **LSP client** (`elang lsp`), and **editor tasks** for **Echo** (`.echo` files) in VS Code and Cursor. The docs site also imports this grammar for Echo code fences (Shiki).
 
-This is **not a language server**. There are no completions, jump-to-definition, or hover docs. Diagnostics in the Problems panel come from running the Echo CLI (`elang check` / `lint` / `test`) through tasks and problem matchers.
+**Live** hover, go-to-definition, and analyzer diagnostics come from `elang lsp` (**2.1.4**). **Echo: Check / Lint / Test** tasks and problem matchers remain for on-demand CLI runs and as a fallback if the language server does not start.
 
-It tracks Echo **v0.8.9**.
+Tracks Echo **v2.1.9**.
 
 ## Install
 
@@ -14,9 +14,16 @@ The Echo CLI must be on `PATH` as **`elang`** (recommended). Most shells already
 
 ```bash
 elang --version
+elang lsp -h
 ```
 
-If your executable is named something else, set **`echo.path`** in VS Code/Cursor settings.
+If your executable is named something else, set **`echo.path`** in VS Code/Cursor settings. Disable the LSP client with **`echo.lsp.enabled`: false** if needed.
+
+From this folder, install the language-client dependency once:
+
+```bash
+cd echo-syntax-highlighter && npm install
+```
 
 ### VS Code
 
@@ -38,15 +45,15 @@ Same layout, different extensions folder:
 ln -s "$(pwd)/echo-syntax-highlighter" ~/.cursor/extensions/echo-syntax-highlighter
 ```
 
-Open any `.echo` file. The status bar language mode should read **Echo**.
+Open any `.echo` file. The status bar language mode should read **Echo**. Hover a builtin or jump to a local / imported definition to confirm the LSP client is running.
 
 ### Develop against a host window
 
-From this folder in VS Code or Cursor, press **F5**. A new window loads the grammar and tasks. Open `examples/highlight-sample.echo` to check scopes.
+From this folder in VS Code or Cursor, press **F5**. A new window loads the grammar, LSP client, and tasks. Open `examples/highlight-sample.echo` to check scopes.
 
 ## Check / Lint / Format / Test from the editor
 
-Tasks pass **`--plain`** so problem matchers see stable text (not Rich panels).
+Tasks pass **`--plain`** so problem matchers see stable text (not Rich panels). These stay available even when LSP is on.
 
 | Action | How |
 | --- | --- |
@@ -58,7 +65,7 @@ Tasks pass **`--plain`** so problem matchers see stable text (not Rich panels).
 
 File-scoped variants are also on the task list: **Echo: Check file**, **Echo: Lint file**, **Echo: Format file**, **Echo: Test file**.
 
-Findings land in the **Problems** panel:
+Findings from tasks land in the **Problems** panel:
 
 - `$echo` — `echo check` / parse errors (`Error[E####]` or `Error:` plus `--> file:line:col`)
 - `$echo-lint` — `echo lint` lines `path:line:col: rule: message`
@@ -88,7 +95,7 @@ The grammar does **not** invent syntax Echo does not have (`try`/`catch`, hex/bi
 
 ## Keep the builtin list in sync
 
-Builtin names are generated from runtime by `tools/sync_builtins.py` (TextMate `builtins` match + playground `BUILTINS` + `docs/reference/builtin-inventory.md`).
+Builtin names are generated from runtime by `tools/sync_builtins.py` (TextMate `builtins` match + playground `BUILTINS` + `docs/reference/builtin-inventory.md` + `docs/reference/std-inventory.md`).
 
 When Echo gains or renames a builtin:
 

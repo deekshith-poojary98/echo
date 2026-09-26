@@ -1,9 +1,11 @@
 # Echo v0.3 Module Semantics
 
-> **Status:** Frozen language contract (v0.3). Implemented.
+> **Status:** Frozen language contract (v0.3 + **2.0** path / std additive). Implemented through **2.0.9**.
 >
 > What `import` / `export` mean. Not an implementation guide.
 > Later releases (0.4–0.7) did not reopen this Model A contract; they added host/stdlib and syntax on top.
+> **2.0.x** adds nested / relative paths, reserved `std/…` install-tree imports, and optional `--require-std` —
+> not a package registry, lockfiles, or third-party package paths.
 
 `import` loads modules.
 `use` / `use mut` stay function mutability and capture.
@@ -436,7 +438,8 @@ The module system does not silently overwrite existing bindings.
 
 ## 13. Module Resolution
 
-The smallest v0.3 module resolver supports relative module names.
+The resolver supports relative module names beside the importing file,
+including nested segments and leading `./` / `../`.
 
 Given:
 
@@ -444,32 +447,44 @@ Given:
 # project/
 #   app.echo
 #   math.echo
+#   lib/
+#     util.echo
 ```
 
-this:
+these:
 
 ```echo
 import add from "math";
+import add from "./math";
+import id from "lib/util";
+import id from "./lib/util";
 ```
 
-resolves `math` relative to the importing file:
+resolve relative to the importing file:
 
 ```text
 project/math.echo
+project/lib/util.echo
 ```
+
+From a nested importer, `"../shared"` walks up one directory.
 
 The `.echo` extension is implied and is not written in the specifier.
 
-The v0.3 specifier is a bare relative name. Given an import from `"math"`, the resolver looks only beside the importing file for `math.echo`.
+Valid specifier rules (2.0.0 + **2.0.2**):
 
-These specifier forms are not part of v0.3:
+* one or more `/`-separated segments;
+* optional leading `./` or `../` (only at the start; mid-path `..` is invalid);
+* each name segment matches `[A-Za-z_][A-Za-z0-9_]*`;
+* no absolute paths, drive letters, backslashes, empty segments, or trailing `/`;
+* no explicit `.echo` suffix in the specifier;
+* reserved prefix `std/…` resolves from the Echo install tree (not beside the importer);
+* bare `"std"` is invalid — write `std/meta` (or another module under std);
+* `"./std/…"` remains a normal relative path beside the importer.
 
-* `"math.echo"`
-* `"./math"`
-* `"../math"`
-* subdirectory paths such as `"lib/math"`
+Missing files are **E3002** (includes a looked-for path hint and the importing line). Invalid specifier shape is **E3001** (with a specific hint). Circular dependencies are **E3003** (path labels stay unique for nested same-basename modules).
 
-The resolver operates on the importing module’s location.
+The resolver operates on the importing module’s location for relative forms, and on the Echo `std` root for `std/…`.
 
 ---
 
@@ -479,9 +494,10 @@ A module’s identity is its resolved absolute path.
 
 Different imports that resolve to the same absolute file identify the same module.
 
-v0.3 has a single specifier form, so this is demonstrated when two modules import the same sibling name and therefore resolve to the same file. Identity is the file, not the specifier string.
+Example: `"math"` and `"./math"` from the same importer are one module.
+Identity is the file, not the specifier string.
 
-Tests must not invent additional specifier spellings, symbolic-link aliases, or extra filesystem names to exercise this rule. Whether two filesystem names that refer to the same inode identify one module is unspecified.
+Tests must not invent symbolic-link aliases or extra filesystem names to exercise this rule. Whether two filesystem names that refer to the same inode identify one module is unspecified.
 
 The absolute resolved path is therefore the canonical module identity used for:
 
@@ -728,20 +744,30 @@ math.add();
 
 ### Alternate import specifier spellings
 
-Not part of v0.3:
+Still not supported:
 
 * an explicit `.echo` suffix in the specifier;
-* `./` or `../` prefixes;
-* subdirectory or package-like paths;
+* absolute paths or drive letters;
+* mid-path `..` (only leading `../` is allowed);
 * extra filesystem names or symbolic links as a way to spell the same module.
+
+Relative `./` / `../` prefixes and nested segments (`"lib/math"`) shipped in **2.0.0**.
 
 ### Packages
 
 No package manager or package-resolution semantics.
+**2.0** closes with path resolution + Echo-owned `std/…` only — not a registry, lockfiles, or `elang add`.
 
 ### Standard-library module paths
 
-No special stdlib import paths.
+`import … from "std/…"` resolves from the Echo install tree (**2.0.2**). Seed module: `std/meta`. Peeled families through **2.0.6** / **2.1.0** / **2.1.6**: `std/http`, `std/url`, `std/base64`, `std/fs`, `std/json`, `std/os`, `std/re`, `std/time`, `std/yaml`, `std/math`, `std/random`.
+
+**Prelude policy (**2.0.7**):** by default those peeled names also remain in the prelude (dual-path). With `Host.require_std` / `elang --require-std`, peeled names are omitted from the prelude and must be imported from `std/…`. Core prelude names (`say`, `type`, list helpers, …) always stay. Method form on values is unchanged. No third-party package paths.
+
+**Inventory (**2.1.7** / **2.1.8**):** `elang std` lists install-tree modules (`--exports` for export names; `--path` prints the resolved std root / `ECHO_STD_ROOT`). Docs page: [Std Inventory](/reference/std-inventory) (generated by `tools/sync_builtins.py`). Pairs with `elang builtins` / [Builtin Inventory](/reference/builtin-inventory).
+
+Docs / examples / playground coverage shipped in **2.0.8**; series closed in **2.0.9**.
+**2.1** adds YAML (`std/yaml`), thin LSP, further peels, `elang std`, and inventories — series closed in **2.1.9**.
 
 ### Dynamic imports
 

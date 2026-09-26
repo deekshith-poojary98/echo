@@ -95,6 +95,7 @@ export default defineConfig({
           { text: 'Loops Reference', link: '/reference/loops-reference' },
           { text: 'CLI and Execution Model', link: '/reference/cli-and-execution-model' },
           { text: 'Builtin Inventory', link: '/reference/builtin-inventory' },
+          { text: 'Std Inventory', link: '/reference/std-inventory' },
           { text: 'Failure Model', link: '/failure-model' }
         ]
       },

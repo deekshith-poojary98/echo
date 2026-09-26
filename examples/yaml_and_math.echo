@@ -1,0 +1,21 @@
+// YAML + std/math (2.1). Playground-safe — no files / HTTP / run.
+
+import yamlParse from "std/yaml";
+import yamlParseOr from "std/yaml";
+import yamlWrite from "std/yaml";
+import abs from "std/math";
+import floor from "std/math";
+import min from "std/math";
+
+doc: str = "name: Echo\nscore: 3.7\n";
+data: hash = yamlParse(doc);
+say("name:", data["name"]);
+say("score:", data["score"]);
+say("floor:", floor(data["score"]));
+say("abs:", abs(-12));
+say("min:", min(2, 9));
+
+roundtrip: str = yamlWrite({ ok: true, n: 1 });
+say("yaml:", roundtrip);
+say("fallback:", yamlParseOr("not: yaml: [", { ok: false })["ok"]);
+say("traced:", trace(data["name"]));

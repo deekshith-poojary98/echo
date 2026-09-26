@@ -3,13 +3,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
-from echo.errors import EchoError, EchoExit, ModuleLoadError
+from echo.errors import EchoError, EchoExit, ModuleLoadError, ModuleResolveError, SourceLocation
 from echo.frontend.ast.nodes import ImportDeclaration
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.modules.graph import ModuleGraph
 from echo.modules.records import FAILED, INITIALIZED, INITIALIZING, Module
 from echo.modules.resolver import ModuleResolver
+from echo.runtime.builtins import BUILTIN_NAMES, prelude_builtin_names
 from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
 from echo.runtime.host import Host
@@ -24,6 +25,7 @@ class ModuleLoader:
         self._modules: dict[Path, Module] = {}
         self._declared_imports: dict[Path, list[str]] = {}
         self._initialized: list[Path] = []
+        self.host = Host()
 
     def declare_imports(self, importer_path: str | Path, names: Sequence[str]) -> None:
         identity = self.resolver.canonicalize(importer_path)
@@ -44,23 +46,37 @@ class ModuleLoader:
         host: Host | None = None,
         interpreter: Interpreter | None = None,
     ) -> Module:
+        self.host = host or Host()
         entry = self.resolver.canonicalize(entry_path)
         graph = ModuleGraph()
         self._collect(entry, graph, set())
         graph.detect_cycles()
         self._analyze_modules()
-        interpreter = interpreter or Interpreter(host=host)
+        interpreter = interpreter or Interpreter(host=self.host)
         for path in graph.dependency_order(entry):
             self._initialize(self._modules[path], interpreter)
         return self._modules[entry]
 
-    def check(self, entry_path: str | Path) -> Module:
+    def check(self, entry_path: str | Path, host: Host | None = None) -> Module:
+        self.host = host or self.host
         entry = self.resolver.canonicalize(entry_path)
         graph = ModuleGraph()
         self._collect(entry, graph, set())
         graph.detect_cycles()
         self._analyze_modules()
         return self._modules[entry]
+
+    def _is_std_module(self, path: Path) -> bool:
+        try:
+            path.resolve().relative_to(self.resolver.std_root)
+            return True
+        except ValueError:
+            return False
+
+    def _prelude_names_for(self, path: Path) -> frozenset[str]:
+        if self._is_std_module(path):
+            return BUILTIN_NAMES
+        return prelude_builtin_names(require_std=self.host.require_std)
 
     def _collect(self, path: Path, graph: ModuleGraph, walked: set[Path]) -> Module:
         module = self._materialize(path)
@@ -72,7 +88,7 @@ class ModuleLoader:
             self._discover_imports(module)
             module.discovered = True
         for name in self._import_names(module):
-            dependency = module.specifiers.get(name) or self.resolver.resolve(module.path, name)
+            dependency = module.specifiers.get(name) or self._resolve(module, name)
             if dependency not in module.dependencies:
                 module.dependencies.append(dependency)
             module.specifiers.setdefault(name, dependency)
@@ -84,9 +100,25 @@ class ModuleLoader:
         for statement in module.ast.statements:
             if not isinstance(statement, ImportDeclaration):
                 continue
-            dependency = self.resolver.resolve(module.path, statement.module)
+            dependency = self._resolve(module, statement.module, statement.location)
             module.imported_bindings.append((statement.name, dependency))
             module.specifiers[statement.module] = dependency
+
+    def _resolve(
+        self,
+        module: Module,
+        specifier: str,
+        location: SourceLocation | None = None,
+    ) -> Path:
+        try:
+            return self.resolver.resolve(module.path, specifier)
+        except ModuleResolveError as exc:
+            raise ModuleResolveError(
+                exc.message,
+                location=location if location is not None else exc.location,
+                help_text=exc.help_text,
+                code=exc.code,
+            ) from None
 
     def _import_names(self, module: Module) -> list[str]:
         names: list[str] = []
@@ -126,7 +158,11 @@ class ModuleLoader:
                 dependency = module.specifiers[statement.module]
                 dependencies[statement.module] = collected[dependency]
             analyzer = SemanticAnalyzer()
-            analyzer.analyze(module.ast, dependencies=dependencies)
+            scope = SemanticAnalyzer.module_scope(
+                module.ast.location,
+                names=self._prelude_names_for(module.path),
+            )
+            analyzer.analyze(module.ast, dependencies=dependencies, scope=scope)
             module.exports = set(analyzer.module_symbols.exports)
             module.class_exports = set(analyzer.module_symbols.classes) | set(
                 analyzer.module_symbols.interfaces
@@ -148,7 +184,12 @@ class ModuleLoader:
         module.state = INITIALIZING
         env = Environment()
         module.env = env
+        previous = interpreter.prelude_names
         try:
+            if self._is_std_module(module.path):
+                interpreter.use_full_prelude()
+            else:
+                interpreter.use_host_prelude()
             self._bind_imports(module, env)
             interpreter.execute(module.ast, env)
         except EchoExit:
@@ -162,6 +203,8 @@ class ModuleLoader:
                 f"module '{module.path.name}' failed to initialize",
                 code="E3005",
             ) from exc
+        finally:
+            interpreter.prelude_names = previous
         module.state = INITIALIZED
         self._initialized.append(module.path)
 

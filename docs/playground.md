@@ -10,4 +10,6 @@ The browser playground uses a **restricted host**: no filesystem, no process lau
 
 URL helpers (`urlEncode`, …) and status checks (`httpOk`, `httpRedirect`) still work; live `httpGet` / `httpPost` do not.
 
+`import … from "std/…"` works in the playground for install-tree modules (try the **std/… imports** or **YAML & math** examples). Multi-file sibling projects still need the CLI. YAML helpers need the PyYAML wheel (loaded in the playground worker).
+
 <Playground />

@@ -490,6 +490,29 @@ bindings under a `Watched:` section.
 
 ---
 
+## Abort stack and `trace`
+
+On abort, when the failure happens inside one or more calls, the CLI and
+`echo test` dump a `Stack:` section (newest frame first). Top-level aborts
+add no stack section.
+
+```echo
+fn boom() {
+    fail("x");
+}
+boom();
+```
+
+```text
+Stack:
+  in boom at <file>:line:col
+```
+
+`trace(value)` / `value.trace()` prints `TRACE: …` and returns the value
+unchanged. No stepper or breakpoints.
+
+---
+
 ## Errors
 
 Echo errors are Echo errors.
@@ -527,6 +550,7 @@ One source file is one program. There is no module system in v0.2.
 
 v0.3 adds a file-based module system on top of this pipeline. A program
 that contains no `import` keeps the v0.2 execution model unchanged.
+**2.0.0** extends specifiers with nested segments and leading `./` / `../`.
 See `docs/module-semantics.md`.
 
 v0.4 adds host and standard-library builtins (`args`, `env`, files, JSON,
@@ -597,4 +621,24 @@ v1.1.6 adds `tools/sync_builtins.py` and the generated builtin inventory page.
 v1.1.7 adds `base64Encode` / `base64Decode` (**E2854**).
 v1.1.8 adds `elang builtins` and tightens CLI help / `-V`.
 v1.1.9 closes **1.1.x** with a README / examples / playground docs pass.
+v2.0.0 extends module specifiers with nested segments and leading `./` / `../`.
+v2.0.1 polishes module not-found / invalid-specifier / cycle diagnostics (**E3001**–**E3003**).
+v2.0.2 adds `import … from "std/…"` from the Echo install tree (seed `std/meta`).
+v2.0.3 peels the HTTP family into `std/http` (prelude dual-path).
+v2.0.4 peels URL + Base64 into `std/url` and `std/base64` (prelude dual-path).
+v2.0.5 peels files / JSON / env into `std/fs`, `std/json`, and `std/os` (prelude dual-path).
+v2.0.6 peels regex + dates into `std/re` and `std/time` (prelude dual-path).
+v2.0.7 documents core vs peeled prelude and adds optional `--require-std` / `Host.require_std`.
+v2.0.8 adds multi-file / `std/…` examples and playground `std/…` import support.
+v2.0.9 closes the **2.0.x** series (path resolution + std modules, not a package manager).
+v2.1.0 adds `yamlParse` / `yamlWrite` (**E2855**) and `std/yaml` (PyYAML).
+v2.1.1 adds `yamlParseOr` (invalid YAML → fallback; non-`str` still aborts).
+v2.1.2 adds `elang lsp` (stdio stub: analyzer diagnostics + builtin hover).
+v2.1.3 adds LSP goto-definition for local bindings and imported symbols (2.0 resolver).
+v2.1.4 wires the VS Code / Cursor extension to `elang lsp` (task matchers remain as fallback).
+v2.1.5 adds abort `Stack:` dumps and a small `trace` helper (no stepper).
+v2.1.6 peels math / random / `now` / `wait` / `run` into `std/math`, `std/random`, and extended `std/time` / `std/os`.
+v2.1.7 adds `elang std` to list install-tree `std/…` modules (`--exports` / `--count` / `--path`).
+v2.1.8 extends `tools/sync_builtins.py` to generate the Std Inventory docs page.
+v2.1.9 closes the **2.1.x** series (YAML + LSP stub + std maturity on 2.0 modules).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

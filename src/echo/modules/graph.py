@@ -1,9 +1,28 @@
 from __future__ import annotations
 
+import os
+from collections.abc import Sequence
 from pathlib import Path
 
-
 from echo.errors import ModuleGraphError
+
+
+def _cycle_labels(cycle: Sequence[Path]) -> list[str]:
+    """Short labels that stay unique for nested same-basename modules."""
+    resolved = [Path(part).expanduser().resolve() for part in cycle]
+    if len(resolved) <= 1:
+        return [part.name for part in resolved]
+    try:
+        root = Path(os.path.commonpath([str(part.parent) for part in resolved]))
+    except ValueError:
+        return [part.as_posix() for part in resolved]
+    labels: list[str] = []
+    for part in resolved:
+        try:
+            labels.append(part.relative_to(root).as_posix())
+        except ValueError:
+            labels.append(part.as_posix())
+    return labels
 
 
 class ModuleGraph:
@@ -44,7 +63,7 @@ class ModuleGraph:
             if node in visiting:
                 cycle_start = stack.index(node)
                 cycle = stack[cycle_start:] + [node]
-                names = " -> ".join(part.name for part in cycle)
+                names = " -> ".join(_cycle_labels(cycle))
                 raise ModuleGraphError(
                     f"circular dependency: {names}",
                     code="E3003",

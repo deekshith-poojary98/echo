@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from functools import cmp_to_key
 
 from echo.core.hashes import ensure, require_hash, take, take_last, wipe
@@ -8,6 +9,7 @@ from echo.core.lists import count_of, empty, find, insert_at, pull, push, remove
 from echo.core.strings import apply_format, require_string
 from echo.errors import (
     ArgumentError,
+    EchoError,
     EchoIndexError,
     EchoNameError,
     EchoRuntimeError,
@@ -162,7 +164,11 @@ from echo.runtime.builtins import (
     do_wait,
     do_write_file,
     do_write_json,
+    do_yaml_parse,
+    do_yaml_parse_or,
+    do_yaml_write,
     do_zip,
+    prelude_builtin_names,
     require_int_convertible,
     resolve_builtin_args,
 )
@@ -198,14 +204,30 @@ from echo.runtime.values import (
 )
 
 
+@dataclass(frozen=True)
+class CallFrame:
+    name: str
+    call_site: SourceLocation | None
+
+
 class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
+        self.prelude_names = prelude_builtin_names(require_std=self.host.require_std)
         self._class_visibility_stack: list[int] = []
         self._watched: list[tuple[Environment, str]] = []
+        self._frames: list[CallFrame] = []
+        self._abort_frames: list[CallFrame] | None = None
+
+    def use_full_prelude(self) -> None:
+        self.prelude_names = BUILTIN_NAMES
+
+    def use_host_prelude(self) -> None:
+        self.prelude_names = prelude_builtin_names(require_std=self.host.require_std)
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
+        self._abort_frames = None
         self.global_env = env or Environment()
         for statement in program.statements:
             self.execute_statement(statement, self.global_env)
@@ -515,7 +537,7 @@ class Interpreter:
             function = env.resolve_function(expression.name)
             if function is not None:
                 return function
-            if expression.name in BUILTIN_NAMES:
+            if expression.name in self.prelude_names:
                 return builtin_value(expression.name)
             raise EchoNameError(f"Variable '{expression.name}' is not defined", expression.location, code="E2002")
         if isinstance(expression, ListLiteral):
@@ -754,7 +776,7 @@ class Interpreter:
             function = env.resolve_function(callee.name)
             if function is not None:
                 return self._call_user_function(function, expression.arguments, env, expression.location)
-            if callee.name in BUILTIN_NAMES:
+            if callee.name in self.prelude_names:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
             record = env.resolve_class(callee.name)
             if record is not None:
@@ -1102,6 +1124,20 @@ class Interpreter:
         if method == "say":
             print(" ".join(stringify(value) for value in args))
             return None
+        if method == "trace":
+            value = target if target is not None else _first(args, method, location)
+            try:
+                rendered = stringify(value)
+            except EchoRuntimeError:
+                rendered = "<nested too deeply>"
+            if self._frames:
+                fname = self._frames[-1].name
+            else:
+                fname = env.current_function_name()
+            where = f" (in {fname})"
+            at = f" at {location}" if location is not None else ""
+            print(f"TRACE: {rendered}{where}{at}")
+            return value
         if method == "eprint":
             print(" ".join(stringify(value) for value in args), file=sys.stderr)
             return None
@@ -1243,6 +1279,14 @@ class Interpreter:
             return do_parse_json_or(text, fallback, location)
         if method == "writeJson":
             return do_write_json(target if target is not None else _first(args, method, location), location)
+        if method == "yamlParse":
+            return do_yaml_parse(target if target is not None else _first(args, method, location), location)
+        if method == "yamlParseOr":
+            text = target if target is not None else _nth(args, 0, method, location)
+            fallback = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_yaml_parse_or(text, fallback, location)
+        if method == "yamlWrite":
+            return do_yaml_write(target if target is not None else _first(args, method, location), location)
         if method == "join":
             value = target if target is not None else _nth(args, 0, method, location)
             separator = args[0] if target is not None else _nth(args, 1, method, location)
@@ -2041,6 +2085,8 @@ class Interpreter:
         if class_id is not None:
             self._class_visibility_stack.append(class_id)
             pushed = True
+        frame_name = declaration.name or "<function>"
+        self._frames.append(CallFrame(frame_name, location))
         try:
             if declaration.inline:
                 result = self.evaluate(declaration.body, new_env)  # type: ignore[arg-type]
@@ -2053,6 +2099,11 @@ class Interpreter:
             check_return(declaration.name, result, declaration.return_type, location)
             return result
         finally:
+            if self._frames:
+                exc = sys.exc_info()[1]
+                if isinstance(exc, EchoError) and self._abort_frames is None:
+                    self._abort_frames = list(self._frames)
+                self._frames.pop()
             if pushed:
                 self._class_visibility_stack.pop()
 
@@ -2244,6 +2295,15 @@ class Interpreter:
                     rendered = "<nested too deeply>"
             snapshot.append((name, rendered))
         return snapshot
+
+    def stack_snapshot(self) -> list[str]:
+        """Newest frame first. Empty when abort happens outside any call."""
+        frames = self._abort_frames if self._abort_frames is not None else self._frames
+        lines: list[str] = []
+        for frame in reversed(frames):
+            at = f" at {frame.call_site}" if frame.call_site is not None else ""
+            lines.append(f"in {frame.name}{at}")
+        return lines
 
 
 def _first(args: list[object], method: str, location: SourceLocation) -> object:

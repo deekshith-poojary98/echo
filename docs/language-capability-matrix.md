@@ -28,7 +28,7 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
 `const` (including param `const`), destructuring (hash `as` rename and hash rest), exact object types, unions, range expressions as
 lists, lexical scope, closures, collections, strings (including multiline),
-`use` / `use mut`, `watch`, sibling-file modules, Echo-owned errors,
+`use` / `use mut`, `watch`, file modules (sibling + nested / relative + `std/…` through **2.0.9**), Echo-owned errors,
 nominal `class` + construction + methods/`this` + `interface` (no inheritance).
 
 Host/stdlib and tooling that used to be the main gaps: `args` / `env` / files /
@@ -42,7 +42,7 @@ inquiry and `*Or`, not exceptions.
 | --- | --- |
 | Language fundamentals | Supported through 0.8.9 surface |
 | Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
-| Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
+| Language ecosystem | fmt / lint / test / REPL / check / thin LSP shipped; no package manager |
 | Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
 
 Distinctive on purpose:
@@ -105,9 +105,9 @@ Distinctive on purpose:
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
 | Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
 | Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8), `--json` (0.6.9) | Tooling | 0.6.9 |
-| Debugger | Ecosystem | Partial (`watch` only) | Tooling | Later |
-| Documentation generator | Ecosystem | Missing | Tooling | Later |
-| IDE support | Ecosystem | Partial (0.5.7), Check workspace (0.5.9) | Tooling | 0.5.9 |
+| Debugger | Ecosystem | Partial (`watch` + abort `Stack:` + `trace`) | Tooling | 2.1.5 |
+| Documentation generator | Ecosystem | Partial (builtin + std inventories) | Tooling | 2.1.8 |
+| IDE support | Ecosystem | Partial (tasks + thin LSP client **2.1.4**) | Tooling | 2.1.4 |
 | Language server | Ecosystem | Missing | Tooling | Later |
 | REPL | Ecosystem | Supported (0.5.0) | Tooling | Done |
 | Playground | Ecosystem | Partial (browser host; no files/argv) | Tooling | Done enough |
@@ -616,22 +616,27 @@ object identity and may be mutated.
 
 **What it means.** Split a program across files with a defined load model.
 
-**Echo status.** Supported, in the small v0.3 form.
+**Echo status.** Supported (v0.3 + nested / relative / `std/…` through **2.0.9**).
 
 ```echo
 import add from "math";
+import square from "lib/math";
+import id from "./lib/util";
+import stdOk from "std/meta";
 ```
 
-Bare sibling name. `.echo` implied. Each file is a module. Each module
+Bare sibling name, nested segments, leading `./` / `../`, and reserved
+`std/…` (install tree). `.echo` implied. Each file is a module. Each module
 executes at most once. Cycles are rejected (E3003). A program with no
-`import` keeps the v0.2 single-file model.
+`import` keeps the single-file model.
 
-**Limitations.** Not in v0.3: aliases, `import *`, namespaces, packages,
-`./foo`, `"math.echo"`, dynamic imports, re-export, cycle recovery.
+**Limitations.** Not supported: aliases, `import *`, namespaces, packages /
+registry, `"math.echo"`, absolute paths, mid-path `..`, dynamic imports,
+re-export, cycle recovery.
 
-**Priority.** Frozen.
+**Priority.** Path forms + `std/…` peels + require-std + docs closed through **2.0.9**.
 
-**Possible version.** Done (v0.3). Do not start v0.4 module features here.
+**Possible version.** Done (**2.0.0**–**2.0.9**). Not a package manager.
 
 ---
 
@@ -683,8 +688,8 @@ Reports assignment and mutating operations, including indexed assignment.
 Mutation lines include a source location. On abort, CLI / `echo test` dump
 watched bindings under `Watched:`.
 
-**Limitations.** Not a stepper. No breakpoints, `trace`, or `profile`.
-Those are ecosystem / vision items.
+**Limitations.** Not a stepper. No breakpoints or interactive debugger.
+Abort `Stack:` dumps and `trace` ship in **2.1.5**.
 
 **Priority.** Frozen as a fundamental; **1.1.3** is diagnostics polish only.
 Richer observability is later.
@@ -1017,59 +1022,60 @@ There is no `test "name" { }` syntax. That stays vision / held.
 
 ### Debugger
 
-**Status.** Partial.
+**Status.** Partial — `watch`, abort `Stack:` dumps, and `trace` (**2.1.5**).
 
-`watch` is real. There is no stepper, breakpoints, or stack inspector.
+No stepper, breakpoints, or interactive inspector.
 
 **Priority.** Tooling. Do not build a VM to get a debugger.
 
-**Possible version.** Later.
+**Possible version.** Done enough through **2.1.5**.
 
 ---
 
 ### Documentation generator
 
-**Status.** Missing.
+**Status.** Partial — `tools/sync_builtins.py` generates Builtin Inventory (**1.1.6**)
+and Std Inventory (**2.1.8**). No docstring extract / API generator for arbitrary
+Echo modules.
 
-VitePress documents the language for humans. There is no docstring
-extract / API generator for Echo modules.
+**Priority.** Tooling. Inventories ship; richer extract later.
 
-**Priority.** Later.
-
-**Possible version.** Later. Needs richer modules first.
+**Possible version.** Done enough through **2.1.8**.
 
 ---
 
 ### IDE support
 
-**Status.** Partial (0.5.7). Check workspace in 0.5.9. Not an LSP.
+**Status.** Partial — tasks (0.5.7–0.5.9) plus thin LSP client (**2.1.4**).
 
 `echo-syntax-highlighter/` is a VS Code / Cursor extension: TextMate grammar
-(also imported by the docs site for Echo code fences), task provider, and
-problem matchers. It highlights current keywords, types, builtins (`expect`,
-`fail`, `assert`, `*Or` twins, host/stdlib), comments, strings with `${...}`,
-and number literals.
+(also imported by the docs site for Echo code fences), task provider, problem
+matchers, and an `elang lsp` client. It highlights current keywords, types,
+builtins (`expect`, `fail`, `assert`, `*Or` twins, host/stdlib), comments,
+strings with `${...}`, and number literals.
 
-Commands / Run Task run `elang check`, `fmt`, `lint`, and `test` (`--plain`)
-so CLI diagnostics appear in the Problems panel. **Echo: Check workspace**
-(0.5.9) runs `elang check --plain` on the folder; **Echo: Check file**
-remains. Format Document shells out to `elang fmt`. There are still no
-completions, jump-to-definition, or a language server.
+Live hover, go-to-definition, and analyzer diagnostics come from `elang lsp`
+(**2.1.2**–**2.1.4**). Commands / Run Task still run `elang check`, `fmt`,
+`lint`, and `test` (`--plain`) so CLI diagnostics appear in the Problems panel
+as a fallback. Format Document shells out to `elang fmt`. Not a full IDE
+language-server product (no completions, rename, etc.).
 
-**Priority.** Tooling. Shipped as highlight + tasks.
+**Priority.** Tooling. Stub + client shipped through **2.1.4**.
 
-**Possible version.** 0.5.9.
+**Possible version.** Done through **2.1.4**.
 
 ---
 
 ### Language server
 
-**Status.** Missing.
+**Status.** Thin stub shipped (**2.1.2**–**2.1.4**). Full LSP-as-product held.
 
-**Priority.** Later. Worth more after the analyzer is treated as a
-public API.
+`elang lsp` (stdio): diagnostics, builtin hover, goto-def for local + imports.
+Editor client wires it by default (`echo.lsp.enabled`).
 
-**Possible version.** Later.
+**Priority.** Later for full product; stub done.
+
+**Possible version.** Stub **2.1.2**–**2.1.4**.
 
 ---
 
@@ -1147,7 +1153,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | Promises / async | Don’t touch |
 | JSON | Shipped (0.4+) |
 | Objects as records | Hashes + aliases / exact |
-| Modules | Smaller sibling-file system; shipped |
+| Modules | Sibling + nested / relative + `std/…` (**2.0.0**–**2.0.9**); shipped |
 | Class / prototype OOP | Excluded |
 
 ### Go
@@ -1157,7 +1163,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | Compile-time types | Decision: runtime-checked |
 | Structs | Partial via aliases / exact |
 | Explicit errors | Closest taste: abort + `*Or` |
-| Packages | Sibling files only |
+| Packages | Sibling + nested files + `std/…`; no registry |
 | `gofmt` / `go test` | Echo has `fmt` / `test` |
 | Goroutines | Don’t touch |
 
@@ -1177,10 +1183,10 @@ Capability comparison only. Echo is not trying to become these languages.
 
 ### Still open (usability / ecosystem)
 
-1. Package manager / non-sibling module paths
+1. Package manager / registry (after **2.1**); `std/…` search path shipped **2.0.2**
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Package registry / full LSP-as-product (after **2.1**; path+std modules drafted **2.0**, YAML+LSP stub drafted **2.1**)
+4. Full LSP-as-product (after **2.1**; stub shipped **2.1.2**–**2.1.4**)
 
 ### Shipped that used to be holes
 
@@ -1188,7 +1194,11 @@ args, env, files, JSON, string/collection helpers, conversion, failure-model
 thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
 destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5);
-HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**).
+HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**);
+relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
+`std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
+docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**);
+`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**); abort `Stack:` + `trace` (**2.1.5**); further std peel math/random/now/wait/run (**2.1.6**); `elang std` inventory (**2.1.7**); generated Std Inventory docs (**2.1.8**); **2.1.x** series close (**2.1.9**).
 
 ### Not holes (held)
 

@@ -5,33 +5,31 @@ Echo is a small interpreted scripting language. Types are declared explicitly an
 Docs: [https://deekshith-poojary98.github.io/echo/](https://deekshith-poojary98.github.io/echo/) — includes a [browser playground](https://deekshith-poojary98.github.io/echo/playground).
 
 ```echo
-name: str = "Echo";
-scores: list = [95, 85, 75];
+import add from "lib/math";
+import stdOk from "std/meta";
 
-fn greet(name: str) -> void {
-    say("Hello, ${name}!");
-}
-
-greet(name);
-
-for i: int in 0..10 by 2 {
-    say("Count:", i);
-}
+say("2+3 =", add(2, 3));
+say("std ready:", stdOk());
 ```
+
+**2.0** is path resolution + std modules — nested / relative imports and `import … from "std/…"`. It is **not** a package manager (no registry, lockfiles, or `elang add`).
+
+**2.1** is YAML + a thin LSP stub + std maturity on that surface — `std/yaml`, `elang lsp` / editor client, abort `Stack:` / `trace`, further peels (`std/math`, `std/random`, …), `elang std`, and generated inventories. Still not a package registry or full IDE language server.
 
 ## What you get
 
 - Typed declarations and parameters; runtime checks on bind / assign / return
 - `list` and `hash`, string interpolation, method calls, `use mut`, lexical scope
-- File modules: `export` / `import name from "module"`
+- File modules: `export` / `import name from "module"` (sibling, `./…`, `../…`, nested `"lib/math"`, reserved `"std/…"`)
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
 - Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
-- Thin scripting stdlib: files, JSON, regex, UTC dates, HTTP (`httpGet` / `httpPost`, host-gated), URL helpers, Base64
-- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`
+- Thin scripting stdlib via prelude and/or `std/…` (`std/fs`, `std/json`, `std/os`, `std/re`, `std/time`, `std/http`, `std/url`, `std/base64`, `std/yaml`, `std/math`, `std/random`); optional `--require-std` hides peeled prelude names; host-gated where noted
+- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`, `std`, `lsp`
+- Editor: VS Code / Cursor extension with TextMate highlighting, tasks, and `elang lsp` (hover, goto-def, diagnostics)
 
 ## What you do not
 
-- No class inheritance (`extends`), no generics, no `try` / `catch`, no packages yet
+- No class inheritance (`extends`), no generics, no `try` / `catch`, no package registry
 - Type inference is limited — you still declare types
 - See [Known Limitations](https://deekshith-poojary98.github.io/echo/errors-diagnostics/known-limitations) and [failure model](https://deekshith-poojary98.github.io/echo/failure-model)
 
@@ -49,6 +47,8 @@ python3 -m pipx ensurepath
 pipx install echolang
 elang --version
 elang builtins --count
+elang std
+elang std --exports
 ```
 
 From GitHub instead of PyPI:
@@ -68,11 +68,13 @@ elang path/to/file.echo
 ## Layout
 
 - `src/echo/` — frontend, semantics, modules, runtime, CLI
+- `src/echo/std/` — install-tree modules for `import … from "std/…"`
 - `docs/` — VitePress site (this is the docs source)
-- `docs/language-semantics.md` — language contract (v0.2 base; additive through **1.1.x**)
-- `docs/module-semantics.md` — v0.3 module contract
-- `docs/reference/builtin-inventory.md` — generated prelude list (`python tools/sync_builtins.py`)
-- `*.echo` / `examples/` — sample programs (including `examples/url_and_base64.echo`)
+- `docs/language-semantics.md` — language contract (v0.2 base; additive through **2.1.x**)
+- `docs/module-semantics.md` — v0.3 module contract (+ **2.0** / **2.1** path / std notes)
+- `docs/reference/builtin-inventory.md` — generated prelude list
+- `docs/reference/std-inventory.md` — generated `std/…` modules + exports (`python tools/sync_builtins.py`)
+- `examples/` — sample programs (`std_imports.echo`, `yaml_and_math.echo`, `modules_demo/`, …)
 
 ## License / contributing
 

@@ -6,8 +6,8 @@ Public status page for what ships today. The ordered implementation plan lives u
 
 Already in the language or CLI:
 
-- File modules: `import` / `export` (v0.3)
-- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`
+- File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**); cycle / resolver diagnostics polish (**2.0.1**); `std/…` install-tree path (**2.0.2**); std peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` (**2.0.7**); docs / examples / playground (**2.0.8**); series close (**2.0.9**)
+- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`, `echo std`, `echo lsp`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
@@ -15,40 +15,44 @@ Already in the language or CLI:
 - Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5); `mkdirAll` / `removeTree` (0.9.6); regex builtins (0.9.7); union narrowing in `if type(...)` (0.9.8); thin dates `formatTime` / `parseTime` / duration helpers (0.9.9)
 - Stable release **1.0.0** (same surface as 0.9.9)
 - **1.1.x** complete (**1.1.0–1.1.9**): HTTP + URL + Base64, watch/abort polish, error-code docs, playground host policy, builtin sync, `elang builtins`, series docs/examples
+- **2.0.x** complete (**2.0.0–2.0.9**): path resolution + `std/…` peels (not a package manager)
+- **2.1.x** complete (**2.1.0–2.1.9**): YAML + thin LSP stub + std maturity on 2.0 modules
 
 ## Next
 
-**1.1.x** is complete. **2.0.x** (modules beyond siblings + stdlib peel) and **2.1.x** (YAML + LSP stub + std maturity) are drafted in [Priority](/project/priority).
+**1.1.x**, **2.0.x**, and **2.1.x** are complete. Held work (package registry, full LSP-as-product, generics, …) stays in [Priority](/project/priority) until a new series starts.
 
-### Drafted — 2.0.x modules + stdlib peel
-
-| Version | Item | Status |
-| --- | --- | --- |
-| 2.0.0 | Relative / nested import paths | drafted |
-| 2.0.1 | Import cycle / resolver diagnostics polish | drafted |
-| 2.0.2 | Stdlib search path: `import … from "std/…"` | drafted |
-| 2.0.3 | Peel HTTP into `std/http` | drafted |
-| 2.0.4 | Peel URL + Base64 | drafted |
-| 2.0.5 | Peel files / JSON / env | drafted |
-| 2.0.6 | Peel regex + dates | drafted |
-| 2.0.7 | Prelude policy (core vs std) | drafted |
-| 2.0.8 | Docs / examples / playground | drafted |
-| 2.0.9 | Series close | drafted |
-
-### Drafted — 2.1.x YAML + LSP stub
+### Closed — 2.1.x YAML + LSP stub + std maturity
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 2.1.0 | YAML helpers | drafted |
-| 2.1.1 | YAML `*Or` + docs | drafted |
-| 2.1.2 | Thin LSP stub | drafted |
-| 2.1.3 | LSP goto-def | drafted |
-| 2.1.4 | Editor LSP client | drafted |
-| 2.1.5 | Debugger polish beyond `watch` | drafted |
-| 2.1.6 | Further std peel | drafted |
-| 2.1.7 | CLI std inventory | drafted |
-| 2.1.8 | Docs generator expansion | drafted |
-| 2.1.9 | Series close | drafted |
+| 2.1.0 | YAML helpers | done |
+| 2.1.1 | YAML `*Or` + docs | done |
+| 2.1.2 | Thin LSP stub | done |
+| 2.1.3 | LSP goto-def | done |
+| 2.1.4 | Editor LSP client | done |
+| 2.1.5 | Debugger polish beyond `watch` | done |
+| 2.1.6 | Further std peel | done |
+| 2.1.7 | CLI std inventory | done |
+| 2.1.8 | Docs generator expansion | done |
+| 2.1.9 | Series close | done |
+
+Public message: **2.1 = YAML + LSP stub + std maturity on 2.0 modules.**
+
+### Closed — 2.0.x modules + stdlib peel
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 2.0.0 | Relative / nested import paths | done |
+| 2.0.1 | Import cycle / resolver diagnostics polish | done |
+| 2.0.2 | Stdlib search path: `import … from "std/…"` | done |
+| 2.0.3 | Peel HTTP into `std/http` | done |
+| 2.0.4 | Peel URL + Base64 | done |
+| 2.0.5 | Peel files / JSON / env | done |
+| 2.0.6 | Peel regex + dates | done |
+| 2.0.7 | Prelude policy (core vs std) | done |
+| 2.0.8 | Docs / examples / playground | done |
+| 2.0.9 | Series close | done |
 
 Details: [Priority — 2.0.x / 2.1.x](/project/priority).
 

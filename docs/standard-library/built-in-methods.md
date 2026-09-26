@@ -42,6 +42,26 @@ eprint("missing file");
 
 ---
 
+### `trace(value)`
+Prints a debug line to stdout and returns `value` unchanged. Useful for inspecting expressions without changing control flow. Method form works on any value.
+
+```echo
+say(trace(1 + 2));
+say("hi".trace());
+```
+
+Output:
+```text
+TRACE: 3 (in global) at <file>:line:col
+3
+TRACE: hi (in global) at <file>:line:col
+hi
+```
+
+Inside a call, the frame name is shown (`in bump`). Not a stepper.
+
+---
+
 ### `ask(prompt)`
 Prints `prompt`, reads one stdin line, returns `str`.
 
@@ -68,7 +88,7 @@ line: str = readLine();
 ---
 
 ### `wait(seconds)`
-Sleeps that many seconds. `int` or `float`.
+Sleeps that many seconds. `int` or `float`. Also `import wait from "std/time"` (**2.1.6**).
 
 ```echo
 say("Starting...");
@@ -295,7 +315,7 @@ say(pathJoin("a", "b", "c"));
 ```
 
 ### `run(command, args)`
-Runs `command` with a list of string arguments. Empty `args` is allowed. Does not use a shell. Returns a hash `{ "code": int, "stdout": str, "stderr": str }`. A non-zero process code is returned, not raised. Missing executables abort. The playground host denies this (`allow_run=False`).
+Runs `command` with a list of string arguments. Empty `args` is allowed. Does not use a shell. Returns a hash `{ "code": int, "stdout": str, "stderr": str }`. A non-zero process code is returned, not raised. Missing executables abort. The playground host denies this (`allow_run=False`). Also `import run from "std/os"` (**2.1.6**).
 
 ```echo
 proc: hash = run("true", []);
@@ -303,12 +323,13 @@ say(proc["code"]);
 ```
 
 ### `httpGet(url)` / `httpPost(url, body)`
-HTTP request helpers. Return a hash `{ "status": int, "body": str, "headers": hash }`. `url` and `body` are strings. Optional trailing `headers` hash (string → string). Non-2xx responses still return the hash. Network failures and bad types abort (**E2852**). The playground host denies these (`allow_http=False` → **E2801**).
+HTTP request helpers. Return a hash `{ "status": int, "body": str, "headers": hash }`. `url` and `body` are strings. Optional trailing `headers` hash (string → string). Non-2xx responses still return the hash. Network failures and bad types abort (**E2852**). The playground host denies these (`allow_http=False` → **E2801**). Also importable from `"std/http"` (**2.0.3**; prelude names remain for compatibility).
 
 ```echo
 resp: hash = httpGet("https://example.com/", { Accept: "application/json" });
 say(resp["status"]);
 created: hash = httpPost("https://example.com/items", "hello", { "Content-Type": "text/plain" });
+import httpGet from "std/http";
 ```
 
 ### `httpGetOr(url, fallback)` / `httpPostOr(url, body, fallback)`
@@ -328,7 +349,7 @@ if (httpOk(resp)) {
 ```
 
 ### `urlEncode(text)` / `urlDecode(text)`
-Percent-encode / decode a string (spaces become `%20`).
+Percent-encode / decode a string (spaces become `%20`). Also importable from `"std/url"` (**2.0.4**; prelude names remain).
 
 ```echo
 say(urlEncode("a b"));   // a%20b
@@ -352,7 +373,7 @@ say(urlQuery({ q: "echo lang", page: "1" }));
 Bad types for URL helpers → **E2853**.
 
 ### `base64Encode(text)` / `base64Decode(text)`
-Encode / decode a UTF-8 string as standard Base64 (stdlib `base64`). Method form works on strings.
+Encode / decode a UTF-8 string as standard Base64 (stdlib `base64`). Method form works on strings. Also importable from `"std/base64"` (**2.0.4**; prelude names remain).
 
 ```echo
 say(base64Encode("hello"));   // aGVsbG8=
@@ -363,7 +384,7 @@ say("echo".base64Encode());
 Bad types or invalid Base64 text → **E2854**.
 
 ### `now()`
-Returns the current unix time as an `int` number of seconds. Takes no arguments.
+Returns the current unix time as an `int` number of seconds. Takes no arguments. Also `import now from "std/time"` (**2.1.6**).
 
 ```echo
 stamp: int = now();
@@ -424,6 +445,18 @@ JSON objects become hashes, arrays become lists, whole numbers become `int`, oth
 data: dynamic = parseJson("{\"n\": 1}");
 maybe: dynamic = parseJsonOr("{", null);
 say(writeJson(data));
+```
+
+---
+
+### `yamlParse(text)` / `yamlParseOr(text, fallback)` / `yamlWrite(value)`
+YAML mappings become hashes, sequences become lists, whole numbers become `int`, other finite numbers become `float`, timestamps become ISO strings. Invalid YAML or bad types abort `yamlParse` with **E2855**. `yamlParseOr` returns `fallback` for invalid YAML; non-string text is still a type error. Also `import … from "std/yaml"`.
+
+```echo
+data: dynamic = yamlParse("n: 1\nok: true");
+maybe: dynamic = yamlParseOr(": [", null);
+say(yamlWrite(data));
+say("name: Echo".yamlParse()["name"]);
 ```
 
 ---
@@ -591,6 +624,8 @@ say("{{literal braces}}".format());         // {literal braces}
 ---
 
 ## Numbers
+
+Also `import … from "std/math"` / `"std/random"` (**2.1.6**). Prelude dual-path unchanged.
 
 ### `abs(n)`
 Returns the absolute value. `n` must be `int` or `float` (`bool` is a type error). An `int` stays an `int`; a `float` stays a `float`.

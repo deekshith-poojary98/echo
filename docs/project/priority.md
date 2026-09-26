@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.8** (release **1.1.9** closes the series). **2.0.x** / **2.1.x** are drafted below. Failure model stays abort + `*Or`.
+Current tagged version tracks **2.1.x**. **1.1.0**–**1.1.9**, **2.0.0**–**2.0.9**, and **2.1.0**–**2.1.9** are complete. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -1100,7 +1100,7 @@ Inheritance, generics, async, VM, `try`/`catch`, `Result`/`Option`, overloading,
 
 ## 2.0.x — Modules beyond siblings + stdlib peel
 
-**Status: drafted (not started).**
+**Status: complete (2.0.0–2.0.9).**
 
 **1.1.x is closed.** **2.0** is the module-resolution and stdlib-module jump — not a package registry, not generics, not a failure-model rewrite. Sibling `import name from "mod"` stays valid. Failure model unchanged.
 
@@ -1108,56 +1108,56 @@ Shape: nested/relative paths first; then a fixed `std/…` search path; peel pre
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 2.0.0 | Relative / nested import paths (`"./math"`, `"lib/math"`) | drafted |
-| 2.0.1 | Import cycle / resolver diagnostics polish | drafted |
-| 2.0.2 | Stdlib search path: `import … from "std/…"` | drafted |
-| 2.0.3 | Peel HTTP family into `std/http` (prelude dual-path) | drafted |
-| 2.0.4 | Peel URL + Base64 into `std/url` / `std/base64` (or `std/net`) | drafted |
-| 2.0.5 | Peel files / JSON / env into `std/fs` + `std/json` | drafted |
-| 2.0.6 | Peel regex + dates into `std/re` + `std/time` | drafted |
-| 2.0.7 | Prelude policy: core vs std; optional require-std flag | drafted |
-| 2.0.8 | Docs / examples / playground for multi-file + `std/…` | drafted |
-| 2.0.9 | Series close (README / module-semantics / matrix) | drafted |
+| 2.0.0 | Relative / nested import paths (`"./math"`, `"lib/math"`) | done |
+| 2.0.1 | Import cycle / resolver diagnostics polish | done |
+| 2.0.2 | Stdlib search path: `import … from "std/…"` | done |
+| 2.0.3 | Peel HTTP family into `std/http` (prelude dual-path) | done |
+| 2.0.4 | Peel URL + Base64 into `std/url` / `std/base64` (or `std/net`) | done |
+| 2.0.5 | Peel files / JSON / env into `std/fs` + `std/json` | done |
+| 2.0.6 | Peel regex + dates into `std/re` + `std/time` | done |
+| 2.0.7 | Prelude policy: core vs std; optional require-std flag | done |
+| 2.0.8 | Docs / examples / playground for multi-file + `std/…` | done |
+| 2.0.9 | Series close (README / module-semantics / matrix) | done |
 
 ### 2.0.0 — relative / nested import paths
 
-Extend v0.3 sibling resolution. Specifiers may include `./`, `../`, and nested segments (`"lib/math"` → `lib/math.echo` beside the importer or under a project root rule — lock exact rules in the slice). Selective `import` / explicit `export` unchanged. No registry. No `import *`.
+**Done.** Specifiers may include leading `./` / `../` and nested segments (`"lib/math"` → `lib/math.echo` beside the importer). Bare sibling names remain valid. Explicit `.echo`, absolute paths, and mid-path `..` are **E3001**. Missing files **E3002**. Module identity is still the canonical absolute path. Selective `import` / explicit `export` unchanged. No registry. No `import *`.
 
 ### 2.0.1 — import cycle / resolver diagnostics polish
 
-Clearer module-not-found and cycle diagnostics for the new path forms. Module identity remains the canonical file path.
+**Done.** Clearer module-not-found and cycle diagnostics for nested / relative path forms. **E3002** reports the looked-for path and import location; **E3001** carries specific hints; **E3003** cycle chains use path labels that stay unique when basenames collide. Module identity remains the canonical file path.
 
 ### 2.0.2 — stdlib search path
 
-`import … from "std/…"` resolves from a fixed Echo install / runtime tree (not the user’s cwd alone). No version pinning. No third-party packages.
+**Done.** `import … from "std/…"` resolves from the Echo install / runtime tree (`src/echo/std/`, overridable via `ECHO_STD_ROOT`). Not the user’s cwd alone. `"./std/…"` remains a local relative path. Bare `"std"` is invalid. Seed module `std/meta` ships; no version pinning; no third-party packages. Builtin peels start in **2.0.3**.
 
 ### 2.0.3 — peel HTTP into `std/http`
 
-Move `httpGet` / `httpPost` / headers / `*Or` / `httpOk` / `httpRedirect` behind `std/http`. Prelude may re-export for one compatibility window. Host `allow_http` unchanged.
+**Done.** Canonical imports: `httpGet` / `httpPost` / `httpGetOr` / `httpPostOr` / `httpOk` / `httpRedirect` from `"std/http"`. Prelude still re-exports the same names for a compatibility window. Host `allow_http` unchanged. Method form and HTTP semantics unchanged.
 
 ### 2.0.4 — peel URL + Base64
 
-`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery` and `base64Encode` / `base64Decode` into `std/url` and `std/base64` (or a single `std/net`). Same dual-path policy as 2.0.3.
+**Done.** Canonical imports from `"std/url"` (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`) and `"std/base64"` (`base64Encode` / `base64Decode`). Prelude dual-path unchanged. Separate modules (not a combined `std/net`).
 
 ### 2.0.5 — peel files / JSON / env
 
-File I/O, `pathJoin`, JSON, `env` / `envOr` into `std/fs` and `std/json` (env may live under `std/os` if cleaner). Host `allow_files` / `allow_run` unchanged.
+**Done.** Canonical imports: file/path helpers from `"std/fs"`, JSON from `"std/json"`, and `env` / `envOr` / `args` from `"std/os"`. Prelude dual-path unchanged. Host `allow_files` / `allow_run` unchanged.
 
 ### 2.0.6 — peel regex + dates
 
-`regex*` and `formatTime` / `parseTime` / duration helpers into `std/re` and `std/time`.
+**Done.** Canonical imports: regex helpers from `"std/re"`, UTC date / duration helpers from `"std/time"`. Prelude dual-path unchanged.
 
 ### 2.0.7 — prelude policy
 
-Document core vs std. Optional CLI / `Host` flag to require std imports for peeled families; default keeps today’s prelude names working.
+**Done.** Core prelude (language / always-on helpers) vs peeled `std/…` families is documented. Optional `Host.require_std` and CLI `--require-std` hide peeled names from the prelude; default keeps today’s dual-path. `std/…` modules themselves still see the full builtin set.
 
 ### 2.0.8 — docs / examples / playground
 
-Multi-file projects and `std/…` imports in docs, examples, and playground (playground still denies files / run / HTTP).
+**Done.** Multi-file and `std/…` coverage in examples and the playground: `examples/std_imports.echo`, `examples/modules_demo/`, playground **std/… imports** demo. Playground still denies files / `run` / HTTP; sibling multi-file projects remain CLI-only.
 
 ### 2.0.9 — series close
 
-README + module-semantics + capability matrix. Public message: **2.0 = path resolution + std modules, not a package manager.**
+**Done.** README + module-semantics + capability matrix close the series. Public message: **2.0 = path resolution + std modules, not a package manager.** No new language syntax; failure model unchanged. Next series: **2.1.x**.
 
 ### Out of 2.0 (still held globally)
 
@@ -1165,7 +1165,7 @@ Package registry / lockfiles / `elang add`, inheritance, generics, async, VM, `t
 
 ## 2.1.x — YAML + LSP stub + std maturity
 
-**Status: drafted (starts after 2.0.9).**
+**Status: complete (2.1.0–2.1.9).**
 
 **2.1** is tooling and deferred scripting polish on the 2.0 module surface — not a registry, not generics, not failure-model rewrite.
 
@@ -1173,56 +1173,73 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 
 | Version | Item | Status |
 | --- | --- | --- |
-| 2.1.0 | YAML helpers (`yamlParse` / `yamlWrite` or similar) | drafted |
-| 2.1.1 | YAML `*Or` twin + codes / docs | drafted |
-| 2.1.2 | Thin LSP stub (`elang lsp` / stdio) — hover + diagnostics | drafted |
-| 2.1.3 | LSP goto-def for local + imported symbols | drafted |
-| 2.1.4 | Editor extension: LSP client (Problems matchers remain fallback) | drafted |
-| 2.1.5 | Debugger polish beyond `watch` (abort stack / `trace`) | drafted |
-| 2.1.6 | Further std peel / leftover modules | drafted |
-| 2.1.7 | CLI: `elang std` (or equivalent) listing std modules | drafted |
-| 2.1.8 | Docs generator expansion (module + std inventory) | drafted |
-| 2.1.9 | Series close (README / matrix / examples) | drafted |
+| 2.1.0 | YAML helpers (`yamlParse` / `yamlWrite` or similar) | done |
+| 2.1.1 | YAML `*Or` twin + codes / docs | done |
+| 2.1.2 | Thin LSP stub (`elang lsp` / stdio) — hover + diagnostics | done |
+| 2.1.3 | LSP goto-def for local + imported symbols | done |
+| 2.1.4 | Editor extension: LSP client (Problems matchers remain fallback) | done |
+| 2.1.5 | Debugger polish beyond `watch` (abort stack / `trace`) | done |
+| 2.1.6 | Further std peel / leftover modules | done |
+| 2.1.7 | CLI: `elang std` (or equivalent) listing std modules | done |
+| 2.1.8 | Docs generator expansion (module + std inventory) | done |
+| 2.1.9 | Series close (README / matrix / examples) | done |
 
 ### 2.1.0 — YAML helpers
 
-Thin YAML parse/write via an allowed dependency (e.g. PyYAML). Prefer living under `std/yaml` once 2.0 std paths exist. Bad types / invalid YAML get Echo codes.
+**Done.** `yamlParse(text)` / `yamlWrite(value)` via PyYAML. Canonical import `"std/yaml"`; prelude dual-path (peeled under `--require-std`). Mappings → hashes, sequences → lists, whole numbers → `int`, other finite numbers → `float`, timestamps → ISO strings. Bad types / invalid YAML → **E2855**. No `yamlParseOr` yet (**2.1.1**).
 
 ### 2.1.1 — YAML `*Or` + docs
 
-Fallback twin for expected parse failures; type / host errors still abort. Document codes.
+**Done.** `yamlParseOr(text, fallback)` returns `fallback` for invalid YAML; non-`str` text still aborts (**E2855**). Documented in the failure-model twins table and built-in methods. Exported from `std/yaml`.
 
 ### 2.1.2 — thin LSP stub
 
-`elang lsp` (stdio). Builtin hover and analyzer diagnostics. Not a full IDE language server product.
+**Done.** `elang lsp` speaks stdio JSON-RPC. Publishes analyzer diagnostics on open/change; hover shows prelude builtin signatures. Full document sync only. Not a full IDE language server product.
 
 ### 2.1.3 — LSP goto-def
 
-Local bindings and imported symbols using the 2.0 resolver.
+**Done.** `textDocument/definition` jumps to local bindings and to imported exports via the 2.0 module resolver (relative + `std/…`). Builtins have no source file (hover only).
 
 ### 2.1.4 — editor LSP client
 
-Wire the VS Code/Cursor extension to the stub; keep task Problems matchers as fallback.
+**Done.** The VS Code / Cursor extension starts `elang lsp` (hover, goto-def, live diagnostics). Setting `echo.lsp.enabled` (default on). Task problem matchers and Check / Lint / Test remain as a fallback.
 
 ### 2.1.5 — debugger polish beyond `watch`
 
-Abort stack dump and/or a small `trace` helper. No full stepper / breakpoints product.
+**Done.** Abort stack dump plus a small `trace` helper. No full stepper / breakpoints product.
+
+- On abort, CLI / `echo test` print `Stack:` (newest frame first) when the failure is inside a call; top-level aborts omit it
+- `trace(value)` / `value.trace()` prints `TRACE: …` and returns the value unchanged
+- Works alongside existing `Watched:` dumps from **1.1.3**
 
 ### 2.1.6 — further std peel
 
-Any leftover prelude families that clearly belong in std modules after 2.0.3–2.0.6.
+**Done.** Leftover prelude families that clearly belong in std modules after 2.0.3–2.0.6 / YAML.
+
+- `std/math` — `abs` / `floor` / `ceil` / `min` / `max`
+- `std/random` — `random` / `randomInt`
+- Extend `std/time` with `now` / `wait`; extend `std/os` with `run`
+- Prelude dual-path + `--require-std` unchanged (new names join `PEELED_STD_BUILTIN_NAMES`)
 
 ### 2.1.7 — CLI std inventory
 
-`elang std` (or similar) lists std modules; pairs with `elang builtins`.
+**Done.** `elang std` lists install-tree `std/…` modules; pairs with `elang builtins`.
+
+- Default: one `std/name` per line (sorted); honors `ECHO_STD_ROOT`
+- `--count`, `--exports` (indented export names), `--path` (resolved std root)
+- Top-level help epilog includes `std`
 
 ### 2.1.8 — docs generator expansion
 
-Extend `tools/sync_builtins.py` (or sibling) for module / std inventory pages.
+**Done.** Extend `tools/sync_builtins.py` for module / std inventory pages.
+
+- Generates `docs/reference/std-inventory.md` from install-tree `std/` (module + exports)
+- `--check` reports std inventory drift alongside builtin / grammar / playground parser
+- VitePress Reference nav includes Std Inventory; cross-links with Builtin Inventory
 
 ### 2.1.9 — series close
 
-README + matrix + examples. Public message: **2.1 = YAML + LSP stub + std maturity on 2.0 modules.**
+**Done.** README + matrix + examples close the series. Public message: **2.1 = YAML + LSP stub + std maturity on 2.0 modules.** No new language syntax; failure model unchanged. Example `examples/yaml_and_math.echo` + playground demo. Next work is outside **2.1** (package registry / full LSP still held).
 
 ### Out of 2.1 (still held globally)
 
@@ -1230,7 +1247,7 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, and **1.1.0–1.1.9** are implemented. **2.0.x** / **2.1.x** are drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, **2.0.0–2.0.9**, and **2.1.0–2.1.9** are implemented. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |
@@ -1249,7 +1266,8 @@ Do not move global holds into a new series without an explicit series start. **0
 | Generics | held |
 | Async | held |
 | VM / JIT | held |
-| Packages / path resolution + std modules | drafted (**2.0.x**) — registry still held |
+| Packages / path resolution + std modules | **2.0.x** complete; registry still held |
+| YAML + LSP stub + std maturity | **2.1.x** complete |
 | `try` / `catch` | held |
 | `Result` / `Option` | held |
 | `match` (error / `Result` form) | held — 0.7.6 is `switch` on values |

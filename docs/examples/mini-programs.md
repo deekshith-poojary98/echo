@@ -72,6 +72,36 @@ elang examples/url_and_base64.echo
 
 Uses `urlQuery` / `urlJoin`, `base64Encode` / `base64Decode`, and `httpOk` / `httpRedirect` (status helpers only). Live `httpGet` needs the CLI host (`allow_http=True`); the playground denies it (**E2801**).
 
+### std/… imports
+
+`examples/std_imports.echo` imports helpers from `"std/meta"`, `"std/url"`, `"std/base64"`, and `"std/http"` (status helpers only). Also in the [playground](/playground?example=std).
+
+```bash
+elang examples/std_imports.echo
+```
+
+### YAML and math
+
+`examples/yaml_and_math.echo` round-trips YAML via `"std/yaml"`, uses `"std/math"`, and shows `trace` (playground-safe). Also in the [playground](/playground?example=yaml).
+
+```bash
+elang examples/yaml_and_math.echo
+```
+
+### Nested modules (CLI)
+
+`examples/modules_demo/` shows nested + `./` imports beside `std/meta`:
+
+```bash
+elang examples/modules_demo/app.echo
+```
+
+```text
+2+3 = 5
+6^2 = 36
+std ready: true
+```
+
 ## See Also
 
 - [Control Flow](/getting-started/control-flow)
@@ -79,3 +109,6 @@ Uses `urlQuery` / `urlJoin`, `base64Encode` / `base64Decode`, and `httpOk` / `ht
 - [Hashes](/core-concepts/hashes)
 - [Built-in Methods](/standard-library/built-in-methods)
 - [Builtin Inventory](/reference/builtin-inventory)
+- [Std Inventory](/reference/std-inventory)
+- [Module semantics](/module-semantics)
+- [Playground](/playground)

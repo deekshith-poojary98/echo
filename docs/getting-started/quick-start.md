@@ -46,8 +46,9 @@ say("Hello, Echo!");
 
 ## Next
 
-- [Playground](/playground) — browser demo; files / `run` / HTTP are denied there (**E2801**)
+- [Playground](/playground) — browser demo; files / `run` / HTTP are denied there (**E2801**); `std/…` imports work
 - [Installation](/getting-started/installation)
+- [Mini Programs](/examples/mini-programs) — includes nested modules + `std/…` demos
 - [Getting Started / Language Tour](/getting-started/tour)
 - [Syntax Basics](/getting-started/syntax-basics)
 - [Variables and Types](/getting-started/variables-and-types)

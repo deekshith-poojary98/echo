@@ -10,6 +10,7 @@ from echo.core.base64util import base64_decode, base64_encode
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
 from echo.core.httputil import http_get, http_ok, http_post, http_redirect
 from echo.core.jsonutil import parse_json, write_json
+from echo.core.yamlutil import parse_yaml, write_yaml
 from echo.core.urlutil import url_decode, url_encode, url_join, url_query
 from echo.core.lists import (
     count_of,
@@ -53,6 +54,7 @@ BUILTIN_NAMES = frozenset(
         "wait",
         "ask",
         "say",
+        "trace",
         "eprint",
         "asInt",
         "asFloat",
@@ -97,6 +99,9 @@ BUILTIN_NAMES = frozenset(
         "parseJson",
         "parseJsonOr",
         "writeJson",
+        "yamlParse",
+        "yamlParseOr",
+        "yamlWrite",
         "asIntOr",
         "asFloatOr",
         "join",
@@ -202,6 +207,7 @@ BUILTIN_PARAMS = {
     "asBool": ["value"],
     "asString": ["value"],
     "type": ["value"],
+    "trace": [],
     "push": ["value"],
     "insertAt": ["index", "value"],
     "pull": ["index"],
@@ -226,6 +232,9 @@ BUILTIN_PARAMS = {
     "parseJson": ["text"],
     "parseJsonOr": ["text", "fallback"],
     "writeJson": ["value"],
+    "yamlParse": ["text"],
+    "yamlParseOr": ["text", "fallback"],
+    "yamlWrite": ["value"],
     "join": ["separator"],
     "startsWith": ["prefix"],
     "endsWith": ["suffix"],
@@ -312,6 +321,7 @@ STANDALONE_PARAMS = {
     "envOr": ["name", "fallback"],
     "readFileOr": ["path", "fallback"],
     "parseJsonOr": ["text", "fallback"],
+    "yamlParseOr": ["text", "fallback"],
     "asIntOr": ["value", "fallback"],
     "asFloatOr": ["value", "fallback"],
     "join": ["items", "separator"],
@@ -380,6 +390,75 @@ def builtin_names() -> frozenset[str]:
     return BUILTIN_NAMES
 
 
+# Names peeled into std/… modules (2.0.3–2.0.6, 2.1.0–2.1.1, 2.1.6).
+# Still in the default prelude; omitted when Host.require_std is True (2.0.7).
+PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
+    {
+        "httpGet",
+        "httpPost",
+        "httpGetOr",
+        "httpPostOr",
+        "httpOk",
+        "httpRedirect",
+        "urlEncode",
+        "urlDecode",
+        "urlJoin",
+        "urlQuery",
+        "base64Encode",
+        "base64Decode",
+        "readFile",
+        "readFileOr",
+        "writeFile",
+        "fileExists",
+        "isDir",
+        "listFiles",
+        "mkdir",
+        "mkdirAll",
+        "removeFile",
+        "removeTree",
+        "copyFile",
+        "pathJoin",
+        "cwd",
+        "parseJson",
+        "parseJsonOr",
+        "writeJson",
+        "yamlParse",
+        "yamlParseOr",
+        "yamlWrite",
+        "env",
+        "envOr",
+        "args",
+        "run",
+        "regexMatch",
+        "regexFind",
+        "regexReplace",
+        "regexSplit",
+        "formatTime",
+        "parseTime",
+        "days",
+        "hours",
+        "minutes",
+        "now",
+        "wait",
+        "abs",
+        "floor",
+        "ceil",
+        "min",
+        "max",
+        "random",
+        "randomInt",
+    }
+)
+
+
+def core_builtin_names() -> frozenset[str]:
+    return BUILTIN_NAMES - PEELED_STD_BUILTIN_NAMES
+
+
+def prelude_builtin_names(*, require_std: bool = False) -> frozenset[str]:
+    return core_builtin_names() if require_std else BUILTIN_NAMES
+
+
 def builtin_value(name: str) -> EchoBuiltin:
     value = _BUILTIN_VALUES.get(name)
     if value is None:
@@ -403,6 +482,7 @@ STANDALONE_MIN_ARGS = {
     "asBool": 1,
     "asString": 1,
     "type": 1,
+    "trace": 1,
     "trim": 1,
     "upperCase": 1,
     "lowerCase": 1,
@@ -430,6 +510,9 @@ STANDALONE_MIN_ARGS = {
     "parseJson": 1,
     "parseJsonOr": 2,
     "writeJson": 1,
+    "yamlParse": 1,
+    "yamlParseOr": 2,
+    "yamlWrite": 1,
     "join": 2,
     "startsWith": 2,
     "endsWith": 2,
@@ -940,6 +1023,25 @@ def do_parse_json_or(text: object, fallback: object, location: SourceLocation | 
 
 def do_write_json(value: object, location: SourceLocation | None = None) -> str:
     return write_json(value, location)
+
+
+def do_yaml_parse(text: object, location: SourceLocation | None = None) -> object:
+    return parse_yaml(text, location)
+
+
+def do_yaml_parse_or(text: object, fallback: object, location: SourceLocation | None = None) -> object:
+    if not isinstance(text, str):
+        raise EchoTypeError("yamlParseOr() requires a string", location, code="E2855")
+    try:
+        return parse_yaml(text, location)
+    except EchoTypeError:
+        raise
+    except EchoRuntimeError:
+        return fallback
+
+
+def do_yaml_write(value: object, location: SourceLocation | None = None) -> str:
+    return write_yaml(value, location)
 
 
 def do_join(value: object, separator: object, location: SourceLocation | None = None) -> str:

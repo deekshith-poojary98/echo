@@ -30,6 +30,16 @@ elang program.echo --plain
 
 `--plain` drops Rich panels for simple text diagnostics.
 
+### Require std imports
+
+```bash
+elang --require-std program.echo
+elang check --require-std program.echo
+elang builtins --require-std
+```
+
+Hides peeled stdlib names (`httpGet`, `readFile`, `regexMatch`, …) from the prelude so programs must `import … from "std/…"`. Default remains dual-path (prelude + `std/…`). Core names like `say` stay. See module semantics (**2.0.7**).
+
 ### Version
 
 ```bash
@@ -48,7 +58,16 @@ elang builtins --count
 
 Prints every prelude builtin name (sorted), one per line — same set as `builtin_names()` / the generated [builtin inventory](/reference/builtin-inventory). `--count` prints only the number. First argv token must be the word `builtins`; `elang builtins.echo` still runs that file.
 
-Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`.
+Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`, `lsp`.
+
+### Language server (thin stub)
+
+```bash
+elang lsp
+elang lsp --require-std
+```
+
+Stdio JSON-RPC language server (**2.1.2**+). Publishes analyzer diagnostics on open/change, answers builtin hover, and resolves goto-definition for local + imported symbols (**2.1.3**). Full document sync only. The VS Code / Cursor extension starts this server by default (**2.1.4**, `echo.lsp.enabled`). Task Problem matchers remain a fallback. Not a full IDE language-server product.
 
 ### Analyze without running
 
@@ -80,7 +99,7 @@ One process is one session: variables, functions, and type aliases persist acros
 
 Continuation: keeps reading while `{` is unclosed or a triple-quoted string is open; shows `... ` until complete. One-line `if true { say(1); }` works.
 
-`import name from "module";` resolves sibling `.echo` files from the cwd, loads with the module loader, merges bindings into the session. Re-import does not re-initialize the module.
+`import name from "module";` resolves `.echo` files relative to the cwd (sibling, nested, or `./` / `../` forms), or from the Echo install tree for `std/…`. Loads with the module loader and merges bindings into the session. Re-import does not re-initialize the module.
 
 Empty lines at a fresh `echo> ` are ignored. Syntax / semantic / runtime errors print an Echo diagnostic and return to the prompt — no process kill, no Python traceback, no drop of earlier successful bindings. Failed analysis does not execute. A runtime error does not roll back the interpreter (`x: int = 1; bad();` may leave `x`).
 

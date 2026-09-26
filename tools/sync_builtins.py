@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Sync builtin inventory from runtime into docs and highlighters.
+"""Sync builtin + std inventories from runtime into docs and highlighters.
 
-Source of truth: ``echo.runtime.builtins.builtin_names()``.
+Source of truth:
+  - ``echo.runtime.builtins.builtin_names()``
+  - install-tree ``echo.std`` modules (``std_root()``)
 
 Writes:
   - docs/reference/builtin-inventory.md
+  - docs/reference/std-inventory.md
   - echo-syntax-highlighter/syntaxes/echo.tmLanguage.json (builtins match)
   - docs/.vitepress/theme/echoLanguage.ts (BUILTINS set)
 
@@ -25,8 +28,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from echo.runtime.builtins import builtin_names  # noqa: E402
+from echo.std import list_std_inventory, std_root  # noqa: E402
 
 INVENTORY_PATH = REPO_ROOT / "docs" / "reference" / "builtin-inventory.md"
+STD_INVENTORY_PATH = REPO_ROOT / "docs" / "reference" / "std-inventory.md"
 GRAMMAR_PATH = REPO_ROOT / "echo-syntax-highlighter" / "syntaxes" / "echo.tmLanguage.json"
 PLAYGROUND_PARSER_PATH = REPO_ROOT / "docs" / ".vitepress" / "theme" / "echoLanguage.ts"
 
@@ -42,6 +47,23 @@ Auto-generated from `builtin_names()` by `tools/sync_builtins.py`.
 Do not edit by hand — run `python tools/sync_builtins.py` after adding a builtin.
 
 Narrative docs stay in [Built-in Methods](/standard-library/built-in-methods).
+Install-tree modules: [Std Inventory](/reference/std-inventory).
+
+"""
+
+STD_INVENTORY_HEADER = """\
+---
+title: Std Inventory
+description: Auto-generated list of Echo install-tree std/… modules
+---
+
+# Std Inventory
+
+Auto-generated from the install-tree `std/` modules by `tools/sync_builtins.py`.
+Do not edit by hand — run `python tools/sync_builtins.py` after adding a std module.
+
+CLI: `elang std` / `elang std --exports`. Module semantics: [Modules](/module-semantics).
+Prelude builtins: [Builtin Inventory](/reference/builtin-inventory).
 
 """
 
@@ -54,6 +76,22 @@ def render_inventory(names: list[str]) -> str:
     lines = [INVENTORY_HEADER, f"**Count:** {len(names)}", "", "| Name |", "| --- |"]
     for name in names:
         lines.append(f"| `{name}` |")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_std_inventory() -> str:
+    rows = list_std_inventory(std_root())
+    lines = [
+        STD_INVENTORY_HEADER,
+        f"**Modules:** {len(rows)}",
+        "",
+        "| Module | Exports |",
+        "| --- | --- |",
+    ]
+    for specifier, _path, exports in rows:
+        export_cell = ", ".join(f"`{name}`" for name in exports) if exports else "—"
+        lines.append(f"| `{specifier}` | {export_cell} |")
     lines.append("")
     return "\n".join(lines)
 
@@ -114,6 +152,17 @@ def update_inventory(names: list[str], *, write: bool) -> bool:
     return True
 
 
+def update_std_inventory(*, write: bool) -> bool:
+    expected = render_std_inventory()
+    current = STD_INVENTORY_PATH.read_text(encoding="utf-8") if STD_INVENTORY_PATH.is_file() else ""
+    if current == expected:
+        return False
+    if write:
+        STD_INVENTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        STD_INVENTORY_PATH.write_text(expected, encoding="utf-8")
+    return True
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -124,8 +173,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     names = sorted_names()
     write = not args.check
+    std_count = len(list_std_inventory(std_root()))
     changed = [
         ("inventory", update_inventory(names, write=write)),
+        ("std inventory", update_std_inventory(write=write)),
         ("grammar", update_grammar(names, write=write)),
         ("playground parser", update_playground_parser(names, write=write)),
     ]
@@ -135,12 +186,12 @@ def main(argv: list[str] | None = None) -> int:
             print("builtin sync drift:", ", ".join(drifted))
             print("run: python tools/sync_builtins.py")
             return 1
-        print(f"builtin sync ok ({len(names)} names)")
+        print(f"builtin sync ok ({len(names)} builtins, {std_count} std modules)")
         return 0
     if drifted:
         print("updated:", ", ".join(drifted))
     else:
-        print(f"already in sync ({len(names)} names)")
+        print(f"already in sync ({len(names)} builtins, {std_count} std modules)")
     return 0
 
 

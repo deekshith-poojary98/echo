@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "echolang"
-version = "1.1.9"
+version = "2.1.9"
 description = "Echo programming language interpreter"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["rich>=13.0.0"]
+dependencies = ["rich>=13.0.0", "PyYAML>=6.0"]
 authors = [{ name = "Deekshith Poojary", email = "deekshithpoojary355@gmail.com" }]
 maintainers = [{ name = "Deekshith Poojary" }]
 classifiers = [
@@ -37,6 +37,9 @@ py-modules = ["echo_cli", "main"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+echo = ["std/**/*.echo"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

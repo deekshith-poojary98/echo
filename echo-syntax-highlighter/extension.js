@@ -3,6 +3,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const vscode = require("vscode");
+const { LanguageClient, TransportKind } = require("vscode-languageclient/node");
 
 const SOURCE = "echo";
 
@@ -16,6 +17,9 @@ const COMMANDS = {
   "fmt-file": { title: "Echo: Format file", verb: "fmt", target: "file", extraArgs: [], matchers: ["$echo"] },
   "test-file": { title: "Echo: Test file", verb: "test", target: "file", extraArgs: ["--plain"], matchers: ["$echo-test-detail", "$echo-test"] },
 };
+
+/** @type {import("vscode-languageclient/node").LanguageClient | undefined} */
+let client;
 
 function activate(context) {
   context.subscriptions.push(
@@ -32,9 +36,44 @@ function activate(context) {
       provideDocumentFormattingEdits: formatDocument,
     }),
   );
+  startLanguageClient(context);
 }
 
-function deactivate() {}
+function deactivate() {
+  if (!client) {
+    return undefined;
+  }
+  return client.stop();
+}
+
+function startLanguageClient(context) {
+  const enabled = vscode.workspace.getConfiguration("echo").get("lsp.enabled", true);
+  if (!enabled) {
+    return;
+  }
+  const serverOptions = {
+    command: cliPath(),
+    args: ["lsp"],
+    transport: TransportKind.stdio,
+    options: {
+      cwd: workspaceFolder()?.uri.fsPath,
+    },
+  };
+  const clientOptions = {
+    documentSelector: [{ scheme: "file", language: "echo" }],
+    synchronize: {
+      fileEvents: vscode.workspace.createFileSystemWatcher("**/*.echo"),
+    },
+  };
+  client = new LanguageClient("echo", "Echo Language Server", serverOptions, clientOptions);
+  context.subscriptions.push(client);
+  client.start().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    vscode.window.showWarningMessage(
+      `Echo LSP failed to start (${message}). Hover / go-to-definition / live diagnostics are unavailable. Tasks and problem matchers still work.`,
+    );
+  });
+}
 
 function cliPath() {
   const configured = vscode.workspace.getConfiguration("echo").get("path");

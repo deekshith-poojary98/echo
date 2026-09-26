@@ -1,0 +1,7 @@
+// Echo std/json (2.0.5).
+// Canonical home for JSON helpers. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export parseJson: dynamic = parseJson;
+export parseJsonOr: dynamic = parseJsonOr;
+export writeJson: dynamic = writeJson;

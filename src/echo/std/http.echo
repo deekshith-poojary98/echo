@@ -1,0 +1,10 @@
+// Echo std/http (2.0.3).
+// Canonical home for the HTTP family. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export httpGet: dynamic = httpGet;
+export httpPost: dynamic = httpPost;
+export httpGetOr: dynamic = httpGetOr;
+export httpPostOr: dynamic = httpPostOr;
+export httpOk: dynamic = httpOk;
+export httpRedirect: dynamic = httpRedirect;
