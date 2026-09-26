@@ -18,7 +18,7 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** and **2.0.x** are complete. **2.1.0**–**2.1.5** shipped. Remaining **2.1.x** is drafted in [Priority](/project/priority).
+**1.1.x** and **2.0.x** are complete. **2.1.0**–**2.1.6** shipped. Remaining **2.1.x** is drafted in [Priority](/project/priority).
 
 ### In progress — 2.1.x YAML + LSP stub
 
@@ -30,7 +30,7 @@ Already in the language or CLI:
 | 2.1.3 | LSP goto-def | done |
 | 2.1.4 | Editor LSP client | done |
 | 2.1.5 | Debugger polish beyond `watch` | done |
-| 2.1.6 | Further std peel | drafted |
+| 2.1.6 | Further std peel | done |
 | 2.1.7 | CLI std inventory | drafted |
 | 2.1.8 | Docs generator expansion | drafted |
 | 2.1.9 | Series close | drafted |

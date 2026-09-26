@@ -637,4 +637,5 @@ v2.1.2 adds `elang lsp` (stdio stub: analyzer diagnostics + builtin hover).
 v2.1.3 adds LSP goto-definition for local bindings and imported symbols (2.0 resolver).
 v2.1.4 wires the VS Code / Cursor extension to `elang lsp` (task matchers remain as fallback).
 v2.1.5 adds abort `Stack:` dumps and a small `trace` helper (no stepper).
+v2.1.6 peels math / random / `now` / `wait` / `run` into `std/math`, `std/random`, and extended `std/time` / `std/os`.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

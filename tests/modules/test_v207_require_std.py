@@ -19,6 +19,10 @@ def test_peeled_names_are_subset_of_builtins() -> None:
     assert "say" in core_builtin_names()
     assert "httpGet" not in core_builtin_names()
     assert "readFile" not in core_builtin_names()
+    assert "abs" not in core_builtin_names()
+    assert "random" not in core_builtin_names()
+    assert "now" not in core_builtin_names()
+    assert "run" not in core_builtin_names()
 
 
 def test_require_std_hides_peeled_prelude_name() -> None:

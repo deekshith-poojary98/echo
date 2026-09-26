@@ -390,8 +390,8 @@ def builtin_names() -> frozenset[str]:
     return BUILTIN_NAMES
 
 
-# Names peeled into std/… modules (2.0.3–2.0.6). Still in the default prelude;
-# omitted from the prelude when Host.require_std is True (2.0.7).
+# Names peeled into std/… modules (2.0.3–2.0.6, 2.1.0–2.1.1, 2.1.6).
+# Still in the default prelude; omitted when Host.require_std is True (2.0.7).
 PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
     {
         "httpGet",
@@ -428,6 +428,7 @@ PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
         "env",
         "envOr",
         "args",
+        "run",
         "regexMatch",
         "regexFind",
         "regexReplace",
@@ -437,6 +438,15 @@ PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
         "days",
         "hours",
         "minutes",
+        "now",
+        "wait",
+        "abs",
+        "floor",
+        "ceil",
+        "min",
+        "max",
+        "random",
+        "randomInt",
     }
 )
 

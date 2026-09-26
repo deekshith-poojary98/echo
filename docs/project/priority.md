@@ -1179,7 +1179,7 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 | 2.1.3 | LSP goto-def for local + imported symbols | done |
 | 2.1.4 | Editor extension: LSP client (Problems matchers remain fallback) | done |
 | 2.1.5 | Debugger polish beyond `watch` (abort stack / `trace`) | done |
-| 2.1.6 | Further std peel / leftover modules | drafted |
+| 2.1.6 | Further std peel / leftover modules | done |
 | 2.1.7 | CLI: `elang std` (or equivalent) listing std modules | drafted |
 | 2.1.8 | Docs generator expansion (module + std inventory) | drafted |
 | 2.1.9 | Series close (README / matrix / examples) | drafted |
@@ -1214,7 +1214,12 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 
 ### 2.1.6 — further std peel
 
-Any leftover prelude families that clearly belong in std modules after 2.0.3–2.0.6.
+**Done.** Leftover prelude families that clearly belong in std modules after 2.0.3–2.0.6 / YAML.
+
+- `std/math` — `abs` / `floor` / `ceil` / `min` / `max`
+- `std/random` — `random` / `randomInt`
+- Extend `std/time` with `now` / `wait`; extend `std/os` with `run`
+- Prelude dual-path + `--require-std` unchanged (new names join `PEELED_STD_BUILTIN_NAMES`)
 
 ### 2.1.7 — CLI std inventory
 
@@ -1234,7 +1239,7 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.0**–**2.1.5** are implemented; remaining **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.0**–**2.1.6** are implemented; remaining **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |

@@ -1,0 +1,6 @@
+// Echo std/random (2.1.6).
+// Canonical home for RNG helpers. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export random: dynamic = random;
+export randomInt: dynamic = randomInt;

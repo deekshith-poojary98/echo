@@ -88,7 +88,7 @@ line: str = readLine();
 ---
 
 ### `wait(seconds)`
-Sleeps that many seconds. `int` or `float`.
+Sleeps that many seconds. `int` or `float`. Also `import wait from "std/time"` (**2.1.6**).
 
 ```echo
 say("Starting...");
@@ -315,7 +315,7 @@ say(pathJoin("a", "b", "c"));
 ```
 
 ### `run(command, args)`
-Runs `command` with a list of string arguments. Empty `args` is allowed. Does not use a shell. Returns a hash `{ "code": int, "stdout": str, "stderr": str }`. A non-zero process code is returned, not raised. Missing executables abort. The playground host denies this (`allow_run=False`).
+Runs `command` with a list of string arguments. Empty `args` is allowed. Does not use a shell. Returns a hash `{ "code": int, "stdout": str, "stderr": str }`. A non-zero process code is returned, not raised. Missing executables abort. The playground host denies this (`allow_run=False`). Also `import run from "std/os"` (**2.1.6**).
 
 ```echo
 proc: hash = run("true", []);
@@ -384,7 +384,7 @@ say("echo".base64Encode());
 Bad types or invalid Base64 text → **E2854**.
 
 ### `now()`
-Returns the current unix time as an `int` number of seconds. Takes no arguments.
+Returns the current unix time as an `int` number of seconds. Takes no arguments. Also `import now from "std/time"` (**2.1.6**).
 
 ```echo
 stamp: int = now();
@@ -624,6 +624,8 @@ say("{{literal braces}}".format());         // {literal braces}
 ---
 
 ## Numbers
+
+Also `import … from "std/math"` / `"std/random"` (**2.1.6**). Prelude dual-path unchanged.
 
 ### `abs(n)`
 Returns the absolute value. `n` must be `int` or `float` (`bool` is a type error). An `int` stays an `int`; a `float` stays a `float`.

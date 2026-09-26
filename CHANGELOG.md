@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.6
+
+Further std peel. Seventh **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `std/math` — `abs` / `floor` / `ceil` / `min` / `max`
+- `std/random` — `random` / `randomInt`
+- `std/time` also exports `now` / `wait`; `std/os` also exports `run`
+- Prelude dual-path unchanged; `--require-std` hides the new peeled names too
+
 ## 2.1.5
 
 Debugger polish beyond `watch`. Sixth **2.1** slice. Failure model unchanged. No new language syntax.
