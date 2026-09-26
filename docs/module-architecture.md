@@ -87,11 +87,13 @@ failure.
 Given importer `/project/app.echo` and name `math`, the resolver yields
 `/project/math.echo`. Nested `"lib/math"` yields `/project/lib/math.echo`.
 Leading `./` / `../` are allowed; mid-path `..` is not.
+Reserved `"std/meta"` yields a file under the Echo install `std/` tree
+(**2.0.2**), not `/project/std/meta.echo`.
 
 The `.echo` extension is implied and is not written in the specifier.
 
 The resolver looks under the importing file’s directory (and parents when
-`../` is used).
+`../` is used), except for the reserved `std/…` prefix.
 
 The resolver:
 
@@ -272,8 +274,8 @@ These are outside the module architecture:
 
 * import aliases (`import add as plus from "math"`);
 * module namespaces (`math.add()`);
-* packages or package-resolution semantics;
-* standard-library module paths;
+* packages or package-resolution semantics (beyond the fixed `std/…` install tree);
+* third-party / registry module paths;
 * dynamic / runtime imports;
 * explicit `.echo` suffixes or absolute paths in specifiers;
 * extra filesystem names or symbolic links as another way to spell a module;
@@ -282,6 +284,7 @@ These are outside the module architecture:
 * re-exporting.
 
 Relative `./` / `../` and nested segments (`"lib/math"`) shipped in **2.0.0**.
+`std/…` install-tree paths shipped in **2.0.2**.
 
 No component may grow a hook for the remaining non-goals in order to make an
 import “more convenient.”
@@ -300,6 +303,7 @@ above. None of these tests require a new language rule.
 * `.echo` extension is implied
 * relative imports resolve beside the importer
 * nested / `./` / `../` path forms resolve (2.0.0)
+* `std/…` resolves from the Echo install tree (2.0.2)
 * missing sibling is not found in another directory (bare name still local)
 * resolved absolute path defines module identity
 * equivalent path forms that hit the same file are one module identity

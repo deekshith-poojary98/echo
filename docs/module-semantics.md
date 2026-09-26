@@ -469,17 +469,20 @@ From a nested importer, `"../shared"` walks up one directory.
 
 The `.echo` extension is implied and is not written in the specifier.
 
-Valid specifier rules (2.0.0):
+Valid specifier rules (2.0.0 + **2.0.2**):
 
 * one or more `/`-separated segments;
 * optional leading `./` or `../` (only at the start; mid-path `..` is invalid);
 * each name segment matches `[A-Za-z_][A-Za-z0-9_]*`;
 * no absolute paths, drive letters, backslashes, empty segments, or trailing `/`;
-* no explicit `.echo` suffix in the specifier.
+* no explicit `.echo` suffix in the specifier;
+* reserved prefix `std/…` resolves from the Echo install tree (not beside the importer);
+* bare `"std"` is invalid — write `std/meta` (or another module under std);
+* `"./std/…"` remains a normal relative path beside the importer.
 
 Missing files are **E3002** (includes a looked-for path hint and the importing line). Invalid specifier shape is **E3001** (with a specific hint). Circular dependencies are **E3003** (path labels stay unique for nested same-basename modules).
 
-The resolver operates on the importing module’s location.
+The resolver operates on the importing module’s location for relative forms, and on the Echo `std` root for `std/…`.
 
 ---
 
@@ -754,7 +757,7 @@ No package manager or package-resolution semantics.
 
 ### Standard-library module paths
 
-No special stdlib import paths.
+`import … from "std/…"` resolves from the Echo install tree (**2.0.2**). Seed module: `std/meta`. Builtin families peel into `std/…` in later **2.0.x** slices. No third-party package paths.
 
 ### Dynamic imports
 

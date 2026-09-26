@@ -1,0 +1,8 @@
+// Echo install-tree std module (2.0.2).
+// Builtin families peel into std/… in later 2.0.x slices; this proves the search path.
+
+export fn stdOk() -> bool {
+    return true;
+}
+
+export stdName: str = "echo-std";

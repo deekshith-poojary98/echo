@@ -23,7 +23,7 @@ for i: int in 0..10 by 2 {
 
 - Typed declarations and parameters; runtime checks on bind / assign / return
 - `list` and `hash`, string interpolation, method calls, `use mut`, lexical scope
-- File modules: `export` / `import name from "module"` (sibling, `./…`, `../…`, nested `"lib/math"`)
+- File modules: `export` / `import name from "module"` (sibling, `./…`, `../…`, nested `"lib/math"`, reserved `"std/…"`)
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
 - Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
 - Thin scripting stdlib: files, JSON, regex, UTC dates, HTTP (`httpGet` / `httpPost`, host-gated), URL helpers, Base64

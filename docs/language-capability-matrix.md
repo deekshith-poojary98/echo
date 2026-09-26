@@ -28,7 +28,7 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
 `const` (including param `const`), destructuring (hash `as` rename and hash rest), exact object types, unions, range expressions as
 lists, lexical scope, closures, collections, strings (including multiline),
-`use` / `use mut`, `watch`, file modules (sibling + nested / relative paths in **2.0.0**), Echo-owned errors,
+`use` / `use mut`, `watch`, file modules (sibling + nested / relative + `std/…` in **2.0.0**–**2.0.2**), Echo-owned errors,
 nominal `class` + construction + methods/`this` + `interface` (no inheritance).
 
 Host/stdlib and tooling that used to be the main gaps: `args` / `env` / files /
@@ -622,19 +622,21 @@ object identity and may be mutated.
 import add from "math";
 import square from "lib/math";
 import id from "./lib/util";
+import stdOk from "std/meta";
 ```
 
-Bare sibling name, nested segments, and leading `./` / `../`. `.echo`
-implied. Each file is a module. Each module executes at most once. Cycles
-are rejected (E3003). A program with no `import` keeps the single-file model.
+Bare sibling name, nested segments, leading `./` / `../`, and reserved
+`std/…` (install tree). `.echo` implied. Each file is a module. Each module
+executes at most once. Cycles are rejected (E3003). A program with no
+`import` keeps the single-file model.
 
-**Limitations.** Not supported: aliases, `import *`, namespaces, packages,
-`"math.echo"`, absolute paths, mid-path `..`, dynamic imports, re-export,
-cycle recovery. `std/…` search path is **2.0.2**.
+**Limitations.** Not supported: aliases, `import *`, namespaces, packages /
+registry, `"math.echo"`, absolute paths, mid-path `..`, dynamic imports,
+re-export, cycle recovery. Builtin peels into `std/…` continue in **2.0.3+**.
 
-**Priority.** Path forms frozen in 2.0.0; std peel continues in 2.0.x.
+**Priority.** Path forms frozen in 2.0.0; `std/…` search path in 2.0.2; peel continues.
 
-**Possible version.** Done for relative/nested paths (2.0.0).
+**Possible version.** Done for relative/nested paths (2.0.0) and `std/…` (2.0.2).
 
 ---
 
@@ -1150,7 +1152,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | Promises / async | Don’t touch |
 | JSON | Shipped (0.4+) |
 | Objects as records | Hashes + aliases / exact |
-| Modules | Sibling + nested / relative paths (**2.0.0**); shipped |
+| Modules | Sibling + nested / relative + `std/…` (**2.0.0**–**2.0.2**); shipped |
 | Class / prototype OOP | Excluded |
 
 ### Go
@@ -1180,10 +1182,10 @@ Capability comparison only. Echo is not trying to become these languages.
 
 ### Still open (usability / ecosystem)
 
-1. Package manager / `std/…` search path (**2.0.2+**) / registry (after **2.1**)
+1. Package manager / registry (after **2.1**); `std/…` search path shipped **2.0.2**
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Full LSP-as-product (after **2.1**; nested paths shipped **2.0.0**, YAML+LSP stub drafted **2.1**)
+4. Full LSP-as-product (after **2.1**; nested paths **2.0.0**, `std/…` **2.0.2**, YAML+LSP stub drafted **2.1**)
 
 ### Shipped that used to be holes
 
@@ -1192,7 +1194,8 @@ thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 `*Or` twins, formatter, test runner, REPL, first-class functions, `const`,
 destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5);
 HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**);
-relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**).
+relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
+`std/…` install-tree search path (**2.0.2**).
 
 ### Not holes (held)
 

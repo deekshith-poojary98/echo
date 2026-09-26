@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.2
+
+Stdlib search path. Third **2.0** slice. Selective `import` / `export` unchanged. Failure model unchanged. No package registry.
+
+- `import … from "std/…"` resolves from the Echo install tree (`echo/std/`), not the importer’s directory
+- Seed module `std/meta` (`stdOk`, `stdName`) proves the path; builtin peels start in **2.0.3**
+- `"./std/…"` still resolves beside the importer; bare `"std"` is **E3001**
+- Override root with `ECHO_STD_ROOT` or `ModuleResolver(std_root=…)` (tests / packaging)
+
 ## 2.0.1
 
 Import cycle / resolver diagnostics polish. Second **2.0** slice. No new language syntax. Failure model unchanged.
