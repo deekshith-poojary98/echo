@@ -293,13 +293,28 @@ say(proc["code"]);
 ```
 
 ### `httpGet(url)` / `httpPost(url, body)`
-HTTP request helpers. Return a hash `{ "status": int, "body": str, "headers": hash }`. `url` and `body` are strings. Non-2xx responses still return the hash. Network failures and bad types abort (**E2852**). The playground host denies these (`allow_http=False` → **E2801**). No custom request headers yet.
+HTTP request helpers. Return a hash `{ "status": int, "body": str, "headers": hash }`. `url` and `body` are strings. Optional trailing `headers` hash (string → string). Non-2xx responses still return the hash. Network failures and bad types abort (**E2852**). The playground host denies these (`allow_http=False` → **E2801**).
 
 ```echo
-resp: hash = httpGet("https://example.com/");
+resp: hash = httpGet("https://example.com/", { Accept: "application/json" });
 say(resp["status"]);
-say(resp["body"]);
-created: hash = httpPost("https://example.com/items", "hello");
+created: hash = httpPost("https://example.com/items", "hello", { "Content-Type": "text/plain" });
+```
+
+### `httpGetOr(url, fallback)` / `httpPostOr(url, body, fallback)`
+Same requests as `httpGet` / `httpPost`, but network failures (**E2852** runtime) return `fallback` instead of aborting. Optional trailing `headers` hash. Host deny (**E2801**) and type errors still abort.
+
+```echo
+resp: dynamic = httpGetOr("https://example.com/", { status: 0, body: "", headers: {} });
+```
+
+### `httpOk(status|resp)` / `httpRedirect(status|resp)`
+`true` when the status is 2xx or 3xx. Accepts an `int` status or a response hash with an `int` `status` field.
+
+```echo
+if (httpOk(resp)) {
+    say(resp["body"]);
+}
 ```
 
 ### `now()`

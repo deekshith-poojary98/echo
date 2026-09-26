@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.1
+
+HTTP request headers, status helpers, and `*Or` twins. Second **1.1** slice. Failure model unchanged.
+
+- Optional trailing headers hash: `httpGet(url, headers)`, `httpPost(url, body, headers)`
+- `httpGetOr(url, fallback[, headers])` / `httpPostOr(url, body, fallback[, headers])` — network failures return fallback; type / host-deny errors still abort
+- `httpOk(status|resp)` / `httpRedirect(status|resp)` — 2xx / 3xx checks on an int or response hash
+- Custom `Content-Type` in headers overrides the POST default (`text/plain; charset=utf-8`)
+- Response hash shape unchanged; still **E2801** / **E2852**
+
 ## 1.1.0
 
 HTTP GET/POST builtins. Opens the **1.1.x** series (HTTP + post-1.0 polish). Failure model unchanged.

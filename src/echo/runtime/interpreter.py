@@ -107,7 +107,11 @@ from echo.runtime.builtins import (
     do_has,
     do_hours,
     do_http_get,
+    do_http_get_or,
+    do_http_ok,
     do_http_post,
+    do_http_post_or,
+    do_http_redirect,
     do_index_of,
     do_is_dir,
     do_join,
@@ -1271,11 +1275,71 @@ class Interpreter:
         if method == "minutes":
             return do_minutes(target if target is not None else _first(args, method, location), location)
         if method == "httpGet":
-            return do_http_get(target if target is not None else _first(args, method, location), self.host, location)
+            url = target if target is not None else _nth(args, 0, method, location)
+            headers = None
+            if target is not None:
+                if len(args) > 1:
+                    raise ArgumentError("httpGet() expected at most 1 argument(s)", location, code="E2604")
+                if args:
+                    headers = args[0]
+            else:
+                if len(args) > 2:
+                    raise ArgumentError("httpGet() expected at most 2 argument(s)", location, code="E2604")
+                if len(args) >= 2:
+                    headers = args[1]
+            return do_http_get(url, self.host, location, headers=headers)
         if method == "httpPost":
             url = target if target is not None else _nth(args, 0, method, location)
             body = args[0] if target is not None else _nth(args, 1, method, location)
-            return do_http_post(url, body, self.host, location)
+            headers = None
+            if target is not None:
+                if len(args) > 2:
+                    raise ArgumentError("httpPost() expected at most 2 argument(s)", location, code="E2604")
+                if len(args) >= 2:
+                    headers = args[1]
+            else:
+                if len(args) > 3:
+                    raise ArgumentError("httpPost() expected at most 3 argument(s)", location, code="E2604")
+                if len(args) >= 3:
+                    headers = args[2]
+            return do_http_post(url, body, self.host, location, headers=headers)
+        if method == "httpGetOr":
+            url = target if target is not None else _nth(args, 0, method, location)
+            headers = None
+            if target is not None:
+                fallback = _nth(args, 0, method, location)
+                if len(args) > 2:
+                    raise ArgumentError("httpGetOr() expected at most 2 argument(s)", location, code="E2604")
+                if len(args) >= 2:
+                    headers = args[1]
+            else:
+                fallback = _nth(args, 1, method, location)
+                if len(args) > 3:
+                    raise ArgumentError("httpGetOr() expected at most 3 argument(s)", location, code="E2604")
+                if len(args) >= 3:
+                    headers = args[2]
+            return do_http_get_or(url, fallback, self.host, location, headers=headers)
+        if method == "httpPostOr":
+            url = target if target is not None else _nth(args, 0, method, location)
+            body = args[0] if target is not None else _nth(args, 1, method, location)
+            headers = None
+            if target is not None:
+                fallback = _nth(args, 1, method, location)
+                if len(args) > 3:
+                    raise ArgumentError("httpPostOr() expected at most 3 argument(s)", location, code="E2604")
+                if len(args) >= 3:
+                    headers = args[2]
+            else:
+                fallback = _nth(args, 2, method, location)
+                if len(args) > 4:
+                    raise ArgumentError("httpPostOr() expected at most 4 argument(s)", location, code="E2604")
+                if len(args) >= 4:
+                    headers = args[3]
+            return do_http_post_or(url, body, fallback, self.host, location, headers=headers)
+        if method == "httpOk":
+            return do_http_ok(target if target is not None else _first(args, method, location), location)
+        if method == "httpRedirect":
+            return do_http_redirect(target if target is not None else _first(args, method, location), location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":

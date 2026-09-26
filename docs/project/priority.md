@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.0.0**. The next series is **1.1.x** (HTTP + post-1.0 polish); **1.1.0** is implemented. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.0**. The **1.1.x** series continues; **1.1.1** is implemented. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -973,7 +973,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## 1.1.x — HTTP + post-1.0 polish
 
-**Status: 1.1.0 implemented; 1.1.1–1.1.5 drafted.**
+**Status: 1.1.0–1.1.1 implemented; 1.1.2–1.1.5 drafted.**
 
 **1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics.
 
@@ -982,7 +982,7 @@ Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny 
 | Version | Item | Status |
 | --- | --- | --- |
 | 1.1.0 | `httpGet` / `httpPost` + `allow_http` host flag | implemented (1.1.0) |
-| 1.1.1 | HTTP headers / status helpers / `*Or` twins | drafted |
+| 1.1.1 | HTTP headers / status helpers / `*Or` twins | implemented (1.1.1) |
 | 1.1.2 | YAML or URL helpers (only if still tiny) | drafted |
 | 1.1.3 | `watch` / abort diagnostics polish | drafted |
 | 1.1.4 | Error-message / code pass | drafted |
@@ -1008,18 +1008,18 @@ Rules:
 - `httpPost(url, body: str) ->` same shape
 - `Host.allow_http` default `True`; playground `False` → **E2801** when denied
 - Network / URL errors → **E2852**; non-2xx status returns the hash (does not abort)
-- No custom request headers yet (**1.1.1**); urllib/stdlib only; no new PyPI deps
+- No custom request headers in **1.1.0** (added in **1.1.1**); urllib/stdlib only; no new PyPI deps
 - Failure model unchanged
 
 ### 1.1.1 — HTTP headers / status helpers / `*Or` twins
 
-Extend the 1.1.0 surface without changing the response hash shape.
+**Implemented.** Extend the 1.1.0 surface without changing the response hash shape.
 
-Rules (drafted):
+Rules:
 
-- Request headers on get/post (hash of string → string)
-- Thin status helpers (e.g. ok / redirect checks) if they stay tiny
-- `httpGetOr` / `httpPostOr` twins matching existing `*Or` conventions
+- Optional trailing request headers hash on get/post (`httpGet(url, headers)`, `httpPost(url, body, headers)`)
+- `httpOk` / `httpRedirect` on an `int` status or response hash
+- `httpGetOr` / `httpPostOr` twins — network **E2852** returns fallback; type errors and **E2801** still abort
 - Still no new PyPI deps; failure model unchanged
 
 ### 1.1.2 — YAML or URL helpers (only if still tiny)
@@ -1081,6 +1081,6 @@ Do not move global holds into a new series without an explicit series start. **0
 | Multi-path `echo check` | implemented (0.5.9) |
 | Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
-| HTTP builtins | **1.1.0** implemented; headers/`*Or` drafted under **1.1.1** |
+| HTTP builtins | **1.1.0–1.1.1** implemented |
 | Test DSL (`test "name" { }`) | held |
 | String `map` / `filter` over graphemes | skipped (awkward) |

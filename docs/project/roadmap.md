@@ -17,14 +17,14 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** is in progress in [Priority](/project/priority). **1.1.0** ships `httpGet` / `httpPost`.
+**1.1.x** is in progress in [Priority](/project/priority). **1.1.0–1.1.1** ship thin HTTP.
 
 ### Drafted — 1.1.x HTTP + polish
 
 | Version | Item | Status |
 | --- | --- | --- |
 | 1.1.0 | `httpGet` / `httpPost` + `allow_http` host flag | implemented (1.1.0) |
-| 1.1.1 | HTTP headers / status helpers / `*Or` twins | drafted |
+| 1.1.1 | HTTP headers / status helpers / `*Or` twins | implemented (1.1.1) |
 | 1.1.2 | YAML or URL helpers (only if still tiny) | drafted |
 | 1.1.3 | `watch` / abort diagnostics polish | drafted |
 | 1.1.4 | Error-message / code pass | drafted |
@@ -59,7 +59,7 @@ Not near-term. Do not treat these as upcoming releases unless a draft series exi
 - Generics, async, VM / JIT, packages
 - `try` / `catch`, `Result` / `Option`, user-level recovery syntax
 - Overloading, LSP
-- HTTP builtins — **1.1.0** shipped (`httpGet` / `httpPost`); headers/`*Or` drafted under **1.1.1**; dates in **0.9.9**; regex in **0.9.7**; `mkdirAll` / `removeTree` in **0.9.6**
+- HTTP builtins — **1.1.0–1.1.1** shipped; dates in **0.9.9**; regex in **0.9.7**; `mkdirAll` / `removeTree` in **0.9.6**
 - Test DSL (`test "name" { }`)
 - Class inheritance (out of 0.8; interfaces only; not the 0.9 ergonomics spine)
 

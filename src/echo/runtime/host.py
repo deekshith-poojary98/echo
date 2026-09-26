@@ -101,16 +101,16 @@ class Host:
             "stderr": completed.stderr,
         }
 
-    def http_get(self, url: str) -> dict[str, object]:
+    def http_get(self, url: str, headers: dict[str, str] | None = None) -> dict[str, object]:
         if not self.allow_http:
             raise PermissionError("http is not available in this host")
         from echo.core.httputil import http_get
 
-        return http_get(url, timeout=self.http_timeout)
+        return http_get(url, headers, timeout=self.http_timeout)
 
-    def http_post(self, url: str, body: str) -> dict[str, object]:
+    def http_post(self, url: str, body: str, headers: dict[str, str] | None = None) -> dict[str, object]:
         if not self.allow_http:
             raise PermissionError("http is not available in this host")
         from echo.core.httputil import http_post
 
-        return http_post(url, body, timeout=self.http_timeout)
+        return http_post(url, body, headers, timeout=self.http_timeout)

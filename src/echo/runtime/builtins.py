@@ -7,7 +7,7 @@ from pathlib import Path
 
 from echo.core.dateutil import days, format_time, hours, minutes, parse_time
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
-from echo.core.httputil import http_get, http_post
+from echo.core.httputil import http_get, http_ok, http_post, http_redirect
 from echo.core.jsonutil import parse_json, write_json
 from echo.core.lists import (
     count_of,
@@ -117,6 +117,10 @@ BUILTIN_NAMES = frozenset(
         "minutes",
         "httpGet",
         "httpPost",
+        "httpGetOr",
+        "httpPostOr",
+        "httpOk",
+        "httpRedirect",
         "fileExists",
         "cwd",
         "exit",
@@ -232,8 +236,12 @@ BUILTIN_PARAMS = {
     "days": [],
     "hours": [],
     "minutes": [],
-    "httpGet": [],
-    "httpPost": ["body"],
+    "httpGet": ["headers"],
+    "httpPost": ["body", "headers"],
+    "httpGetOr": ["fallback", "headers"],
+    "httpPostOr": ["body", "fallback", "headers"],
+    "httpOk": [],
+    "httpRedirect": [],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
@@ -310,8 +318,12 @@ STANDALONE_PARAMS = {
     "days": ["count"],
     "hours": ["count"],
     "minutes": ["count"],
-    "httpGet": ["url"],
-    "httpPost": ["url", "body"],
+    "httpGet": ["url", "headers"],
+    "httpPost": ["url", "body", "headers"],
+    "httpGetOr": ["url", "fallback", "headers"],
+    "httpPostOr": ["url", "body", "fallback", "headers"],
+    "httpOk": ["status"],
+    "httpRedirect": ["status"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -418,6 +430,10 @@ STANDALONE_MIN_ARGS = {
     "minutes": 1,
     "httpGet": 1,
     "httpPost": 2,
+    "httpGetOr": 2,
+    "httpPostOr": 3,
+    "httpOk": 1,
+    "httpRedirect": 1,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
@@ -964,10 +980,15 @@ def do_minutes(count: object, location: SourceLocation | None = None) -> int:
     return minutes(count, location)
 
 
-def do_http_get(url: object, host: Host, location: SourceLocation | None = None) -> dict[str, object]:
+def do_http_get(
+    url: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> dict[str, object]:
     if not host.allow_http:
         raise EchoRuntimeError("httpGet() is not available in this host", location, code="E2801")
-    return http_get(url, location=location, timeout=host.http_timeout)
+    return http_get(url, headers, location=location, timeout=host.http_timeout)
 
 
 def do_http_post(
@@ -975,10 +996,67 @@ def do_http_post(
     body: object,
     host: Host,
     location: SourceLocation | None = None,
+    headers: object | None = None,
 ) -> dict[str, object]:
     if not host.allow_http:
         raise EchoRuntimeError("httpPost() is not available in this host", location, code="E2801")
-    return http_post(url, body, location=location, timeout=host.http_timeout)
+    return http_post(url, body, headers, location=location, timeout=host.http_timeout)
+
+
+def do_http_get_or(
+    url: object,
+    fallback: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> object:
+    if not host.allow_http:
+        raise EchoRuntimeError("httpGetOr() is not available in this host", location, code="E2801")
+    try:
+        return http_get(
+            url,
+            headers,
+            location=location,
+            timeout=host.http_timeout,
+            builtin="httpGetOr",
+        )
+    except EchoRuntimeError as exc:
+        if exc.code == "E2852" and not isinstance(exc, EchoTypeError):
+            return fallback
+        raise
+
+
+def do_http_post_or(
+    url: object,
+    body: object,
+    fallback: object,
+    host: Host,
+    location: SourceLocation | None = None,
+    headers: object | None = None,
+) -> object:
+    if not host.allow_http:
+        raise EchoRuntimeError("httpPostOr() is not available in this host", location, code="E2801")
+    try:
+        return http_post(
+            url,
+            body,
+            headers,
+            location=location,
+            timeout=host.http_timeout,
+            builtin="httpPostOr",
+        )
+    except EchoRuntimeError as exc:
+        if exc.code == "E2852" and not isinstance(exc, EchoTypeError):
+            return fallback
+        raise
+
+
+def do_http_ok(value: object, location: SourceLocation | None = None) -> bool:
+    return http_ok(value, location)
+
+
+def do_http_redirect(value: object, location: SourceLocation | None = None) -> bool:
+    return http_redirect(value, location)
 
 
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:
