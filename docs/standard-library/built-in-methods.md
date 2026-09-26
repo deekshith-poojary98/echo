@@ -351,6 +351,17 @@ say(urlQuery({ q: "echo lang", page: "1" }));
 
 Bad types for URL helpers → **E2853**.
 
+### `base64Encode(text)` / `base64Decode(text)`
+Encode / decode a UTF-8 string as standard Base64 (stdlib `base64`). Method form works on strings.
+
+```echo
+say(base64Encode("hello"));   // aGVsbG8=
+say(base64Decode("aGVsbG8=")); // hello
+say("echo".base64Encode());
+```
+
+Bad types or invalid Base64 text → **E2854**.
+
 ### `now()`
 Returns the current unix time as an `int` number of seconds. Takes no arguments.
 

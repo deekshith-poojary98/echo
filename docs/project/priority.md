@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.5**. The **1.1.x** series continues; **1.1.6** is implemented. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.6**. The **1.1.x** series continues; **1.1.7** is implemented. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -973,7 +973,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## 1.1.x — HTTP + post-1.0 polish
 
-**Status: 1.1.0–1.1.6 implemented; 1.1.7–1.1.9 drafted.**
+**Status: 1.1.0–1.1.7 implemented; 1.1.8–1.1.9 drafted.**
 
 **1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics; close with docs sync / base64 / CLI inventory / series docs.
 
@@ -988,7 +988,7 @@ Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny 
 | 1.1.4 | Error-message / code pass | implemented (1.1.4) |
 | 1.1.5 | Docs generator or playground HTTP policy | implemented (1.1.5 — playground host policy) |
 | 1.1.6 | Thin docs generator / builtin sync | implemented (1.1.6) |
-| 1.1.7 | `base64Encode` / `base64Decode` | drafted |
+| 1.1.7 | `base64Encode` / `base64Decode` | implemented (1.1.7) |
 | 1.1.8 | CLI builtin inventory polish | drafted |
 | 1.1.9 | Series close (docs / examples) | drafted |
 
@@ -1072,7 +1072,11 @@ Rules:
 
 ### 1.1.7 — `base64Encode` / `base64Decode`
 
-Thin stdlib `base64` helpers for HTTP/scripting. Bad types → **E2854**. No new PyPI deps.
+**Implemented.** Thin stdlib `base64` helpers for HTTP/scripting.
+
+- `base64Encode(text)` / `base64Decode(text)` — UTF-8 ↔ standard Base64
+- Method form on strings; bad types or invalid Base64 → **E2854**
+- No new PyPI deps; failure model unchanged
 
 ### 1.1.8 — CLI builtin inventory polish
 
@@ -1119,6 +1123,6 @@ Do not move global holds into a new series without an explicit series start. **0
 | Multi-path `echo check` | implemented (0.5.9) |
 | Editor tasks + Problems matchers | implemented (0.5.7), Check workspace (0.5.9) |
 | LSP | held |
-| HTTP builtins | **1.1.0–1.1.6** implemented; **1.1.7–1.1.9** drafted |
+| HTTP builtins | **1.1.0–1.1.7** implemented; **1.1.8–1.1.9** drafted |
 | Test DSL (`test "name" { }`) | held |
 | String `map` / `filter` over graphemes | skipped (awkward) |

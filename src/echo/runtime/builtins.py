@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 
 from echo.core.dateutil import days, format_time, hours, minutes, parse_time
+from echo.core.base64util import base64_decode, base64_encode
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
 from echo.core.httputil import http_get, http_ok, http_post, http_redirect
 from echo.core.jsonutil import parse_json, write_json
@@ -126,6 +127,8 @@ BUILTIN_NAMES = frozenset(
         "urlDecode",
         "urlJoin",
         "urlQuery",
+        "base64Encode",
+        "base64Decode",
         "fileExists",
         "cwd",
         "exit",
@@ -251,6 +254,8 @@ BUILTIN_PARAMS = {
     "urlDecode": [],
     "urlJoin": ["path"],
     "urlQuery": [],
+    "base64Encode": [],
+    "base64Decode": [],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
@@ -337,6 +342,8 @@ STANDALONE_PARAMS = {
     "urlDecode": ["text"],
     "urlJoin": ["base", "path"],
     "urlQuery": ["params"],
+    "base64Encode": ["text"],
+    "base64Decode": ["text"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -451,6 +458,8 @@ STANDALONE_MIN_ARGS = {
     "urlDecode": 1,
     "urlJoin": 2,
     "urlQuery": 1,
+    "base64Encode": 1,
+    "base64Decode": 1,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
@@ -1090,6 +1099,14 @@ def do_url_join(base: object, path: object, location: SourceLocation | None = No
 
 def do_url_query(params: object, location: SourceLocation | None = None) -> str:
     return url_query(params, location)
+
+
+def do_base64_encode(text: object, location: SourceLocation | None = None) -> str:
+    return base64_encode(text, location)
+
+
+def do_base64_decode(text: object, location: SourceLocation | None = None) -> str:
+    return base64_decode(text, location)
 
 
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:

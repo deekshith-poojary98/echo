@@ -50,6 +50,8 @@ const BUILTINS = new Set([
   'asString',
   'ask',
   'assert',
+  'base64Decode',
+  'base64Encode',
   'ceil',
   'chunk',
   'clone',

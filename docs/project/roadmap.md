@@ -31,7 +31,7 @@ Already in the language or CLI:
 | 1.1.4 | Error-message / code pass | implemented (1.1.4) |
 | 1.1.5 | Docs generator or playground HTTP policy | implemented (1.1.5 — playground host policy) |
 | 1.1.6 | Thin docs generator / builtin sync | implemented (1.1.6) |
-| 1.1.7 | `base64Encode` / `base64Decode` | drafted |
+| 1.1.7 | `base64Encode` / `base64Decode` | implemented (1.1.7) |
 | 1.1.8 | CLI builtin inventory polish | drafted |
 | 1.1.9 | Series close (docs / examples) | drafted |
 

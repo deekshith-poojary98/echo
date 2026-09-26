@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.7
+
+`base64Encode` / `base64Decode`. Seventh **1.1** slice. Failure model unchanged.
+
+- `base64Encode(text)` / `base64Decode(text)` — UTF-8 ↔ standard Base64 via stdlib `base64`
+- Method form on strings; bad types or invalid Base64 → **E2854**
+- No new PyPI deps
+
 ## 1.1.6
 
 Thin docs generator / builtin sync. Sixth **1.1** slice. No new language syntax. Failure model unchanged.
