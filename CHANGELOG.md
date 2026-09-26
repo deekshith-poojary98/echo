@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.4
+
+Error-message / code pass. Fifth **1.1** slice. No new language syntax. Failure model unchanged.
+
+- Document host / scripting codes **E2801**, **E2850**–**E2853** in errors-and-troubleshooting
+- Document `httpGetOr` / `httpPostOr` in the failure-model twins table
+- Align URL / duration type-error wording with HTTP / regex style (`… must be a …`)
+
 ## 1.1.3
 
 `watch` / abort diagnostics polish. Fourth **1.1** slice. No new language syntax. Failure model unchanged.

@@ -1180,7 +1180,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Error-message / code pass (drafted **1.1.4**; `watch` / abort diagnostics shipped in **1.1.3**)
+4. Docs generator or playground HTTP policy (drafted **1.1.5**; error-code docs shipped in **1.1.4**)
 
 ### Shipped that used to be holes
 

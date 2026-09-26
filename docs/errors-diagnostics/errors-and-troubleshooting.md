@@ -28,6 +28,8 @@ Runtime failures that still abort as Echo errors:
 - List `some` / `every` / `findIndex` (`E2840`–`E2841`; non-`bool` result is `E2831`)
 - `chunk()` size (`E2842`); `rangeList` / `rangeListInclusive` bounds (`E2843`)
 - Hash `mapValues` (`E2844`–`E2845`); list `flatten` (`E2846`); list `partition` (`E2847`–`E2848`; non-`bool` is `E2831`)
+- Host deny for files / run / HTTP (`E2801`)
+- Regex builtins (`E2850`); date helpers (`E2851`); HTTP (`E2852`); URL helpers (`E2853`)
 - `const` reassignment / mutation (`E3201`–`E3204`)
 - Destructuring length / shape (`E3205`–`E3207`); missing hash keys reuse **E2711**
 - Exact object shape: extra field **E3208**, missing field **E3209**
@@ -38,6 +40,18 @@ Runtime failures that still abort as Echo errors:
 `fail(message)` always aborts (`E2825`). `assert(cond, message)` aborts when `cond` is falsy (`E2819`). Same diagnostic shape.
 
 `expect(cond, message)` requires a `bool` (`E2826`). `expectEq` / `expectNeq` use Echo `==` (`E2827` / `E2828`).
+
+Host / scripting stdlib:
+
+| Code | Surface |
+| --- | --- |
+| `E2801` | Host deny — `allow_files=False` / `allow_run=False` / `allow_http=False` |
+| `E2850` | Regex builtins — bad types or invalid pattern |
+| `E2851` | Date helpers — bad types or invalid format / parse |
+| `E2852` | HTTP — bad types, empty URL, network / timeout / invalid URL (non-2xx still returns the response hash) |
+| `E2853` | URL helpers — bad types (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`) |
+
+`httpGetOr` / `httpPostOr`: network / empty-URL **E2852** runtime failures return `fallback`; type errors and host deny (**E2801**) still abort.
 
 List HOF callbacks:
 

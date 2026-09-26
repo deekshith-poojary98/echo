@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.2**. The **1.1.x** series continues; **1.1.3** is implemented. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.3**. The **1.1.x** series continues; **1.1.4** is implemented. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -973,7 +973,7 @@ Inheritance, generics, packages, async, VM, `try`/`catch`, `Result`/`Option`, ov
 
 ## 1.1.x — HTTP + post-1.0 polish
 
-**Status: 1.1.0–1.1.3 implemented; 1.1.4–1.1.5 drafted.**
+**Status: 1.1.0–1.1.4 implemented; 1.1.5 drafted.**
 
 **1.0.0 is the stable cut.** **1.1** is thin scripting/stdlib and tooling polish on that surface — not packages, generics, inheritance, or a failure-model rewrite. Lead with HTTP; then small helpers and diagnostics.
 
@@ -985,7 +985,7 @@ Shape: ship host-gated HTTP first, then headers / status helpers, optional tiny 
 | 1.1.1 | HTTP headers / status helpers / `*Or` twins | implemented (1.1.1) |
 | 1.1.2 | YAML or URL helpers (only if still tiny) | implemented (1.1.2 — URL only) |
 | 1.1.3 | `watch` / abort diagnostics polish | implemented (1.1.3) |
-| 1.1.4 | Error-message / code pass | drafted |
+| 1.1.4 | Error-message / code pass | implemented (1.1.4) |
 | 1.1.5 | Docs generator or playground HTTP policy | drafted |
 
 ### 1.1.0 — `httpGet` / `httpPost` + `allow_http`
@@ -1039,7 +1039,12 @@ Rules:
 
 ### 1.1.4 — error-message / code pass
 
-Consistency pass on Echo error messages and codes. Document any new **E28xx** codes introduced in 1.1.0–1.1.3.
+**Implemented.** Consistency pass on Echo error messages and codes for the 1.1.x surface.
+
+- Documented **E2801** (host deny including HTTP) and **E2850**–**E2853** (regex / dates / HTTP / URL) in errors-and-troubleshooting
+- Documented `httpGetOr` / `httpPostOr` in the failure-model twins table
+- Aligned URL helper and `days` / `hours` / `minutes` type-error wording with HTTP / regex style
+- No new error codes; no failure-model change
 
 ### 1.1.5 — docs generator or playground HTTP policy
 
