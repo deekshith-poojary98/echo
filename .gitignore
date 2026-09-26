@@ -172,6 +172,7 @@ cython_debug/
 
 # Node / VitePress (docs workspace)
 docs/node_modules/
+echo-syntax-highlighter/node_modules/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 docs/public/echo-runtime/

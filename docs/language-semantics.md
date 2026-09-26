@@ -612,4 +612,5 @@ v2.1.0 adds `yamlParse` / `yamlWrite` (**E2855**) and `std/yaml` (PyYAML).
 v2.1.1 adds `yamlParseOr` (invalid YAML → fallback; non-`str` still aborts).
 v2.1.2 adds `elang lsp` (stdio stub: analyzer diagnostics + builtin hover).
 v2.1.3 adds LSP goto-definition for local bindings and imported symbols (2.0 resolver).
+v2.1.4 wires the VS Code / Cursor extension to `elang lsp` (task matchers remain as fallback).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

@@ -42,7 +42,7 @@ inquiry and `*Or`, not exceptions.
 | --- | --- |
 | Language fundamentals | Supported through 0.8.9 surface |
 | Language usability | Host/stdlib mostly shipped; date/time and some sugar still open |
-| Language ecosystem | fmt / lint / test / REPL / check shipped; no package manager or LSP |
+| Language ecosystem | fmt / lint / test / REPL / check / thin LSP shipped; no package manager |
 | Implementation / runtime maturity | Don’t touch (no VM / JIT / native) |
 
 Distinctive on purpose:
@@ -107,7 +107,7 @@ Distinctive on purpose:
 | Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8), `--json` (0.6.9) | Tooling | 0.6.9 |
 | Debugger | Ecosystem | Partial (`watch` only) | Tooling | Later |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
-| IDE support | Ecosystem | Partial (0.5.7), Check workspace (0.5.9) | Tooling | 0.5.9 |
+| IDE support | Ecosystem | Partial (tasks + thin LSP client **2.1.4**) | Tooling | 2.1.4 |
 | Language server | Ecosystem | Missing | Tooling | Later |
 | REPL | Ecosystem | Supported (0.5.0) | Tooling | Done |
 | Playground | Ecosystem | Partial (browser host; no files/argv) | Tooling | Done enough |
@@ -1047,34 +1047,36 @@ extract / API generator for Echo modules.
 
 ### IDE support
 
-**Status.** Partial (0.5.7). Check workspace in 0.5.9. Not an LSP.
+**Status.** Partial — tasks (0.5.7–0.5.9) plus thin LSP client (**2.1.4**).
 
 `echo-syntax-highlighter/` is a VS Code / Cursor extension: TextMate grammar
-(also imported by the docs site for Echo code fences), task provider, and
-problem matchers. It highlights current keywords, types, builtins (`expect`,
-`fail`, `assert`, `*Or` twins, host/stdlib), comments, strings with `${...}`,
-and number literals.
+(also imported by the docs site for Echo code fences), task provider, problem
+matchers, and an `elang lsp` client. It highlights current keywords, types,
+builtins (`expect`, `fail`, `assert`, `*Or` twins, host/stdlib), comments,
+strings with `${...}`, and number literals.
 
-Commands / Run Task run `elang check`, `fmt`, `lint`, and `test` (`--plain`)
-so CLI diagnostics appear in the Problems panel. **Echo: Check workspace**
-(0.5.9) runs `elang check --plain` on the folder; **Echo: Check file**
-remains. Format Document shells out to `elang fmt`. There are still no
-completions, jump-to-definition, or a language server.
+Live hover, go-to-definition, and analyzer diagnostics come from `elang lsp`
+(**2.1.2**–**2.1.4**). Commands / Run Task still run `elang check`, `fmt`,
+`lint`, and `test` (`--plain`) so CLI diagnostics appear in the Problems panel
+as a fallback. Format Document shells out to `elang fmt`. Not a full IDE
+language-server product (no completions, rename, etc.).
 
-**Priority.** Tooling. Shipped as highlight + tasks.
+**Priority.** Tooling. Stub + client shipped through **2.1.4**.
 
-**Possible version.** 0.5.9.
+**Possible version.** Done through **2.1.4**.
 
 ---
 
 ### Language server
 
-**Status.** Missing.
+**Status.** Thin stub shipped (**2.1.2**–**2.1.4**). Full LSP-as-product held.
 
-**Priority.** Later. Worth more after the analyzer is treated as a
-public API.
+`elang lsp` (stdio): diagnostics, builtin hover, goto-def for local + imports.
+Editor client wires it by default (`echo.lsp.enabled`).
 
-**Possible version.** Later.
+**Priority.** Later for full product; stub done.
+
+**Possible version.** Stub **2.1.2**–**2.1.4**.
 
 ---
 
@@ -1197,7 +1199,7 @@ HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-co
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
 `std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
 docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**);
-`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**).
+`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**).
 
 ### Not holes (held)
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.4
+
+Editor LSP client. Fifth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- VS Code / Cursor extension starts `elang lsp` via `vscode-languageclient` (hover, go-to-definition, live diagnostics)
+- Setting `echo.lsp.enabled` (default true); CLI path still `echo.path`
+- Task problem matchers and Check / Lint / Test commands remain as a fallback
+- Extension folder: run `npm install` once after clone
+
 ## 2.1.3
 
 LSP goto-definition. Fourth **2.1** slice. Failure model unchanged. No new language syntax.

@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.1.4
+
+- LSP client: starts `elang lsp` for hover, go-to-definition, and live diagnostics (`echo.lsp.enabled`, default on).
+- Task problem matchers and Check / Lint / Test commands remain as a fallback.
+- Depends on `vscode-languageclient` (run `npm install` in this folder).
+
 ## Unreleased
 
 - Extension **icon** and **`.echo` file icons** from real sound-wave logo (`docs/public/echo_logo.jpg` alpha silhouette), transparent background (light/dark variants).

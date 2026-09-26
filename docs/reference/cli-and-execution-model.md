@@ -67,7 +67,7 @@ elang lsp
 elang lsp --require-std
 ```
 
-Stdio JSON-RPC language server (**2.1.2**+). Publishes analyzer diagnostics on open/change, answers builtin hover, and resolves goto-definition for local + imported symbols (**2.1.3**). Full document sync only. Not a full IDE product — editor client wiring follows in **2.1.4**. Task Problem matchers remain a fallback until then.
+Stdio JSON-RPC language server (**2.1.2**+). Publishes analyzer diagnostics on open/change, answers builtin hover, and resolves goto-definition for local + imported symbols (**2.1.3**). Full document sync only. The VS Code / Cursor extension starts this server by default (**2.1.4**, `echo.lsp.enabled`). Task Problem matchers remain a fallback. Not a full IDE language-server product.
 
 ### Analyze without running
 
