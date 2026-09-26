@@ -694,6 +694,9 @@ class Interpreter:
                 if record is not None and not env.is_defined(class_name):
                     method = self._record_method(record, callee.name)
                     if method is not None:
+                        self._require_method_runtime_visible(
+                            record, callee.name, expression.location
+                        )
                         return self._call_user_function(
                             method, expression.arguments, env, expression.location
                         )
@@ -713,8 +716,12 @@ class Interpreter:
                             expression.location,
                             code="E3213",
                         )
+                    self._require_method_runtime_visible(
+                        target.record, callee.name, expression.location
+                    )
                     return self._call_method(method, target, expression.arguments, env, expression.location)
                 if callee.name in target.fields:
+                    self._require_field_runtime_visible(target, callee.name, expression.location)
                     return self._call_value(
                         target.fields[callee.name],
                         expression.arguments,
