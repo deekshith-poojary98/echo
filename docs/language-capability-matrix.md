@@ -1180,7 +1180,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Packages / YAML / LSP (after **1.1**; series complete through **1.1.9**)
+4. Package registry / full LSP-as-product (after **2.1**; path+std modules drafted **2.0**, YAML+LSP stub drafted **2.1**)
 
 ### Shipped that used to be holes
 

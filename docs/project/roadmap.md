@@ -18,7 +18,39 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** is complete. Later candidates (not drafted as a series yet): packages / stdlib-module imports, YAML, LSP. See [Priority](/project/priority) holds.
+**1.1.x** is complete. **2.0.x** (modules beyond siblings + stdlib peel) and **2.1.x** (YAML + LSP stub + std maturity) are drafted in [Priority](/project/priority).
+
+### Drafted — 2.0.x modules + stdlib peel
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 2.0.0 | Relative / nested import paths | drafted |
+| 2.0.1 | Import cycle / resolver diagnostics polish | drafted |
+| 2.0.2 | Stdlib search path: `import … from "std/…"` | drafted |
+| 2.0.3 | Peel HTTP into `std/http` | drafted |
+| 2.0.4 | Peel URL + Base64 | drafted |
+| 2.0.5 | Peel files / JSON / env | drafted |
+| 2.0.6 | Peel regex + dates | drafted |
+| 2.0.7 | Prelude policy (core vs std) | drafted |
+| 2.0.8 | Docs / examples / playground | drafted |
+| 2.0.9 | Series close | drafted |
+
+### Drafted — 2.1.x YAML + LSP stub
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 2.1.0 | YAML helpers | drafted |
+| 2.1.1 | YAML `*Or` + docs | drafted |
+| 2.1.2 | Thin LSP stub | drafted |
+| 2.1.3 | LSP goto-def | drafted |
+| 2.1.4 | Editor LSP client | drafted |
+| 2.1.5 | Debugger polish beyond `watch` | drafted |
+| 2.1.6 | Further std peel | drafted |
+| 2.1.7 | CLI std inventory | drafted |
+| 2.1.8 | Docs generator expansion | drafted |
+| 2.1.9 | Series close | drafted |
+
+Details: [Priority — 2.0.x / 2.1.x](/project/priority).
 
 ### Closed — 1.1.x HTTP + polish
 
@@ -61,14 +93,14 @@ Details: [Priority — 0.9.x](/project/priority).
 
 Not near-term. Do not treat these as upcoming releases unless a draft series exists above:
 
-- Generics, async, VM / JIT, packages
+- Generics, async, VM / JIT
 - `try` / `catch`, `Result` / `Option`, user-level recovery syntax
-- Overloading, LSP
-- YAML (deferred; needs a dependency)
+- Overloading, full LSP-as-product, `Point.new`
+- Package registry / lockfiles / `elang add` (path resolution + std modules are **2.0**; registry after **2.1**)
 - Test DSL (`test "name" { }`)
 - Class inheritance (out of 0.8; interfaces only)
 
-**1.1.x** (HTTP through series docs) is closed above — do not re-list those as held.
+**1.1.x** is closed above. **2.0.x** / **2.1.x** are drafted under Next — do not re-list those as held.
 
 See [Known Limitations](/errors-diagnostics/known-limitations) and [failure model](/failure-model).
 
