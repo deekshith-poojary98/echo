@@ -7,7 +7,7 @@ const pluginDir = path.dirname(fileURLToPath(import.meta.url))
 const echoSrc = path.resolve(pluginDir, '../../../src/echo')
 const outDir = path.resolve(pluginDir, '../../public/echo-runtime')
 
-function collectPythonFiles(dir: string, rel = ''): string[] {
+function collectRuntimeFiles(dir: string, rel = ''): string[] {
   const files: string[] = []
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === '__pycache__' || entry.name.startsWith('.')) {
@@ -16,10 +16,10 @@ function collectPythonFiles(dir: string, rel = ''): string[] {
     const nextRel = rel ? `${rel}/${entry.name}` : entry.name
     const nextPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
-      files.push(...collectPythonFiles(nextPath, nextRel))
+      files.push(...collectRuntimeFiles(nextPath, nextRel))
       continue
     }
-    if (entry.name.endsWith('.py')) {
+    if (entry.name.endsWith('.py') || entry.name.endsWith('.echo')) {
       files.push(nextRel.replaceAll('\\', '/'))
     }
   }
@@ -31,7 +31,7 @@ export function copyEchoRuntime(): string[] {
     throw new Error(`Echo sources not found at ${echoSrc}`)
   }
   fs.rmSync(outDir, { recursive: true, force: true })
-  const files = collectPythonFiles(echoSrc)
+  const files = collectRuntimeFiles(echoSrc)
   for (const rel of files) {
     const dest = path.join(outDir, rel)
     fs.mkdirSync(path.dirname(dest), { recursive: true })

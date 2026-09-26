@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.9
+
+Series close (docs). Closes the **2.0.x** series. No new language syntax. Failure model unchanged.
+
+- Public message: **2.0 = path resolution + std modules, not a package manager**
+- README + module-semantics + capability matrix mark **2.0.0–2.0.9** complete
+- Roadmap / priority / known limitations move next work to **2.1.x** (YAML + LSP stub)
+
+## 2.0.8
+
+Docs / examples / playground for multi-file + `std/…`. Ninth **2.0** slice. Failure model unchanged. Playground still denies files / `run` / HTTP.
+
+- `examples/std_imports.echo` + playground **std/… imports** demo
+- `examples/modules_demo/` nested + `./` + `std/meta` CLI demo
+- Playground worker loads `std/*.echo` and supports `import … from "std/…"`
+- Mini-programs + playground page note multi-file vs `std/…`
+
 ## 2.0.7
 
 Prelude policy (core vs std). Eighth **2.0** slice. Failure model unchanged. Default prelude unchanged.

@@ -5,7 +5,7 @@ from io import StringIO
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from echo.cli.main import run_source
+from echo.cli.main import run_file, run_source
 from echo.runtime.host import Host
 
 
@@ -80,5 +80,27 @@ def assert_no_python_leak(result: ExecutionResult) -> None:
 
 
 def run_echo_file(path: Path, *, stdin_lines: list[str] | None = None) -> ExecutionResult:
-    source = path.read_text(encoding="utf-8")
-    return run_echo(source, filename=str(path), stdin_lines=stdin_lines)
+    """Run a real .echo path via ModuleLoader (imports / std/… work)."""
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        try:
+            if stdin_lines is None:
+                exit_code = run_file(str(path), plain=True)
+            else:
+                from unittest.mock import patch
+
+                answers = iter(stdin_lines)
+
+                def _fake_input(_prompt: object = "") -> str:
+                    try:
+                        return next(answers)
+                    except StopIteration as exc:
+                        raise EOFError from exc
+
+                with patch("builtins.input", side_effect=_fake_input):
+                    exit_code = run_file(str(path), plain=True)
+        except Exception as exc:  # noqa: BLE001 — leak detector
+            raise AssertionError(
+                f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"
+            ) from exc
+    return ExecutionResult(exit_code, stdout.getvalue())

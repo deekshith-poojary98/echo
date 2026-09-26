@@ -9,6 +9,7 @@ import { echoLanguage } from './echoLanguage'
 import { echoHighlight } from './echoHighlight'
 import classesSource from '../../../examples/classes_and_interfaces.echo?raw'
 import bankSource from '../../../examples/bank_account.echo?raw'
+import stdImportsSource from '../../../examples/std_imports.echo?raw'
 
 type Example = {
   id: string
@@ -158,6 +159,11 @@ say("url:", path);
 say("ok status:", httpOk(200));
 say("redirect:", httpRedirect(302));
 `,
+  },
+  {
+    id: 'std',
+    label: 'std/… imports',
+    source: stdImportsSource,
   },
   {
     id: 'bank',

@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **2.0.7**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports through `std/re` / `std/time`, optional `--require-std` prelude policy, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins (also `std/re`), union narrowing in `if type(...)`, thin UTC dates (also `std/time`), thin HTTP (also `std/http`), thin URL helpers (also `std/url`), Base64 helpers (also `std/base64`), file/JSON/env helpers also via `std/fs` / `std/json` / `std/os`, `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** and module **E3001**–**E3005** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **2.0.9**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports through `std/re` / `std/time`, optional `--require-std` prelude policy, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins (also `std/re`), union narrowing in `if type(...)`, thin UTC dates (also `std/time`), thin HTTP (also `std/http`), thin URL helpers (also `std/url`), Base64 helpers (also `std/base64`), file/JSON/env helpers also via `std/fs` / `std/json` / `std/os`, `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** and module **E3001**–**E3005** codes, playground host-policy docs plus playground `std/…` imports, and a generated builtin inventory (`tools/sync_builtins.py`). **2.0** is path resolution + std modules — not a package registry. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -37,6 +37,8 @@ What Echo still does **not** do. As of **2.0.7**, the language includes modules 
 - 2.0.5: files / JSON / env via `std/fs` / `std/json` / `std/os` (prelude dual-path)
 - 2.0.6: regex + dates via `std/re` / `std/time` (prelude dual-path)
 - 2.0.7: optional `--require-std` / `Host.require_std` (core vs peeled prelude)
+- 2.0.8: docs / examples / playground for multi-file + `std/…`
+- 2.0.9: **2.0.x** series close (path resolution + std modules, not a package manager)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 

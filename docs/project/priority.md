@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.9**. **2.0.0**–**2.0.7** are implemented on this branch; remaining **2.0.x** / **2.1.x** are drafted below. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.9**. **2.0.0**–**2.0.9** are implemented on this branch (series closed). **2.1.x** is drafted below. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -1100,7 +1100,7 @@ Inheritance, generics, async, VM, `try`/`catch`, `Result`/`Option`, overloading,
 
 ## 2.0.x — Modules beyond siblings + stdlib peel
 
-**Status: in progress (2.0.0–2.0.7 shipped).**
+**Status: complete (2.0.0–2.0.9).**
 
 **1.1.x is closed.** **2.0** is the module-resolution and stdlib-module jump — not a package registry, not generics, not a failure-model rewrite. Sibling `import name from "mod"` stays valid. Failure model unchanged.
 
@@ -1116,8 +1116,8 @@ Shape: nested/relative paths first; then a fixed `std/…` search path; peel pre
 | 2.0.5 | Peel files / JSON / env into `std/fs` + `std/json` | done |
 | 2.0.6 | Peel regex + dates into `std/re` + `std/time` | done |
 | 2.0.7 | Prelude policy: core vs std; optional require-std flag | done |
-| 2.0.8 | Docs / examples / playground for multi-file + `std/…` | drafted |
-| 2.0.9 | Series close (README / module-semantics / matrix) | drafted |
+| 2.0.8 | Docs / examples / playground for multi-file + `std/…` | done |
+| 2.0.9 | Series close (README / module-semantics / matrix) | done |
 
 ### 2.0.0 — relative / nested import paths
 
@@ -1153,11 +1153,11 @@ Shape: nested/relative paths first; then a fixed `std/…` search path; peel pre
 
 ### 2.0.8 — docs / examples / playground
 
-Multi-file projects and `std/…` imports in docs, examples, and playground (playground still denies files / run / HTTP).
+**Done.** Multi-file and `std/…` coverage in examples and the playground: `examples/std_imports.echo`, `examples/modules_demo/`, playground **std/… imports** demo. Playground still denies files / `run` / HTTP; sibling multi-file projects remain CLI-only.
 
 ### 2.0.9 — series close
 
-README + module-semantics + capability matrix. Public message: **2.0 = path resolution + std modules, not a package manager.**
+**Done.** README + module-semantics + capability matrix close the series. Public message: **2.0 = path resolution + std modules, not a package manager.** No new language syntax; failure model unchanged. Next series: **2.1.x**.
 
 ### Out of 2.0 (still held globally)
 
@@ -1165,7 +1165,7 @@ Package registry / lockfiles / `elang add`, inheritance, generics, async, VM, `t
 
 ## 2.1.x — YAML + LSP stub + std maturity
 
-**Status: drafted (starts after 2.0.9).**
+**Status: drafted (starts after 2.0.9; 2.0.x is closed).**
 
 **2.1** is tooling and deferred scripting polish on the 2.0 module surface — not a registry, not generics, not failure-model rewrite.
 
@@ -1230,7 +1230,7 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, and **1.1.0–1.1.9** are implemented. **2.0.0**–**2.0.7** are implemented; remaining **2.0.x** / **2.1.x** are drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |

@@ -28,7 +28,7 @@ Not a promise list. A gap here is either a hole, a hold, or already closed — c
 Fundamentals are in: typed bindings, control flow (including `switch`), loops, functions/lambdas,
 `const` (including param `const`), destructuring (hash `as` rename and hash rest), exact object types, unions, range expressions as
 lists, lexical scope, closures, collections, strings (including multiline),
-`use` / `use mut`, `watch`, file modules (sibling + nested / relative + `std/…` in **2.0.0**–**2.0.2**), Echo-owned errors,
+`use` / `use mut`, `watch`, file modules (sibling + nested / relative + `std/…` through **2.0.9**), Echo-owned errors,
 nominal `class` + construction + methods/`this` + `interface` (no inheritance).
 
 Host/stdlib and tooling that used to be the main gaps: `args` / `env` / files /
@@ -616,7 +616,7 @@ object identity and may be mutated.
 
 **What it means.** Split a program across files with a defined load model.
 
-**Echo status.** Supported (v0.3 + nested / relative paths in **2.0.0**).
+**Echo status.** Supported (v0.3 + nested / relative / `std/…` through **2.0.9**).
 
 ```echo
 import add from "math";
@@ -634,9 +634,9 @@ executes at most once. Cycles are rejected (E3003). A program with no
 registry, `"math.echo"`, absolute paths, mid-path `..`, dynamic imports,
 re-export, cycle recovery.
 
-**Priority.** Path forms + `std/…` peels + optional require-std frozen through **2.0.7**.
+**Priority.** Path forms + `std/…` peels + require-std + docs closed through **2.0.9**.
 
-**Possible version.** Done through prelude policy (**2.0.7**).
+**Possible version.** Done (**2.0.0**–**2.0.9**). Not a package manager.
 
 ---
 
@@ -1152,7 +1152,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | Promises / async | Don’t touch |
 | JSON | Shipped (0.4+) |
 | Objects as records | Hashes + aliases / exact |
-| Modules | Sibling + nested / relative + `std/…` (**2.0.0**–**2.0.2**); shipped |
+| Modules | Sibling + nested / relative + `std/…` (**2.0.0**–**2.0.9**); shipped |
 | Class / prototype OOP | Excluded |
 
 ### Go
@@ -1162,7 +1162,7 @@ Capability comparison only. Echo is not trying to become these languages.
 | Compile-time types | Decision: runtime-checked |
 | Structs | Partial via aliases / exact |
 | Explicit errors | Closest taste: abort + `*Or` |
-| Packages | Sibling files only |
+| Packages | Sibling + nested files + `std/…`; no registry |
 | `gofmt` / `go test` | Echo has `fmt` / `test` |
 | Goroutines | Don’t touch |
 
@@ -1195,7 +1195,8 @@ thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5);
 HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**);
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
-`std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**).
+`std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
+docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**).
 
 ### Not holes (held)
 

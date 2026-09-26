@@ -1,0 +1,10 @@
+// Multi-file + nested import demo (CLI).
+// Run: elang examples/modules_demo/app.echo
+
+import add from "lib/math";
+import square from "./lib/math";
+import stdOk from "std/meta";
+
+say("2+3 =", add(2, 3));
+say("6^2 =", square(6));
+say("std ready:", stdOk());

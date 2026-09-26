@@ -284,7 +284,8 @@ These are outside the module architecture:
 * re-exporting.
 
 Relative `./` / `../` and nested segments (`"lib/math"`) shipped in **2.0.0**.
-`std/…` install-tree paths shipped in **2.0.2**.
+`std/…` install-tree paths shipped in **2.0.2**; peels + require-std through **2.0.7**; docs / series close **2.0.8**–**2.0.9**.
+No package registry.
 
 No component may grow a hook for the remaining non-goals in order to make an
 import “more convenient.”

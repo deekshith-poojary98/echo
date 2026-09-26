@@ -7,16 +7,21 @@ import sys
 import time
 import traceback
 import builtins
+from pathlib import Path
 from js import playgroundAsk
 from pyodide.ffi import run_sync
 from echo.errors import EchoError, EchoExit, format_diagnostic
+from echo.frontend.ast.nodes import ImportDeclaration
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
+from echo.modules.loader import ModuleLoader
+from echo.modules.resolver import ModuleResolver
 from echo.runtime.host import Host
 from echo.runtime.interpreter import Interpreter
 from echo.semantics.analyzer import SemanticAnalyzer
 
 _orig_sleep = time.sleep
+_STD_ROOT = Path("/home/pyodide/echo/std")
 
 def _capped_sleep(seconds):
     try:
@@ -43,15 +48,26 @@ def _playground_input(prompt=""):
 
 builtins.input = _playground_input
 
+def _has_imports(program):
+    return any(isinstance(statement, ImportDeclaration) for statement in program.statements)
+
 def run_echo(source):
     stdout = io.StringIO()
     old_out, old_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = stdout
+    host = Host(allow_files=False, allow_run=False, allow_http=False, environ={})
     try:
         tokens = Lexer().tokenize(source, filename="<playground>")
         program = Parser(tokens).parse()
-        SemanticAnalyzer().analyze(program)
-        Interpreter(Host(allow_files=False, allow_run=False, allow_http=False, environ={})).execute(program)
+        if _has_imports(program):
+            entry = Path("/tmp/echo-playground/app.echo")
+            entry.parent.mkdir(parents=True, exist_ok=True)
+            entry.write_text(source, encoding="utf-8")
+            loader = ModuleLoader(ModuleResolver(std_root=_STD_ROOT))
+            loader.load(entry, host=host, interpreter=Interpreter(host=host))
+        else:
+            SemanticAnalyzer().analyze(program)
+            Interpreter(host=host).execute(program)
         return json.dumps({"ok": True, "output": stdout.getvalue()})
     except EchoExit as exc:
         payload = {"ok": exc.code == 0, "output": stdout.getvalue()}

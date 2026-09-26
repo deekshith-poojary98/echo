@@ -5,19 +5,14 @@ Echo is a small interpreted scripting language. Types are declared explicitly an
 Docs: [https://deekshith-poojary98.github.io/echo/](https://deekshith-poojary98.github.io/echo/) — includes a [browser playground](https://deekshith-poojary98.github.io/echo/playground).
 
 ```echo
-name: str = "Echo";
-scores: list = [95, 85, 75];
+import add from "lib/math";
+import stdOk from "std/meta";
 
-fn greet(name: str) -> void {
-    say("Hello, ${name}!");
-}
-
-greet(name);
-
-for i: int in 0..10 by 2 {
-    say("Count:", i);
-}
+say("2+3 =", add(2, 3));
+say("std ready:", stdOk());
 ```
+
+**2.0** is path resolution + std modules — nested / relative imports and `import … from "std/…"`. It is **not** a package manager (no registry, lockfiles, or `elang add`).
 
 ## What you get
 
@@ -31,7 +26,7 @@ for i: int in 0..10 by 2 {
 
 ## What you do not
 
-- No class inheritance (`extends`), no generics, no `try` / `catch`, no packages yet
+- No class inheritance (`extends`), no generics, no `try` / `catch`, no package registry
 - Type inference is limited — you still declare types
 - See [Known Limitations](https://deekshith-poojary98.github.io/echo/errors-diagnostics/known-limitations) and [failure model](https://deekshith-poojary98.github.io/echo/failure-model)
 
@@ -68,11 +63,12 @@ elang path/to/file.echo
 ## Layout
 
 - `src/echo/` — frontend, semantics, modules, runtime, CLI
+- `src/echo/std/` — install-tree modules for `import … from "std/…"`
 - `docs/` — VitePress site (this is the docs source)
-- `docs/language-semantics.md` — language contract (v0.2 base; additive through **1.1.x**)
-- `docs/module-semantics.md` — v0.3 module contract
+- `docs/language-semantics.md` — language contract (v0.2 base; additive through **2.0.x**)
+- `docs/module-semantics.md` — v0.3 module contract (+ **2.0** path / std notes)
 - `docs/reference/builtin-inventory.md` — generated prelude list (`python tools/sync_builtins.py`)
-- `*.echo` / `examples/` — sample programs (including `examples/url_and_base64.echo`)
+- `examples/` — sample programs (`std_imports.echo`, `modules_demo/`, …)
 
 ## License / contributing
 

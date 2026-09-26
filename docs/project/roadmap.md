@@ -6,7 +6,7 @@ Public status page for what ships today. The ordered implementation plan lives u
 
 Already in the language or CLI:
 
-- File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**); cycle / resolver diagnostics polish (**2.0.1**); `std/…` install-tree path (**2.0.2**); std peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` (**2.0.7**)
+- File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**); cycle / resolver diagnostics polish (**2.0.1**); `std/…` install-tree path (**2.0.2**); std peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` (**2.0.7**); docs / examples / playground (**2.0.8**); series close (**2.0.9**)
 - REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
@@ -18,9 +18,9 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** is complete. **2.0.0**–**2.0.7** shipped. Remaining **2.0.x** (docs close) and **2.1.x** (YAML + LSP stub) are drafted in [Priority](/project/priority).
+**1.1.x** and **2.0.x** are complete. Next drafted series: **2.1.x** (YAML + LSP stub) in [Priority](/project/priority).
 
-### In progress — 2.0.x modules + stdlib peel
+### Closed — 2.0.x modules + stdlib peel
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -32,10 +32,8 @@ Already in the language or CLI:
 | 2.0.5 | Peel files / JSON / env | done |
 | 2.0.6 | Peel regex + dates | done |
 | 2.0.7 | Prelude policy (core vs std) | done |
-| 2.0.8 | Docs / examples / playground | drafted |
-| 2.0.7 | Prelude policy (core vs std) | drafted |
-| 2.0.8 | Docs / examples / playground | drafted |
-| 2.0.9 | Series close | drafted |
+| 2.0.8 | Docs / examples / playground | done |
+| 2.0.9 | Series close | done |
 
 ### Drafted — 2.1.x YAML + LSP stub
 

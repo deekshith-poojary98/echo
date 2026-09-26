@@ -1,0 +1,23 @@
+// Playground-safe std/… imports (2.0.8).
+// Live httpGet / files stay denied in the browser host (**E2801**).
+
+import stdOk from "std/meta";
+import stdName from "std/meta";
+import urlEncode from "std/url";
+import urlQuery from "std/url";
+import base64Encode from "std/base64";
+import base64Decode from "std/base64";
+import httpOk from "std/http";
+import httpRedirect from "std/http";
+
+say("std ready:", stdOk());
+say("std name:", stdName);
+
+payload: str = "echo lang";
+encoded: str = base64Encode(payload);
+say("base64:", encoded);
+say("roundtrip:", base64Decode(encoded));
+say("encoded space:", urlEncode("a b"));
+say("query:", urlQuery({ q: payload, page: "1" }));
+say("ok status:", httpOk(200));
+say("redirect:", httpRedirect(302));
