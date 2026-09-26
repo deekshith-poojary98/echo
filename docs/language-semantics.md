@@ -605,4 +605,5 @@ v2.0.3 peels the HTTP family into `std/http` (prelude dual-path).
 v2.0.4 peels URL + Base64 into `std/url` and `std/base64` (prelude dual-path).
 v2.0.5 peels files / JSON / env into `std/fs`, `std/json`, and `std/os` (prelude dual-path).
 v2.0.6 peels regex + dates into `std/re` and `std/time` (prelude dual-path).
+v2.0.7 documents core vs peeled prelude and adds optional `--require-std` / `Host.require_std`.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

@@ -380,6 +380,62 @@ def builtin_names() -> frozenset[str]:
     return BUILTIN_NAMES
 
 
+# Names peeled into std/… modules (2.0.3–2.0.6). Still in the default prelude;
+# omitted from the prelude when Host.require_std is True (2.0.7).
+PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
+    {
+        "httpGet",
+        "httpPost",
+        "httpGetOr",
+        "httpPostOr",
+        "httpOk",
+        "httpRedirect",
+        "urlEncode",
+        "urlDecode",
+        "urlJoin",
+        "urlQuery",
+        "base64Encode",
+        "base64Decode",
+        "readFile",
+        "readFileOr",
+        "writeFile",
+        "fileExists",
+        "isDir",
+        "listFiles",
+        "mkdir",
+        "mkdirAll",
+        "removeFile",
+        "removeTree",
+        "copyFile",
+        "pathJoin",
+        "cwd",
+        "parseJson",
+        "parseJsonOr",
+        "writeJson",
+        "env",
+        "envOr",
+        "args",
+        "regexMatch",
+        "regexFind",
+        "regexReplace",
+        "regexSplit",
+        "formatTime",
+        "parseTime",
+        "days",
+        "hours",
+        "minutes",
+    }
+)
+
+
+def core_builtin_names() -> frozenset[str]:
+    return BUILTIN_NAMES - PEELED_STD_BUILTIN_NAMES
+
+
+def prelude_builtin_names(*, require_std: bool = False) -> frozenset[str]:
+    return core_builtin_names() if require_std else BUILTIN_NAMES
+
+
 def builtin_value(name: str) -> EchoBuiltin:
     value = _BUILTIN_VALUES.get(name)
     if value is None:

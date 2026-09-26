@@ -46,11 +46,15 @@ except ImportError:
 
 
 def run_source(source: str, filename: str = "<input>", *, plain: bool = True, host: Host | None = None) -> int:
+    host = host or Host()
     interpreter = Interpreter(host=host)
     try:
         tokens = Lexer().tokenize(source, filename=filename)
         program = Parser(tokens).parse()
-        SemanticAnalyzer().analyze(program)
+        SemanticAnalyzer().analyze(
+            program,
+            scope=SemanticAnalyzer.prelude_scope(program.location, host),
+        )
         interpreter.execute(program)
         return 0
     except EchoExit as exc:
@@ -61,7 +65,8 @@ def run_source(source: str, filename: str = "<input>", *, plain: bool = True, ho
         return 1
 
 
-def check_file(source_path: str, plain: bool = False) -> int:
+def check_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
+    host = host or Host()
     file_path = Path(source_path).expanduser().resolve()
     if not file_path.exists() or not file_path.is_file():
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
@@ -71,9 +76,12 @@ def check_file(source_path: str, plain: bool = False) -> int:
         tokens = Lexer().tokenize(source, filename=str(file_path))
         program = Parser(tokens).parse()
         if _has_imports(program):
-            ModuleLoader().check(file_path)
+            ModuleLoader().check(file_path, host=host)
         else:
-            SemanticAnalyzer().analyze(program)
+            SemanticAnalyzer().analyze(
+                program,
+                scope=SemanticAnalyzer.prelude_scope(program.location, host),
+            )
         return 0
     except EchoError as exc:
         _print_error(exc, _error_source(exc, source), plain)
@@ -81,6 +89,7 @@ def check_file(source_path: str, plain: bool = False) -> int:
 
 
 def run_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
+    host = host or Host()
     file_path = Path(source_path).expanduser().resolve()
     if not file_path.exists() or not file_path.is_file():
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
@@ -93,7 +102,10 @@ def run_file(source_path: str, plain: bool = False, host: Host | None = None) ->
         if _has_imports(program):
             ModuleLoader().load(file_path, host=host, interpreter=interpreter)
         else:
-            SemanticAnalyzer().analyze(program)
+            SemanticAnalyzer().analyze(
+                program,
+                scope=SemanticAnalyzer.prelude_scope(program.location, host),
+            )
             interpreter.execute(program)
         return 0
     except EchoExit as exc:
@@ -189,6 +201,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("source", nargs="?", help="Path to .echo source file")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
     parser.add_argument(
+        "--require-std",
+        action="store_true",
+        help="Hide peeled stdlib names from the prelude; import them from std/… instead",
+    )
+    parser.add_argument(
         "-V",
         "--version",
         action="store_true",
@@ -206,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.version:
         print(f"Echo {__version__}")
         return 0
-    host = Host(args=list(program_args))
+    host = Host(args=list(program_args), require_std=bool(args.require_std))
     if not args.source:
         return run_repl(plain=args.plain, host=host)
     return run_file(args.source, plain=args.plain, host=host)
@@ -216,7 +233,7 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
     host = host or Host()
     interpreter = Interpreter(host=host)
     env = Environment()
-    session_scope = SemanticAnalyzer.module_scope(SourceLocation(1, 1, "<repl>"))
+    session_scope = SemanticAnalyzer.prelude_scope(SourceLocation(1, 1, "<repl>"), host)
     loader = ModuleLoader()
     print(f"Echo {__version__}")
     buffer: list[str] = []
@@ -261,14 +278,18 @@ def _run_repl_snippet(
     tokens = Lexer().tokenize(source, filename="<repl>")
     program = Parser(tokens).parse()
     snippet_scope = session_scope.copy()
-    dependencies = _repl_import_dependencies(program, loader)
+    dependencies = _repl_import_dependencies(program, loader, interpreter.host)
     SemanticAnalyzer().analyze(program, dependencies=dependencies, scope=snippet_scope)
     _repl_bind_imports(program, loader, env, interpreter.host)
     interpreter.execute(program, env)
     return snippet_scope
 
 
-def _repl_import_dependencies(program: Program, loader: ModuleLoader) -> dict[str, ModuleSymbols]:
+def _repl_import_dependencies(
+    program: Program,
+    loader: ModuleLoader,
+    host: Host,
+) -> dict[str, ModuleSymbols]:
     if not _has_imports(program):
         return {}
     importer = Path.cwd() / "<repl>"
@@ -277,10 +298,9 @@ def _repl_import_dependencies(program: Program, loader: ModuleLoader) -> dict[st
         if not isinstance(statement, ImportDeclaration) or statement.module in dependencies:
             continue
         path = loader.resolver.resolve(importer, statement.module)
-        module = loader.check(path)
+        module = loader.check(path, host=host)
         dependencies[statement.module] = SemanticAnalyzer().collect_symbols(module.ast)
     return dependencies
-
 
 def _repl_bind_imports(program: Program, loader: ModuleLoader, env: Environment, host: Host) -> None:
     if not _has_imports(program):
@@ -365,17 +385,23 @@ def _main_check(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="echo check", description="Analyze Echo source files without running them")
     parser.add_argument("paths", nargs="*", help="Files or directories of .echo sources")
     parser.add_argument("--plain", action="store_true", help="Disable Rich styling and use plain text output")
+    parser.add_argument(
+        "--require-std",
+        action="store_true",
+        help="Hide peeled stdlib names from the prelude; import them from std/… instead",
+    )
     args = parser.parse_args(argv)
     if not args.paths:
         parser.print_help()
         return 2
+    host = Host(require_std=bool(args.require_std))
     status = 0
     for raw_path in args.paths:
         collected = _collect_echo_files(raw_path, args.plain)
         if isinstance(collected, int):
             return collected
         for file_path in collected:
-            code = check_file(str(file_path), plain=args.plain)
+            code = check_file(str(file_path), plain=args.plain, host=host)
             if code != 0:
                 status = code
     return status
@@ -384,15 +410,22 @@ def _main_check(argv: list[str]) -> int:
 def _main_builtins(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         prog="echo builtins",
-        description="List Echo prelude builtin names (from builtin_names())",
+        description="List Echo prelude builtin names",
     )
     parser.add_argument(
         "--count",
         action="store_true",
         help="Print only the number of builtins",
     )
+    parser.add_argument(
+        "--require-std",
+        action="store_true",
+        help="List only core prelude names (exclude peeled std/… families)",
+    )
     args = parser.parse_args(argv)
-    names = sorted(builtin_names())
+    from echo.runtime.builtins import prelude_builtin_names
+
+    names = sorted(prelude_builtin_names(require_std=bool(args.require_std)))
     if args.count:
         print(len(names))
         return 0

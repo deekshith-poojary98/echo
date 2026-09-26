@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.7
+
+Prelude policy (core vs std). Eighth **2.0** slice. Failure model unchanged. Default prelude unchanged.
+
+- Document **core** prelude vs peeled **std/…** families (`PEELED_STD_BUILTIN_NAMES`)
+- Optional `Host.require_std` / CLI `--require-std` hides peeled names from the prelude; import them from `std/…` instead
+- `elang check --require-std` and `elang builtins --require-std` honor the same policy
+- Install-tree `std/…` modules always see the full builtin set so dual-path re-exports keep working
+- Method form on values (e.g. `"x".regexMatch(...)`) is unchanged
+
 ## 2.0.6
 
 Peel regex + dates into `std/re` and `std/time`. Seventh **2.0** slice. Failure model unchanged.

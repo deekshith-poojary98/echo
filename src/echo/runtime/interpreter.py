@@ -163,6 +163,7 @@ from echo.runtime.builtins import (
     do_write_file,
     do_write_json,
     do_zip,
+    prelude_builtin_names,
     require_int_convertible,
     resolve_builtin_args,
 )
@@ -202,8 +203,15 @@ class Interpreter:
     def __init__(self, host: Host | None = None, test_session: TestSession | None = None) -> None:
         self.host = host or Host()
         self.test_session = test_session
+        self.prelude_names = prelude_builtin_names(require_std=self.host.require_std)
         self._class_visibility_stack: list[int] = []
         self._watched: list[tuple[Environment, str]] = []
+
+    def use_full_prelude(self) -> None:
+        self.prelude_names = BUILTIN_NAMES
+
+    def use_host_prelude(self) -> None:
+        self.prelude_names = prelude_builtin_names(require_std=self.host.require_std)
 
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self.global_env = env or Environment()
@@ -515,7 +523,7 @@ class Interpreter:
             function = env.resolve_function(expression.name)
             if function is not None:
                 return function
-            if expression.name in BUILTIN_NAMES:
+            if expression.name in self.prelude_names:
                 return builtin_value(expression.name)
             raise EchoNameError(f"Variable '{expression.name}' is not defined", expression.location, code="E2002")
         if isinstance(expression, ListLiteral):
@@ -754,7 +762,7 @@ class Interpreter:
             function = env.resolve_function(callee.name)
             if function is not None:
                 return self._call_user_function(function, expression.arguments, env, expression.location)
-            if callee.name in BUILTIN_NAMES:
+            if callee.name in self.prelude_names:
                 return self._call_builtin(callee.name, expression.arguments, env, None, expression.location, None)
             record = env.resolve_class(callee.name)
             if record is not None:

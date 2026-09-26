@@ -757,7 +757,9 @@ No package manager or package-resolution semantics.
 
 ### Standard-library module paths
 
-`import … from "std/…"` resolves from the Echo install tree (**2.0.2**). Seed module: `std/meta`. Peeled families through **2.0.6**: `std/http`, `std/url`, `std/base64`, `std/fs`, `std/json`, `std/os`, `std/re`, `std/time` (prelude dual-path until **2.0.7**). No third-party package paths.
+`import … from "std/…"` resolves from the Echo install tree (**2.0.2**). Seed module: `std/meta`. Peeled families through **2.0.6**: `std/http`, `std/url`, `std/base64`, `std/fs`, `std/json`, `std/os`, `std/re`, `std/time`.
+
+**Prelude policy (**2.0.7**):** by default those peeled names also remain in the prelude (dual-path). With `Host.require_std` / `elang --require-std`, peeled names are omitted from the prelude and must be imported from `std/…`. Core prelude names (`say`, `type`, list helpers, …) always stay. Method form on values is unchanged. No third-party package paths.
 
 ### Dynamic imports
 

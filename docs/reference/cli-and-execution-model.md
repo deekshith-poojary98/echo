@@ -30,6 +30,16 @@ elang program.echo --plain
 
 `--plain` drops Rich panels for simple text diagnostics.
 
+### Require std imports
+
+```bash
+elang --require-std program.echo
+elang check --require-std program.echo
+elang builtins --require-std
+```
+
+Hides peeled stdlib names (`httpGet`, `readFile`, `regexMatch`, …) from the prelude so programs must `import … from "std/…"`. Default remains dual-path (prelude + `std/…`). Core names like `say` stay. See module semantics (**2.0.7**).
+
 ### Version
 
 ```bash
