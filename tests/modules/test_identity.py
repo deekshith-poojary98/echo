@@ -7,8 +7,8 @@ from echo.modules.graph import ModuleGraph
 from echo.modules.resolver import ModuleResolver
 from modules.harness import assert_success, run_entry, write_modules
 
-# Specifiers passed to ModuleResolver are only the v0.3 bare name, e.g. "math",
-# except for the explicit invalid-specifier cases below.
+# Specifiers may be bare names, "./" / "../" prefixes, or nested segments (2.0.0).
+# Explicit ".echo" suffixes and absolute paths remain invalid.
 
 
 def _resolve(importer: Path, name: str) -> Path:
@@ -134,9 +134,9 @@ def test_missing_module_is_not_found(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "specifier",
-    ("math.echo", "./math", "../math", "lib/math"),
+    ("math.echo", "/tmp/math", "lib/../math", "math/", ""),
 )
-def test_alternate_specifier_is_invalid(tmp_path: Path, specifier: str) -> None:
+def test_invalid_specifier_is_rejected(tmp_path: Path, specifier: str) -> None:
     write_modules(
         tmp_path,
         {
@@ -149,4 +149,17 @@ def test_alternate_specifier_is_invalid(tmp_path: Path, specifier: str) -> None:
         _resolve(tmp_path / "app.echo", specifier)
     assert isinstance(caught.value, EchoError)
     assert caught.value.code == "E3001"
-    assert specifier in caught.value.message
+
+
+def test_dot_slash_and_nested_specifiers_resolve(tmp_path: Path) -> None:
+    write_modules(
+        tmp_path,
+        {
+            "math.echo": "x: int = 1;",
+            "lib/math.echo": "x: int = 1;",
+            "app.echo": "x: int = 1;",
+        },
+    )
+    app = tmp_path / "app.echo"
+    assert _resolve(app, "./math") == (tmp_path / "math.echo").resolve()
+    assert _resolve(app, "lib/math") == (tmp_path / "lib" / "math.echo").resolve()

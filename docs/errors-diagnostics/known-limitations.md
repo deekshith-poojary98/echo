@@ -1,10 +1,10 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **1.1.9**, the language includes modules, CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), Base64 helpers (`base64Encode` / `base64Decode`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **2.0.0**, the language includes modules (sibling + nested / relative paths), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`), Base64 helpers (`base64Encode` / `base64Decode`), `watch` location / abort dumps, documented **E2801** / **E2850**–**E2854** codes, playground host-policy docs, and a generated builtin inventory (`tools/sync_builtins.py`). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
-- Core syntax and v0.3 file modules (`import` / `export`)
+- Core syntax and file modules (`import` / `export`; nested / relative paths in **2.0.0**)
 - Host/stdlib, REPL, `check` / `test` / `fmt` / `lint`
 - 0.6–0.7: lambdas, collection helpers, `const`, destructuring, exact objects, unions, `switch`, range-as-value
 - 0.8: `class` + `new { ... }`, methods + `this`, unbound/type methods, `interface`, optional `implements`
@@ -29,6 +29,7 @@ What Echo still does **not** do. As of **1.1.9**, the language includes modules,
 - 1.1.7: `base64Encode` / `base64Decode` (**E2854**)
 - 1.1.8: `elang builtins` (+ `-V` / help epilog)
 - 1.1.9: series close (README / examples / playground docs for full **1.1** surface)
+- 2.0.0: relative / nested import paths (`"./math"`, `"lib/math"`, `"../shared"`)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -49,6 +50,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only)
 - HTTP is thin (no cookies/session client, no multipart); playground denies HTTP (`allow_http=False`)
 - No LSP (the editor extension runs CLI tasks into the Problems panel; that is not a language server)
+- No package registry or `std/…` search path yet (nested / relative file paths shipped in **2.0.0**; std peel is **2.0.2+**)
 
 ## Why this page exists
 

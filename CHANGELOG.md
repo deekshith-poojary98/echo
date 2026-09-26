@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0
+
+Relative / nested import paths. Opens the **2.0.x** series (modules beyond siblings + stdlib peel). Selective `import` / explicit `export` unchanged. Failure model unchanged. No package registry.
+
+- Specifiers may use `"./…"`, `"../…"`, and nested segments (`"lib/math"` → `lib/math.echo` beside the importer)
+- Bare sibling names (`"math"`) stay valid; `.echo` is still implied and must not appear in the specifier
+- Absolute paths, mid-path `..`, empty segments, and trailing `/` are **E3001**; missing files remain **E3002**
+- Module identity remains the canonical absolute file path (bare and `./` forms that resolve to the same file are one module)
+
 ## 1.1.9
 
 Series close (docs / examples). Closes the **1.1.x** series. No new language syntax. Failure model unchanged.

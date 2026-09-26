@@ -527,6 +527,7 @@ One source file is one program. There is no module system in v0.2.
 
 v0.3 adds a file-based module system on top of this pipeline. A program
 that contains no `import` keeps the v0.2 execution model unchanged.
+**2.0.0** extends specifiers with nested segments and leading `./` / `../`.
 See `docs/module-semantics.md`.
 
 v0.4 adds host and standard-library builtins (`args`, `env`, files, JSON,
@@ -597,4 +598,5 @@ v1.1.6 adds `tools/sync_builtins.py` and the generated builtin inventory page.
 v1.1.7 adds `base64Encode` / `base64Decode` (**E2854**).
 v1.1.8 adds `elang builtins` and tightens CLI help / `-V`.
 v1.1.9 closes **1.1.x** with a README / examples / playground docs pass.
+v2.0.0 extends module specifiers with nested segments and leading `./` / `../`.
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

@@ -80,7 +80,7 @@ One process is one session: variables, functions, and type aliases persist acros
 
 Continuation: keeps reading while `{` is unclosed or a triple-quoted string is open; shows `... ` until complete. One-line `if true { say(1); }` works.
 
-`import name from "module";` resolves sibling `.echo` files from the cwd, loads with the module loader, merges bindings into the session. Re-import does not re-initialize the module.
+`import name from "module";` resolves `.echo` files relative to the cwd (sibling, nested, or `./` / `../` forms), loads with the module loader, merges bindings into the session. Re-import does not re-initialize the module.
 
 Empty lines at a fresh `echo> ` are ignored. Syntax / semantic / runtime errors print an Echo diagnostic and return to the prompt — no process kill, no Python traceback, no drop of earlier successful bindings. Failed analysis does not execute. A runtime error does not roll back the interpreter (`x: int = 1; bad();` may leave `x`).
 

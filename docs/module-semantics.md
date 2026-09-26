@@ -436,7 +436,8 @@ The module system does not silently overwrite existing bindings.
 
 ## 13. Module Resolution
 
-The smallest v0.3 module resolver supports relative module names.
+The resolver supports relative module names beside the importing file,
+including nested segments and leading `./` / `../`.
 
 Given:
 
@@ -444,30 +445,39 @@ Given:
 # project/
 #   app.echo
 #   math.echo
+#   lib/
+#     util.echo
 ```
 
-this:
+these:
 
 ```echo
 import add from "math";
+import add from "./math";
+import id from "lib/util";
+import id from "./lib/util";
 ```
 
-resolves `math` relative to the importing file:
+resolve relative to the importing file:
 
 ```text
 project/math.echo
+project/lib/util.echo
 ```
+
+From a nested importer, `"../shared"` walks up one directory.
 
 The `.echo` extension is implied and is not written in the specifier.
 
-The v0.3 specifier is a bare relative name. Given an import from `"math"`, the resolver looks only beside the importing file for `math.echo`.
+Valid specifier rules (2.0.0):
 
-These specifier forms are not part of v0.3:
+* one or more `/`-separated segments;
+* optional leading `./` or `../` (only at the start; mid-path `..` is invalid);
+* each name segment matches `[A-Za-z_][A-Za-z0-9_]*`;
+* no absolute paths, drive letters, backslashes, empty segments, or trailing `/`;
+* no explicit `.echo` suffix in the specifier.
 
-* `"math.echo"`
-* `"./math"`
-* `"../math"`
-* subdirectory paths such as `"lib/math"`
+Missing files are **E3002**. Invalid specifier shape is **E3001**.
 
 The resolver operates on the importing module’s location.
 
@@ -479,9 +489,10 @@ A module’s identity is its resolved absolute path.
 
 Different imports that resolve to the same absolute file identify the same module.
 
-v0.3 has a single specifier form, so this is demonstrated when two modules import the same sibling name and therefore resolve to the same file. Identity is the file, not the specifier string.
+Example: `"math"` and `"./math"` from the same importer are one module.
+Identity is the file, not the specifier string.
 
-Tests must not invent additional specifier spellings, symbolic-link aliases, or extra filesystem names to exercise this rule. Whether two filesystem names that refer to the same inode identify one module is unspecified.
+Tests must not invent symbolic-link aliases or extra filesystem names to exercise this rule. Whether two filesystem names that refer to the same inode identify one module is unspecified.
 
 The absolute resolved path is therefore the canonical module identity used for:
 
@@ -728,12 +739,14 @@ math.add();
 
 ### Alternate import specifier spellings
 
-Not part of v0.3:
+Still not supported:
 
 * an explicit `.echo` suffix in the specifier;
-* `./` or `../` prefixes;
-* subdirectory or package-like paths;
+* absolute paths or drive letters;
+* mid-path `..` (only leading `../` is allowed);
 * extra filesystem names or symbolic links as a way to spell the same module.
+
+Relative `./` / `../` prefixes and nested segments (`"lib/math"`) shipped in **2.0.0**.
 
 ### Packages
 
