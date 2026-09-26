@@ -7,7 +7,7 @@ Public status page for what ships today. The ordered implementation plan lives u
 Already in the language or CLI:
 
 - File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**); cycle / resolver diagnostics polish (**2.0.1**); `std/…` install-tree path (**2.0.2**); std peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` (**2.0.7**); docs / examples / playground (**2.0.8**); series close (**2.0.9**)
-- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`, `echo lsp`
+- REPL (`echo` with no file), `echo check`, `echo test`, `echo fmt`, `echo lint`, `echo builtins`, `echo std`, `echo lsp`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
@@ -18,7 +18,7 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** and **2.0.x** are complete. **2.1.0**–**2.1.6** shipped. Remaining **2.1.x** is drafted in [Priority](/project/priority).
+**1.1.x** and **2.0.x** are complete. **2.1.0**–**2.1.7** shipped. Remaining **2.1.x** is drafted in [Priority](/project/priority).
 
 ### In progress — 2.1.x YAML + LSP stub
 
@@ -31,7 +31,7 @@ Already in the language or CLI:
 | 2.1.4 | Editor LSP client | done |
 | 2.1.5 | Debugger polish beyond `watch` | done |
 | 2.1.6 | Further std peel | done |
-| 2.1.7 | CLI std inventory | drafted |
+| 2.1.7 | CLI std inventory | done |
 | 2.1.8 | Docs generator expansion | drafted |
 | 2.1.9 | Series close | drafted |
 

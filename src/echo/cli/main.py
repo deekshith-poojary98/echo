@@ -201,12 +201,14 @@ def main(argv: list[str] | None = None) -> int:
         return _main_lint(raw[1:])
     if raw[:1] == ["builtins"]:
         return _main_builtins(raw[1:])
+    if raw[:1] == ["std"]:
+        return _main_std(raw[1:])
     if raw[:1] == ["lsp"]:
         return _main_lsp(raw[1:])
     parser = argparse.ArgumentParser(
         description="Run an Echo source file",
         epilog=(
-            "Subcommands: check, test, fmt, lint, builtins, lsp.\n"
+            "Subcommands: check, test, fmt, lint, builtins, std, lsp.\n"
             "Use 'elang <subcommand> -h' for details. "
             "'elang --version' prints the interpreter version."
         ),
@@ -446,6 +448,46 @@ def _main_builtins(argv: list[str]) -> int:
         return 0
     for name in names:
         print(name)
+    return 0
+
+
+def _main_std(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="echo std",
+        description="List install-tree std/… modules (pairs with echo builtins)",
+    )
+    parser.add_argument(
+        "--count",
+        action="store_true",
+        help="Print only the number of std modules",
+    )
+    parser.add_argument(
+        "--exports",
+        action="store_true",
+        help="Also list each module's export names",
+    )
+    parser.add_argument(
+        "--path",
+        action="store_true",
+        help="Print the resolved std root directory and exit",
+    )
+    args = parser.parse_args(argv)
+    from echo.std import list_std_inventory, list_std_modules, resolve_std_root
+
+    if args.path:
+        print(resolve_std_root())
+        return 0
+    if args.count:
+        print(len(list_std_modules()))
+        return 0
+    if args.exports:
+        for specifier, _path, exports in list_std_inventory():
+            print(specifier)
+            for name in exports:
+                print(f"  {name}")
+        return 0
+    for specifier in list_std_modules():
+        print(specifier)
     return 0
 
 

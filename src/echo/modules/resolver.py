@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
 from echo.errors import ModuleResolveError
-from echo.std import std_root as default_std_root
+from echo.std import resolve_std_root
+
 
 _SEGMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _DRIVE = re.compile(r"^[A-Za-z]:")
@@ -13,12 +13,7 @@ _DRIVE = re.compile(r"^[A-Za-z]:")
 
 class ModuleResolver:
     def __init__(self, std_root: str | Path | None = None) -> None:
-        if std_root is not None:
-            root = Path(std_root)
-        else:
-            env = os.environ.get("ECHO_STD_ROOT")
-            root = Path(env) if env else default_std_root()
-        self.std_root = root.expanduser().resolve()
+        self.std_root = resolve_std_root(std_root)
 
     def resolve(self, importer_path: str | Path, module_name: str) -> Path:
         parts = self._parse_specifier(module_name)

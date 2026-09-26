@@ -2,7 +2,7 @@
   "name": "echo-syntax-highlighter",
   "displayName": "Echo Syntax Highlighter",
   "description": "Syntax highlighting, LSP client (elang lsp), tasks, and Problems matchers for Echo (.echo files).",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "publisher": "deekshith-poojary98",
   "license": "MIT",
   "icon": "images/icon.png",

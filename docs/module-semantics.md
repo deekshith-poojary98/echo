@@ -764,6 +764,8 @@ No package manager or package-resolution semantics.
 
 **Prelude policy (**2.0.7**):** by default those peeled names also remain in the prelude (dual-path). With `Host.require_std` / `elang --require-std`, peeled names are omitted from the prelude and must be imported from `std/…`. Core prelude names (`say`, `type`, list helpers, …) always stay. Method form on values is unchanged. No third-party package paths.
 
+**Inventory (**2.1.7**):** `elang std` lists install-tree modules (`--exports` for export names; `--path` prints the resolved std root / `ECHO_STD_ROOT`). Pairs with `elang builtins`.
+
 Docs / examples / playground coverage shipped in **2.0.8**; series closed in **2.0.9**.
 
 ### Dynamic imports

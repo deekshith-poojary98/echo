@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.7
+
+CLI std inventory. Eighth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `elang std` lists install-tree `std/…` modules (honors `ECHO_STD_ROOT`)
+- `--count`, `--exports` (export names per module), `--path` (resolved std root)
+- Pairs with `elang builtins`; help epilog includes `std`
+
 ## 2.1.6
 
 Further std peel. Seventh **2.1** slice. Failure model unchanged. No new language syntax.

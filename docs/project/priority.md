@@ -1180,7 +1180,7 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 | 2.1.4 | Editor extension: LSP client (Problems matchers remain fallback) | done |
 | 2.1.5 | Debugger polish beyond `watch` (abort stack / `trace`) | done |
 | 2.1.6 | Further std peel / leftover modules | done |
-| 2.1.7 | CLI: `elang std` (or equivalent) listing std modules | drafted |
+| 2.1.7 | CLI: `elang std` (or equivalent) listing std modules | done |
 | 2.1.8 | Docs generator expansion (module + std inventory) | drafted |
 | 2.1.9 | Series close (README / matrix / examples) | drafted |
 
@@ -1223,7 +1223,11 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 
 ### 2.1.7 — CLI std inventory
 
-`elang std` (or similar) lists std modules; pairs with `elang builtins`.
+**Done.** `elang std` lists install-tree `std/…` modules; pairs with `elang builtins`.
+
+- Default: one `std/name` per line (sorted); honors `ECHO_STD_ROOT`
+- `--count`, `--exports` (indented export names), `--path` (resolved std root)
+- Top-level help epilog includes `std`
 
 ### 2.1.8 — docs generator expansion
 
@@ -1239,7 +1243,7 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.0**–**2.1.6** are implemented; remaining **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.0**–**2.1.7** are implemented; remaining **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |

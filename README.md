@@ -22,7 +22,7 @@ say("std ready:", stdOk());
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
 - Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
 - Thin scripting stdlib via prelude and/or `std/…` (`std/fs`, `std/json`, `std/os`, `std/re`, `std/time`, `std/http`, `std/url`, `std/base64`, `std/yaml`); optional `--require-std` hides peeled prelude names; host-gated where noted
-- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`, `lsp`
+- CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`, `std`, `lsp`
 
 ## What you do not
 
@@ -44,6 +44,8 @@ python3 -m pipx ensurepath
 pipx install echolang
 elang --version
 elang builtins --count
+elang std
+elang std --exports
 ```
 
 From GitHub instead of PyPI:
