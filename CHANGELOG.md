@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.9
+
+Series close (docs / examples). Closes the **2.1.x** series. No new language syntax. Failure model unchanged.
+
+- Public message: **2.1 = YAML + LSP stub + std maturity on 2.0 modules**
+- README + matrix + roadmap / known limitations mark **2.1.0–2.1.9** complete
+- Example `examples/yaml_and_math.echo` (playground-safe YAML + `std/math` + `trace`); playground **YAML & math** demo
+- Mini-programs + playground page note the full **2.1** surface
+
 ## 2.1.8
 
 Docs generator expansion. Ninth **2.1** slice. Failure model unchanged. No new language syntax.

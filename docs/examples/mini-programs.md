@@ -80,6 +80,14 @@ Uses `urlQuery` / `urlJoin`, `base64Encode` / `base64Decode`, and `httpOk` / `ht
 elang examples/std_imports.echo
 ```
 
+### YAML and math
+
+`examples/yaml_and_math.echo` round-trips YAML via `"std/yaml"`, uses `"std/math"`, and shows `trace` (playground-safe). Also in the [playground](/playground?example=yaml).
+
+```bash
+elang examples/yaml_and_math.echo
+```
+
 ### Nested modules (CLI)
 
 `examples/modules_demo/` shows nested + `./` imports beside `std/meta`:
@@ -101,5 +109,6 @@ std ready: true
 - [Hashes](/core-concepts/hashes)
 - [Built-in Methods](/standard-library/built-in-methods)
 - [Builtin Inventory](/reference/builtin-inventory)
+- [Std Inventory](/reference/std-inventory)
 - [Module semantics](/module-semantics)
 - [Playground](/playground)

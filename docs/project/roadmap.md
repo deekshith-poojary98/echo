@@ -15,12 +15,14 @@ Already in the language or CLI:
 - Compound assign on class members (`this.x += 1`) (0.9.0); `priv` fields/methods (0.9.1); positional construction `Point(3, 4)` (0.9.2); deep `clone()` (0.9.3); named `format` placeholders (0.9.4); class properties `get`/`set` (0.9.5); `mkdirAll` / `removeTree` (0.9.6); regex builtins (0.9.7); union narrowing in `if type(...)` (0.9.8); thin dates `formatTime` / `parseTime` / duration helpers (0.9.9)
 - Stable release **1.0.0** (same surface as 0.9.9)
 - **1.1.x** complete (**1.1.0–1.1.9**): HTTP + URL + Base64, watch/abort polish, error-code docs, playground host policy, builtin sync, `elang builtins`, series docs/examples
+- **2.0.x** complete (**2.0.0–2.0.9**): path resolution + `std/…` peels (not a package manager)
+- **2.1.x** complete (**2.1.0–2.1.9**): YAML + thin LSP stub + std maturity on 2.0 modules
 
 ## Next
 
-**1.1.x** and **2.0.x** are complete. **2.1.0**–**2.1.8** shipped. Remaining **2.1.x** is drafted in [Priority](/project/priority).
+**1.1.x**, **2.0.x**, and **2.1.x** are complete. Held work (package registry, full LSP-as-product, generics, …) stays in [Priority](/project/priority) until a new series starts.
 
-### In progress — 2.1.x YAML + LSP stub
+### Closed — 2.1.x YAML + LSP stub + std maturity
 
 | Version | Item | Status |
 | --- | --- | --- |
@@ -33,7 +35,9 @@ Already in the language or CLI:
 | 2.1.6 | Further std peel | done |
 | 2.1.7 | CLI std inventory | done |
 | 2.1.8 | Docs generator expansion | done |
-| 2.1.9 | Series close | drafted |
+| 2.1.9 | Series close | done |
+
+Public message: **2.1 = YAML + LSP stub + std maturity on 2.0 modules.**
 
 ### Closed — 2.0.x modules + stdlib peel
 

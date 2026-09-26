@@ -1186,7 +1186,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / registry (after **2.1**); `std/…` search path shipped **2.0.2**
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. Full LSP-as-product (after **2.1**; nested paths **2.0.0**, `std/…` **2.0.2**, YAML+LSP stub drafted **2.1**)
+4. Full LSP-as-product (after **2.1**; stub shipped **2.1.2**–**2.1.4**)
 
 ### Shipped that used to be holes
 
@@ -1198,7 +1198,7 @@ HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-co
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
 `std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
 docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**);
-`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**); abort `Stack:` + `trace` (**2.1.5**); further std peel math/random/now/wait/run (**2.1.6**); `elang std` inventory (**2.1.7**); generated Std Inventory docs (**2.1.8**).
+`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**); abort `Stack:` + `trace` (**2.1.5**); further std peel math/random/now/wait/run (**2.1.6**); `elang std` inventory (**2.1.7**); generated Std Inventory docs (**2.1.8**); **2.1.x** series close (**2.1.9**).
 
 ### Not holes (held)
 

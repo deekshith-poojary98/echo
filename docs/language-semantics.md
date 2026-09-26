@@ -640,4 +640,5 @@ v2.1.5 adds abort `Stack:` dumps and a small `trace` helper (no stepper).
 v2.1.6 peels math / random / `now` / `wait` / `run` into `std/math`, `std/random`, and extended `std/time` / `std/os`.
 v2.1.7 adds `elang std` to list install-tree `std/…` modules (`--exports` / `--count` / `--path`).
 v2.1.8 extends `tools/sync_builtins.py` to generate the Std Inventory docs page.
+v2.1.9 closes the **2.1.x** series (YAML + LSP stub + std maturity on 2.0 modules).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

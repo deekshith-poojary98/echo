@@ -4,7 +4,7 @@ TextMate grammar, **LSP client** (`elang lsp`), and **editor tasks** for **Echo*
 
 **Live** hover, go-to-definition, and analyzer diagnostics come from `elang lsp` (**2.1.4**). **Echo: Check / Lint / Test** tasks and problem matchers remain for on-demand CLI runs and as a fallback if the language server does not start.
 
-Tracks Echo **v2.1.8**.
+Tracks Echo **v2.1.9**.
 
 ## Install
 
