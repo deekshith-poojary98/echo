@@ -215,6 +215,114 @@ switch v {
     assert result.lines == ["public", "false"]
 
 
+def test_priv_method_via_dynamic_is_e3215():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+    }
+
+    priv fn reveal(this) -> str {
+        return this.secret;
+    }
+}
+
+v: dynamic = Vault {};
+say(v.reveal());
+"""
+    )
+    assert result.exit_code != 0
+    assert "private" in result.output.lower() or "E3215" in result.output
+
+
+def test_priv_method_via_union_is_e3215():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+    }
+
+    priv fn reveal(this) -> str {
+        return this.secret;
+    }
+}
+
+class Other {
+    new {
+        n: int = 1;
+    }
+}
+
+v: Vault | Other = Vault {};
+say(v.reveal());
+"""
+    )
+    assert result.exit_code != 0
+    assert "private" in result.output.lower() or "E3215" in result.output
+
+
+def test_priv_function_field_call_is_e3215():
+    result = run_echo(
+        """
+class Box {
+    new {
+        priv handler: fn() -> str;
+    }
+}
+
+b: Box = Box { handler: fn() -> str { return "leaked"; } };
+say(b.handler());
+"""
+    )
+    assert result.exit_code != 0
+    assert "private" in result.output.lower() or "E3215" in result.output
+
+
+def test_priv_function_field_call_via_dynamic_is_e3215():
+    result = run_echo(
+        """
+class Box {
+    new {
+        priv handler: fn() -> str;
+    }
+}
+
+b: dynamic = Box { handler: fn() -> str { return "leaked"; } };
+say(b.handler());
+"""
+    )
+    assert result.exit_code != 0
+    assert "private" in result.output.lower() or "E3215" in result.output
+
+
+def test_bound_priv_method_returned_from_inside_still_callable():
+    result = run_echo(
+        """
+class Vault {
+    new {
+        priv secret: str = "s3cret";
+    }
+
+    priv fn reveal(this) -> str {
+        return this.secret;
+    }
+
+    fn getter(this) -> fn() -> str {
+        return this.reveal;
+    }
+}
+
+v: Vault = Vault {};
+f: fn() -> str = v.getter();
+say(f());
+"""
+    )
+    assert result.exit_code == 0
+    assert result.output.strip() == "s3cret"
+
+
 def test_hash_rest_includes_priv_fields_inside_method():
     result = run_echo(
         """
