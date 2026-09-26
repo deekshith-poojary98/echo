@@ -632,11 +632,11 @@ executes at most once. Cycles are rejected (E3003). A program with no
 
 **Limitations.** Not supported: aliases, `import *`, namespaces, packages /
 registry, `"math.echo"`, absolute paths, mid-path `..`, dynamic imports,
-re-export, cycle recovery. Further builtin peels into `std/…` continue in **2.0.6+**.
+re-export, cycle recovery. Prelude policy / optional require-std is **2.0.7**.
 
-**Priority.** Path forms frozen in 2.0.0; `std/…` search path in 2.0.2; peels through **2.0.5**; peel continues.
+**Priority.** Path forms frozen in 2.0.0; `std/…` search path in 2.0.2; peels through **2.0.6**.
 
-**Possible version.** Done for relative/nested paths (2.0.0), `std/…` (2.0.2), and peels through `std/fs` / `std/json` / `std/os` (2.0.3–2.0.5).
+**Possible version.** Done for relative/nested paths (2.0.0), `std/…` (2.0.2), and peels through `std/re` / `std/time` (2.0.3–2.0.6).
 
 ---
 
@@ -1195,7 +1195,7 @@ thin UTC dates (`formatTime` / `parseTime`, 0.9.9),
 destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), methods + `this` (0.8.1), interfaces (0.8.2), `new { ... }` fields (0.8.3), field defaults (0.8.4), unbound methods (0.8.5), type methods (0.8.6), optional `implements` (0.8.7); docs release pass (0.8.8); first PyPI release (0.8.9); 0.9 ergonomics through properties `get`/`set` (0.9.5);
 HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**);
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
-`std/…` install-tree search path (**2.0.2**); HTTP via `std/http` (**2.0.3**); URL + Base64 via `std/url` / `std/base64` (**2.0.4**); files / JSON / env via `std/fs` / `std/json` / `std/os` (**2.0.5**; prelude dual-path).
+`std/…` install-tree search path (**2.0.2**); peels through `std/http` / `std/url` / `std/base64` / `std/fs` / `std/json` / `std/os` / `std/re` / `std/time` (**2.0.3**–**2.0.6**; prelude dual-path until **2.0.7**).
 
 ### Not holes (held)
 

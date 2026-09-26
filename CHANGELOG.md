@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.6
+
+Peel regex + dates into `std/re` and `std/time`. Seventh **2.0** slice. Failure model unchanged.
+
+- `std/re` — `regexMatch` / `regexFind` / `regexReplace` / `regexSplit`
+- `std/time` — `formatTime` / `parseTime` / `days` / `hours` / `minutes`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+
 ## 2.0.5
 
 Peel files / JSON / env into `std/fs`, `std/json`, and `std/os`. Sixth **2.0** slice. Failure model unchanged. Host `allow_files` / `allow_run` unchanged.

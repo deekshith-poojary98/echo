@@ -1,0 +1,8 @@
+// Echo std/re (2.0.6).
+// Canonical home for regex helpers. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export regexMatch: dynamic = regexMatch;
+export regexFind: dynamic = regexFind;
+export regexReplace: dynamic = regexReplace;
+export regexSplit: dynamic = regexSplit;

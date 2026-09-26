@@ -1,0 +1,9 @@
+// Echo std/time (2.0.6).
+// Canonical home for UTC date / duration helpers. Prelude still exposes the
+// same names for a compatibility window (see 2.0.7 prelude policy).
+
+export formatTime: dynamic = formatTime;
+export parseTime: dynamic = parseTime;
+export days: dynamic = days;
+export hours: dynamic = hours;
+export minutes: dynamic = minutes;

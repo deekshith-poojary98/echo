@@ -757,7 +757,7 @@ No package manager or package-resolution semantics.
 
 ### Standard-library module paths
 
-`import … from "std/…"` resolves from the Echo install tree (**2.0.2**). Seed module: `std/meta`. Peeled families: `std/http` (**2.0.3**), `std/url` + `std/base64` (**2.0.4**), `std/fs` + `std/json` + `std/os` (**2.0.5**); prelude dual-path. Further peels in later **2.0.x** slices. No third-party package paths.
+`import … from "std/…"` resolves from the Echo install tree (**2.0.2**). Seed module: `std/meta`. Peeled families through **2.0.6**: `std/http`, `std/url`, `std/base64`, `std/fs`, `std/json`, `std/os`, `std/re`, `std/time` (prelude dual-path until **2.0.7**). No third-party package paths.
 
 ### Dynamic imports
 
