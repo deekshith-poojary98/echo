@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version is **v1.1.9**. **2.0.0**–**2.0.9** are complete. **2.1.0**–**2.1.1** are implemented on this branch; remaining **2.1.x** is drafted below. Failure model stays abort + `*Or`.
+Current tagged version is **v1.1.9**. **2.0.0**–**2.0.9** are complete. **2.1.0**–**2.1.2** are implemented on this branch; remaining **2.1.x** is drafted below. Failure model stays abort + `*Or`.
 
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
@@ -1165,7 +1165,7 @@ Package registry / lockfiles / `elang add`, inheritance, generics, async, VM, `t
 
 ## 2.1.x — YAML + LSP stub + std maturity
 
-**Status: in progress (2.1.0–2.1.1 shipped).**
+**Status: in progress (2.1.0–2.1.2 shipped).**
 
 **2.1** is tooling and deferred scripting polish on the 2.0 module surface — not a registry, not generics, not failure-model rewrite.
 
@@ -1175,7 +1175,7 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 | --- | --- | --- |
 | 2.1.0 | YAML helpers (`yamlParse` / `yamlWrite` or similar) | done |
 | 2.1.1 | YAML `*Or` twin + codes / docs | done |
-| 2.1.2 | Thin LSP stub (`elang lsp` / stdio) — hover + diagnostics | drafted |
+| 2.1.2 | Thin LSP stub (`elang lsp` / stdio) — hover + diagnostics | done |
 | 2.1.3 | LSP goto-def for local + imported symbols | drafted |
 | 2.1.4 | Editor extension: LSP client (Problems matchers remain fallback) | drafted |
 | 2.1.5 | Debugger polish beyond `watch` (abort stack / `trace`) | drafted |
@@ -1194,7 +1194,7 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 
 ### 2.1.2 — thin LSP stub
 
-`elang lsp` (stdio). Builtin hover and analyzer diagnostics. Not a full IDE language server product.
+**Done.** `elang lsp` speaks stdio JSON-RPC. Publishes analyzer diagnostics on open/change; hover shows prelude builtin signatures. Full document sync only. Not a full IDE language server product.
 
 ### 2.1.3 — LSP goto-def
 
@@ -1230,7 +1230,7 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## Held (do not implement)
 
-Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.0**–**2.1.1** are implemented; remaining **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
+Do not move global holds into a new series without an explicit series start. **0.8.0–0.8.9**, **0.9.0–0.9.9**, stable **1.0.0**, **1.1.0–1.1.9**, and **2.0.0–2.0.9** are implemented. **2.1.0**–**2.1.2** are implemented; remaining **2.1.x** is drafted above. The closed 0.7 spine is in the **0.7.x** table.
 
 | Item | Status |
 | --- | --- |

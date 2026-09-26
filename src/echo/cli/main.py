@@ -189,10 +189,12 @@ def main(argv: list[str] | None = None) -> int:
         return _main_lint(raw[1:])
     if raw[:1] == ["builtins"]:
         return _main_builtins(raw[1:])
+    if raw[:1] == ["lsp"]:
+        return _main_lsp(raw[1:])
     parser = argparse.ArgumentParser(
         description="Run an Echo source file",
         epilog=(
-            "Subcommands: check, test, fmt, lint, builtins.\n"
+            "Subcommands: check, test, fmt, lint, builtins, lsp.\n"
             "Use 'elang <subcommand> -h' for details. "
             "'elang --version' prints the interpreter version."
         ),
@@ -432,6 +434,22 @@ def _main_builtins(argv: list[str]) -> int:
     for name in names:
         print(name)
     return 0
+
+
+def _main_lsp(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="echo lsp",
+        description="Thin Echo language server over stdio (diagnostics + builtin hover)",
+    )
+    parser.add_argument(
+        "--require-std",
+        action="store_true",
+        help="Hide peeled stdlib names from the prelude; import them from std/… instead",
+    )
+    args = parser.parse_args(argv)
+    from echo.lsp.server import run_stdio
+
+    return run_stdio(host=Host(require_std=bool(args.require_std)))
 
 
 def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:

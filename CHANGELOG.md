@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.2
+
+Thin LSP stub. Third **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `elang lsp` — stdio JSON-RPC language server
+- `textDocument/publishDiagnostics` from Lexer / Parser / SemanticAnalyzer (and `ModuleLoader.check` when the file exists on disk)
+- `textDocument/hover` for prelude builtins (signature via `format_type`)
+- Not a full IDE language server; goto-def and editor client follow in **2.1.3** / **2.1.4**
+
 ## 2.1.1
 
 YAML `yamlParseOr` + docs. Second **2.1** slice. Failure model unchanged.

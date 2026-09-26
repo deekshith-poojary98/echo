@@ -58,7 +58,16 @@ elang builtins --count
 
 Prints every prelude builtin name (sorted), one per line — same set as `builtin_names()` / the generated [builtin inventory](/reference/builtin-inventory). `--count` prints only the number. First argv token must be the word `builtins`; `elang builtins.echo` still runs that file.
 
-Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`.
+Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`, `lsp`.
+
+### Language server (thin stub)
+
+```bash
+elang lsp
+elang lsp --require-std
+```
+
+Stdio JSON-RPC language server (**2.1.2**). Publishes analyzer diagnostics on open/change and answers builtin hover. Full document sync only. Not a full IDE product — goto-def and editor wiring follow later. Editors should keep task Problem matchers as a fallback until then.
 
 ### Analyze without running
 

@@ -610,4 +610,5 @@ v2.0.8 adds multi-file / `std/…` examples and playground `std/…` import supp
 v2.0.9 closes the **2.0.x** series (path resolution + std modules, not a package manager).
 v2.1.0 adds `yamlParse` / `yamlWrite` (**E2855**) and `std/yaml` (PyYAML).
 v2.1.1 adds `yamlParseOr` (invalid YAML → fallback; non-`str` still aborts).
+v2.1.2 adds `elang lsp` (stdio stub: analyzer diagnostics + builtin hover).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).
