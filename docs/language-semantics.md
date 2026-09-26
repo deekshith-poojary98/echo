@@ -601,4 +601,5 @@ v1.1.9 closes **1.1.x** with a README / examples / playground docs pass.
 v2.0.0 extends module specifiers with nested segments and leading `./` / `../`.
 v2.0.1 polishes module not-found / invalid-specifier / cycle diagnostics (**E3001**–**E3003**).
 v2.0.2 adds `import … from "std/…"` from the Echo install tree (seed `std/meta`).
+v2.0.3 peels the HTTP family into `std/http` (prelude dual-path).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

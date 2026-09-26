@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.3
+
+Peel HTTP into `std/http`. Fourth **2.0** slice. Failure model unchanged. Host `allow_http` unchanged.
+
+- `import httpGet / httpPost / httpGetOr / httpPostOr / httpOk / httpRedirect from "std/http"`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+- Method form on strings and existing HTTP semantics unchanged
+
 ## 2.0.2
 
 Stdlib search path. Third **2.0** slice. Selective `import` / `export` unchanged. Failure model unchanged. No package registry.
