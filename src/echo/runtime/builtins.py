@@ -10,6 +10,7 @@ from echo.core.base64util import base64_decode, base64_encode
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
 from echo.core.httputil import http_get, http_ok, http_post, http_redirect
 from echo.core.jsonutil import parse_json, write_json
+from echo.core.yamlutil import parse_yaml, write_yaml
 from echo.core.urlutil import url_decode, url_encode, url_join, url_query
 from echo.core.lists import (
     count_of,
@@ -97,6 +98,8 @@ BUILTIN_NAMES = frozenset(
         "parseJson",
         "parseJsonOr",
         "writeJson",
+        "yamlParse",
+        "yamlWrite",
         "asIntOr",
         "asFloatOr",
         "join",
@@ -226,6 +229,8 @@ BUILTIN_PARAMS = {
     "parseJson": ["text"],
     "parseJsonOr": ["text", "fallback"],
     "writeJson": ["value"],
+    "yamlParse": ["text"],
+    "yamlWrite": ["value"],
     "join": ["separator"],
     "startsWith": ["prefix"],
     "endsWith": ["suffix"],
@@ -412,6 +417,8 @@ PEELED_STD_BUILTIN_NAMES: frozenset[str] = frozenset(
         "parseJson",
         "parseJsonOr",
         "writeJson",
+        "yamlParse",
+        "yamlWrite",
         "env",
         "envOr",
         "args",
@@ -486,6 +493,8 @@ STANDALONE_MIN_ARGS = {
     "parseJson": 1,
     "parseJsonOr": 2,
     "writeJson": 1,
+    "yamlParse": 1,
+    "yamlWrite": 1,
     "join": 2,
     "startsWith": 2,
     "endsWith": 2,
@@ -996,6 +1005,14 @@ def do_parse_json_or(text: object, fallback: object, location: SourceLocation | 
 
 def do_write_json(value: object, location: SourceLocation | None = None) -> str:
     return write_json(value, location)
+
+
+def do_yaml_parse(text: object, location: SourceLocation | None = None) -> object:
+    return parse_yaml(text, location)
+
+
+def do_yaml_write(value: object, location: SourceLocation | None = None) -> str:
+    return write_yaml(value, location)
 
 
 def do_join(value: object, separator: object, location: SourceLocation | None = None) -> str:

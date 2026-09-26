@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0
+
+YAML helpers. First **2.1** slice. Failure model unchanged. Depends on PyYAML.
+
+- `yamlParse(text)` / `yamlWrite(value)` — YAML ↔ Echo hashes / lists / scalars
+- Method form: `"n: 1".yamlParse()`; bad types or invalid YAML → **E2855**
+- Canonical import: `import yamlParse from "std/yaml"` (prelude dual-path; peeled under `--require-std`)
+- `yamlParseOr` deferred to **2.1.1**
+
 ## 2.0.9
 
 Series close (docs). Closes the **2.0.x** series. No new language syntax. Failure model unchanged.

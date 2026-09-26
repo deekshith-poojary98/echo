@@ -1196,7 +1196,8 @@ destructuring, exact objects, unions, range-as-value, nominal classes (0.8.0), m
 HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-code docs (**1.1.4**); playground host policy (**1.1.5**); builtin sync (**1.1.6**); Base64 (**1.1.7**); `elang builtins` (**1.1.8**); series docs/examples close (**1.1.9**);
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
 `std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
-docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**).
+docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**);
+`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**).
 
 ### Not holes (held)
 

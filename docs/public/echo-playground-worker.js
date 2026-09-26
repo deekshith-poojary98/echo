@@ -145,6 +145,8 @@ async function ensurePyodide() {
       postMessage({ type: 'status', message: 'Downloading Python runtime…' })
       const { loadPyodide } = await import(`${PYODIDE_INDEX}pyodide.mjs`)
       const pyodide = await loadPyodide({ indexURL: PYODIDE_INDEX })
+      postMessage({ type: 'status', message: 'Loading packages…' })
+      await pyodide.loadPackage('pyyaml')
       postMessage({ type: 'status', message: 'Loading Echo…' })
       await loadEcho(pyodide)
       return pyodide

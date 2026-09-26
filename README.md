@@ -21,7 +21,7 @@ say("std ready:", stdOk());
 - File modules: `export` / `import name from "module"` (sibling, `./…`, `../…`, nested `"lib/math"`, reserved `"std/…"`)
 - Type aliases, object types (`exact { ... }` too), unions (`int | str`), first-class functions and builtins-as-values
 - Nominal `class` with `new { ... }` fields, methods (`this`), type methods, unbound methods, and `interface` (optional `implements`; no inheritance)
-- Thin scripting stdlib via prelude and/or `std/…` (`std/fs`, `std/json`, `std/os`, `std/re`, `std/time`, `std/http`, `std/url`, `std/base64`); optional `--require-std` hides peeled prelude names; host-gated where noted
+- Thin scripting stdlib via prelude and/or `std/…` (`std/fs`, `std/json`, `std/os`, `std/re`, `std/time`, `std/http`, `std/url`, `std/base64`, `std/yaml`); optional `--require-std` hides peeled prelude names; host-gated where noted
 - CLI: run a file, REPL, `check`, `test`, `fmt`, `lint`, `builtins`
 
 ## What you do not

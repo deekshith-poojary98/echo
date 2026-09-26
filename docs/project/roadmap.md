@@ -18,7 +18,22 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** and **2.0.x** are complete. Next drafted series: **2.1.x** (YAML + LSP stub) in [Priority](/project/priority).
+**1.1.x** and **2.0.x** are complete. **2.1.0** shipped. Remaining **2.1.x** is drafted in [Priority](/project/priority).
+
+### In progress — 2.1.x YAML + LSP stub
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 2.1.0 | YAML helpers | done |
+| 2.1.1 | YAML `*Or` + docs | drafted |
+| 2.1.2 | Thin LSP stub | drafted |
+| 2.1.3 | LSP goto-def | drafted |
+| 2.1.4 | Editor LSP client | drafted |
+| 2.1.5 | Debugger polish beyond `watch` | drafted |
+| 2.1.6 | Further std peel | drafted |
+| 2.1.7 | CLI std inventory | drafted |
+| 2.1.8 | Docs generator expansion | drafted |
+| 2.1.9 | Series close | drafted |
 
 ### Closed — 2.0.x modules + stdlib peel
 
@@ -34,21 +49,6 @@ Already in the language or CLI:
 | 2.0.7 | Prelude policy (core vs std) | done |
 | 2.0.8 | Docs / examples / playground | done |
 | 2.0.9 | Series close | done |
-
-### Drafted — 2.1.x YAML + LSP stub
-
-| Version | Item | Status |
-| --- | --- | --- |
-| 2.1.0 | YAML helpers | drafted |
-| 2.1.1 | YAML `*Or` + docs | drafted |
-| 2.1.2 | Thin LSP stub | drafted |
-| 2.1.3 | LSP goto-def | drafted |
-| 2.1.4 | Editor LSP client | drafted |
-| 2.1.5 | Debugger polish beyond `watch` | drafted |
-| 2.1.6 | Further std peel | drafted |
-| 2.1.7 | CLI std inventory | drafted |
-| 2.1.8 | Docs generator expansion | drafted |
-| 2.1.9 | Series close | drafted |
 
 Details: [Priority — 2.0.x / 2.1.x](/project/priority).
 

@@ -160,6 +160,8 @@ const BUILTINS = new Set([
   'wipe',
   'writeFile',
   'writeJson',
+  'yamlParse',
+  'yamlWrite',
   'zip',
 ])
 

@@ -162,6 +162,8 @@ from echo.runtime.builtins import (
     do_wait,
     do_write_file,
     do_write_json,
+    do_yaml_parse,
+    do_yaml_write,
     do_zip,
     prelude_builtin_names,
     require_int_convertible,
@@ -1251,6 +1253,10 @@ class Interpreter:
             return do_parse_json_or(text, fallback, location)
         if method == "writeJson":
             return do_write_json(target if target is not None else _first(args, method, location), location)
+        if method == "yamlParse":
+            return do_yaml_parse(target if target is not None else _first(args, method, location), location)
+        if method == "yamlWrite":
+            return do_yaml_write(target if target is not None else _first(args, method, location), location)
         if method == "join":
             value = target if target is not None else _nth(args, 0, method, location)
             separator = args[0] if target is not None else _nth(args, 1, method, location)
