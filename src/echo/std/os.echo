@@ -1,0 +1,7 @@
+// Echo std/os (2.0.5).
+// Canonical home for process / environment helpers. Prelude still exposes
+// the same names for a compatibility window (see 2.0.7 prelude policy).
+
+export env: dynamic = env;
+export envOr: dynamic = envOr;
+export args: dynamic = args;

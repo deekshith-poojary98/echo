@@ -1,0 +1,17 @@
+// Echo std/fs (2.0.5).
+// Canonical home for file / path helpers. Prelude still exposes the same names
+// for a compatibility window (see 2.0.7 prelude policy).
+
+export readFile: dynamic = readFile;
+export readFileOr: dynamic = readFileOr;
+export writeFile: dynamic = writeFile;
+export fileExists: dynamic = fileExists;
+export isDir: dynamic = isDir;
+export listFiles: dynamic = listFiles;
+export mkdir: dynamic = mkdir;
+export mkdirAll: dynamic = mkdirAll;
+export removeFile: dynamic = removeFile;
+export removeTree: dynamic = removeTree;
+export copyFile: dynamic = copyFile;
+export pathJoin: dynamic = pathJoin;
+export cwd: dynamic = cwd;

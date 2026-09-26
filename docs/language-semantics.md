@@ -603,4 +603,5 @@ v2.0.1 polishes module not-found / invalid-specifier / cycle diagnostics (**E300
 v2.0.2 adds `import … from "std/…"` from the Echo install tree (seed `std/meta`).
 v2.0.3 peels the HTTP family into `std/http` (prelude dual-path).
 v2.0.4 peels URL + Base64 into `std/url` and `std/base64` (prelude dual-path).
+v2.0.5 peels files / JSON / env into `std/fs`, `std/json`, and `std/os` (prelude dual-path).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.5
+
+Peel files / JSON / env into `std/fs`, `std/json`, and `std/os`. Sixth **2.0** slice. Failure model unchanged. Host `allow_files` / `allow_run` unchanged.
+
+- `std/fs` — `readFile` / `readFileOr` / `writeFile` / `fileExists` / `isDir` / `listFiles` / `mkdir` / `mkdirAll` / `removeFile` / `removeTree` / `copyFile` / `pathJoin` / `cwd`
+- `std/json` — `parseJson` / `parseJsonOr` / `writeJson`
+- `std/os` — `env` / `envOr` / `args`
+- Prelude still exposes the same names (compatibility window; stricter policy in **2.0.7**)
+
 ## 2.0.4
 
 Peel URL + Base64 into `std/url` and `std/base64`. Fifth **2.0** slice. Failure model unchanged.
