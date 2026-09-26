@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **2.1.4**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports through `std/re` / `std/time` / `std/yaml`, optional `--require-std` prelude policy, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins` / `lsp`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins (also `std/re`), union narrowing in `if type(...)`, thin UTC dates (also `std/time`), thin HTTP (also `std/http`), thin URL helpers (also `std/url`), Base64 helpers (also `std/base64`), YAML helpers (`yamlParse` / `yamlParseOr` / `yamlWrite`, also `std/yaml`, **E2855**), file/JSON/env helpers also via `std/fs` / `std/json` / `std/os`, `watch` location / abort dumps, documented **E2801** / **E2850**–**E2855** and module **E3001**–**E3005** codes, playground host-policy docs plus playground `std/…` imports, a thin `elang lsp` stub wired into the editor extension (diagnostics, builtin hover, goto-def; task matchers remain as fallback), and a generated builtin inventory (`tools/sync_builtins.py`). **2.0** is path resolution + std modules — not a package registry. This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **2.1.5**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports through `std/re` / `std/time` / `std/yaml`, optional `--require-std` prelude policy, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins` / `lsp`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins (also `std/re`), union narrowing in `if type(...)`, thin UTC dates (also `std/time`), thin HTTP (also `std/http`), thin URL helpers (also `std/url`), Base64 helpers (also `std/base64`), YAML helpers (`yamlParse` / `yamlParseOr` / `yamlWrite`, also `std/yaml`, **E2855**), file/JSON/env helpers also via `std/fs` / `std/json` / `std/os`, `watch` location / abort dumps, abort `Stack:` dumps and `trace`, documented **E2801** / **E2850**–**E2855** and module **E3001**–**E3005** codes, playground host-policy docs plus playground `std/…` imports, a thin `elang lsp` stub wired into the editor extension (diagnostics, builtin hover, goto-def; task matchers remain as fallback), and a generated builtin inventory (`tools/sync_builtins.py`). **2.0** is path resolution + std modules — not a package registry. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -44,6 +44,7 @@ What Echo still does **not** do. As of **2.1.4**, the language includes modules 
 - 2.1.2: `elang lsp` thin stdio stub (diagnostics + builtin hover)
 - 2.1.3: LSP goto-def for local + imported symbols
 - 2.1.4: editor LSP client (`elang lsp` via vscode-languageclient; task matchers remain)
+- 2.1.5: abort `Stack:` dump + `trace` helper (no stepper)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -64,6 +65,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only)
 - HTTP is thin (no cookies/session client, no multipart); playground denies HTTP (`allow_http=False`)
 - No full LSP-as-product (thin `elang lsp` + editor client ship in **2.1.2**–**2.1.4**; tasks/matchers remain)
+- No full debugger / stepper (abort `Stack:` + `watch` + `trace` ship through **2.1.5**)
 - No package registry yet (stdlib peels + optional `--require-std` shipped through **2.0.7**)
 
 ## Why this page exists

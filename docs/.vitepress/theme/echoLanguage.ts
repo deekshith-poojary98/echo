@@ -147,6 +147,7 @@ const BUILTINS = new Set([
   'startsWith',
   'take',
   'take_last',
+  'trace',
   'trim',
   'type',
   'unique',

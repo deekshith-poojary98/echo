@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.5
+
+Debugger polish beyond `watch`. Sixth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- On abort, CLI / `echo test` print a `Stack:` dump of active call frames (newest first); top-level aborts omit the section
+- `trace(value)` / `value.trace()` prints `TRACE: …` and returns the value unchanged
+- Not a stepper / breakpoints product
+
 ## 2.1.4
 
 Editor LSP client. Fifth **2.1** slice. Failure model unchanged. No new language syntax.

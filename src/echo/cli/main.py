@@ -61,6 +61,7 @@ def run_source(source: str, filename: str = "<input>", *, plain: bool = True, ho
         return exc.code
     except EchoError as exc:
         _print_error(exc, source, plain)
+        _print_stack(interpreter, plain)
         _print_watched(interpreter, plain)
         return 1
 
@@ -112,6 +113,7 @@ def run_file(source_path: str, plain: bool = False, host: Host | None = None) ->
         return exc.code
     except EchoError as exc:
         _print_error(exc, _error_source(exc, source), plain)
+        _print_stack(interpreter, plain)
         _print_watched(interpreter, plain)
         return 1
 
@@ -168,6 +170,16 @@ def _print_watched(interpreter: Interpreter, plain: bool) -> None:
     for name, rendered in snapshot:
         lines.append(f"  {name} = {rendered}")
     _print_plain_error("Watch", "\n".join(lines), plain)
+
+
+def _print_stack(interpreter: Interpreter, plain: bool) -> None:
+    snapshot = interpreter.stack_snapshot()
+    if not snapshot:
+        return
+    lines = ["Stack:"]
+    for frame in snapshot:
+        lines.append(f"  {frame}")
+    _print_plain_error("Stack", "\n".join(lines), plain)
 
 
 def _print_plain_error(title: str, message: str, plain: bool) -> None:
@@ -263,6 +275,7 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
             return exc.code
         except EchoError as exc:
             _print_error(exc, source, plain)
+            _print_stack(interpreter, plain)
             _print_watched(interpreter, plain)
         except KeyboardInterrupt:
             print()

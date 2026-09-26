@@ -50,6 +50,7 @@ _SIGNATURE_OVERRIDES: dict[str, FunctionType] = {
     "floor": _fn([_DYN], _INT),
     "ceil": _fn([_DYN], _INT),
     "type": _fn([_DYN], _STR),
+    "trace": _fn([_DYN], _DYN),
     "length": _fn([_DYN], _INT),
     "now": _fn([], _INT),
     "random": _fn([], _FLOAT),

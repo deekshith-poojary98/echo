@@ -490,6 +490,29 @@ bindings under a `Watched:` section.
 
 ---
 
+## Abort stack and `trace`
+
+On abort, when the failure happens inside one or more calls, the CLI and
+`echo test` dump a `Stack:` section (newest frame first). Top-level aborts
+add no stack section.
+
+```echo
+fn boom() {
+    fail("x");
+}
+boom();
+```
+
+```text
+Stack:
+  in boom at <file>:line:col
+```
+
+`trace(value)` / `value.trace()` prints `TRACE: …` and returns the value
+unchanged. No stepper or breakpoints.
+
+---
+
 ## Errors
 
 Echo errors are Echo errors.
@@ -613,4 +636,5 @@ v2.1.1 adds `yamlParseOr` (invalid YAML → fallback; non-`str` still aborts).
 v2.1.2 adds `elang lsp` (stdio stub: analyzer diagnostics + builtin hover).
 v2.1.3 adds LSP goto-definition for local bindings and imported symbols (2.0 resolver).
 v2.1.4 wires the VS Code / Cursor extension to `elang lsp` (task matchers remain as fallback).
+v2.1.5 adds abort `Stack:` dumps and a small `trace` helper (no stepper).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

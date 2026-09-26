@@ -42,6 +42,26 @@ eprint("missing file");
 
 ---
 
+### `trace(value)`
+Prints a debug line to stdout and returns `value` unchanged. Useful for inspecting expressions without changing control flow. Method form works on any value.
+
+```echo
+say(trace(1 + 2));
+say("hi".trace());
+```
+
+Output:
+```text
+TRACE: 3 (in global) at <file>:line:col
+3
+TRACE: hi (in global) at <file>:line:col
+hi
+```
+
+Inside a call, the frame name is shown (`in bump`). Not a stepper.
+
+---
+
 ### `ask(prompt)`
 Prints `prompt`, reads one stdin line, returns `str`.
 

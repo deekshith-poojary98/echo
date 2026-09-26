@@ -246,6 +246,7 @@ def _result_from_finish(
     if abort is not None:
         details.extend(_error_lines(abort, source))
         if interpreter is not None:
+            details.extend(_stack_lines(interpreter))
             details.extend(_watched_lines(interpreter))
     elif exit_code is not None and exit_code != 0:
         details.append(f"exit code {exit_code}")
@@ -308,6 +309,16 @@ def _watched_lines(interpreter: Interpreter) -> list[str]:
     lines = ["Watched:"]
     for name, rendered in snapshot:
         lines.append(f"  {name} = {rendered}")
+    return lines
+
+
+def _stack_lines(interpreter: Interpreter) -> list[str]:
+    snapshot = interpreter.stack_snapshot()
+    if not snapshot:
+        return []
+    lines = ["Stack:"]
+    for frame in snapshot:
+        lines.append(f"  {frame}")
     return lines
 
 

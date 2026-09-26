@@ -105,7 +105,7 @@ Distinctive on purpose:
 | Formatter | Ecosystem | Implemented (0.5.4) | Tooling | 0.5.4 |
 | Linter | Ecosystem | Implemented (0.5.8) | Tooling | 0.5.8 |
 | Native test runner | Ecosystem | Implemented (0.5.6), `-run` (0.6.8), `--json` (0.6.9) | Tooling | 0.6.9 |
-| Debugger | Ecosystem | Partial (`watch` only) | Tooling | Later |
+| Debugger | Ecosystem | Partial (`watch` + abort `Stack:` + `trace`) | Tooling | 2.1.5 |
 | Documentation generator | Ecosystem | Missing | Tooling | Later |
 | IDE support | Ecosystem | Partial (tasks + thin LSP client **2.1.4**) | Tooling | 2.1.4 |
 | Language server | Ecosystem | Missing | Tooling | Later |
@@ -688,8 +688,8 @@ Reports assignment and mutating operations, including indexed assignment.
 Mutation lines include a source location. On abort, CLI / `echo test` dump
 watched bindings under `Watched:`.
 
-**Limitations.** Not a stepper. No breakpoints, `trace`, or `profile`.
-Those are ecosystem / vision items.
+**Limitations.** Not a stepper. No breakpoints or interactive debugger.
+Abort `Stack:` dumps and `trace` ship in **2.1.5**.
 
 **Priority.** Frozen as a fundamental; **1.1.3** is diagnostics polish only.
 Richer observability is later.
@@ -1022,13 +1022,13 @@ There is no `test "name" { }` syntax. That stays vision / held.
 
 ### Debugger
 
-**Status.** Partial.
+**Status.** Partial — `watch`, abort `Stack:` dumps, and `trace` (**2.1.5**).
 
-`watch` is real. There is no stepper, breakpoints, or stack inspector.
+No stepper, breakpoints, or interactive inspector.
 
 **Priority.** Tooling. Do not build a VM to get a debugger.
 
-**Possible version.** Later.
+**Possible version.** Done enough through **2.1.5**.
 
 ---
 
@@ -1199,7 +1199,7 @@ HTTP + URL helpers (**1.1.0–1.1.2**); watch/abort polish (**1.1.3**); error-co
 relative / nested import paths (**2.0.0**); module cycle / resolver diagnostics polish (**2.0.1**);
 `std/…` install-tree search path (**2.0.2**); peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` prelude policy (**2.0.7**);
 docs / examples / playground (**2.0.8**); **2.0.x** series close (**2.0.9**);
-`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**).
+`yamlParse` / `yamlWrite` + `std/yaml` (**2.1.0**); `yamlParseOr` (**2.1.1**); thin `elang lsp` stub (**2.1.2**); LSP goto-def (**2.1.3**); editor LSP client (**2.1.4**); abort `Stack:` + `trace` (**2.1.5**).
 
 ### Not holes (held)
 
