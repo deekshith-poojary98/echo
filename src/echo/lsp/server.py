@@ -7,6 +7,7 @@ from typing import BinaryIO
 
 from echo import __version__
 from echo.lsp.diagnostics import collect_diagnostics
+from echo.lsp.definition import definition_at
 from echo.lsp.hover import hover_at
 from echo.runtime.host import Host
 
@@ -78,6 +79,7 @@ class LspServer:
                             "change": 1,  # Full
                         },
                         "hoverProvider": True,
+                        "definitionProvider": True,
                     },
                     "serverInfo": {"name": "echo-lsp", "version": __version__},
                 },
@@ -103,6 +105,9 @@ class LspServer:
             return
         if method == "textDocument/hover":
             self._hover(request_id, params)
+            return
+        if method == "textDocument/definition":
+            self._definition(request_id, params)
             return
         if request_id is not None:
             self._write_message(
@@ -152,6 +157,19 @@ class LspServer:
         position = params.get("position") or {}
         text = self.documents.get(uri, "")
         result = hover_at(
+            uri,
+            text,
+            int(position.get("line", 0)),
+            int(position.get("character", 0)),
+        )
+        self._reply(request_id, result)
+
+    def _definition(self, request_id: object, params: dict) -> None:
+        doc = params.get("textDocument") or {}
+        uri = doc.get("uri") or ""
+        position = params.get("position") or {}
+        text = self.documents.get(uri, "")
+        result = definition_at(
             uri,
             text,
             int(position.get("line", 0)),

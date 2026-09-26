@@ -67,7 +67,7 @@ elang lsp
 elang lsp --require-std
 ```
 
-Stdio JSON-RPC language server (**2.1.2**). Publishes analyzer diagnostics on open/change and answers builtin hover. Full document sync only. Not a full IDE product — goto-def and editor wiring follow later. Editors should keep task Problem matchers as a fallback until then.
+Stdio JSON-RPC language server (**2.1.2**+). Publishes analyzer diagnostics on open/change, answers builtin hover, and resolves goto-definition for local + imported symbols (**2.1.3**). Full document sync only. Not a full IDE product — editor client wiring follows in **2.1.4**. Task Problem matchers remain a fallback until then.
 
 ### Analyze without running
 

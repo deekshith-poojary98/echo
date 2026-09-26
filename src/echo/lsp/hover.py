@@ -8,10 +8,26 @@ from echo.runtime.builtins import BUILTIN_PARAMS, STANDALONE_PARAMS, builtin_nam
 from echo.runtime.values import format_type
 
 
+def identifier_at(text: str, line: int, column: int, *, filename: str) -> str | None:
+    try:
+        tokens = Lexer().tokenize(text, filename=filename)
+    except Exception:  # noqa: BLE001 — hover / definition are best-effort
+        return None
+    for token in tokens:
+        if token.type != TokenType.IDENTIFIER or token.line != line:
+            continue
+        start = token.column
+        end = start + len(token.lexeme)
+        # Inclusive end so the cursor after the last character still hits.
+        if start <= column <= end:
+            return token.lexeme
+    return None
+
+
 def hover_at(uri: str, text: str, line: int, character: int) -> dict | None:
     """Return an LSP Hover result for a builtin at the given 0-based position, or None."""
     echo_line, echo_col = lsp_to_echo_position(line, character)
-    name = _identifier_at(text, echo_line, echo_col, filename=uri or "<lsp>")
+    name = identifier_at(text, echo_line, echo_col, filename=uri or "<lsp>")
     if name is None or name not in builtin_names():
         return None
     signature = format_type(builtin_fn_type(name))
@@ -26,19 +42,3 @@ def hover_at(uri: str, text: str, line: int, character: int) -> dict | None:
             "value": "\n".join(lines),
         }
     }
-
-
-def _identifier_at(text: str, line: int, column: int, *, filename: str) -> str | None:
-    try:
-        tokens = Lexer().tokenize(text, filename=filename)
-    except Exception:  # noqa: BLE001 — hover is best-effort
-        return None
-    for token in tokens:
-        if token.type != TokenType.IDENTIFIER or token.line != line:
-            continue
-        start = token.column
-        end = start + len(token.lexeme)
-        # Inclusive end so the cursor after the last character still hits.
-        if start <= column <= end:
-            return token.lexeme
-    return None

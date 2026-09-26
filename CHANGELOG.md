@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.3
+
+LSP goto-definition. Fourth **2.1** slice. Failure model unchanged. No new language syntax.
+
+- `textDocument/definition` for local bindings (functions, params, variables) and imported names
+- Import targets resolve via the **2.0** module resolver (`std/…` and relative paths)
+- Builtins still have no source location (hover remains the surface)
+
 ## 2.1.2
 
 Thin LSP stub. Third **2.1** slice. Failure model unchanged. No new language syntax.
