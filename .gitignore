@@ -16,6 +16,11 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Keep Echo example modules under examples/.../lib/ (Python packaging lib/ stays ignored)
+!examples/
+!examples/**
+!examples/**/lib/
+!examples/**/lib/**
 parts/
 sdist/
 var/
