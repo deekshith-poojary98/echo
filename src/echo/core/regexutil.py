@@ -45,7 +45,10 @@ def regex_replace(
     if not isinstance(replacement, str):
         raise EchoTypeError("regexReplace() replacement must be a string", location, code="E2850")
     compiled = _compile(pattern, "regexReplace", location)
-    return compiled.sub(replacement, value)
+    try:
+        return compiled.sub(replacement, value)
+    except (re.error, IndexError) as exc:
+        raise EchoRuntimeError(f"invalid regex replacement: {exc}", location, code="E2850") from exc
 
 
 def regex_split(text: object, pattern: object, location: SourceLocation | None = None) -> list[str]:

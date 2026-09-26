@@ -600,27 +600,40 @@ def do_clone(
     location: SourceLocation | None = None,
     _memo: dict[int, object] | None = None,
 ) -> object:
+    try:
+        return _clone_value(value, location, {} if _memo is None else _memo)
+    except RecursionError as exc:
+        raise EchoRuntimeError(
+            "Cannot clone a value nested too deeply",
+            location,
+            code="E2609",
+        ) from exc
+
+
+def _clone_value(
+    value: object,
+    location: SourceLocation | None,
+    memo: dict[int, object],
+) -> object:
     if isinstance(value, bool) or value is None or isinstance(value, (int, float, str)):
         return value
 
-    if _memo is None:
-        _memo = {}
     object_id = id(value)
-    cached = _memo.get(object_id)
+    cached = memo.get(object_id)
     if cached is not None:
         return cached
 
     if isinstance(value, list):
         cloned: list = []
-        _memo[object_id] = cloned
-        cloned.extend(do_clone(item, location, _memo) for item in value)
+        memo[object_id] = cloned
+        cloned.extend(_clone_value(item, location, memo) for item in value)
         return cloned
 
     if isinstance(value, dict):
         cloned_hash: dict = {}
-        _memo[object_id] = cloned_hash
+        memo[object_id] = cloned_hash
         for key, item in value.items():
-            cloned_hash[key] = do_clone(item, location, _memo)
+            cloned_hash[key] = _clone_value(item, location, memo)
         return cloned_hash
 
     from echo.runtime.instances import ClassInstance
@@ -628,9 +641,9 @@ def do_clone(
     if isinstance(value, ClassInstance):
         fields: dict[str, object] = {}
         cloned_instance = ClassInstance(value.class_name, fields, value.record)
-        _memo[object_id] = cloned_instance
+        memo[object_id] = cloned_instance
         for key, item in value.fields.items():
-            fields[key] = do_clone(item, location, _memo)
+            fields[key] = _clone_value(item, location, memo)
         return cloned_instance
 
     raise EchoTypeError(
