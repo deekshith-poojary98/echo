@@ -9,6 +9,7 @@ from echo.core.dateutil import days, format_time, hours, minutes, parse_time
 from echo.core.hashes import ensure, hash_has, require_hash, take, take_last, wipe
 from echo.core.httputil import http_get, http_ok, http_post, http_redirect
 from echo.core.jsonutil import parse_json, write_json
+from echo.core.urlutil import url_decode, url_encode, url_join, url_query
 from echo.core.lists import (
     count_of,
     empty,
@@ -121,6 +122,10 @@ BUILTIN_NAMES = frozenset(
         "httpPostOr",
         "httpOk",
         "httpRedirect",
+        "urlEncode",
+        "urlDecode",
+        "urlJoin",
+        "urlQuery",
         "fileExists",
         "cwd",
         "exit",
@@ -242,6 +247,10 @@ BUILTIN_PARAMS = {
     "httpPostOr": ["body", "fallback", "headers"],
     "httpOk": [],
     "httpRedirect": [],
+    "urlEncode": [],
+    "urlDecode": [],
+    "urlJoin": ["path"],
+    "urlQuery": [],
     "fileExists": ["path"],
     "cwd": [],
     "exit": ["code"],
@@ -324,6 +333,10 @@ STANDALONE_PARAMS = {
     "httpPostOr": ["url", "body", "fallback", "headers"],
     "httpOk": ["status"],
     "httpRedirect": ["status"],
+    "urlEncode": ["text"],
+    "urlDecode": ["text"],
+    "urlJoin": ["base", "path"],
+    "urlQuery": ["params"],
     "min": ["a", "b"],
     "max": ["a", "b"],
     "copyFile": ["src", "dest"],
@@ -434,6 +447,10 @@ STANDALONE_MIN_ARGS = {
     "httpPostOr": 3,
     "httpOk": 1,
     "httpRedirect": 1,
+    "urlEncode": 1,
+    "urlDecode": 1,
+    "urlJoin": 2,
+    "urlQuery": 1,
     "fileExists": 1,
     "cwd": 0,
     "exit": 1,
@@ -1057,6 +1074,22 @@ def do_http_ok(value: object, location: SourceLocation | None = None) -> bool:
 
 def do_http_redirect(value: object, location: SourceLocation | None = None) -> bool:
     return http_redirect(value, location)
+
+
+def do_url_encode(text: object, location: SourceLocation | None = None) -> str:
+    return url_encode(text, location)
+
+
+def do_url_decode(text: object, location: SourceLocation | None = None) -> str:
+    return url_decode(text, location)
+
+
+def do_url_join(base: object, path: object, location: SourceLocation | None = None) -> str:
+    return url_join(base, path, location)
+
+
+def do_url_query(params: object, location: SourceLocation | None = None) -> str:
+    return url_query(params, location)
 
 
 def do_file_exists(path: object, host: Host, location: SourceLocation | None = None) -> bool:

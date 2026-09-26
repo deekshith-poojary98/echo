@@ -1177,7 +1177,7 @@ Capability comparison only. Echo is not trying to become these languages.
 1. Package manager / non-sibling module paths
 2. Language server / richer editor support
 3. Optional sugar still held where listed in priority
-4. YAML / URL helpers (drafted **1.1.2**; HTTP through headers/`*Or` shipped in **1.1.0–1.1.1**)
+4. `watch` / abort diagnostics polish (drafted **1.1.3**; URL helpers shipped in **1.1.2**; YAML deferred)
 
 ### Shipped that used to be holes
 

@@ -1,6 +1,6 @@
 # Known Limitations
 
-What Echo still does **not** do. As of **1.1.1**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), and thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins). This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **1.1.2**, the language includes modules, CLI tooling, first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins, union narrowing in `if type(...)`, thin UTC dates (`formatTime` / `parseTime` / duration helpers), thin HTTP (`httpGet` / `httpPost`, headers, `httpOk` / `httpRedirect`, `*Or` twins), and thin URL helpers (`urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`). This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -21,6 +21,7 @@ What Echo still does **not** do. As of **1.1.1**, the language includes modules,
 - 1.0.0: stable release (same surface as 0.9.9)
 - 1.1.0: `httpGet` / `httpPost` with `Host.allow_http`
 - 1.1.1: request headers, `httpOk` / `httpRedirect`, `httpGetOr` / `httpPostOr`
+- 1.1.2: `urlEncode` / `urlDecode` / `urlJoin` / `urlQuery`
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 

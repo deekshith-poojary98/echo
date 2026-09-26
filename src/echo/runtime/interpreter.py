@@ -153,6 +153,10 @@ from echo.runtime.builtins import (
     do_split,
     do_starts_with,
     do_unique,
+    do_url_decode,
+    do_url_encode,
+    do_url_join,
+    do_url_query,
     do_wait,
     do_write_file,
     do_write_json,
@@ -1340,6 +1344,16 @@ class Interpreter:
             return do_http_ok(target if target is not None else _first(args, method, location), location)
         if method == "httpRedirect":
             return do_http_redirect(target if target is not None else _first(args, method, location), location)
+        if method == "urlEncode":
+            return do_url_encode(target if target is not None else _first(args, method, location), location)
+        if method == "urlDecode":
+            return do_url_decode(target if target is not None else _first(args, method, location), location)
+        if method == "urlJoin":
+            base = target if target is not None else _nth(args, 0, method, location)
+            path = args[0] if target is not None else _nth(args, 1, method, location)
+            return do_url_join(base, path, location)
+        if method == "urlQuery":
+            return do_url_query(target if target is not None else _first(args, method, location), location)
         if method == "fileExists":
             return do_file_exists(target if target is not None else _first(args, method, location), self.host, location)
         if method == "cwd":

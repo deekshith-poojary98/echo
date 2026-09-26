@@ -317,6 +317,30 @@ if (httpOk(resp)) {
 }
 ```
 
+### `urlEncode(text)` / `urlDecode(text)`
+Percent-encode / decode a string (spaces become `%20`).
+
+```echo
+say(urlEncode("a b"));   // a%20b
+say(urlDecode("a%20b")); // a b
+```
+
+### `urlJoin(base, path)`
+Join a base URL with a relative path (same rules as Python `urllib.parse.urljoin`).
+
+```echo
+say(urlJoin("https://example.com/api/", "users"));
+```
+
+### `urlQuery(params)`
+Encode a hash of string keys/values as a query string (`application/x-www-form-urlencoded`).
+
+```echo
+say(urlQuery({ q: "echo lang", page: "1" }));
+```
+
+Bad types for URL helpers → **E2853**.
+
 ### `now()`
 Returns the current unix time as an `int` number of seconds. Takes no arguments.
 

@@ -17,7 +17,7 @@ Already in the language or CLI:
 
 ## Next
 
-**1.1.x** is in progress in [Priority](/project/priority). **1.1.0–1.1.1** ship thin HTTP.
+**1.1.x** is in progress in [Priority](/project/priority). **1.1.0–1.1.2** ship HTTP + URL helpers.
 
 ### Drafted — 1.1.x HTTP + polish
 
@@ -25,7 +25,7 @@ Already in the language or CLI:
 | --- | --- | --- |
 | 1.1.0 | `httpGet` / `httpPost` + `allow_http` host flag | implemented (1.1.0) |
 | 1.1.1 | HTTP headers / status helpers / `*Or` twins | implemented (1.1.1) |
-| 1.1.2 | YAML or URL helpers (only if still tiny) | drafted |
+| 1.1.2 | YAML or URL helpers (only if still tiny) | implemented (1.1.2 — URL only) |
 | 1.1.3 | `watch` / abort diagnostics polish | drafted |
 | 1.1.4 | Error-message / code pass | drafted |
 | 1.1.5 | Docs generator or playground HTTP policy | drafted |

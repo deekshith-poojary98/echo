@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.2
+
+Thin URL helpers. Third **1.1** slice. Failure model unchanged. YAML deferred (no stdlib YAML; would need a dependency).
+
+- `urlEncode(text)` / `urlDecode(text)` — percent-encoding via `urllib.parse`
+- `urlJoin(base, path)` — resolve a relative path against a base URL
+- `urlQuery(params)` — encode a string→string hash as an `application/x-www-form-urlencoded` query
+- Method form works; bad types → **E2853**
+
 ## 1.1.1
 
 HTTP request headers, status helpers, and `*Or` twins. Second **1.1** slice. Failure model unchanged.
