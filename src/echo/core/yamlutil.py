@@ -23,13 +23,14 @@ def parse_yaml(text: object, location: SourceLocation | None = None) -> object:
         raise EchoTypeError("yamlParse() requires a string", location, code="E2855")
     yaml = _yaml(location)
     try:
-        raw = yaml.safe_load(text)
+        # safe_load and yaml_to_echo both recurse. Alias cycles raise RecursionError
+        # in yaml_to_echo unless they are detected first.
+        return yaml_to_echo(yaml.safe_load(text), location)
     except yaml.YAMLError as exc:
         reason = str(exc).strip() or "invalid YAML"
         raise EchoRuntimeError(f"Invalid YAML: {reason}", location, code="E2855") from exc
     except RecursionError as exc:
         raise EchoRuntimeError("YAML is nested too deeply", location, code="E2855") from exc
-    return yaml_to_echo(raw, location)
 
 
 def write_yaml(value: object, location: SourceLocation | None = None) -> str:
@@ -66,20 +67,32 @@ def write_yaml(value: object, location: SourceLocation | None = None) -> str:
     return text
 
 
-def yaml_to_echo(raw: object, location: SourceLocation | None = None) -> object:
+def yaml_to_echo(
+    raw: object,
+    location: SourceLocation | None = None,
+    seen: set[int] | None = None,
+) -> object:
     if isinstance(raw, datetime):
         return raw.isoformat()
     if isinstance(raw, date):
         return raw.isoformat()
-    if isinstance(raw, dict):
-        result = {}
-        for key, item in raw.items():
-            if not isinstance(key, str):
-                raise EchoRuntimeError("YAML mapping keys must be strings", location, code="E2855")
-            result[key] = yaml_to_echo(item, location)
-        return result
-    if isinstance(raw, list):
-        return [yaml_to_echo(item, location) for item in raw]
+    if isinstance(raw, (list, dict)):
+        ident = id(raw)
+        tracking = set() if seen is None else seen
+        if ident in tracking:
+            raise EchoRuntimeError("Cannot parse cyclic YAML", location, code="E2855")
+        tracking.add(ident)
+        try:
+            if isinstance(raw, list):
+                return [yaml_to_echo(item, location, tracking) for item in raw]
+            result = {}
+            for key, item in raw.items():
+                if not isinstance(key, str):
+                    raise EchoRuntimeError("YAML mapping keys must be strings", location, code="E2855")
+                result[key] = yaml_to_echo(item, location, tracking)
+            return result
+        finally:
+            tracking.remove(ident)
     try:
         return json_to_echo(raw, location)
     except EchoRuntimeError as exc:

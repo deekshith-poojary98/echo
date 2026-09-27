@@ -1,3 +1,5 @@
+from echo.core.yamlutil import parse_yaml
+from echo.errors import EchoRuntimeError
 from helpers import assert_no_python_leak, run_echo
 from modules.harness import assert_echo_error, assert_success, run_entry, write_modules
 
@@ -45,6 +47,54 @@ def test_yaml_parse_invalid():
     assert_no_python_leak(result)
     assert "E2855" in result.output
     assert "Invalid YAML" in result.output
+
+
+def test_yaml_parse_rejects_alias_cycles_without_python_recursion():
+    result = run_echo('yamlParse("a: &anchor\\n  self: *anchor\\n");\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2855" in result.output
+    assert "cyclic YAML" in result.output
+
+
+def test_yaml_parse_rejects_list_alias_cycles_without_python_recursion():
+    result = run_echo('yamlParse("&a\\n- *a\\n");\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2855" in result.output
+    assert "cyclic YAML" in result.output
+
+
+def test_yaml_parse_allows_shared_aliases():
+    result = run_echo(
+        """
+data: hash = yamlParse("x: &a\\n  n: 1\\ny: *a\\n");
+say(data["x"]["n"]);
+say(data["y"]["n"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["1", "1"]
+
+
+def test_yaml_parse_or_alias_cycle_returns_fallback():
+    result = run_echo('say(yamlParseOr("a: &anchor\\n  self: *anchor\\n", "cycle"));\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["cycle"]
+
+
+def test_parse_yaml_direct_alias_cycle_is_echo_error():
+    try:
+        parse_yaml("a: &anchor\n  self: *anchor\n")
+    except RecursionError as exc:
+        raise AssertionError("RecursionError leaked from parse_yaml") from exc
+    except EchoRuntimeError as exc:
+        assert "cyclic YAML" in exc.message
+        assert exc.code == "E2855"
+        return
+    raise AssertionError("parse_yaml accepted cyclic YAML aliases")
 
 
 def test_yaml_write_unsupported():
