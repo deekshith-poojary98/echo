@@ -633,12 +633,24 @@ body:has(.echo-playground) {
   overflow: hidden;
 }
 
+.Layout:has(.echo-playground) {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .Layout:has(.echo-playground) .VPFooter,
 .Layout:has(.echo-playground) .VPDocFooter {
   display: none !important;
 }
 
 .Layout:has(.echo-playground) .VPContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   padding: 0 !important;
   padding-top: var(--vp-nav-height, 64px) !important;
   margin: 0 !important;
@@ -653,6 +665,16 @@ body:has(.echo-playground) {
   }
 }
 
+.Layout:has(.echo-playground) .VPPage,
+.Layout:has(.echo-playground) .VPPage > div,
+.Layout:has(.echo-playground) .VPPage > div > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .Layout:has(.echo-playground) .VPPage {
   padding: 0 !important;
   margin: 0 !important;
@@ -664,9 +686,10 @@ body:has(.echo-playground) {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   width: 100%;
-  height: calc(100vh - var(--vp-nav-height, 64px));
-  min-height: 36rem;
+  height: auto;
+  min-height: 0;
   background: var(--vp-c-bg);
   overflow: hidden;
 }
@@ -681,16 +704,6 @@ body:has(.echo-playground) {
   padding: 0.65rem 1rem;
   border-bottom: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-alt);
-}
-
-.echo-playground__policy {
-  margin: 0;
-  padding: 0.4rem 1rem;
-  border-bottom: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-text-2);
-  font-size: 0.8rem;
-  line-height: 1.35;
 }
 
 .echo-playground__identity {
@@ -796,6 +809,7 @@ body:has(.echo-playground) {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
   background: var(--vp-c-bg);
 }
 
@@ -858,10 +872,18 @@ body:has(.echo-playground) {
 .echo-playground__editor {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .echo-playground__editor .cm-editor {
   height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.echo-playground__editor .cm-scroller {
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .echo-playground__output {
@@ -870,6 +892,7 @@ body:has(.echo-playground) {
   margin: 0;
   padding: 0.9rem 1rem;
   overflow: auto;
+  overscroll-behavior: contain;
   background: var(--vp-c-bg-alt);
   color: var(--vp-c-text-1);
   white-space: pre-wrap;
@@ -915,7 +938,7 @@ body:has(.echo-playground) {
 
 @media (max-width: 860px) {
   .echo-playground {
-    height: calc(100dvh - var(--vp-nav-height, 64px));
+    height: auto;
     min-height: 0;
     overflow: hidden;
   }

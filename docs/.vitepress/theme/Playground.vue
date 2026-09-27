@@ -633,9 +633,6 @@ onUnmounted(() => {
         </button>
       </div>
     </header>
-    <p class="echo-playground__policy">
-      No files, processes, or HTTP here — denied builtins abort with E2801. CLI allows them by default.
-    </p>
 
     <div
       ref="workspaceEl"

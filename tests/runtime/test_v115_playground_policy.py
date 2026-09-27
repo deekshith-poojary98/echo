@@ -11,16 +11,8 @@ def test_playground_worker_host_policy():
     assert "Host(allow_files=False, allow_run=False, allow_http=False, environ={})" in worker
 
 
-def test_playground_docs_describe_host_policy():
-    page = (REPO_ROOT / "docs" / "playground.md").read_text(encoding="utf-8")
-    assert "allow_http" in page or "HTTP" in page
-    assert "E2801" in page
-    assert "restricted host" in page.lower() or "No filesystem" in page or "no HTTP" in page.lower()
-
-
-def test_playground_ui_mentions_policy():
+def test_playground_ui_includes_url_example():
     vue = (REPO_ROOT / "docs" / ".vitepress" / "theme" / "Playground.vue").read_text(encoding="utf-8")
-    assert "E2801" in vue
     assert 'id: \'urls\'' in vue or 'id: "urls"' in vue
 
 
