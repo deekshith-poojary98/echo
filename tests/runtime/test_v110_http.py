@@ -128,6 +128,43 @@ def test_http_get_bad_url_type():
     assert "E2852" in result.output
 
 
+def test_http_unknown_charset_does_not_leak_lookup_error(monkeypatch):
+    monkeypatch.setattr(
+        "echo.core.httputil.urlopen",
+        lambda request, timeout=30.0: _FakeResponse(
+            200,
+            b"pong",
+            {"Content-Type": "text/plain; charset=utf8mb4"},
+        ),
+    )
+    result = run_echo(
+        """
+resp: hash = httpGet("https://example.com/ping");
+say(resp["status"]);
+say(resp["body"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["200", "pong"]
+
+
+def test_read_response_unknown_charset_falls_back_to_utf8():
+    from echo.core.httputil import _read_response
+
+    response = _FakeResponse(
+        200,
+        b"hello",
+        {"Content-Type": "text/plain; charset=not-a-real-encoding"},
+    )
+    try:
+        payload = _read_response(response)
+    except LookupError as exc:
+        raise AssertionError("LookupError leaked from _read_response") from exc
+    assert payload["status"] == 200
+    assert payload["body"] == "hello"
+
+
 def test_http_network_failure_is_e2852(monkeypatch):
     from urllib.error import URLError
 

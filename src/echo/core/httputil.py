@@ -60,7 +60,12 @@ def _read_response(response: object) -> dict[str, object]:
     if isinstance(header_map, Message):
         charset = header_map.get_content_charset() or "utf-8"
     if isinstance(raw, bytes):
-        body = raw.decode(charset, errors="replace")
+        try:
+            body = raw.decode(charset, errors="replace")
+        except LookupError:
+            # Content-Type may name a charset Python does not know (utf8mb4, binary).
+            # Fall back the same way as the utf-8 default: replacement, not a crash.
+            body = raw.decode("utf-8", errors="replace")
     else:
         body = str(raw)
     return {
