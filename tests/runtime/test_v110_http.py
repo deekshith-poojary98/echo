@@ -194,6 +194,28 @@ def test_httputil_empty_url_aborts():
         assert exc.code == "E2852"
 
 
+def test_http_url_with_nul_is_echo_error_not_python():
+    result = run_echo(
+        """
+url: str = parseJson("\\"http://example.com/\\\\u0000\\"");
+say(httpGet(url));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2852" in result.output
+    assert "NUL" in result.output
+
+
+def test_httputil_rejects_nul_url():
+    try:
+        http_get("http://example.com/\x00")
+        raise AssertionError("expected EchoRuntimeError")
+    except EchoRuntimeError as exc:
+        assert exc.code == "E2852"
+        assert "NUL" in exc.message
+
+
 def test_playground_worker_denies_http():
     worker = ( __import__("pathlib").Path(__file__).resolve().parents[2]
         / "docs"

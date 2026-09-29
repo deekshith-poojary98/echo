@@ -454,6 +454,68 @@ def test_regex_replace_invalid_group_is_echo_error_not_python():
     assert "invalid regex replacement" in result.output
 
 
+def test_nul_path_is_echo_error_not_python():
+    result = run_echo(
+        """
+path: str = parseJson("\\"foo\\\\u0000bar\\"");
+say(readFile(path));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "NUL" in result.output
+    assert "E2802" in result.output
+
+
+def test_nul_path_file_exists_is_echo_error_not_python():
+    result = run_echo(
+        """
+path: str = parseJson("\\"foo\\\\u0000bar\\"");
+say(fileExists(path));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "NUL" in result.output
+
+
+def test_nul_path_write_file_is_echo_error_not_python():
+    result = run_echo(
+        """
+path: str = parseJson("\\"foo\\\\u0000bar\\"");
+writeFile(path, "hi");
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "NUL" in result.output
+
+
+def test_nul_run_command_is_echo_error_not_python():
+    result = run_echo(
+        """
+cmd: str = parseJson("\\"echo\\\\u0000x\\"");
+say(run(cmd, []));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "NUL" in result.output
+    assert "E2822" in result.output
+
+
+def test_nul_run_arg_is_echo_error_not_python():
+    result = run_echo(
+        """
+arg: str = parseJson("\\"hi\\\\u0000x\\"");
+say(run("echo", [arg]));
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "NUL" in result.output
+
+
 def test_equality_nested_too_deeply_is_echo_error_not_python():
     result = run_echo(
         """
