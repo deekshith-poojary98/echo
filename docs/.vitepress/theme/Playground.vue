@@ -608,14 +608,9 @@ onUnmounted(() => {
     <section class="echo-playground__guide" aria-label="How to use the playground">
       <h1 class="echo-playground__title">Try Echo in the browser</h1>
       <p class="echo-playground__lead">
-        You do not need to install anything. Wait until the status shows
-        <strong>Ready</strong> (Echo is loading in the browser — that can take a moment).
+        Nothing to install. Type on the left, press <strong>Run</strong> (Ctrl/⌘ Enter),
+        read the <strong>Output</strong> on the right.
       </p>
-      <ol class="echo-playground__steps">
-        <li>The <strong>left</strong> panel is where you type Echo instructions.</li>
-        <li>Click <strong>Run</strong> (or press Ctrl/⌘ Enter).</li>
-        <li>Read the result in the <strong>Output</strong> panel on the right.</li>
-      </ol>
     </section>
 
     <header class="echo-playground__toolbar">

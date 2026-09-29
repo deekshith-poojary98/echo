@@ -716,39 +716,31 @@ body:has(.echo-playground) #app {
   overflow: hidden;
 }
 
+/* One compact strip: every extra line here is height taken from the editor. */
 .echo-playground__guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.7rem;
   flex: 0 0 auto;
-  padding: 1rem 1.15rem 1.1rem;
+  padding: 0.55rem 1.15rem;
   border-bottom: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
 }
 
 .echo-playground__title {
-  margin: 0 0 0.45rem;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
 
 .echo-playground__lead {
-  margin: 0 0 0.75rem;
-  max-width: 48rem;
+  margin: 0;
   color: var(--vp-c-text-2);
-  font-size: 0.95rem;
-  line-height: 1.55;
-}
-
-.echo-playground__steps {
-  margin: 0 0 0.75rem;
-  padding-left: 1.25rem;
-  max-width: 48rem;
-  color: var(--vp-c-text-1);
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
-.echo-playground__steps code {
-  font-size: 0.86em;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .echo-playground__toolbar {
