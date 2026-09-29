@@ -1,5 +1,9 @@
 # Syntax Basics
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 1](/learn/first-program). This page is a compact syntax checklist for people who already know how to run Echo.
+:::
+
 Statements end with `;`. Blocks use `{ }`. Method calls chain with `.`.
 
 ## Basic Example

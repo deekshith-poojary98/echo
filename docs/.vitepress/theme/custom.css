@@ -48,6 +48,14 @@
   padding-top: var(--vp-nav-height, 64px) !important;
 }
 
+/* On narrower viewports the nav is in normal flow (not fixed), so the
+   padding above doubles the offset and shows as an empty bar under the header. */
+@media (max-width: 959px) {
+  .Layout:has(.echo-home) .VPContent {
+    padding-top: 0 !important;
+  }
+}
+
 .Layout:has(.echo-home) .VPPage {
   padding: 0 !important;
   max-width: none !important;
@@ -633,7 +641,21 @@ body:has(.echo-playground) {
   overflow: hidden;
 }
 
+/* VitePress mounts into #app; without this the layout only sizes to content
+   and the editor/output panels collapse instead of filling the viewport. */
+html:has(.echo-playground) #app,
+body:has(.echo-playground) #app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .Layout:has(.echo-playground) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   height: 100%;
   max-height: 100%;
   min-height: 0;
@@ -688,10 +710,45 @@ body:has(.echo-playground) {
   flex-direction: column;
   flex: 1 1 auto;
   width: 100%;
-  height: auto;
+  height: 100%;
   min-height: 0;
   background: var(--vp-c-bg);
   overflow: hidden;
+}
+
+.echo-playground__guide {
+  flex: 0 0 auto;
+  padding: 1rem 1.15rem 1.1rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+}
+
+.echo-playground__title {
+  margin: 0 0 0.45rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.echo-playground__lead {
+  margin: 0 0 0.75rem;
+  max-width: 48rem;
+  color: var(--vp-c-text-2);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.echo-playground__steps {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+  max-width: 48rem;
+  color: var(--vp-c-text-1);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.echo-playground__steps code {
+  font-size: 0.86em;
 }
 
 .echo-playground__toolbar {
@@ -700,6 +757,7 @@ body:has(.echo-playground) {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1rem;
+  flex: 0 0 auto;
   min-height: var(--echo-toolbar-height);
   padding: 0.65rem 1rem;
   border-bottom: 1px solid var(--vp-c-divider);
@@ -791,8 +849,10 @@ body:has(.echo-playground) {
   display: grid;
   grid-template-columns: minmax(0, 57fr) auto minmax(0, 43fr);
   grid-template-rows: minmax(0, 1fr);
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .echo-playground__workspace.is-dragging {
@@ -809,6 +869,7 @@ body:has(.echo-playground) {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
   background: var(--vp-c-bg);
 }
@@ -937,12 +998,6 @@ body:has(.echo-playground) {
 }
 
 @media (max-width: 860px) {
-  .echo-playground {
-    height: auto;
-    min-height: 0;
-    overflow: hidden;
-  }
-
   .echo-playground__workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 57fr) auto minmax(0, 43fr);

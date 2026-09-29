@@ -1,5 +1,9 @@
 # Hello World
 
+::: tip Learning path
+Prefer [Lesson 1 — Your first program](/learn/first-program) if you are new to coding.
+:::
+
 ```echo
 say("Hello, Echo!");
 ```
@@ -10,12 +14,12 @@ Hello, Echo!
 
 ## Notes
 
-- `say(...)` writes to stdout.
-- Semicolon is required, even on one-liners.
+- `say(...)` writes text to the screen (standard output).
+- A semicolon is required, even on one-liners.
 
 ## Common Mistakes
 
-- Missing semicolon
+- Missing semicolon — see [Common mistakes](/errors-diagnostics/common-mistakes)
 
 ## See Also
 

@@ -1,5 +1,9 @@
 # Variables and Types
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 2 — Values and variables](/learn/values-and-variables). This page is the **full** type surface (unions, destructuring, classes, …).
+:::
+
 Declare a type. Echo checks it at runtime when the value is bound or reassigned.
 
 ## Basic Example

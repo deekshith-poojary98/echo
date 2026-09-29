@@ -1,5 +1,9 @@
 # Strings and Interpolation
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 7 — Strings](/learn/strings). This page is the **full** string surface (`format`, escapes, …).
+:::
+
 Quotes, escapes, `${...}` interpolation, and `format` (positional + named).
 
 ```echo

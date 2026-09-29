@@ -1,5 +1,9 @@
 # Errors and Troubleshooting
 
+::: tip New to Echo?
+For plain-language fixes (missing `;`, unknown name, `elang` not found), start with [Common mistakes](/errors-diagnostics/common-mistakes). This page is the **error-code catalog**.
+:::
+
 Errors carry a category and usually a hint. Abort is the default; see [failure model](/failure-model).
 
 ## Categories

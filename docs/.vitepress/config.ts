@@ -33,55 +33,50 @@ export default defineConfig({
     logo: '/echo_logo.jpg',
     siteTitle: false,
     nav: [
-      { text: 'Install', link: '/getting-started/installation' },
-      { text: 'Learn', link: '/getting-started/quick-start' },
+      { text: 'Start', link: '/start/choose-your-path' },
+      { text: 'Learn', link: '/learn/first-program' },
+      { text: 'Practice', link: '/practice/change-predict-fix' },
       { text: 'Playground', link: '/playground' },
-      { text: 'Examples', link: '/examples/hello-world' },
       { text: 'Reference', link: '/reference/language-reference' },
-      { text: 'Limits', link: '/errors-diagnostics/known-limitations' }
+      { text: 'Advanced', link: '/getting-started/tour' }
     ],
     sidebar: [
       {
-        text: 'Start',
+        text: 'Start here',
         items: [
-          { text: 'Installation', link: '/getting-started/installation' },
-          { text: 'Quick Start', link: '/getting-started/quick-start' },
-          { text: 'Playground', link: '/playground' }
+          { text: 'Choose your path', link: '/start/choose-your-path' },
+          { text: 'Install Echo', link: '/getting-started/installation' },
+          { text: 'Playground', link: '/playground' },
+          { text: 'Quick Start (short)', link: '/getting-started/quick-start' }
         ]
       },
       {
-        text: 'Learn',
+        text: 'Learn Echo',
         items: [
-          { text: 'Language Tour', link: '/getting-started/tour' },
-          { text: 'Syntax Basics', link: '/getting-started/syntax-basics' },
-          { text: 'Variables and Types', link: '/getting-started/variables-and-types' },
-          { text: 'Strings and Interpolation', link: '/getting-started/strings-and-interpolation' },
-          { text: 'Control Flow', link: '/getting-started/control-flow' },
-          { text: 'Functions', link: '/getting-started/functions' },
-          { text: 'Scope, use, and watch', link: '/core-concepts/scope-use-watch' },
-          { text: 'Lists', link: '/core-concepts/lists' },
-          { text: 'Hashes', link: '/core-concepts/hashes' },
-          { text: 'Classes and Interfaces', link: '/examples/classes-and-interfaces' },
-          { text: 'Modules', link: '/getting-started/modules' },
-          { text: 'Type Aliases', link: '/core-concepts/type-aliases' }
+          { text: '1. Your first program', link: '/learn/first-program' },
+          { text: '2. Values and variables', link: '/learn/values-and-variables' },
+          { text: '3. Making decisions', link: '/learn/making-decisions' },
+          { text: '4. Repeating things', link: '/learn/repeating-things' },
+          { text: '5. Functions', link: '/learn/functions' },
+          { text: '6. Lists and hashes', link: '/learn/lists-and-hashes' },
+          { text: '7. Strings', link: '/learn/strings' },
+          { text: '8. Organizing programs', link: '/learn/modules' },
+          { text: '9. Classes', link: '/learn/classes' }
         ]
       },
       {
-        text: 'Standard Library',
+        text: 'Practice',
         items: [
-          { text: 'Built-in Methods', link: '/standard-library/built-in-methods' }
+          { text: 'Change, predict, fix', link: '/practice/change-predict-fix' },
+          { text: 'Small exercises', link: '/practice/small-exercises' },
+          { text: 'Mini projects', link: '/practice/mini-projects' }
         ]
       },
       {
-        text: 'Examples',
+        text: 'When something goes wrong',
         items: [
-          { text: 'Hello World', link: '/examples/hello-world' },
-          { text: 'Classes and Interfaces', link: '/examples/classes-and-interfaces' },
-          { text: 'Lists in Practice', link: '/examples/lists-in-practice' },
-          { text: 'Hash Usage', link: '/examples/hash-usage' },
-          { text: 'Functions in Practice', link: '/examples/functions-in-practice' },
-          { text: 'Mini Programs', link: '/examples/mini-programs' },
-          { text: 'Algorithm Examples', link: '/examples/algorithms' }
+          { text: 'Common mistakes', link: '/errors-diagnostics/common-mistakes' },
+          { text: 'Error codes (reference)', link: '/errors-diagnostics/errors-and-troubleshooting' }
         ]
       },
       {
@@ -93,16 +88,39 @@ export default defineConfig({
           { text: 'Operators', link: '/reference/operators' },
           { text: 'Loops Reference', link: '/reference/loops-reference' },
           { text: 'CLI and Execution Model', link: '/reference/cli-and-execution-model' },
+          { text: 'Built-in Methods', link: '/standard-library/built-in-methods' },
           { text: 'Builtin Inventory', link: '/reference/builtin-inventory' },
           { text: 'Std Inventory', link: '/reference/std-inventory' },
-          { text: 'Failure Model', link: '/failure-model' }
+          { text: 'Failure Model', link: '/failure-model' },
+          { text: 'Known Limitations', link: '/errors-diagnostics/known-limitations' }
         ]
       },
       {
-        text: 'Errors',
+        text: 'Advanced',
         items: [
-          { text: 'Errors and Troubleshooting', link: '/errors-diagnostics/errors-and-troubleshooting' },
-          { text: 'Known Limitations', link: '/errors-diagnostics/known-limitations' }
+          { text: 'Language Tour (for programmers)', link: '/getting-started/tour' },
+          { text: 'Syntax Basics', link: '/getting-started/syntax-basics' },
+          { text: 'Variables and Types (full)', link: '/getting-started/variables-and-types' },
+          { text: 'Strings and Interpolation (full)', link: '/getting-started/strings-and-interpolation' },
+          { text: 'Control Flow (full)', link: '/getting-started/control-flow' },
+          { text: 'Functions (full)', link: '/getting-started/functions' },
+          { text: 'Scope, use, and watch', link: '/core-concepts/scope-use-watch' },
+          { text: 'Lists (methods)', link: '/core-concepts/lists' },
+          { text: 'Hashes (methods)', link: '/core-concepts/hashes' },
+          { text: 'Type Aliases', link: '/core-concepts/type-aliases' },
+          { text: 'Classes and Interfaces (full)', link: '/examples/classes-and-interfaces' },
+          { text: 'Modules (full)', link: '/getting-started/modules' }
+        ]
+      },
+      {
+        text: 'Examples',
+        items: [
+          { text: 'Hello World', link: '/examples/hello-world' },
+          { text: 'Lists in Practice', link: '/examples/lists-in-practice' },
+          { text: 'Hash Usage', link: '/examples/hash-usage' },
+          { text: 'Functions in Practice', link: '/examples/functions-in-practice' },
+          { text: 'Mini Programs', link: '/examples/mini-programs' },
+          { text: 'Algorithm Examples', link: '/examples/algorithms' }
         ]
       },
       {

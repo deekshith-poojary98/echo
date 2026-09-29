@@ -1,5 +1,9 @@
 # Scope, use, and watch
 
+::: tip Learning Echo from scratch?
+Finish [Lesson 5 — Functions](/learn/functions) first. This page is **advanced**: lexical scope, `use` / `use mut`, and `watch`.
+:::
+
 Lexical scoping. Functions can **read** outer variables from the scope where they were defined. **Reassigning** those outer variables requires `use mut`. Plain `use name;` does **not** permit assignment.
 
 ## Syntax

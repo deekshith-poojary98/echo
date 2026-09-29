@@ -1,5 +1,9 @@
 # Mini Programs
 
+::: tip Looking for guided practice?
+Use [Practice](/practice/change-predict-fix) and [Mini projects](/practice/mini-projects). This page is a catalog of short scripts — **not** a tutorial series.
+:::
+
 Short scripts. Not a tutorial series.
 
 Inline examples below run from any working directory. Commands that use `examples/...` paths require a **git clone** of this repository, with the shell cwd at the **repo root** (`examples/` is not installed by pip/pipx).

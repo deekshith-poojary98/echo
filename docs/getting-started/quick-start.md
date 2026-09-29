@@ -2,6 +2,8 @@
 
 Write a file, run it. That is the whole page.
 
+If you are new to programming, prefer [Lesson 1 — Your first program](/learn/first-program) after [Install](/getting-started/installation) or the [Playground](/playground).
+
 ## Hello
 
 Create `hello.echo`:
@@ -20,21 +22,13 @@ Output:
 Hello, Echo!
 ```
 
-Plain diagnostics (no Rich panels):
-
-```bash
-elang hello.echo --plain
-```
-
-On aborts inside a call, `--plain` may show a doubled `Stack: Stack:` header — a known quirk. Details: [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting#plain-mode-stack-header).
-
 ## Rules you hit immediately
 
-- Statements end with `;`.
-- Blocks use `{ }`. Newlines do not end statements.
-- Indentation is not syntax (unlike Python).
+- Instructions end with `;`.
+- Groups of instructions use `{ }`. New lines alone do not end an instruction.
+- Spaces at the start of a line are for reading. They are not how Echo groups code (unlike Python).
 
-Wrong:
+Wrong (missing `;`):
 
 ```echo
 say("Hello, Echo!")
@@ -48,9 +42,6 @@ say("Hello, Echo!");
 
 ## Next
 
-- [Playground](/playground) — browser demo; files / `run` / HTTP are denied there (**E2801**); `std/…` imports work
-- [Installation](/getting-started/installation)
-- [Mini Programs](/examples/mini-programs) — includes nested modules + `std/…` demos
-- [Getting Started / Language Tour](/getting-started/tour)
-- [Syntax Basics](/getting-started/syntax-basics)
-- [Variables and Types](/getting-started/variables-and-types)
+→ [Lesson 1 — Your first program](/learn/first-program)
+
+Also: [Playground](/playground) · [Install](/getting-started/installation) · [Common mistakes](/errors-diagnostics/common-mistakes)

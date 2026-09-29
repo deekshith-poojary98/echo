@@ -1,5 +1,9 @@
 # Control Flow
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 3 — Making decisions](/learn/making-decisions) and [Lesson 4 — Repeating things](/learn/repeating-things). This page is the **full** control-flow surface.
+:::
+
 `if` / `switch` / `while` / `for` / `foreach`, plus `break` and `continue`. Conditions use Echo [truthiness](#truthiness). `switch` is value dispatch (literals, type arms, destructuring) — not error handling.
 
 ## Truthiness

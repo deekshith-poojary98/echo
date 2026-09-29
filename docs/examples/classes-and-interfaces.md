@@ -1,5 +1,9 @@
 # Classes and Interfaces
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 9 — Classes](/learn/classes) for a minimal introduction. This page is the **full** example (interfaces, properties, `priv`, …).
+:::
+
 Nominal classes, `new { ... }` fields, methods, properties, and interfaces.
 
 ```echo

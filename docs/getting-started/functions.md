@@ -1,5 +1,9 @@
 # Functions
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 5 — Functions](/learn/functions). This page covers the **full** function surface (`use mut`, lambdas, variadics, …).
+:::
+
 Named `fn`s with typed parameters. Outer variables can be **read** lexically. **Reassignment** of an outer variable needs `use mut`. A `return` requires a return type on the function.
 
 ## Basic Example

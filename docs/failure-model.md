@@ -1,5 +1,9 @@
 # Echo failure model
 
+::: info Reference page
+This is a **design contract** for how Echo fails — not a beginner lesson. Learners: see [Common mistakes](/errors-diagnostics/common-mistakes).
+:::
+
 > **Status:** Frozen. `*Or` twins shipped in v0.5.3.
 > **Rule:** Abort by default. Recovery is inquiry and `*Or` twins — not `try` / `catch`.
 > **Background:** [v0.4 language vs stdlib](/archive/v0.4-language-vs-stdlib) section 8

@@ -1,18 +1,62 @@
 # Installation
 
-Install a CLI that runs `.echo` files. Needs **Python 3.10+**.
+This page helps you put Echo on your computer and run your first program.
 
-Prefer the command name **`elang`**. Many shells already treat `echo` as a built-in (POSIX `echo`; `Write-Output` on PowerShell). The package also registers `echolang` and `echo`; docs and examples use `elang`.
+You will:
 
-The PyPI package name is **`echolang`**.
+1. Open a **Terminal** (a window where you type commands).
+2. Install Echo.
+3. Check that Echo works.
+4. Create a file named `hello.echo`.
+5. Run it and see `Hello, Echo!`
 
-`examples/` ships with the git repository only — it is **not** installed by pip/pipx. After a PyPI install, verify with `--version` and a small file you create yourself.
+Want to try Echo **without** installing? Use the [Playground](/playground) first, then come back here.
 
-## Option 1: pipx (recommended)
+---
 
-Isolated env, global commands.
+## What is a Terminal?
+
+A **Terminal** (sometimes called a command line) is an app where you type short commands and press Enter. Echo’s install steps use the Terminal.
+
+### How to open it
+
+| Computer | What to open |
+| --- | --- |
+| macOS | Open **Spotlight** (⌘ Space), type `Terminal`, press Enter |
+| Windows | Open the Start menu, type `PowerShell`, open **Windows PowerShell** |
+| Linux | Open your system’s **Terminal** app |
+
+You type the commands from this page **into that Terminal window**, not into this documentation page.
+
+---
+
+## Before you install
+
+Echo’s installer uses **Python** (version **3.10 or newer**).
+
+In Terminal, check:
+
+```bash
+python3 --version
+```
+
+On Windows PowerShell, try:
+
+```powershell
+python --version
+```
+
+You should see a version number like `Python 3.12.x`. If the command fails, install Python 3.10+ from [python.org](https://www.python.org/downloads/), then open a **new** Terminal and try again.
+
+---
+
+## Install Echo (recommended)
+
+These steps use a helper called **pipx**. You do not need to understand pipx in detail. It installs Echo so you can run the `elang` command.
 
 ### macOS / Linux
+
+Type these lines **one at a time**, pressing Enter after each:
 
 ```bash
 python3 -m pip install --user pipx
@@ -28,80 +72,110 @@ python -m pipx ensurepath
 pipx install echolang
 ```
 
-### Open a new terminal
+### Open a new Terminal
 
-`pipx ensurepath` updates your shell config files. It does **not** refresh the PATH in the terminal where you just ran it. **Open a new terminal window** (or start a new shell session) before continuing.
+After `ensurepath`, **close the Terminal and open a new one**. The new window is what picks up the install.
 
-### Verify the install
+### Check that it worked
+
+In the **new** Terminal:
 
 ```bash
 elang --version
 ```
 
-The command prints `Echo` followed by the installed version and exits 0. The version string is whatever you installed from PyPI (or from a clone). This repository’s package version is **2.1.9**.
+**Success looks like this** (version number may match what you installed):
 
-Optional sanity checks that do not need a checkout:
-
-```bash
-elang builtins --count
-elang std
+```text
+Echo 2.1.9
 ```
 
-### If `elang: command not found`
+If you see that line, Echo is installed.
 
-1. Confirm you opened a **new** terminal after `ensurepath`.
-2. Re-run path setup explicitly:
+::: tip Command name
+The program is named **Echo**. The command you type is **`elang`**. The download package is named **`echolang`**. Docs use `elang`.
+:::
+
+### If you see `elang: command not found`
+
+1. Confirm you opened a **new** Terminal after install.
+2. Run path setup again, then open another new Terminal:
 
    ```bash
    python3 -m pipx ensurepath
    ```
 
-   On Windows PowerShell: `python -m pipx ensurepath`, then open a new session.
+   On Windows PowerShell: `python -m pipx ensurepath`
 
-3. On macOS / Linux, check that `~/.local/bin` is on your PATH (pipx usually installs shims there):
+3. Confirm the package is there: `pipx list` should mention `echolang`.
 
-   ```bash
-   ls ~/.local/bin/elang
-   echo "$PATH"
-   ```
+Still stuck? See [Common mistakes](/errors-diagnostics/common-mistakes#elang-command-not-found) for a longer checklist (including PATH details).
 
-   If the binary exists but PATH is wrong, add `~/.local/bin` to PATH in your shell profile, then open a new terminal.
+---
 
-4. Confirm the package is installed: `pipx list` should show `echolang`.
+## Your first Echo file
 
-### First program
+### 1. Create the file
 
-Create `hello.echo` in any directory:
+1. Open a simple text editor (TextEdit on macOS, Notepad on Windows, or any editor you like).
+2. Paste this exact line:
 
 ```echo
 say("Hello, Echo!");
 ```
 
-Run it:
+3. Save the file as **`hello.echo`**.
+4. Remember **which folder** you saved it in (for example, Desktop or Documents).
+
+The `.echo` ending tells you (and Echo) that this file is an Echo program.
+
+### 2. Run it from that folder
+
+In Terminal, go to the folder that contains `hello.echo`.
+
+Examples:
+
+```bash
+cd ~/Desktop
+```
+
+```powershell
+cd $HOME\Desktop
+```
+
+Then run:
 
 ```bash
 elang hello.echo
 ```
 
-Output:
+### 3. Expected output
 
 ```text
 Hello, Echo!
 ```
 
-Next: [Quick Start](/getting-started/quick-start).
+If you see that, you ran Echo on your computer.
 
-### From GitHub (still no clone required)
+**Next:** [Lesson 1 — Your first program](/learn/first-program) (explains what each part means).
+
+---
+
+## For people who already develop software
+
+The sections below are optional. Beginners can skip them.
+
+### Install from GitHub without cloning
 
 ```bash
 pipx install git+https://github.com/deekshith-poojary98/echo.git
 ```
 
-Same verify → hello.echo journey as above.
+Same verify → `hello.echo` steps as above.
 
-## Option 2: From a clone (repo root)
+### Install from a clone (repo root)
 
-Clone the repository, then install from the repo root. The `examples/` tree is available only in this layout.
+`examples/` ships with the git repository only — it is **not** installed by pip/pipx.
 
 ```bash
 git clone https://github.com/deekshith-poojary98/echo.git
@@ -110,21 +184,15 @@ pip install .
 # or for development: pip install -e .
 ```
 
-From the **repo root**, you can run shipped examples:
+From the **repo root**:
 
 ```bash
 elang examples/language_feature_smoke.echo
 ```
 
-Editable install (development):
+### Extra commands
 
-```bash
-pip install -e .
-```
-
-## Commands
-
-- `elang path/to/file.echo` — run
+- `elang path/to/file.echo` — run a file
 - `elang check [paths...]`
 - `elang test [paths...]`
 - `elang fmt [paths...] [--check]`
@@ -135,7 +203,18 @@ pip install -e .
 
 No path on `elang` / `echolang` / `echo` alone starts the REPL (see [CLI and Execution Model](/reference/cli-and-execution-model)).
 
-## See Also
+Optional checks after install:
 
-- [Quick Start](/getting-started/quick-start)
+```bash
+elang builtins --count
+elang std
+```
+
+---
+
+## See also
+
+- [Choose your path](/start/choose-your-path)
+- [Lesson 1 — Your first program](/learn/first-program)
+- [Common mistakes](/errors-diagnostics/common-mistakes)
 - [CLI and Execution Model](/reference/cli-and-execution-model)

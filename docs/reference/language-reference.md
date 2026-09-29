@@ -1,6 +1,10 @@
 # Language Reference
 
-Compact lookup for syntax and built-ins. For explanations, use Getting Started.
+::: info Lookup page
+This is a **reference** page for looking things up — not a tutorial. For learning, use [Learn Echo](/learn/first-program). For deeper rules, see [Language Semantics](/language-semantics).
+:::
+
+Compact lookup for syntax and built-ins.
 
 ## Statements
 

@@ -1,5 +1,9 @@
 # Modules
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 8 — Organizing programs](/learn/modules). This page is the fuller module write-up.
+:::
+
 Split a program across `.echo` files with `export` and `import`. Each file is its own module scope. Full contract: [Module Semantics](/module-semantics).
 
 ## Basic Example

@@ -1,5 +1,9 @@
 # Hashes
 
+::: tip Learning Echo from scratch?
+Start with [Lesson 6 — Lists and hashes](/learn/lists-and-hashes). This page is the **method catalog**.
+:::
+
 Mutable key-value maps. Type is `hash`.
 
 ## Syntax
