@@ -56,7 +56,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
 - No class inheritance (`extends`); shared behavior is interfaces + composition
 - No generics
-- No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `echo test` may continue after `expect*` failures; that is runner-only, not in-language recovery
+- No exceptions such as `try/catch` — abort stays the default; recovery is inquiry and `*Or` twins ([failure model](/failure-model)). `elang test` may continue after `expect*` failures; that is runner-only, not in-language recovery
 - No overloads
 - Function scope is lexical; reassignment of outer variables still requires `use mut`
 - Nested collections inside a frozen list/hash are not recursively frozen; a nested value reached through a different mutable name can still be mutated

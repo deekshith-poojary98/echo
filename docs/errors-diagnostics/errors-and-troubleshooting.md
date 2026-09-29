@@ -22,7 +22,7 @@ Runtime failures that still abort as Echo errors:
 
 - List index out of range; missing hash key; bad method use; invalid `format()` placeholder
 - `assert` / `fail` abort (`E2819` / `E2825`)
-- `expect` / `expectEq` / `expectNeq` abort outside `echo test` (`E2826` / `E2827` / `E2828`); under `echo test` they record and continue
+- `expect` / `expectEq` / `expectNeq` abort outside `elang test` (`E2826` / `E2827` / `E2828`); under `elang test` they record and continue
 - List `map` / `filter` callback errors (`E2829`–`E2831`)
 - List `reduce` (`E2832`–`E2834`); `forEach` (`E2835`–`E2836`); `flatMap` (`E2837`–`E2839`)
 - List `some` / `every` / `findIndex` (`E2840`–`E2841`; non-`bool` result is `E2831`)
@@ -87,7 +87,7 @@ Destructuring: length mismatch **E3205**; list pattern on non-list **E3206**; ha
 
 ## Lint is not a runtime error
 
-`echo lint` prints `path:line:col: rule: message` and exits 1 on findings. Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`, `test-naming`, `self-assign`, `unreachable-after-fail`. Zero-arg `fn test*` is not unused-function. `test-naming` flags a top-level `fn` that looks like a test but is not a zero-arg `testXxx` unit.
+`elang lint` prints `path:line:col: rule: message` and exits 1 on findings. Rules: `unused-local`, `unused-function`, `unused-import`, `comparison-to-bool`, `redundant-by-one`, `empty-block`, `shadow-builtin`, `test-naming`, `self-assign`, `unreachable-after-fail`. Zero-arg `fn test*` is not unused-function. `test-naming` flags a top-level `fn` that looks like a test but is not a zero-arg `testXxx` unit.
 
 ## Example
 
@@ -103,11 +103,22 @@ Name error: `count` was never declared.
 - `--plain`: simple text.
 - Hints are printed for common mistakes.
 
+### Plain-mode stack header
+
+When an abort happens inside a call and you use `--plain`, the stack section may look like:
+
+```text
+Stack: Stack:
+  in boom at path/to/file.echo:4:1
+```
+
+That doubled `Stack: Stack:` prefix is a known product quirk in plain mode (the printer adds a title onto a body that already starts with `Stack:`). It is harmless noise; the frame lines underneath are the useful part. Prefer Rich output (omit `--plain`) if you want cleaner panels.
+
 ## Common Fixes
 
 - Declare before assign
 - Add the missing semicolon
-- Add `use` or `use mut` inside functions
+- Add `use mut` inside functions before assigning to an outer variable (reads do not need `use`)
 - Check list indexes and hash keys
 - Match declared types
 

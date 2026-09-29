@@ -26,6 +26,8 @@ Plain diagnostics (no Rich panels):
 elang hello.echo --plain
 ```
 
+On aborts inside a call, `--plain` may show a doubled `Stack: Stack:` header — a known quirk. Details: [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting#plain-mode-stack-header).
+
 ## Rules you hit immediately
 
 - Statements end with `;`.

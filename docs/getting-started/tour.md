@@ -63,4 +63,5 @@ if true {
 - [Variables and Types](/getting-started/variables-and-types)
 - [Control Flow](/getting-started/control-flow)
 - [Functions](/getting-started/functions)
+- [Modules](/getting-started/modules)
 - [Known Limitations](/errors-diagnostics/known-limitations)

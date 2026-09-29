@@ -1,32 +1,18 @@
 # Control Flow
 
-`if` / `switch` / `while` / `for` / `foreach`, plus `break` and `continue`. Conditions use Echo truthiness. `switch` is value dispatch (literals, type arms, destructuring) — not error handling.
+`if` / `switch` / `while` / `for` / `foreach`, plus `break` and `continue`. Conditions use Echo [truthiness](#truthiness). `switch` is value dispatch (literals, type arms, destructuring) — not error handling.
 
-```echo
-if condition {
-    say("yes");
-} else {
-    say("no");
-}
+## Truthiness
 
-switch x {
-    0 { say("zero"); }
-    1 { say("one"); }
-    else { say("other"); }
-}
+Used by `if`, `while`, `&&`, `||`, `!`, and `default()`.
 
-while condition {
-    say("loop");
-}
+**Falsy** values: `false`, `null`, `0`, `0.0`, `""`, `[]`, `{}`.
 
-for i: int in 0..10 by 1 {
-    say(i);
-}
+Every other value is **truthy**.
 
-foreach item: str in items {
-    say(item);
-}
-```
+Full contract: [Language Semantics — Truthiness](/language-semantics#truthiness).
+
+## Basic Example
 
 ```echo
 for i: int in 0..5 {
@@ -42,20 +28,71 @@ for i: int in 0..5 {
 }
 ```
 
+## Output
+
 ```text
 0
 1
 3
 ```
 
-## Notes
+## How It Works
+
+```echo
+x: int = 1;
+condition: bool = true;
+items: list = ["a", "b"];
+
+if condition {
+    say("yes");
+} else {
+    say("no");
+}
+
+switch x {
+    0 { say("zero"); }
+    1 { say("one"); }
+    else { say("other"); }
+}
+
+i: int = 0;
+while i < 1 {
+    say("loop");
+    i = i + 1;
+}
+
+for n: int in 0..2 by 1 {
+    say(n);
+}
+
+foreach item: str in items {
+    say(item);
+}
+```
+
+#### Output
+
+```text
+yes
+one
+loop
+0
+1
+2
+a
+b
+```
+
 ### `if`, `else`, and `else if`
+
 `else if` is supported in source form.
 
 ### `while`
+
 Runs while the condition stays truthy.
 
 ### `for`
+
 - `..` means inclusive end
 - `...` means exclusive end
 - `by` sets the step
@@ -64,26 +101,38 @@ Runs while the condition stays truthy.
 - The same `..` / `...` / `by` spelling is a `list` of `int` in expression position (`xs: list = 0...5;`)
 
 ### `foreach`
+
 Each item is checked against the declared loop variable type at runtime. A range expression is a list, so `foreach` over `0...3` iterates that list.
 
 ## Common Mistakes
-### Using the wrong loop variable type in `for`
+
+### Using the wrong loop variable type in `for` — E1008
+
 ```echo
 for i: str in 0..10 {
     say(i);
 }
 ```
 
-### Using `break` outside a loop
-That raises a syntax error.
+### Using `break` outside a loop — E1004
+
+```echo
+break;
+```
+
+That is a **semantic** error (**E1004**), not a syntax error.
 
 ### Forgetting braces
+
 Echo does not support implicit blocks.
 
-### `for ... by 0`
+### `for ... by 0` — E2702
+
 Aborts (**E2702**). It does not loop forever.
 
-## See Also
+## Related
+
 - [Loops Reference](/reference/loops-reference)
 - [Operators](/reference/operators)
+- [Language Semantics](/language-semantics)
 - [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting)

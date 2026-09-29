@@ -50,7 +50,7 @@ export default defineConfig({
         ]
       },
       {
-        text: 'Language',
+        text: 'Learn',
         items: [
           { text: 'Language Tour', link: '/getting-started/tour' },
           { text: 'Syntax Basics', link: '/getting-started/syntax-basics' },
@@ -58,14 +58,11 @@ export default defineConfig({
           { text: 'Strings and Interpolation', link: '/getting-started/strings-and-interpolation' },
           { text: 'Control Flow', link: '/getting-started/control-flow' },
           { text: 'Functions', link: '/getting-started/functions' },
-          { text: 'Scope, use, and watch', link: '/core-concepts/scope-use-watch' }
-        ]
-      },
-      {
-        text: 'Data',
-        items: [
+          { text: 'Scope, use, and watch', link: '/core-concepts/scope-use-watch' },
           { text: 'Lists', link: '/core-concepts/lists' },
           { text: 'Hashes', link: '/core-concepts/hashes' },
+          { text: 'Classes and Interfaces', link: '/examples/classes-and-interfaces' },
+          { text: 'Modules', link: '/getting-started/modules' },
           { text: 'Type Aliases', link: '/core-concepts/type-aliases' }
         ]
       },
@@ -91,6 +88,8 @@ export default defineConfig({
         text: 'Reference',
         items: [
           { text: 'Language Reference', link: '/reference/language-reference' },
+          { text: 'Language Semantics', link: '/language-semantics' },
+          { text: 'Module Semantics', link: '/module-semantics' },
           { text: 'Operators', link: '/reference/operators' },
           { text: 'Loops Reference', link: '/reference/loops-reference' },
           { text: 'CLI and Execution Model', link: '/reference/cli-and-execution-model' },

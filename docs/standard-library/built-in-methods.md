@@ -417,14 +417,14 @@ assert(fileExists("notes.txt"), "missing notes");
 ```
 
 ### `expect(cond, message)`
-`cond` must be a `bool`. `message` must be a `str`. Under `echo test`, a false condition records failure **E2826** and the unit continues. Outside `echo test` it aborts like `assert`. Type errors (non-bool condition, non-string message) always abort.
+`cond` must be a `bool`. `message` must be a `str`. Under `elang test`, a false condition records failure **E2826** and the unit continues. Outside `elang test` it aborts like `assert`. Type errors (non-bool condition, non-string message) always abort.
 
 ```echo
 expect(1 + 1 == 2, "add");
 ```
 
 ### `expectEq(left, right, message)` / `expectNeq(left, right, message)`
-Compare with Echo `==`. `message` must be a `str`. Mismatch (or unexpected equality) records **E2827** / **E2828** and continues under `echo test`; outside `echo test` it aborts. The diagnostic includes `expected …, got …`.
+Compare with Echo `==`. `message` must be a `str`. Mismatch (or unexpected equality) records **E2827** / **E2828** and continues under `elang test`; outside `elang test` it aborts. The diagnostic includes `expected …, got …`.
 
 ```echo
 expectEq(1 + 1, 2, "add");

@@ -2,6 +2,8 @@
 
 Short scripts. Not a tutorial series.
 
+Inline examples below run from any working directory. Commands that use `examples/...` paths require a **git clone** of this repository, with the shell cwd at the **repo root** (`examples/` is not installed by pip/pipx).
+
 ### Countdown
 
 ```echo

@@ -30,6 +30,8 @@ elang program.echo --plain
 
 `--plain` drops Rich panels for simple text diagnostics.
 
+Known quirk (product bug, not a docs fiction): when an abort includes a call stack, plain mode may print a doubled header `Stack: Stack:` because the printer prefixes `Stack:` onto a body that already starts with `Stack:`. Rich (non-plain) output does not show that doubled title the same way. See [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting#plain-mode-stack-header).
+
 ### Require std imports
 
 ```bash
@@ -58,7 +60,18 @@ elang builtins --count
 
 Prints every prelude builtin name (sorted), one per line — same set as `builtin_names()` / the generated [builtin inventory](/reference/builtin-inventory). `--count` prints only the number. First argv token must be the word `builtins`; `elang builtins.echo` still runs that file.
 
-Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`, `lsp`.
+Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`, `std`, `lsp`.
+
+### List install-tree std modules
+
+```bash
+elang std
+elang std --exports
+elang std --count
+elang std --path
+```
+
+Prints `std/…` modules from the Echo install tree (one name per line by default). First argv token must be the word `std`; `elang std.echo` still runs that file.
 
 ### Language server (thin stub)
 
@@ -156,21 +169,24 @@ Native test runner. No `test "name" { }` syntax.
 - Process exit 0 if every unit passed, 1 if any failed (2 for usage).
 - `exit(0)` in a unit passes it; any other `exit(n)` fails it. Runner exit is not the program's `exit(n)`.
 
-Human report:
+Human report (one passing unit, one failing `expectEq`):
 
 ```text
 ok   path/foo_test.echo::testAdd
 FAIL path/foo_test.echo::testSub
      Error[E2827]: sub
      expected 3, got 4
-2 passed, 1 failed
+     --> path/foo_test.echo:4:5
+1 passed, 1 failed
 ```
 
-`--json` sample:
+The `--> file:line:col` line is printed for expect failures that carry a location. Paths and line numbers match your files.
+
+`--json` sample for the same run:
 
 ```json
 {
-  "passed": 2,
+  "passed": 1,
   "failed": 1,
   "skipped": 0,
   "units": [

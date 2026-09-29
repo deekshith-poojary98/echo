@@ -2,6 +2,8 @@
 
 Current tagged version tracks **2.1.x**. **1.1.0**–**1.1.9**, **2.0.0**–**2.0.9**, and **2.1.0**–**2.1.9** are complete. Failure model stays abort + `*Or`.
 
+User-facing docs prefer the CLI name **`elang`** (shells reserve `echo`). Historical slices below often say `echo check` / `echo test` / … — that is version history, not the command to type today.
+
 The completed 0.5.x work was language basics: a few host/stdlib builtins plus two syntax extensions, then CLI/editor tooling. **0.5.9** is the last 0.5.x slice: `echo check [paths...]` with directory recursion (same as `fmt` / `lint` / `test`) plus editor **Check workspace**. **0.5.8** adds a small `echo lint` rule batch (`test-naming`, `self-assign`, `unreachable-after-fail`). **0.5.7** wires `echo check` / `fmt` / `lint` / `test` into the VS Code/Cursor extension as tasks and Problems matchers (not an LSP). **0.5.6** ships the native `echo test` product (`expect*` helpers, file/function units, summary). **0.5.5** ships `fail(message)` and `echo lint`. **0.5.4** ships `echo fmt`. **0.5.3** ships `readFileOr`, `parseJsonOr`, `asIntOr`, and `asFloatOr`. **0.5.2** makes the REPL keep session state across submissions. **0.5.1** hardened the 0.5.0 CLI (REPL continuation/quit, `echo test` semantics) and playground `allow_run` host enforcement.
 
 Status values: `pending` / `drafted` / `in progress` / `implemented (version)` / `held`.
@@ -104,7 +106,7 @@ Last 0.5.x tooling slice. No new language syntax.
 
 ## 0.6.x
 
-**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). Current language version is **0.9.0**. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.9** are implemented. **0.9.0** is implemented.
+**0.5.9** closed the 0.5.x tooling arc. **0.6** opened language (functions as values, then collection helpers on those values). **Historical note (written during the 0.6 planning window):** at that time the then-current language version was described as **0.9.0**. That sentence is not the package version today — see the top of this file and `pyproject.toml` for the current **2.1.x** line. **0.6.x is complete.** **0.7.0**–**0.7.9** are implemented. **0.8.0–0.8.9** are implemented. **0.9.0** is implemented.
 
 **0.6.0** shipped all three language items in **one** release:
 

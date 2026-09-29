@@ -25,7 +25,7 @@ Exceptions already shipped (this note does not change them):
 - Fallback twin: `envOr(name, fallback)`, `readFileOr(path, fallback)`, `parseJsonOr(text, fallback)`, `yamlParseOr(text, fallback)`, `asIntOr(value, fallback)`, `asFloatOr(value, fallback)`, `httpGetOr` / `httpPostOr` (1.1.1)
 - Status value: `run` → `{ "code", "stdout", "stderr" }` (non-zero is not an Echo error)
 - Programmer abort: `assert(cond, message)`, `fail(message)`, `exit(code)`
-- Test-only continue: `expect` / `expectEq` / `expectNeq` under `echo test` (0.5.6). They record and continue in that runner; outside `echo test` they abort like `assert`. This is not `try` / `catch` and not user-level recovery.
+- Test-only continue: `expect` / `expectEq` / `expectNeq` under `elang test` (0.5.6). They record and continue in that runner; outside `elang test` they abort like `assert`. This is not `try` / `catch` and not user-level recovery.
 - Host policy: `allow_files=False` / `allow_run=False` / `allow_http=False` always abort (`E2801`)
 - HTTP status: non-2xx from `httpGet` / `httpPost` still returns the response hash (not an Echo error)
 
@@ -53,7 +53,7 @@ Contract violations. Not recoverable. No `*Or` twin.
 
 Catching these would hide bugs.
 
-`expect*` false/mismatch is a test assertion, not language recovery. Only `echo test` continues after it, and only for that helper. `assert` / `fail` still abort the current test unit.
+`expect*` false/mismatch is a test assertion, not language recovery. Only `elang test` continues after it, and only for that helper. `assert` / `fail` still abort the current test unit.
 
 ### 2. Expected absence — check or fallback
 

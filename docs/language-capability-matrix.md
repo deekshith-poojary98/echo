@@ -32,7 +32,7 @@ lists, lexical scope, closures, collections, strings (including multiline),
 nominal `class` + construction + methods/`this` + `interface` (no inheritance).
 
 Host/stdlib and tooling that used to be the main gaps: `args` / `env` / files /
-JSON, inquiry + `*Or` twins, `echo check` / `fmt` / `lint` / `test`, REPL.
+JSON, inquiry + `*Or` twins, `elang check` / `fmt` / `lint` / `test`, REPL.
 
 Still open or held: richer date/time, package manager, LSP, `try` / `catch`,
 generics, VM, class inheritance. Failure model is frozen — abort by default; recovery is
@@ -685,7 +685,7 @@ watch counter;
 ```
 
 Reports assignment and mutating operations, including indexed assignment.
-Mutation lines include a source location. On abort, CLI / `echo test` dump
+Mutation lines include a source location. On abort, CLI / `elang test` dump
 watched bindings under `Watched:`.
 
 **Limitations.** Not a stepper. No breakpoints or interactive debugger.
@@ -756,7 +756,7 @@ inquiry (`fileExists`, `has`, `contains`, …) and `*Or` twins
 **Current syntax.** No `try` / `catch`, no `Result` / `Option`, no `?`.
 
 **Limitations.** Expected absence is covered. Arbitrary catch-and-continue is
-not. `echo test` continuing after `expect*` is runner-only.
+not. `elang test` continuing after `expect*` is runner-only.
 
 **Priority.** Design hold. Do not add exceptions to “finish” this row.
 
@@ -979,7 +979,7 @@ Python interpreter package.
 
 **Status.** Implemented (0.5.4).
 
-`echo fmt [paths...]` rewrites Echo sources in place. `--check` reports
+`elang fmt [paths...]` rewrites Echo sources in place. `--check` reports
 dirty files without writing. Directory arguments recurse for `*.echo`.
 Go’s `gofmt` is still the reference: one style, no layout knobs.
 
@@ -993,7 +993,7 @@ Go’s `gofmt` is still the reference: one style, no layout knobs.
 
 **Status.** Implemented (0.5.5), expanded (0.5.8).
 
-The semantic analyzer already rejects real mistakes. `echo lint` covers
+The semantic analyzer already rejects real mistakes. `elang lint` covers
 style and convention: unused locals/functions/imports, comparison to
 boolean literals, redundant `by 1`, empty if/function bodies, shadowed
 builtins, `test-naming`, `self-assign`, and `unreachable-after-fail`.
@@ -1010,7 +1010,7 @@ It does not re-run typechecking. Unused parameters are `unused-local`.
 
 **Status.** Implemented (0.5.6) as tooling. No new keywords.
 
-`echo test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit. **0.6.8** adds `-run` / `--run` glob filter on those function unit names (not file names). **0.6.9** adds `--json` for a machine-readable report (totals, per-unit pass/fail, skipped from `-run`, failure message and location).
+`elang test [paths...]` discovers `*_test.echo` files in directories (explicit paths always run), calls zero-argument top-level `fn testXxx()` functions as separate units, and prints a pass/fail summary. `expect` / `expectEq` / `expectNeq` record and continue under the runner; `assert` / `fail` still abort the current unit. **0.6.8** adds `-run` / `--run` glob filter on those function unit names (not file names). **0.6.9** adds `--json` for a machine-readable report (totals, per-unit pass/fail, skipped from `-run`, failure message and location).
 
 There is no `test "name" { }` syntax. That stays vision / held.
 
@@ -1086,7 +1086,7 @@ Editor client wires it by default (`echo.lsp.enabled`).
 `echo` with no source file starts a REPL. Bindings persist for the process.
 Continuation spans braces and unterminated triple-quoted strings. Failed
 submissions return to the prompt. `--plain` works. `import` loads sibling
-`.echo` files from the working directory. `echo check` (0.4.1; multi-path
+`.echo` files from the working directory. `elang check` (0.4.1; multi-path
 0.5.9) is separate analysis tooling.
 
 **Priority.** Tooling. Shipped.

@@ -1,6 +1,8 @@
 # Functions
 
-Named `fn`s with typed parameters. Outer reassignment needs `use mut`. A `return` requires a return type on the function.
+Named `fn`s with typed parameters. Outer variables can be **read** lexically. **Reassignment** of an outer variable needs `use mut`. A `return` requires a return type on the function.
+
+## Basic Example
 
 ```echo
 fn greet(name: str) {
@@ -11,16 +13,26 @@ fn add(a: int, b: int) -> int {
     return a + b;
 }
 
-fn addPair([a: int, b: int]) -> int {
-    return a + b;
-}
-
-fn greetUser({ name: str }) -> str {
-    return name;
-}
-
-fn square(x: int) -> int => x * x;
+greet("Echo");
+say(add(2, 3));
 ```
+
+## Output
+
+```text
+Hello, Echo!
+5
+```
+
+## How It Works
+
+- Every parameter needs a type annotation.
+- Return type annotations are optional only when the function has no `return` statements.
+- If a function contains `return` (including bare `return;`), a return type annotation is required — use `-> void` when there is no value.
+- Keyword arguments work on user-defined functions. Most builtins accept them too, except variadic ones (`say`, `format`, …).
+- Functions can read outer variables without `use`. Only `use mut name;` permits assignment to an outer name.
+
+### Keyword arguments
 
 ```echo
 fn describe(name: str, age: int) {
@@ -30,29 +42,56 @@ fn describe(name: str, age: int) {
 describe(age: 21, name: "Alice");
 ```
 
-Lambdas and function types:
+#### Output
+
+```text
+Alice is 21
+```
+
+### Other shapes
+
+```echo
+fn addPair([a: int, b: int]) -> int {
+    return a + b;
+}
+
+fn greetUser({ name: str }) -> str {
+    return name;
+}
+
+fn square(x: int) -> int => x * x;
+
+say(addPair([2, 3]));
+say(greetUser({ name: "Ada" }));
+say(square(4));
+```
+
+#### Output
+
+```text
+5
+Ada
+16
+```
+
+### Lambdas and collection helpers
 
 ```echo
 double: fn(int) -> int = fn(x: int) -> int { return x * 2; };
 say(double(21));
 say(map([1, 2, 3], double));
 say(reduce([1, 2, 3], 0, fn(acc: int, x: int) -> int { return acc + x; }));
-forEach([1, 2, 3], fn(x: int) { say(x); });
-say(flatMap([1, 2], fn(x: int) -> list { return [x, x]; }));
-say(some([1, 2, 3], fn(x: int) -> bool { return x == 2; }));
-say(every([1, 2, 3], fn(x: int) -> bool { return x > 0; }));
-say(findIndex([1, 2, 3], fn(x: int) -> bool { return x == 3; }));
-say(zip([1, 2], [10, 20]));
-say(unique([1, 2, 1, true, 1]));
-say(chunk([1, 2, 3, 4, 5], 2));
-say(flatten([[1, 2], [3]]));
-say(partition([1, 2, 3, 4], fn(x: int) -> bool { return x % 2 == 0; }));
-say(rangeList(0, 5));
-say(rangeListInclusive(0, 5));
-say(mapValues({ a: 1, b: 2 }, double));
 ```
 
-Defaults and a trailing variadic:
+#### Output
+
+```text
+42
+[2, 4, 6]
+6
+```
+
+### Defaults and trailing variadic
 
 ```echo
 fn join(punct: str = ",", parts: str...) {
@@ -61,6 +100,13 @@ fn join(punct: str = ",", parts: str...) {
 
 join(parts: ["a", "b"]);
 join(" | ", "a", "b", "c");
+```
+
+#### Output
+
+```text
+a,b
+a | b | c
 ```
 
 A function with trailing defaults is assignable to the full-arity type and to a narrower type that omits those defaulted parameters:
@@ -75,85 +121,87 @@ say(full(2, 3));
 say(narrow(2));
 ```
 
-Standalone builtins are values too:
+#### Output
+
+```text
+5
+2
+```
+
+### Builtins as values
 
 ```echo
 print: fn(str) -> dynamic = say;
 print("hi");
-apply: fn(list, fn(int) -> int) -> list = map;
 say(type(say));
+```
+
+#### Output
+
+```text
+hi
+fn
 ```
 
 Variadic builtins (`say`, `eprint`, `format`, `pathJoin`) have type
 `fn(dynamic...) -> void` or `fn(dynamic...) -> str`. Bound methods such as
 `xs.map` are values; `xs.unknown` is still an error.
 
-## Output
-```text
-Alice is 21
-```
-
-## Notes
-### Parameter types
-Every parameter needs a type annotation.
-
-### Return types
-Return type annotations are optional only when the function has no `return` statements.
-
-If a function contains `return`, a return type annotation is required.
-
-```echo
-fn log(msg: str) {
-    say(msg);
-}
-
-fn add(a: int, b: int) -> int {
-    return a + b;
-}
-```
-
-### `return;`
-Bare `return;` is allowed.
-
-### Keyword arguments
-User-defined functions support keyword arguments.
-Most builtins do too, except variadic ones (`say`, `format`).
-
-### Scope inside functions
-Functions can read outer variables lexically.
-Reassignment of an outer variable still needs:
-
-```echo
-use x;
-use mut x;
-```
-
 ## Common Mistakes
-### Reading an outer variable without `use`
-```echo
-name: str = "Echo";
 
-fn greet() {
-    say(name);
-}
+### `return` without a return type — E1009
+
+```echo
+fn f() { return; }
 ```
 
-### Writing an outer variable without `use mut`
+Fails with **E1009**. Use an explicit return type:
+
+```echo
+fn f() -> void { return; }
+```
+
+### Assigning an outer variable without `use mut` — E2003
+
 ```echo
 count: int = 0;
 
 fn bump() {
     count = count + 1;
 }
+
+bump();
 ```
 
-### Returning the wrong type from an annotated function
-That raises a runtime type error.
+Reading `count` would work; assigning it needs `use mut count;` inside the function.
+
+### `use` alone does not allow assignment
+
+```echo
+count: int = 0;
+
+fn bump() {
+    use count;
+    count = count + 1;
+}
+```
+
+Still **E2003**. Only `use mut count;` permits the assignment.
+
+### Keyword args on variadic builtins — E2601
+
+```echo
+say(msg: "hi");
+```
+
+Fails with **E2601** (`say` is variadic and does not take keyword arguments).
 
 ## Current Limitation
+
 - No overloads
 
-## See Also
+## Related
+
 - [Scope, use, and watch](/core-concepts/scope-use-watch)
 - [Built-in Methods](/standard-library/built-in-methods)
 - [Errors and Troubleshooting](/errors-diagnostics/errors-and-troubleshooting)

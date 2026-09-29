@@ -132,7 +132,6 @@ Operators: `+`, `-`, `*`, `/`, `%`, unary `-`.
 Compound assignment: `+=`, `-=`, `*=`, `/=`, `%=`.
 `x += y` means `x = x + y` with the same type and mutability rules.
 On class fields, `this.x += y` / `obj.field += y` means the same read-then-assign on that field (0.9.0).
-On class fields, `this.x += y` / `obj.field += y` means the same read-then-assign on that field (0.9.0).
 
 ---
 
@@ -485,7 +484,7 @@ watch counter;
 
 Reports changes to the named binding from assignment and mutating operations,
 including indexed assignment. Mutation lines include a source location
-(`at file:line:col`). On abort, the CLI and `echo test` dump current watched
+(`at file:line:col`). On abort, the CLI and `elang test` dump current watched
 bindings under a `Watched:` section.
 
 ---
@@ -493,7 +492,7 @@ bindings under a `Watched:` section.
 ## Abort stack and `trace`
 
 On abort, when the failure happens inside one or more calls, the CLI and
-`echo test` dump a `Stack:` section (newest frame first). Top-level aborts
+`elang test` dump a `Stack:` section (newest frame first). Top-level aborts
 add no stack section.
 
 ```echo
