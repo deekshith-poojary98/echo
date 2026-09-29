@@ -16,6 +16,13 @@ say("Hello, Echo!");
 elang hello.echo
 ```
 
+Or open a desktop editor (IDLE-style) and click **Run**:
+
+```bash
+elang ide hello.echo
+# or empty buffer: elang ide
+```
+
 Output:
 
 ```text

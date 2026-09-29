@@ -205,10 +205,12 @@ def main(argv: list[str] | None = None) -> int:
         return _main_std(raw[1:])
     if raw[:1] == ["lsp"]:
         return _main_lsp(raw[1:])
+    if raw[:1] == ["ide"]:
+        return _main_ide(raw[1:])
     parser = argparse.ArgumentParser(
         description="Run an Echo source file",
         epilog=(
-            "Subcommands: check, test, fmt, lint, builtins, std, lsp.\n"
+            "Subcommands: check, test, fmt, lint, builtins, std, lsp, ide.\n"
             "Use 'elang <subcommand> -h' for details. "
             "'elang --version' prints the interpreter version."
         ),
@@ -505,6 +507,30 @@ def _main_lsp(argv: list[str]) -> int:
     from echo.lsp.server import run_stdio
 
     return run_stdio(host=Host(require_std=bool(args.require_std)))
+
+
+def _main_ide(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="echo ide",
+        description="Open the Echo desktop editor (edit, Run, output)",
+    )
+    parser.add_argument(
+        "source",
+        nargs="?",
+        help="Optional .echo file to open",
+    )
+    args = parser.parse_args(argv)
+    try:
+        from echo.ide.app import launch
+    except ImportError as exc:
+        print(
+            "elang ide requires Tkinter, which is not available in this Python.\n"
+            "On Homebrew: brew install python-tk@3.13   (match your Python version)\n"
+            "Or use the python.org / macOS installer build, which includes Tk."
+        )
+        print(f"({exc})")
+        return 1
+    return launch(args.source)
 
 
 def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:

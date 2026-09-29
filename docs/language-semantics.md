@@ -640,4 +640,5 @@ v2.1.6 peels math / random / `now` / `wait` / `run` into `std/math`, `std/random
 v2.1.7 adds `elang std` to list install-tree `std/…` modules (`--exports` / `--count` / `--path`).
 v2.1.8 extends `tools/sync_builtins.py` to generate the Std Inventory docs page.
 v2.1.9 closes the **2.1.x** series (YAML + LSP stub + std maturity on 2.0 modules).
+v2.2.0 adds `elang ide`, a Tk desktop editor that runs the buffer in-process (no language change).
 See [archive/v0.4-stdlib](/archive/v0.4-stdlib) for the historical host cut; current builtins are documented under [Built-in Methods](/standard-library/built-in-methods).

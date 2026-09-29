@@ -27,7 +27,7 @@ say("Version:", version);
 - Abort is the default on failure; inquiry and `*Or` twins cover expected absence — see [Failure model](/failure-model).
 - Classes and interfaces ship: `new { ... }` fields, methods, type methods, unbound methods, optional `implements`. Class inheritance does not.
 - Scripting helpers: HTTP (host-gated), URL / Base64, regex, UTC dates. List prelude names with `elang builtins`.
-- Current package version: **2.1.9** (see [Known Limitations](/errors-diagnostics/known-limitations) for the feature timeline).
+- Current package version: **2.2.0** (see [Known Limitations](/errors-diagnostics/known-limitations) for the feature timeline).
 - Comments:
 
 ```echo

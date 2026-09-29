@@ -87,7 +87,7 @@ elang --version
 **Success looks like this** (version number may match what you installed):
 
 ```text
-Echo 2.1.9
+Echo 2.2.0
 ```
 
 If you see that line, Echo is installed.
@@ -200,6 +200,7 @@ elang examples/language_feature_smoke.echo
 - `elang builtins` / `elang builtins --count`
 - `elang std` / `elang std --exports`
 - `elang lsp`
+- `elang ide` / `elang ide path/to/file.echo` — desktop editor (edit → Run → output)
 
 No path on `elang` / `echolang` / `echo` alone starts the REPL (see [CLI and Execution Model](/reference/cli-and-execution-model)).
 

@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version tracks **2.1.x**. **1.1.0**–**1.1.9**, **2.0.0**–**2.0.9**, and **2.1.0**–**2.1.9** are complete. Failure model stays abort + `*Or`.
+Current tagged version tracks **2.2.x**. **1.1.0**–**1.1.9**, **2.0.0**–**2.0.9**, and **2.1.0**–**2.1.9** are complete; **2.2.0** ships `elang ide`. Failure model stays abort + `*Or`.
 
 User-facing docs prefer the CLI name **`elang`** (shells reserve `echo`). Historical slices below often say `echo check` / `echo test` / … — that is version history, not the command to type today.
 
@@ -1246,6 +1246,26 @@ Shape: YAML (allowed PyPI dep), thin LSP, editor wire-up, light debugger polish,
 ### Out of 2.1 (still held globally)
 
 Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `Result`/`Option`, overloading, full LSP-as-product, `Point.new`.
+
+## 2.2.x — local tooling
+
+**Status: open (2.2.0 shipped).**
+
+**2.2** is about running Echo without a terminal. Not a language change; failure model unchanged.
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 2.2.0 | `elang ide` desktop editor (Tk) | done |
+
+### 2.2.0 — desktop IDE
+
+**Done.** `elang ide [file]` opens a Tk window: editor with line numbers and Echo syntax highlighting, Run, and an output pane that separates stdout from stderr.
+
+- Runs the unsaved buffer in-process through the normal pipeline; programs with `import` save first so the module loader reads the same text
+- Work happens on a background thread and results cross to the UI thread through a queue
+- New package `echo.ide`; `runner.run_source` is headless and unit-tested
+- Tkinter only (stdlib) — missing Tk prints an install hint and exits 1
+- MVP: no autocomplete, no debugger, no project tree, no LSP in the window; interactive `ask` / `readLine` are limited
 
 ## Held (do not implement)
 

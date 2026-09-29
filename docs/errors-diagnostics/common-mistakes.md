@@ -143,7 +143,7 @@ Still stuck? On macOS/Linux, developers sometimes need `~/.local/bin` on PATH â€
 Success looks like:
 
 ```text
-Echo 2.1.9
+Echo 2.2.0
 ```
 
 ---

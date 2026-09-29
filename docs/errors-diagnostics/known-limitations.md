@@ -1,10 +1,10 @@
 # Known Limitations
 
 ::: info Not a beginner lesson
-This page lists what Echo does **not** do yet, plus a historical feature timeline. For learning, use [Learn Echo](/learn/first-program). Current package version: **2.1.9**.
+This page lists what Echo does **not** do yet, plus a historical feature timeline. For learning, use [Learn Echo](/learn/first-program). Current package version: **2.2.0**.
 :::
 
-What Echo still does **not** do. As of **2.1.9**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports through `std/re` / `std/time` / `std/yaml` / `std/math` / `std/random`, optional `--require-std` prelude policy, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins` / `std` / `lsp`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins (also `std/re`), union narrowing in `if type(...)`, thin UTC dates (also `std/time`), thin HTTP (also `std/http`), thin URL helpers (also `std/url`), Base64 helpers (also `std/base64`), YAML helpers (`yamlParse` / `yamlParseOr` / `yamlWrite`, also `std/yaml`, **E2855**), file/JSON/env helpers also via `std/fs` / `std/json` / `std/os`, math / random / `now` / `wait` / `run` also via std modules, `watch` location / abort dumps, abort `Stack:` dumps and `trace`, documented **E2801** / **E2850**–**E2855** and module **E3001**–**E3005** codes, playground host-policy docs plus playground `std/…` / YAML demos, a thin `elang lsp` stub wired into the editor extension (diagnostics, builtin hover, goto-def; task matchers remain as fallback), and generated builtin + std inventories (`tools/sync_builtins.py`). **2.0** is path resolution + std modules — not a package registry. **2.1** is YAML + LSP stub + std maturity on that surface. This page is the remainder — not a changelog.
+What Echo still does **not** do. As of **2.2.0**, the language includes modules (sibling + nested / relative paths, `std/…` install-tree imports through `std/re` / `std/time` / `std/yaml` / `std/math` / `std/random`, optional `--require-std` prelude policy, clearer cycle / not-found diagnostics), CLI tooling (`check` / `test` / `fmt` / `lint` / `builtins` / `std` / `lsp` / `ide`), first-class functions, `const` / destructuring / unions / `switch`, nominal classes with `new { ... }` fields (including defaults), bound/unbound/type methods, optional `implements`, interfaces (no inheritance), compound assignment on members, `priv` visibility, positional construction, deep `clone()`, named `format` placeholders, class properties (`get` / `set`), recursive `mkdirAll` / `removeTree`, regex builtins (also `std/re`), union narrowing in `if type(...)`, thin UTC dates (also `std/time`), thin HTTP (also `std/http`), thin URL helpers (also `std/url`), Base64 helpers (also `std/base64`), YAML helpers (`yamlParse` / `yamlParseOr` / `yamlWrite`, also `std/yaml`, **E2855**), file/JSON/env helpers also via `std/fs` / `std/json` / `std/os`, math / random / `now` / `wait` / `run` also via std modules, `watch` location / abort dumps, abort `Stack:` dumps and `trace`, documented **E2801** / **E2850**–**E2855** and module **E3001**–**E3005** codes, playground host-policy docs plus playground `std/…` / YAML demos, a thin `elang lsp` stub wired into the editor extension (diagnostics, builtin hover, goto-def; task matchers remain as fallback), and generated builtin + std inventories (`tools/sync_builtins.py`). **2.0** is path resolution + std modules — not a package registry. **2.1** is YAML + LSP stub + std maturity on that surface. This page is the remainder — not a changelog.
 
 ## Already in (summary)
 
@@ -53,6 +53,7 @@ What Echo still does **not** do. As of **2.1.9**, the language includes modules 
 - 2.1.7: `elang std` lists install-tree `std/…` modules (`--exports` / `--count` / `--path`)
 - 2.1.8: generated Std Inventory docs page (`tools/sync_builtins.py`)
 - 2.1.9: **2.1.x** series close (YAML + LSP stub + std maturity on 2.0 modules)
+- 2.2.0: `elang ide` desktop editor (Tk window: edit → Run → output, line numbers, syntax highlight)
 
 Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 
@@ -73,6 +74,7 @@ Details: [Roadmap](/project/roadmap) and `CHANGELOG.md`.
 - No date object type / local-timezone calendars (UTC unix seconds + `formatTime` / `parseTime` only)
 - HTTP is thin (no cookies/session client, no multipart); playground denies HTTP (`allow_http=False`)
 - No full LSP-as-product (thin `elang lsp` + editor client ship in **2.1.2**–**2.1.4**; tasks/matchers remain)
+- `elang ide` is an MVP desktop editor (edit / Run / output, Open/Save, syntax highlight) — no autocomplete, no debugger, no project tree, no LSP inside the window; interactive `ask` / `readLine` are limited (non-interactive programs are the happy path)
 - No full debugger / stepper (abort `Stack:` + `watch` + `trace` ship through **2.1.5**)
 - No package registry yet (stdlib peels + optional `--require-std` shipped through **2.0.7**)
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.2.0
+
+Desktop IDE. Opens the **2.2.x** series. Failure model unchanged. No new language syntax.
+
+- `elang ide [file]` opens a Tk desktop editor (edit → Run → output); optional file argument
+- Editor: line numbers, Echo syntax highlighting, current-line highlight, two-space indent, auto-indent after `{`
+- Output pane separates stdout from stderr, with a run-status pill and elapsed time
+- Runs the unsaved buffer in-process; programs with `import` save first so the module loader sees the same text
+- New package `echo.ide` (`runner.run_source` is headless and testable); Tkinter only, no new PyPI dependency
+- Missing Tkinter prints an install hint and exits 1 instead of a traceback
+
+Fixes:
+
+- `httpGet` decodes responses with an unknown charset instead of aborting
+- `yamlParse` rejects cyclic YAML aliases instead of recursing until the interpreter dies
+
+Docs:
+
+- New beginner path: nine `learn/` lessons, three `practice/` pages, and `start/choose-your-path`
+- Playground page / UI refactor; obsolete `echo_documentation.md` moved under `archive/`
+
 ## 2.1.9
 
 Series close (docs / examples). Closes the **2.1.x** series. No new language syntax. Failure model unchanged.

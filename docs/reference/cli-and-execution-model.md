@@ -60,7 +60,16 @@ elang builtins --count
 
 Prints every prelude builtin name (sorted), one per line — same set as `builtin_names()` / the generated [builtin inventory](/reference/builtin-inventory). `--count` prints only the number. First argv token must be the word `builtins`; `elang builtins.echo` still runs that file.
 
-Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`, `std`, `lsp`.
+Top-level `elang -h` lists subcommands: `check`, `test`, `fmt`, `lint`, `builtins`, `std`, `lsp`, `ide`.
+
+### Desktop IDE
+
+```bash
+elang ide
+elang ide hello.echo
+```
+
+Opens a small Tk window: editor with line numbers and syntax highlighting, **Run**, output pane, Open/Save. Runs the buffer in-process (no save required for programs without `import`). Needs Tkinter (usual on macOS/Windows Python installers; on Homebrew: `brew install python-tk@3.13`, matching your Python version). Interactive `ask` / `readLine` are limited in v1 — prefer non-interactive programs. First argv token must be the word `ide`; `elang ide.echo` still runs that file.
 
 ### List install-tree std modules
 

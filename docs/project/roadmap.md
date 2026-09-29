@@ -7,7 +7,7 @@ Public status page for what ships today. The ordered implementation plan lives u
 Already in the language or CLI:
 
 - File modules: `import` / `export` (v0.3); nested / relative paths (**2.0.0**); cycle / resolver diagnostics polish (**2.0.1**); `std/…` install-tree path (**2.0.2**); std peels through `std/re` / `std/time` (**2.0.3**–**2.0.6**); optional `--require-std` (**2.0.7**); docs / examples / playground (**2.0.8**); series close (**2.0.9**)
-- REPL (`elang` with no file), `elang check`, `elang test`, `elang fmt`, `elang lint`, `elang builtins`, `elang std`, `elang lsp`
+- REPL (`elang` with no file), `elang check`, `elang test`, `elang fmt`, `elang lint`, `elang builtins`, `elang std`, `elang lsp`, `elang ide`
 - Exact object types: `exact { ... }` (0.7.2)
 - Number literals `.5` / scientific form; multiline strings
 - `const` (including param `const` in 0.7.9), destructuring (hash `as` rename, hash rest), builtins as values, range-as-value, unions (`int | str`), `switch` through 0.7.9
@@ -17,10 +17,19 @@ Already in the language or CLI:
 - **1.1.x** complete (**1.1.0–1.1.9**): HTTP + URL + Base64, watch/abort polish, error-code docs, playground host policy, builtin sync, `elang builtins`, series docs/examples
 - **2.0.x** complete (**2.0.0–2.0.9**): path resolution + `std/…` peels (not a package manager)
 - **2.1.x** complete (**2.1.0–2.1.9**): YAML + thin LSP stub + std maturity on 2.0 modules
+- **2.2.0**: `elang ide` desktop editor (Tk window: edit → Run → output)
 
 ## Next
 
-**1.1.x**, **2.0.x**, and **2.1.x** are complete. Held work (package registry, full LSP-as-product, generics, …) stays in [Priority](/project/priority) until a new series starts.
+**1.1.x**, **2.0.x**, and **2.1.x** are complete; **2.2.x** is open. Held work (package registry, full LSP-as-product, generics, …) stays in [Priority](/project/priority) until it is pulled into a series.
+
+### Open — 2.2.x local tooling
+
+| Version | Item | Status |
+| --- | --- | --- |
+| 2.2.0 | `elang ide` desktop editor (Tk) | done |
+
+Public message: **2.2 = run Echo without a terminal.**
 
 ### Closed — 2.1.x YAML + LSP stub + std maturity
 
