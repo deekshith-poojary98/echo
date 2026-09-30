@@ -209,6 +209,27 @@ def test_wait_integer_too_large_for_float_is_echo_error_not_python():
     assert "finite" in result.output
 
 
+def test_wait_finite_too_large_for_platform_time_is_echo_error_not_python():
+    # 1e10 is finite but overflows C time_t; 1e308 is finite float max-ish.
+    result = run_echo("wait(1e10);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "wait()" in result.output
+    assert "finite" in result.output
+
+    result = run_echo("wait(1e308);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "wait()" in result.output
+    assert "finite" in result.output
+
+    result = run_echo("wait(10000000000);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "wait()" in result.output
+    assert "finite" in result.output
+
+
 def test_as_int_infinity_is_echo_error_not_python():
     result = run_echo("say(asInt(1e400));\n")
     assert result.exit_code == 1

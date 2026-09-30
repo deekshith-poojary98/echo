@@ -724,9 +724,10 @@ def do_wait(seconds: object, location: SourceLocation | None = None) -> None:
         raise ArgumentError("wait() requires a non-negative number of seconds", location, code="E2608")
     try:
         duration = float(seconds)
-    except OverflowError as exc:
+        # Platform time_t cannot represent every finite float (e.g. 1e10, 1e308).
+        time.sleep(duration)
+    except (OverflowError, OSError) as exc:
         raise ArgumentError("wait() requires a finite number of seconds", location, code="E2608") from exc
-    time.sleep(duration)
 
 
 def do_clone(
