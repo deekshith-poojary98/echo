@@ -965,11 +965,27 @@ def do_env_or(name: object, fallback: object, host: Host, location: SourceLocati
     return mapping[name]
 
 
+def _reject_embedded_nul(
+    value: str,
+    method: str,
+    what: str,
+    location: SourceLocation | None,
+    code: str,
+) -> None:
+    if "\x00" in value:
+        raise EchoRuntimeError(
+            f"{method}() {what} must not contain a NUL character",
+            location,
+            code=code,
+        )
+
+
 def do_read_file(path: object, host: Host, location: SourceLocation | None = None) -> str:
     if not host.allow_files:
         raise EchoRuntimeError("readFile() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("readFile() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "readFile", "path", location, "E2802")
     target = host.resolve_path(path)
     try:
         return target.read_text(encoding="utf-8")
@@ -977,7 +993,7 @@ def do_read_file(path: object, host: Host, location: SourceLocation | None = Non
         raise EchoRuntimeError(f"file not found: {path}", location, code="E2802") from exc
     except UnicodeDecodeError as exc:
         raise EchoRuntimeError(f"file is not valid UTF-8: {path}", location, code="E2803") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot read file: {path}", location, code="E2803") from exc
 
 
@@ -986,10 +1002,11 @@ def do_read_file_or(path: object, fallback: object, host: Host, location: Source
         raise EchoRuntimeError("readFileOr() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("readFileOr() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "readFileOr", "path", location, "E2802")
     target = host.resolve_path(path)
     try:
         return target.read_text(encoding="utf-8")
-    except (FileNotFoundError, UnicodeDecodeError, OSError):
+    except (FileNotFoundError, UnicodeDecodeError, OSError, ValueError):
         return fallback
 
 
@@ -1000,10 +1017,11 @@ def do_write_file(path: object, contents: object, host: Host, location: SourceLo
         raise EchoTypeError("writeFile() path must be a string", location, code="E2803")
     if not isinstance(contents, str):
         raise EchoTypeError("writeFile() contents must be a string", location, code="E2803")
+    _reject_embedded_nul(path, "writeFile", "path", location, "E2803")
     target = host.resolve_path(path)
     try:
         target.write_text(contents, encoding="utf-8")
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot write file: {path}", location, code="E2803") from exc
     return None
 
@@ -1229,7 +1247,11 @@ def do_file_exists(path: object, host: Host, location: SourceLocation | None = N
         raise EchoRuntimeError("fileExists() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("fileExists() path must be a string", location, code="E2802")
-    return host.file_exists(path)
+    _reject_embedded_nul(path, "fileExists", "path", location, "E2802")
+    try:
+        return host.file_exists(path)
+    except ValueError as exc:
+        raise EchoRuntimeError(f"invalid path: {path}", location, code="E2802") from exc
 
 
 def do_cwd(args: list[object], host: Host, location: SourceLocation | None = None) -> str:
@@ -1249,7 +1271,11 @@ def do_is_dir(path: object, host: Host, location: SourceLocation | None = None) 
         raise EchoRuntimeError("isDir() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("isDir() path must be a string", location, code="E2802")
-    return host.is_dir(path)
+    _reject_embedded_nul(path, "isDir", "path", location, "E2802")
+    try:
+        return host.is_dir(path)
+    except ValueError as exc:
+        raise EchoRuntimeError(f"invalid path: {path}", location, code="E2802") from exc
 
 
 def do_list_files(path: object, host: Host, location: SourceLocation | None = None) -> list[str]:
@@ -1257,13 +1283,14 @@ def do_list_files(path: object, host: Host, location: SourceLocation | None = No
         raise EchoRuntimeError("listFiles() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("listFiles() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "listFiles", "path", location, "E2802")
     try:
         return host.list_entries(path)
     except FileNotFoundError as exc:
         raise EchoRuntimeError(f"directory not found: {path}", location, code="E2802") from exc
     except NotADirectoryError as exc:
         raise EchoRuntimeError(f"not a directory: {path}", location, code="E2802") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot list directory: {path}", location, code="E2803") from exc
 
 
@@ -1272,6 +1299,7 @@ def do_mkdir(path: object, host: Host, location: SourceLocation | None = None) -
         raise EchoRuntimeError("mkdir() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("mkdir() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "mkdir", "path", location, "E2802")
     target = host.resolve_path(path)
     if target.is_file():
         raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
@@ -1287,7 +1315,7 @@ def do_mkdir(path: object, host: Host, location: SourceLocation | None = None) -
         raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803") from exc
     except NotADirectoryError as exc:
         raise EchoRuntimeError(f"parent directory not found: {path}", location, code="E2802") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot create directory: {path}", location, code="E2803") from exc
     return None
 
@@ -1297,6 +1325,7 @@ def do_mkdir_all(path: object, host: Host, location: SourceLocation | None = Non
         raise EchoRuntimeError("mkdirAll() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("mkdirAll() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "mkdirAll", "path", location, "E2802")
     target = host.resolve_path(path)
     if target.is_file():
         raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
@@ -1306,7 +1335,7 @@ def do_mkdir_all(path: object, host: Host, location: SourceLocation | None = Non
         raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803") from exc
     except NotADirectoryError as exc:
         raise EchoRuntimeError(f"parent path is not a directory: {path}", location, code="E2802") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot create directory: {path}", location, code="E2803") from exc
     return None
 
@@ -1316,6 +1345,7 @@ def do_remove_file(path: object, host: Host, location: SourceLocation | None = N
         raise EchoRuntimeError("removeFile() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("removeFile() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "removeFile", "path", location, "E2802")
     try:
         host.remove_file(path)
     except FileNotFoundError as exc:
@@ -1327,7 +1357,7 @@ def do_remove_file(path: object, host: Host, location: SourceLocation | None = N
         if target.is_dir():
             raise EchoRuntimeError(f"not a file: {path}", location, code="E2802") from exc
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
     return None
 
@@ -1337,11 +1367,12 @@ def do_remove_tree(path: object, host: Host, location: SourceLocation | None = N
         raise EchoRuntimeError("removeTree() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("removeTree() path must be a string", location, code="E2802")
+    _reject_embedded_nul(path, "removeTree", "path", location, "E2802")
     try:
         host.remove_tree(path)
     except FileNotFoundError as exc:
         raise EchoRuntimeError(f"path not found: {path}", location, code="E2802") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot remove path: {path}", location, code="E2803") from exc
     return None
 
@@ -1464,6 +1495,8 @@ def do_copy_file(src: object, dest: object, host: Host, location: SourceLocation
         raise EchoTypeError("copyFile() src must be a string", location, code="E2802")
     if not isinstance(dest, str):
         raise EchoTypeError("copyFile() dest must be a string", location, code="E2802")
+    _reject_embedded_nul(src, "copyFile", "src", location, "E2802")
+    _reject_embedded_nul(dest, "copyFile", "dest", location, "E2802")
     source = host.resolve_path(src)
     target = host.resolve_path(dest)
     if source.is_dir():
@@ -1480,7 +1513,7 @@ def do_copy_file(src: object, dest: object, host: Host, location: SourceLocation
         if source.is_dir():
             raise EchoRuntimeError(f"not a file: {src}", location, code="E2802") from exc
         raise EchoRuntimeError(f"destination is a directory: {dest}", location, code="E2802") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot copy file: {src}", location, code="E2803") from exc
     return None
 
@@ -1503,16 +1536,18 @@ def do_run(command: object, args: object, host: Host, location: SourceLocation |
         raise EchoTypeError("run() command must be a string", location, code="E2822")
     if not isinstance(args, list):
         raise EchoTypeError("run() args must be a list of strings", location, code="E2822")
+    _reject_embedded_nul(command, "run", "command", location, "E2822")
     argv: list[str] = []
     for item in args:
         if not isinstance(item, str):
             raise EchoTypeError("run() args must be a list of strings", location, code="E2822")
+        _reject_embedded_nul(item, "run", "args", location, "E2822")
         argv.append(item)
     try:
         return host.run_process(command, argv)
     except FileNotFoundError as exc:
         raise EchoRuntimeError(f"executable not found: {command}", location, code="E2822") from exc
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot run command: {command}", location, code="E2822") from exc
 
 

@@ -17,6 +17,8 @@ def _require_url(value: object, method: str, location: SourceLocation | None) ->
         raise EchoTypeError(f"{method}() url must be a string", location, code="E2852")
     if not value:
         raise EchoRuntimeError(f"{method}() url must not be empty", location, code="E2852")
+    if "\x00" in value:
+        raise EchoRuntimeError(f"{method}() url must not contain a NUL character", location, code="E2852")
     return value
 
 
@@ -118,9 +120,9 @@ def http_request(
         data = text.encode("utf-8")
         if not any(key.lower() == "content-type" for key in request_headers):
             request_headers = {**request_headers, "Content-Type": "text/plain; charset=utf-8"}
-    request = Request(target, data=data, headers=request_headers, method=method.upper())
     open_url = opener or urlopen
     try:
+        request = Request(target, data=data, headers=request_headers, method=method.upper())
         with open_url(request, timeout=timeout) as response:
             return _read_response(response)
     except HTTPError as exc:
