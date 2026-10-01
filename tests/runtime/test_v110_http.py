@@ -216,6 +216,65 @@ def test_httputil_rejects_nul_url():
         assert "NUL" in exc.message
 
 
+def test_http_file_url_is_echo_error_not_python():
+    result = run_echo('say(httpGet("file:///tmp/echo_secret_test.txt"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2852" in result.output
+    assert "http or https" in result.output
+
+
+def test_http_data_url_is_echo_error_not_python():
+    result = run_echo('say(httpGet("data:text/plain,hello"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2852" in result.output
+    assert "http or https" in result.output
+
+
+def test_http_ftp_url_is_echo_error_not_python():
+    result = run_echo('say(httpGet("ftp://127.0.0.1:1/"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2852" in result.output
+    assert "http or https" in result.output
+
+
+def test_http_get_or_file_url_returns_fallback():
+    result = run_echo('say(httpGetOr("file:///tmp/echo_secret_test.txt", "offline"));\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "offline"
+
+
+def test_httputil_rejects_file_url():
+    try:
+        http_get("file:///tmp/echo_secret_test.txt")
+        raise AssertionError("expected EchoRuntimeError")
+    except EchoRuntimeError as exc:
+        assert exc.code == "E2852"
+        assert "http or https" in exc.message
+
+
+def test_read_response_missing_status_does_not_leak_type_error():
+    from echo.core.httputil import _read_response
+
+    class _NoStatus:
+        status = None
+        code = None
+        headers = EmailMessage()
+
+        def read(self) -> bytes:
+            return b"body"
+
+    try:
+        payload = _read_response(_NoStatus())
+    except TypeError as exc:
+        raise AssertionError("TypeError leaked from _read_response") from exc
+    assert payload["status"] == 0
+    assert payload["body"] == "body"
+
+
 def test_playground_worker_denies_http():
     worker = ( __import__("pathlib").Path(__file__).resolve().parents[2]
         / "docs"
