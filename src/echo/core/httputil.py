@@ -3,6 +3,7 @@ from __future__ import annotations
 from email.message import Message
 from typing import Callable
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
@@ -19,6 +20,11 @@ def _require_url(value: object, method: str, location: SourceLocation | None) ->
         raise EchoRuntimeError(f"{method}() url must not be empty", location, code="E2852")
     if "\x00" in value:
         raise EchoRuntimeError(f"{method}() url must not contain a NUL character", location, code="E2852")
+    # urlopen handles file://, data:, ftp://, and others. file:// would read the
+    # local disk even when Host.allow_files is False, and those handlers return
+    # responses whose status is None — int(None) leaked TypeError.
+    if urlparse(value).scheme.lower() not in {"http", "https"}:
+        raise EchoRuntimeError(f"{method}() url must be an http or https URL", location, code="E2852")
     return value
 
 
@@ -54,7 +60,13 @@ def _headers_to_hash(headers: Message) -> dict[str, str]:
 
 
 def _read_response(response: object) -> dict[str, object]:
-    status = int(getattr(response, "status", getattr(response, "code", 0)))
+    raw_status = getattr(response, "status", None)
+    if raw_status is None:
+        raw_status = getattr(response, "code", None)
+    try:
+        status = int(raw_status)
+    except (TypeError, ValueError):
+        status = 0
     header_map = getattr(response, "headers", None)
     headers = _headers_to_hash(header_map) if isinstance(header_map, Message) else {}
     raw = response.read()  # type: ignore[attr-defined]
