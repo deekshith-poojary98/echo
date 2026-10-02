@@ -608,11 +608,16 @@ class EchoIdeApp:
         started = time.perf_counter()
 
         def worker() -> None:
-            result = run_source(
-                source,
-                filename=str(path) if path else "<ide>",
-                path=path if path and path.is_file() else None,
-            )
+            try:
+                result = run_source(
+                    source,
+                    filename=str(path) if path else "<ide>",
+                    path=path if path and path.is_file() else None,
+                )
+            except Exception as exc:  # noqa: BLE001 — always deliver a result
+                # An uncaught exception used to kill the worker without
+                # enqueueing, leaving Run stuck until the IDE was restarted.
+                result = RunResult(exit_code=1, stderr=f"{type(exc).__name__}: {exc}\n")
             self._results.put((result, time.perf_counter() - started))
 
         threading.Thread(target=worker, daemon=True).start()

@@ -229,8 +229,19 @@ class Interpreter:
     def execute(self, program: Program, env: Environment | None = None) -> None:
         self._abort_frames = None
         self.global_env = env or Environment()
-        for statement in program.statements:
-            self.execute_statement(statement, self.global_env)
+        try:
+            for statement in program.statements:
+                self.execute_statement(statement, self.global_env)
+        except RecursionError as exc:
+            # Deeply nested expressions (not just function calls) blow the
+            # Python stack. Function bodies convert this in
+            # _run_with_class_visibility so the Echo stack snapshot is kept.
+            location = self._frames[-1].call_site if self._frames else program.location
+            raise EchoRuntimeError(
+                "Call stack nested too deeply",
+                location,
+                code="E2797",
+            ) from exc
 
     def execute_statement(self, statement: Statement, env: Environment) -> None:
         if isinstance(statement, TypeAliasStatement):
@@ -2098,6 +2109,12 @@ class Interpreter:
                     result = returned.value
             check_return(declaration.name, result, declaration.return_type, location)
             return result
+        except RecursionError as exc:
+            raise EchoRuntimeError(
+                "Call stack nested too deeply",
+                location,
+                code="E2797",
+            ) from exc
         finally:
             if self._frames:
                 exc = sys.exc_info()[1]
