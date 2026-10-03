@@ -599,6 +599,43 @@ def test_read_file_or_symlink_loop_returns_fallback(tmp_path):
     assert result.output.strip() == "ok"
 
 
+def test_unbounded_function_recursion_is_echo_error_not_python():
+    result = run_echo(
+        """
+fn f() {
+    f();
+}
+f();
+say("reached");
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "E2797" in result.output
+    assert "reached" not in result.lines
+
+
+def test_unbounded_method_recursion_is_echo_error_not_python():
+    result = run_echo(
+        """
+class Node {
+    fn boom(this) {
+        this.boom();
+    }
+}
+n: Node = Node {};
+n.boom();
+say("reached");
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "E2797" in result.output
+    assert "reached" not in result.lines
+
+
 def test_equality_nested_too_deeply_is_echo_error_not_python():
     result = run_echo(
         """

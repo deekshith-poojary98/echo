@@ -22,3 +22,18 @@ def test_run_source_captures_error():
     assert result.exit_code == 1
     assert result.stdout == ""
     assert result.stderr.strip() != ""
+
+
+def test_run_source_unbounded_recursion_is_echo_error():
+    result = run_source(
+        """
+fn f() {
+    f();
+}
+f();
+"""
+    )
+    assert result.exit_code == 1
+    assert "nested too deeply" in result.stderr
+    assert "E2797" in result.stderr
+    assert "RecursionError" not in result.output
