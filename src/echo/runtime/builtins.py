@@ -981,13 +981,25 @@ def _reject_embedded_nul(
         )
 
 
+def _resolve_host_path(
+    host: Host,
+    path: str,
+    location: SourceLocation | None,
+    code: str,
+) -> Path:
+    try:
+        return host.resolve_path(path)
+    except (OSError, ValueError) as exc:
+        raise EchoRuntimeError(f"cannot resolve path: {path}", location, code=code) from exc
+
+
 def do_read_file(path: object, host: Host, location: SourceLocation | None = None) -> str:
     if not host.allow_files:
         raise EchoRuntimeError("readFile() is not available in this host", location, code="E2801")
     if not isinstance(path, str):
         raise EchoTypeError("readFile() path must be a string", location, code="E2802")
     _reject_embedded_nul(path, "readFile", "path", location, "E2802")
-    target = host.resolve_path(path)
+    target = _resolve_host_path(host, path, location, "E2802")
     try:
         return target.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
@@ -1004,8 +1016,8 @@ def do_read_file_or(path: object, fallback: object, host: Host, location: Source
     if not isinstance(path, str):
         raise EchoTypeError("readFileOr() path must be a string", location, code="E2802")
     _reject_embedded_nul(path, "readFileOr", "path", location, "E2802")
-    target = host.resolve_path(path)
     try:
+        target = host.resolve_path(path)
         return target.read_text(encoding="utf-8")
     except (FileNotFoundError, UnicodeDecodeError, OSError, ValueError):
         return fallback
@@ -1019,7 +1031,7 @@ def do_write_file(path: object, contents: object, host: Host, location: SourceLo
     if not isinstance(contents, str):
         raise EchoTypeError("writeFile() contents must be a string", location, code="E2803")
     _reject_embedded_nul(path, "writeFile", "path", location, "E2803")
-    target = host.resolve_path(path)
+    target = _resolve_host_path(host, path, location, "E2803")
     try:
         target.write_text(contents, encoding="utf-8")
     except (OSError, ValueError) as exc:
@@ -1251,7 +1263,7 @@ def do_file_exists(path: object, host: Host, location: SourceLocation | None = N
     _reject_embedded_nul(path, "fileExists", "path", location, "E2802")
     try:
         return host.file_exists(path)
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"invalid path: {path}", location, code="E2802") from exc
 
 
@@ -1275,7 +1287,7 @@ def do_is_dir(path: object, host: Host, location: SourceLocation | None = None) 
     _reject_embedded_nul(path, "isDir", "path", location, "E2802")
     try:
         return host.is_dir(path)
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"invalid path: {path}", location, code="E2802") from exc
 
 
@@ -1301,7 +1313,7 @@ def do_mkdir(path: object, host: Host, location: SourceLocation | None = None) -
     if not isinstance(path, str):
         raise EchoTypeError("mkdir() path must be a string", location, code="E2802")
     _reject_embedded_nul(path, "mkdir", "path", location, "E2802")
-    target = host.resolve_path(path)
+    target = _resolve_host_path(host, path, location, "E2802")
     if target.is_file():
         raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
     if target.is_dir():
@@ -1327,7 +1339,7 @@ def do_mkdir_all(path: object, host: Host, location: SourceLocation | None = Non
     if not isinstance(path, str):
         raise EchoTypeError("mkdirAll() path must be a string", location, code="E2802")
     _reject_embedded_nul(path, "mkdirAll", "path", location, "E2802")
-    target = host.resolve_path(path)
+    target = _resolve_host_path(host, path, location, "E2802")
     if target.is_file():
         raise EchoRuntimeError(f"file in the way: {path}", location, code="E2803")
     try:
@@ -1498,8 +1510,8 @@ def do_copy_file(src: object, dest: object, host: Host, location: SourceLocation
         raise EchoTypeError("copyFile() dest must be a string", location, code="E2802")
     _reject_embedded_nul(src, "copyFile", "src", location, "E2802")
     _reject_embedded_nul(dest, "copyFile", "dest", location, "E2802")
-    source = host.resolve_path(src)
-    target = host.resolve_path(dest)
+    source = _resolve_host_path(host, src, location, "E2802")
+    target = _resolve_host_path(host, dest, location, "E2802")
     if source.is_dir():
         raise EchoRuntimeError(f"not a file: {src}", location, code="E2802")
     if target.is_dir():

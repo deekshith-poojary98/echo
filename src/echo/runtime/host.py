@@ -33,7 +33,12 @@ class Host:
         if candidate.is_absolute():
             return candidate
         root = self.cwd if self.cwd is not None else Path.cwd()
-        return (root / candidate).resolve()
+        try:
+            return (root / candidate).resolve()
+        except RuntimeError as exc:
+            # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP),
+            # not OSError. Host callers already map OSError to Echo errors.
+            raise OSError(str(exc)) from exc
 
     def working_directory(self) -> Path:
         root = self.cwd if self.cwd is not None else Path.cwd()

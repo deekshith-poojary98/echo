@@ -1,5 +1,6 @@
 from echo.core.jsonutil import parse_json
 from echo.errors import EchoRuntimeError
+from echo.runtime.host import Host
 from helpers import assert_no_python_leak, run_echo
 
 
@@ -535,6 +536,67 @@ say(run("echo", [arg]));
     assert result.exit_code == 1
     assert_no_python_leak(result)
     assert "NUL" in result.output
+
+
+def _assert_symlink_loop_is_echo_error(tmp_path, source: str) -> None:
+    cycle = tmp_path / "cycle"
+    cycle.symlink_to("cycle")
+    result = run_echo(source, host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "cycle" in result.output
+
+
+def test_symlink_loop_file_exists_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'say(fileExists("cycle"));\n')
+    result = run_echo('say(fileExists("cycle"));\n', host=Host(cwd=tmp_path))
+    assert "invalid path" in result.output or "cannot resolve" in result.output
+
+
+def test_symlink_loop_is_dir_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'say(isDir("cycle"));\n')
+
+
+def test_symlink_loop_read_file_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'say(readFile("cycle"));\n')
+    result = run_echo('say(readFile("cycle"));\n', host=Host(cwd=tmp_path))
+    assert "cannot resolve path" in result.output
+
+
+def test_symlink_loop_write_file_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'writeFile("cycle", "x");\n')
+
+
+def test_symlink_loop_list_files_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'say(listFiles("cycle"));\n')
+
+
+def test_symlink_loop_remove_file_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'removeFile("cycle");\n')
+
+
+def test_symlink_loop_copy_file_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'copyFile("cycle", "out.txt");\n')
+
+
+def test_symlink_loop_mkdir_is_echo_error_not_python(tmp_path):
+    _assert_symlink_loop_is_echo_error(tmp_path, 'mkdir("cycle");\n')
+
+
+def test_two_node_symlink_loop_is_echo_error_not_python(tmp_path):
+    (tmp_path / "a").symlink_to("b")
+    (tmp_path / "b").symlink_to("a")
+    result = run_echo('say(fileExists("a"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+
+
+def test_read_file_or_symlink_loop_returns_fallback(tmp_path):
+    (tmp_path / "cycle").symlink_to("cycle")
+    result = run_echo('say(readFileOr("cycle", "ok"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "ok"
 
 
 def test_unbounded_function_recursion_is_echo_error_not_python():
