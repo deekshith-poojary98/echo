@@ -1,5 +1,7 @@
 from echo.core.jsonutil import parse_json
-from echo.errors import EchoRuntimeError
+from echo.errors import EchoRuntimeError, ParseError
+from echo.frontend.lexer import Lexer
+from echo.frontend.parser import Parser
 from echo.runtime.host import Host
 from helpers import assert_no_python_leak, run_echo
 
@@ -597,6 +599,37 @@ def test_read_file_or_symlink_loop_returns_fallback(tmp_path):
     assert result.exit_code == 0, result.output
     assert_no_python_leak(result)
     assert result.output.strip() == "ok"
+
+
+def test_deeply_nested_parens_is_echo_error_not_python():
+    depth = 200
+    result = run_echo("(" * depth + "1" + ")" * depth + ";\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "E1100" in result.output
+
+
+def test_deeply_nested_list_literal_is_echo_error_not_python():
+    depth = 200
+    result = run_echo("say(" + "[" * depth + "]" * depth + ");\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "E1100" in result.output
+
+
+def test_parser_nested_parens_raise_parse_error_not_recursion_error():
+    source = "(" * 200 + "1" + ")" * 200 + ";\n"
+    try:
+        Parser(Lexer().tokenize(source, filename="<test>")).parse()
+    except RecursionError as exc:
+        raise AssertionError("RecursionError leaked from Parser.parse") from exc
+    except ParseError as exc:
+        assert "nested too deeply" in exc.message
+        assert exc.code == "E1100"
+        return
+    raise AssertionError("Parser.parse accepted 200 levels of nested parentheses")
 
 
 def test_unbounded_function_recursion_is_echo_error_not_python():

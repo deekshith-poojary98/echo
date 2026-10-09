@@ -77,9 +77,19 @@ class Parser:
     def parse(self) -> Program:
         statements: list[Statement] = []
         location = self._location(self._peek())
-        while not self._check(TokenType.EOF):
-            statements.append(self.parse_statement())
-        return Program(location, statements)
+        try:
+            while not self._check(TokenType.EOF):
+                statements.append(self.parse_statement())
+            return Program(location, statements)
+        except RecursionError as exc:
+            # Nested parens, lists, and calls recurse through the expression
+            # grammar. CLI / loader / LSP only catch EchoError, so this must
+            # not leak a Python RecursionError.
+            raise ParseError(
+                "Expression nested too deeply",
+                self._location(self._peek()),
+                code="E1100",
+            ) from exc
 
     def parse_statement(self) -> Statement:
         token = self._peek()
