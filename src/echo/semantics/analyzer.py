@@ -114,7 +114,16 @@ class SemanticAnalyzer:
         self._enclosing_class = None
         if scope is None:
             scope = self.module_scope(program.location)
-        self._statements(program.statements, scope)
+        try:
+            self._statements(program.statements, scope)
+        except RecursionError as exc:
+            # A tree that barely parsed can still overflow here. Convert so
+            # check / LSP / module analysis do not leak RecursionError.
+            raise SemanticError(
+                "Program nested too deeply",
+                program.location,
+                code="E1100",
+            ) from exc
         return program
 
     @staticmethod
