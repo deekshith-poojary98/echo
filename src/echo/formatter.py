@@ -514,11 +514,33 @@ class _Printer:
         return str(value)
 
     def _wrap_string(self, raw: str) -> str:
-        if "\n" in raw:
-            if '"""' not in raw:
-                return f'"""{raw}"""'
+        # The AST stores the raw lexeme (escapes intact), so the closer must
+        # not appear unescaped in `raw`. Always using "..." used to rewrite
+        # 'He said "hi"' as "He said "hi"", which parses as three arguments.
+        if "\n" not in raw and '"' not in raw:
+            return f'"{raw}"'
+        if "\n" not in raw and "'" not in raw:
+            return f"'{raw}'"
+        if '"""' not in raw and not raw.endswith('"'):
+            return f'"""{raw}"""'
+        if "'''" not in raw and not raw.endswith("'"):
             return f"'''{raw}'''"
-        return f'"{raw}"'
+        return f'"{self._escape_unescaped_double_quotes(raw.replace("\n", "\\n"))}"'
+
+    def _escape_unescaped_double_quotes(self, raw: str) -> str:
+        pieces: list[str] = []
+        index = 0
+        while index < len(raw):
+            if raw[index] == "\\" and index + 1 < len(raw):
+                pieces.append(raw[index : index + 2])
+                index += 2
+                continue
+            if raw[index] == '"':
+                pieces.append('\\"')
+            else:
+                pieces.append(raw[index])
+            index += 1
+        return "".join(pieces)
 
     def _interpolation(self, expression: StringInterpolation) -> str:
         body = ""

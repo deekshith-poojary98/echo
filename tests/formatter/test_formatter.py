@@ -1,4 +1,5 @@
 from echo.formatter import format_source
+from helpers import run_echo
 
 
 def _assert_idempotent(source: str) -> str:
@@ -118,3 +119,39 @@ def test_import_module_uses_double_quotes():
 def test_hash_keys_unquoted_when_identifier():
     formatted = _assert_idempotent('h: hash = { "foo": 1, "a b": 2, "if": 3 };')
     assert formatted == 'h: hash = {foo: 1, "a b": 2, "if": 3};\n'
+
+
+def test_single_quoted_string_with_double_quotes_is_not_rewritten_broken():
+    source = "say('He said \"hi\"');\n"
+    formatted = _assert_idempotent(source)
+    assert formatted == "say('He said \"hi\"');\n"
+    result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == 'He said "hi"'
+
+
+def test_json_payload_in_single_quotes_survives_format():
+    source = 'payload: str = \'{"ok": true}\';\nsay(payload);\n'
+    formatted = _assert_idempotent(source)
+    result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == '{"ok": true}'
+
+
+def test_interpolation_with_inner_quotes_survives_format():
+    source = 'name: str = "Ada";\nsay(\'Hello "${name}"\');\n'
+    formatted = _assert_idempotent(source)
+    result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == 'Hello "Ada"'
+
+
+def test_string_with_both_quote_styles_stays_parseable():
+    source = "say('He said \"hi\" and \\'bye\\'');\n"
+    formatted = _assert_idempotent(source)
+    result = run_echo(source)
+    formatted_result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert formatted_result.exit_code == 0, formatted_result.output
+    assert formatted_result.output == result.output
+    assert formatted_result.output.strip() == "He said \"hi\" and 'bye'"
