@@ -81,6 +81,26 @@ def test_lint_no_path_prints_help_and_fails():
     assert "echo lint" in output
 
 
+def test_lint_symlink_loop_is_echo_error_not_python(tmp_path):
+    cycle = tmp_path / "cycle.echo"
+    cycle.symlink_to("cycle.echo")
+    code, output = _run_main(["lint", str(cycle), "--plain"])
+    result = ExecutionResult(code, output)
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "cannot resolve source path" in output
+
+
+def test_lint_invalid_utf8_is_echo_error_not_python(tmp_path):
+    bad = tmp_path / "bad.echo"
+    bad.write_bytes(b"x: int = 1;\n\xff")
+    code, output = _run_main(["lint", str(bad), "--plain"])
+    result = ExecutionResult(code, output)
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "not valid UTF-8" in output
+
+
 def test_echo_test_fail_aborts(tmp_path):
     app = tmp_path / "app.echo"
     app.write_text('fail("nope");\nsay("after");\n', encoding="utf-8")

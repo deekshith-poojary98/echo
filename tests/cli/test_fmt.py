@@ -12,6 +12,26 @@ def _run_main(argv: list[str]) -> tuple[int, str]:
     return code, stdout.getvalue()
 
 
+def test_fmt_symlink_loop_is_echo_error_not_python(tmp_path):
+    cycle = tmp_path / "cycle.echo"
+    cycle.symlink_to("cycle.echo")
+    code, output = _run_main(["fmt", str(cycle), "--plain"])
+    result = ExecutionResult(code, output)
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "cannot resolve source path" in output
+
+
+def test_fmt_invalid_utf8_is_echo_error_not_python(tmp_path):
+    bad = tmp_path / "bad.echo"
+    bad.write_bytes(b"x:int=1;\n\xff")
+    code, output = _run_main(["fmt", str(bad), "--plain"])
+    result = ExecutionResult(code, output)
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "not valid UTF-8" in output
+
+
 def test_fmt_rewrites_in_place(tmp_path):
     app = tmp_path / "app.echo"
     app.write_text("x:int=1;\n", encoding="utf-8")

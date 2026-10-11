@@ -138,7 +138,18 @@ class ModuleLoader:
         existing = self._modules.get(identity)
         if existing is not None:
             return existing
-        source = identity.read_text(encoding="utf-8")
+        try:
+            source = identity.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise ModuleLoadError(
+                f"module '{identity.name}' is not valid UTF-8",
+                code="E3005",
+            ) from exc
+        except OSError as exc:
+            raise ModuleLoadError(
+                f"cannot read module '{identity.name}'",
+                code="E3005",
+            ) from exc
         tokens = Lexer().tokenize(source, filename=str(identity))
         program = Parser(tokens).parse()
         module = Module(path=identity, source=source, ast=program)

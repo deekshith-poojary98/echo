@@ -66,13 +66,38 @@ def run_source(source: str, filename: str = "<input>", *, plain: bool = True, ho
         return 1
 
 
-def check_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
-    host = host or Host()
-    file_path = Path(source_path).expanduser().resolve()
+def _resolve_user_path(source_path: str, plain: bool) -> Path | None:
+    try:
+        return Path(source_path).expanduser().resolve()
+    except RuntimeError:
+        # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP).
+        _print_plain_error("Error", f"cannot resolve source path: {source_path}", plain)
+        return None
+
+
+def _open_source_file(source_path: str, plain: bool) -> tuple[Path, str] | None:
+    file_path = _resolve_user_path(source_path, plain)
+    if file_path is None:
+        return None
     if not file_path.exists() or not file_path.is_file():
         _print_plain_error("Error", f"source file not found: {file_path}", plain)
+        return None
+    try:
+        return file_path, file_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        _print_plain_error("Error", f"source file is not valid UTF-8: {file_path}", plain)
+        return None
+    except OSError:
+        _print_plain_error("Error", f"cannot read source file: {file_path}", plain)
+        return None
+
+
+def check_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
+    host = host or Host()
+    opened = _open_source_file(source_path, plain)
+    if opened is None:
         return 1
-    source = file_path.read_text(encoding="utf-8")
+    file_path, source = opened
     try:
         tokens = Lexer().tokenize(source, filename=str(file_path))
         program = Parser(tokens).parse()
@@ -91,11 +116,10 @@ def check_file(source_path: str, plain: bool = False, host: Host | None = None) 
 
 def run_file(source_path: str, plain: bool = False, host: Host | None = None) -> int:
     host = host or Host()
-    file_path = Path(source_path).expanduser().resolve()
-    if not file_path.exists() or not file_path.is_file():
-        _print_plain_error("Error", f"source file not found: {file_path}", plain)
+    opened = _open_source_file(source_path, plain)
+    if opened is None:
         return 1
-    source = file_path.read_text(encoding="utf-8")
+    file_path, source = opened
     interpreter = Interpreter(host=host)
     try:
         tokens = Lexer().tokenize(source, filename=str(file_path))
@@ -128,7 +152,10 @@ def _error_source(error: EchoError, fallback: str) -> str:
     origin = Path(error.location.filename)
     if not origin.is_file():
         return fallback
-    return origin.read_text(encoding="utf-8")
+    try:
+        return origin.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return fallback
 
 
 def _category(error: EchoError) -> str:
@@ -534,11 +561,10 @@ def _main_ide(argv: list[str]) -> int:
 
 
 def format_file(source_path: str, *, check: bool = False, plain: bool = False) -> int:
-    file_path = Path(source_path).expanduser().resolve()
-    if not file_path.exists() or not file_path.is_file():
-        _print_plain_error("Error", f"source file not found: {file_path}", plain)
+    opened = _open_source_file(source_path, plain)
+    if opened is None:
         return 1
-    source = file_path.read_text(encoding="utf-8")
+    file_path, source = opened
     try:
         formatted = format_source(source, filename=str(file_path))
     except EchoError as exc:
@@ -554,7 +580,9 @@ def format_file(source_path: str, *, check: bool = False, plain: bool = False) -
 
 
 def _collect_echo_files(source_path: str, plain: bool) -> list[Path] | int:
-    path = Path(source_path).expanduser().resolve()
+    path = _resolve_user_path(source_path, plain)
+    if path is None:
+        return 1
     if path.is_file():
         return [path]
     if path.is_dir():
@@ -585,11 +613,10 @@ def _main_fmt(argv: list[str]) -> int:
 
 
 def lint_file(source_path: str, *, plain: bool = False) -> tuple[int, list[LintFinding]]:
-    file_path = Path(source_path).expanduser().resolve()
-    if not file_path.exists() or not file_path.is_file():
-        _print_plain_error("Error", f"source file not found: {file_path}", plain)
+    opened = _open_source_file(source_path, plain)
+    if opened is None:
         return 1, []
-    source = file_path.read_text(encoding="utf-8")
+    file_path, source = opened
     try:
         findings = lint_source(source, filename=str(file_path))
     except EchoError as exc:

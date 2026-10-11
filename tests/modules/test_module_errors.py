@@ -117,6 +117,23 @@ def test_circular_dependency_produces_an_echo_error(tmp_path: Path) -> None:
     assert_no_python_leak(result)
 
 
+def test_imported_invalid_utf8_is_echo_error_not_python(tmp_path: Path) -> None:
+    write_modules(
+        tmp_path,
+        {
+            "app.echo": """
+                import foo from "dep";
+                foo();
+            """,
+        },
+    )
+    (tmp_path / "dep.echo").write_bytes(b"export fn foo() {\n}\n\xff")
+    result = run_entry(tmp_path)
+    assert_echo_error(result, "utf-8")
+    assert_no_python_leak(result)
+    assert "E3005" in result.output
+
+
 def test_python_exceptions_do_not_leak(tmp_path: Path) -> None:
     write_modules(
         tmp_path,
