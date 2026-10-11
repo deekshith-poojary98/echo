@@ -65,6 +65,19 @@ def test_fmt_directory_recurses_echo_files(tmp_path):
     assert ignored.read_text(encoding="utf-8") == "x:int=1;\n"
 
 
+def test_fmt_keeps_single_quoted_payload_runnable(tmp_path):
+    app = tmp_path / "app.echo"
+    app.write_text("say('He said \"hi\"');\n", encoding="utf-8")
+    code, output = _run_main(["fmt", str(app), "--plain"])
+    assert code == 0
+    assert output == ""
+    rewritten = app.read_text(encoding="utf-8")
+    assert '"hi"' in rewritten
+    code, output = _run_main([str(app), "--plain"])
+    assert code == 0, output
+    assert output.strip() == 'He said "hi"'
+
+
 def test_fmt_parse_error_does_not_write(tmp_path):
     app = tmp_path / "bad.echo"
     original = "say(1)\n"
