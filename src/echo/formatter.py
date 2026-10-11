@@ -525,7 +525,8 @@ class _Printer:
             return f'"""{raw}"""'
         if "'''" not in raw and not raw.endswith("'"):
             return f"'''{raw}'''"
-        return f'"{self._escape_unescaped_double_quotes(raw.replace("\n", "\\n"))}"'
+        escaped = self._escape_unescaped_double_quotes(raw.replace("\n", "\\n"))
+        return f'"{escaped}"'
 
     def _escape_unescaped_double_quotes(self, raw: str) -> str:
         pieces: list[str] = []
