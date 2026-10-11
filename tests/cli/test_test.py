@@ -212,6 +212,26 @@ def test_echo_test_no_path_prints_help_and_fails():
     assert "passed" not in output
 
 
+def test_invalid_utf8_is_echo_error_not_python(tmp_path):
+    bad = tmp_path / "bad_test.echo"
+    bad.write_bytes(b"fn testOk() {\n    expect(true, \"ok\");\n}\n\xff")
+    code, output = _run_main(["test", str(bad), "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "not valid UTF-8" in output or "E3005" in output
+
+
+def test_test_symlink_loop_is_echo_error_not_python(tmp_path):
+    cycle = tmp_path / "cycle_test.echo"
+    cycle.symlink_to("cycle_test.echo")
+    code, output = _run_main(["test", str(cycle), "--plain"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "cannot resolve source path" in output
+
+
 def test_parse_error_fails_that_unit_later_files_run(tmp_path):
     bad = tmp_path / "bad_test.echo"
     good = tmp_path / "good_test.echo"

@@ -30,6 +30,80 @@ def test_run_file_returns_error_for_missing_source(tmp_path):
     assert run_file(str(missing), plain=True) == 1
 
 
+def test_run_file_symlink_loop_is_echo_error_not_python(tmp_path):
+    cycle = tmp_path / "cycle.echo"
+    cycle.symlink_to("cycle.echo")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        try:
+            code = run_file(str(cycle), plain=True)
+        except Exception as exc:  # noqa: BLE001 — leak detector
+            raise AssertionError(
+                f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"
+            ) from exc
+    result = ExecutionResult(code, stdout.getvalue())
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "cannot resolve source path" in result.output
+
+
+def test_run_file_two_node_symlink_loop_is_echo_error_not_python(tmp_path):
+    left = tmp_path / "a.echo"
+    right = tmp_path / "b.echo"
+    left.symlink_to("b.echo")
+    right.symlink_to("a.echo")
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        try:
+            code = run_file(str(left), plain=True)
+        except Exception as exc:  # noqa: BLE001 — leak detector
+            raise AssertionError(
+                f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"
+            ) from exc
+    result = ExecutionResult(code, stdout.getvalue())
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "cannot resolve source path" in result.output
+
+
+def test_run_file_invalid_utf8_is_echo_error_not_python(tmp_path):
+    bad = tmp_path / "bad.echo"
+    bad.write_bytes(b'const x: int = 1;\n\xff\xfe')
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        try:
+            code = run_file(str(bad), plain=True)
+        except Exception as exc:  # noqa: BLE001 — leak detector
+            raise AssertionError(
+                f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"
+            ) from exc
+    result = ExecutionResult(code, stdout.getvalue())
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "not valid UTF-8" in result.output
+
+
+def test_run_file_unreadable_is_echo_error_not_python(tmp_path):
+    locked = tmp_path / "locked.echo"
+    locked.write_text('say("hi");\n', encoding="utf-8")
+    locked.chmod(0)
+    stdout = StringIO()
+    try:
+        with redirect_stdout(stdout):
+            try:
+                code = run_file(str(locked), plain=True)
+            except Exception as exc:  # noqa: BLE001 — leak detector
+                raise AssertionError(
+                    f"Python exception leaked to the Echo user: {type(exc).__name__}: {exc}"
+                ) from exc
+    finally:
+        locked.chmod(0o644)
+    result = ExecutionResult(code, stdout.getvalue())
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "cannot read source file" in result.output or "not valid UTF-8" in result.output or "source file not found" in result.output
+
+
 def test_missing_semicolon_emits_friendly_hint():
     result = run_echo(
         """

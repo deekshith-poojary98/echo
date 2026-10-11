@@ -532,7 +532,7 @@ class EchoIdeApp:
     def _open_path(self, path: Path) -> None:
         try:
             text = path.read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
             messagebox.showerror("Open failed", str(exc), parent=self.root)
             return
         self.path = path

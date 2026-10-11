@@ -123,4 +123,12 @@ class ModuleResolver:
             return candidate.as_posix()
 
     def canonicalize(self, path: str | Path) -> Path:
-        return Path(path).expanduser().resolve()
+        try:
+            return Path(path).expanduser().resolve()
+        except RuntimeError as exc:
+            # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP).
+            raise ModuleResolveError(
+                f"cannot resolve module path '{path}'",
+                code="E3002",
+                help_text="the path is a symlink loop or cannot be resolved",
+            ) from exc

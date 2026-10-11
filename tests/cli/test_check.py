@@ -95,6 +95,26 @@ def test_check_missing_path_exits_one(tmp_path):
     assert "source file not found" in output
 
 
+def test_check_symlink_loop_is_echo_error_not_python(tmp_path):
+    cycle = tmp_path / "cycle.echo"
+    cycle.symlink_to("cycle.echo")
+    code, output = _run_main(["check", str(cycle), "--plain"])
+    result = ExecutionResult(code, output)
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "cannot resolve source path" in output
+
+
+def test_check_invalid_utf8_is_echo_error_not_python(tmp_path):
+    bad = tmp_path / "bad.echo"
+    bad.write_bytes(b"say(1);\n\xff")
+    code, output = _run_main(["check", str(bad), "--plain"])
+    result = ExecutionResult(code, output)
+    assert code == 1
+    assert_no_python_leak(result)
+    assert "not valid UTF-8" in output
+
+
 def test_check_no_path_prints_help_and_fails():
     code, output = _run_main(["check"])
     assert code == 2

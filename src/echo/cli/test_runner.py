@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from echo.errors import EchoError, EchoExit, format_diagnostic
+from echo.errors import EchoError, EchoExit, ModuleLoadError, format_diagnostic
 from echo.frontend.ast.nodes import ImportDeclaration, Program
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
@@ -27,7 +27,10 @@ class TestUnitResult:
 
 
 def collect_test_files(source_path: str) -> list[Path] | str:
-    path = Path(source_path).expanduser().resolve()
+    try:
+        path = Path(source_path).expanduser().resolve()
+    except RuntimeError:
+        return f"cannot resolve source path: {source_path}"
     if path.is_file():
         return [path]
     if path.is_dir():
@@ -73,7 +76,18 @@ def run_test_file(path: Path, *, run: str | None = None) -> list[TestUnitResult]
     source = ""
     program = None
     try:
-        source = path.read_text(encoding="utf-8")
+        try:
+            source = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise ModuleLoadError(
+                f"source file is not valid UTF-8: {path}",
+                code="E3005",
+            ) from exc
+        except OSError as exc:
+            raise ModuleLoadError(
+                f"cannot read source file: {path}",
+                code="E3005",
+            ) from exc
         tokens = Lexer().tokenize(source, filename=str(path))
         program = Parser(tokens).parse()
         if run is not None:
@@ -328,7 +342,10 @@ def _error_source(error: EchoError, fallback: str) -> str:
     origin = Path(error.location.filename)
     if not origin.is_file():
         return fallback
-    return origin.read_text(encoding="utf-8")
+    try:
+        return origin.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return fallback
 
 
 def _has_imports(program: Program) -> bool:
@@ -336,7 +353,10 @@ def _has_imports(program: Program) -> bool:
 
 
 def _display_path(path: Path) -> str:
-    resolved = path.resolve()
+    try:
+        resolved = path.resolve()
+    except RuntimeError:
+        return str(path)
     try:
         return resolved.relative_to(Path.cwd().resolve()).as_posix()
     except ValueError:
