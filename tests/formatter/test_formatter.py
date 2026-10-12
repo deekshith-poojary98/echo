@@ -155,3 +155,26 @@ def test_string_with_both_quote_styles_stays_parseable():
     assert formatted_result.exit_code == 0, formatted_result.output
     assert formatted_result.output == result.output
     assert formatted_result.output.strip() == "He said \"hi\" and 'bye'"
+
+
+def test_single_quoted_hash_key_with_double_quotes_survives_format():
+    source = "h: hash = { 'he said \"hi\"': 1 };\nsay(h['he said \"hi\"']);\n"
+    formatted = _assert_idempotent(source)
+    result = run_echo(source)
+    formatted_result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert formatted_result.exit_code == 0, formatted_result.output
+    assert formatted_result.output == result.output
+    assert formatted_result.output.strip() == "1"
+    assert '"hi"' in formatted
+
+
+def test_escaped_hash_key_survives_format_and_lookup():
+    source = 'h: hash = { "he said \\"hi\\"": 1 };\nsay(h["he said \\"hi\\""]);\n'
+    formatted = _assert_idempotent(source)
+    result = run_echo(source)
+    formatted_result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert formatted_result.exit_code == 0, formatted_result.output
+    assert formatted_result.output == result.output
+    assert formatted_result.output.strip() == "1"
