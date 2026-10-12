@@ -554,7 +554,14 @@ class Interpreter:
         if isinstance(expression, ListLiteral):
             return [self.evaluate(element, env) for element in expression.elements]
         if isinstance(expression, HashLiteral):
-            return {pair.key: self.evaluate(pair.value, env) for pair in expression.pairs}
+            # Hash keys are stored as raw lexemes (same as StringLiteralExpression).
+            # Lookups go through evaluate() → unescape_string(), so literals must
+            # too; otherwise { "a\tb": 1 }["a\tb"] misses and fmt/JSON see the
+            # backslashes as part of the key.
+            return {
+                unescape_string(pair.key): self.evaluate(pair.value, env)
+                for pair in expression.pairs
+            }
         if isinstance(expression, BinaryExpression):
             if expression.operator.type == TokenType.AND_AND:
                 left = self.evaluate(expression.left, env)

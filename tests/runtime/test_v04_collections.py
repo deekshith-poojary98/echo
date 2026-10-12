@@ -81,3 +81,35 @@ def test_standalone_slice():
     result = run_echo("say(slice(items: [10, 20, 30], start: 0, end: 2));\n")
     assert result.exit_code == 0, result.output
     assert result.output.strip() == "[10, 20]"
+
+
+def test_hash_literal_unescapes_keys_like_lookups():
+    result = run_echo(
+        r"""
+quoted: hash = { "he said \"hi\"": 1 };
+say(quoted.has("he said \"hi\""));
+say(quoted["he said \"hi\""]);
+
+tabbed: hash = { "a\tb": 2 };
+say(tabbed.has("a\tb"));
+say(tabbed["a\tb"]);
+
+lined: hash = { "a\nb": 3 };
+say(lined.has("a\nb"));
+say(lined["a\nb"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["true", "1", "true", "2", "true", "3"]
+
+
+def test_hash_literal_backslash_key_matches_lookup():
+    result = run_echo(
+        r"""
+win: hash = { "C:\\tmp": 1 };
+say(win.has("C:\\tmp"));
+say(win["C:\\tmp"]);
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["true", "1"]

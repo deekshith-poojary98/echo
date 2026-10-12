@@ -555,7 +555,9 @@ class _Printer:
     def _hash_key(self, key: str) -> str:
         if key.isidentifier() and key not in KEYWORDS:
             return key
-        return f'"{key}"'
+        # Keys are raw lexemes. Always wrapping in "..." rewrote
+        # { 'He said "hi"': 1 } as { "He said "hi"": 1 }, which does not parse.
+        return self._wrap_string(key)
 
     def _leading_comments(self, line: int) -> None:
         while self._comment_index < len(self._comments):
