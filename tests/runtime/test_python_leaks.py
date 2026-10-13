@@ -688,3 +688,88 @@ say(left == right);
     assert result.exit_code == 1
     assert_no_python_leak(result)
     assert "nested too deeply" in result.output
+
+
+def test_oversized_integer_literal_is_echo_error_not_python():
+    result = run_echo("say(" + "1" * 5000 + ");\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "E1101" in result.output
+
+
+def test_oversized_switch_integer_pattern_is_echo_error_not_python():
+    result = run_echo("switch " + "1" * 5000 + " { else { say(1); } }\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "E1101" in result.output
+
+
+def test_parser_oversized_integer_raises_parse_error_not_value_error():
+    source = "say(" + "1" * 5000 + ");\n"
+    try:
+        Parser(Lexer().tokenize(source, filename="<test>")).parse()
+    except ValueError as exc:
+        raise AssertionError("ValueError leaked from Parser.parse") from exc
+    except ParseError as exc:
+        assert "too large" in exc.message
+        assert exc.code == "E1101"
+        return
+    raise AssertionError("Parser.parse accepted a 5000-digit integer literal")
+
+
+def test_parse_json_oversized_integer_is_echo_error_not_python():
+    result = run_echo('parseJson("' + "1" * 5000 + '");\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "E2805" in result.output
+
+
+def test_parse_json_or_oversized_integer_returns_fallback():
+    result = run_echo('say(parseJsonOr("' + "1" * 5000 + '", "ok"));\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "ok"
+
+
+def test_parse_json_direct_oversized_integer_is_echo_error():
+    try:
+        parse_json("1" * 5000)
+    except ValueError as exc:
+        raise AssertionError("ValueError leaked from parse_json") from exc
+    except EchoRuntimeError as exc:
+        assert "too large" in exc.message
+        assert exc.code == "E2805"
+        return
+    raise AssertionError("parse_json accepted a 5000-digit JSON integer")
+
+
+def test_yaml_parse_oversized_integer_is_echo_error_not_python():
+    result = run_echo('yamlParse("' + "1" * 5000 + '");\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "E2855" in result.output
+
+
+def test_yaml_parse_or_oversized_integer_returns_fallback():
+    result = run_echo('say(yamlParseOr("' + "1" * 5000 + '", "ok"));\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "ok"
+
+
+def test_say_computed_oversized_integer_is_echo_error_not_python():
+    # 4299 nines is under the 4300-digit int() limit; * 100 crosses it.
+    result = run_echo(
+        """
+n: int = "9".repeat(4299).asInt();
+say(n * 100);
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too many digits" in result.output
+    assert "E2806" in result.output

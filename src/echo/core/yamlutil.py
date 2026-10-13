@@ -31,6 +31,10 @@ def parse_yaml(text: object, location: SourceLocation | None = None) -> object:
         raise EchoRuntimeError(f"Invalid YAML: {reason}", location, code="E2855") from exc
     except RecursionError as exc:
         raise EchoRuntimeError("YAML is nested too deeply", location, code="E2855") from exc
+    except ValueError as exc:
+        # safe_load constructs Python ints; 4300+ digit numbers raise ValueError
+        # (CVE-2020-10735) instead of YAMLError.
+        raise EchoRuntimeError("YAML number is too large", location, code="E2855") from exc
 
 
 def write_yaml(value: object, location: SourceLocation | None = None) -> str:
