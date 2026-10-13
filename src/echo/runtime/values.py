@@ -378,6 +378,17 @@ def _stringify(value: object, nested: bool = False, seen: set[int] | None = None
         return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, int):
+        try:
+            return str(value)
+        except ValueError as exc:
+            # str(int) raises when the value has more digits than
+            # sys.get_int_max_str_digits() (default 4300 on 3.11+).
+            raise EchoRuntimeError(
+                "Cannot print an integer with too many digits",
+                None,
+                code="E2806",
+            ) from exc
     if isinstance(value, str):
         return quote_string(value) if nested else value
     if isinstance(value, (list, dict)):

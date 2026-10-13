@@ -17,6 +17,10 @@ def parse_json(text: object, location: SourceLocation | None = None) -> object:
         raise EchoRuntimeError(f"Invalid JSON: {exc.msg}", location, code="E2805") from exc
     except RecursionError as exc:
         raise EchoRuntimeError("JSON is nested too deeply", location, code="E2805") from exc
+    except ValueError as exc:
+        # json.loads raises ValueError (not JSONDecodeError) when an integer
+        # has more digits than sys.get_int_max_str_digits() (default 4300).
+        raise EchoRuntimeError("JSON number is too large", location, code="E2805") from exc
 
 
 def write_json(value: object, location: SourceLocation | None = None) -> str:

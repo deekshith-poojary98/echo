@@ -305,10 +305,8 @@ class Parser:
                 value = False
             elif token.type == TokenType.NULL:
                 value = None
-            elif token.type == TokenType.INTEGER:
-                value = int(token.lexeme)
-            elif token.type == TokenType.FLOAT:
-                value = float(token.lexeme)
+            elif token.type in (TokenType.INTEGER, TokenType.FLOAT):
+                value = self._number_literal_value(token)
             else:
                 value = token.lexeme
             return LiteralPattern(token.location, value)
@@ -899,10 +897,10 @@ class Parser:
         token = self._peek()
         if token.type == TokenType.INTEGER:
             self._advance()
-            return LiteralExpression(token.location, int(token.lexeme))
+            return LiteralExpression(token.location, self._number_literal_value(token))
         if token.type == TokenType.FLOAT:
             self._advance()
-            return LiteralExpression(token.location, float(token.lexeme))
+            return LiteralExpression(token.location, self._number_literal_value(token))
         if token.type == TokenType.TRUE:
             self._advance()
             return LiteralExpression(token.location, True)
@@ -1525,6 +1523,21 @@ class Parser:
         if not self._is_name(token) and token.type != TokenType.TYPE_KW:
             raise ParseError(f"Expected {expected}, got '{token.lexeme}'", token.location)
         return self._advance()
+
+    def _number_literal_value(self, token: Token) -> object:
+        try:
+            if token.type == TokenType.INTEGER:
+                return int(token.lexeme)
+            return float(token.lexeme)
+        except ValueError as exc:
+            # Python 3.11+ rejects int() of 4300+ digit strings (CVE-2020-10735).
+            # CLI / loader / LSP only catch EchoError, so this must not leak.
+            kind = "Integer" if token.type == TokenType.INTEGER else "Number"
+            raise ParseError(
+                f"{kind} literal is too large",
+                token.location,
+                code="E1101",
+            ) from exc
 
     def _location(self, token: Token) -> SourceLocation:
         return token.location
