@@ -373,6 +373,20 @@ def stringify(value: object, nested: bool = False, seen: set[int] | None = None)
         ) from exc
 
 
+def format_value(value: object) -> str:
+    """Render a value for diagnostics. Never raises on oversized integers."""
+    if isinstance(value, int) and not isinstance(value, bool):
+        try:
+            return str(value)
+        except ValueError:
+            # Same 4300-digit limit as stringify(); error text must not crash.
+            return "<integer with too many digits>"
+    try:
+        return stringify(value, nested=True)
+    except EchoRuntimeError:
+        return "<unprintable>"
+
+
 def _stringify(value: object, nested: bool = False, seen: set[int] | None = None) -> str:
     if value is None:
         return "null"

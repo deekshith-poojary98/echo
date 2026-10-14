@@ -47,7 +47,7 @@ from echo.runtime.functions import EchoBuiltin
 from echo.runtime.host import Host
 from echo.runtime.operators import echo_equal
 from echo.runtime.testing import TestSession
-from echo.runtime.values import echo_type_name, is_truthy, stringify
+from echo.runtime.values import echo_type_name, format_value, is_truthy, stringify
 
 BUILTIN_NAMES = frozenset(
     {
@@ -669,19 +669,19 @@ def as_int(value: object, location: SourceLocation | None = None) -> int:
         return value
     if isinstance(value, float):
         if not math.isfinite(value):
-            raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
+            raise EchoTypeError(f"Cannot convert value to int: {format_value(value)}", location, code="E2606")
         return int(value)
     if isinstance(value, str):
         text = value.strip()
         signed = text[0] in "+-" if text else False
         digits = text[1:] if signed else text
         if text == "" or not digits.isdecimal():
-            raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
+            raise EchoTypeError(f"Cannot convert value to int: {format_value(value)}", location, code="E2606")
         try:
             return int(text)
         except ValueError as exc:
-            raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606") from exc
-    raise EchoTypeError(f"Cannot convert value to int: {value!r}", location, code="E2606")
+            raise EchoTypeError(f"Cannot convert value to int: {format_value(value)}", location, code="E2606") from exc
+    raise EchoTypeError(f"Cannot convert value to int: {format_value(value)}", location, code="E2606")
 
 
 def as_float(value: object, location: SourceLocation | None = None) -> float:
@@ -691,22 +691,22 @@ def as_float(value: object, location: SourceLocation | None = None) -> float:
         try:
             result = float(value)
         except OverflowError as exc:
-            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607") from exc
+            raise EchoTypeError(f"Cannot convert value to float: {format_value(value)}", location, code="E2607") from exc
         if not math.isfinite(result):
-            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+            raise EchoTypeError(f"Cannot convert value to float: {format_value(value)}", location, code="E2607")
         return result
     if isinstance(value, str):
         text = value.strip()
         if text == "":
-            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+            raise EchoTypeError(f"Cannot convert value to float: {format_value(value)}", location, code="E2607")
         try:
             result = float(text)
         except ValueError as exc:
-            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607") from exc
+            raise EchoTypeError(f"Cannot convert value to float: {format_value(value)}", location, code="E2607") from exc
         if not math.isfinite(result):
-            raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+            raise EchoTypeError(f"Cannot convert value to float: {format_value(value)}", location, code="E2607")
         return result
-    raise EchoTypeError(f"Cannot convert value to float: {value!r}", location, code="E2607")
+    raise EchoTypeError(f"Cannot convert value to float: {format_value(value)}", location, code="E2607")
 
 
 def as_bool(value: object) -> bool:
@@ -1447,7 +1447,7 @@ def _require_expect_message(method: str, message: object, location: SourceLocati
 
 
 def _equality_detail(left: object, right: object) -> str:
-    return f"expected {stringify(right, True)}, got {stringify(left, True)}"
+    return f"expected {format_value(right)}, got {format_value(left)}"
 
 
 def do_expect(
@@ -1494,7 +1494,7 @@ def do_expect_neq(
     text = _require_expect_message("expectNeq", message, location, "E2828")
     if not echo_equal(left, right):
         return None
-    detail = f"expected values to differ, both were {stringify(left, True)}"
+    detail = f"expected values to differ, both were {format_value(left)}"
     if session is None:
         raise EchoRuntimeError(text, location, help_text=detail, code="E2828")
     session.record("E2828", text, detail=detail, location=location)

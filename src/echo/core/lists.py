@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from echo.errors import EchoIndexError, EchoRuntimeError, EchoTypeError, SourceLocation
+from echo.runtime.values import format_value
 
 
 def require_list(value: object, method: str, location: SourceLocation | None = None) -> list:
@@ -23,7 +24,11 @@ def insert_at(target: list, index: object, value: object, location: SourceLocati
     if not isinstance(index, int) or isinstance(index, bool):
         raise EchoTypeError("insertAt() index must be an integer", location, code="E2402")
     if index < 0 or index > len(target):
-        raise EchoIndexError(f"Index {index} out of range for list of length {len(target)}", location, code="E2403")
+        raise EchoIndexError(
+            f"Index {format_value(index)} out of range for list of length {len(target)}",
+            location,
+            code="E2403",
+        )
     target.insert(index, value)
     return target
 
@@ -36,7 +41,11 @@ def pull(target: list, index: object | None = None, location: SourceLocation | N
     if not isinstance(index, int) or isinstance(index, bool):
         raise EchoTypeError("pull() index must be an integer", location, code="E2405")
     if index < 0 or index >= len(target):
-        raise EchoIndexError(f"Index {index} out of range for list of length {len(target)}", location, code="E2406")
+        raise EchoIndexError(
+            f"Index {format_value(index)} out of range for list of length {len(target)}",
+            location,
+            code="E2406",
+        )
     return target.pop(index)
 
 
@@ -45,7 +54,7 @@ def remove_value(target: list, value: object, location: SourceLocation | None, m
         if matches(item, value):
             del target[index]
             return target
-    raise EchoRuntimeError(f"Value {value} not found in list", location, code="E2407")
+    raise EchoRuntimeError(f"Value {format_value(value)} not found in list", location, code="E2407")
 
 
 def find(target: list, value: object, matches) -> int:
@@ -97,7 +106,15 @@ def slice_sequence(value: object, start: object, end: object, location: SourceLo
     finish = require_slice_bound(end, "end", location)
     length = len(value)
     if begin < 0 or begin > length:
-        raise EchoIndexError(f"slice() start {begin} out of range for length {length}", location, code="E2812")
+        raise EchoIndexError(
+            f"slice() start {format_value(begin)} out of range for length {length}",
+            location,
+            code="E2812",
+        )
     if finish < begin or finish > length:
-        raise EchoIndexError(f"slice() end {finish} out of range for length {length}", location, code="E2812")
+        raise EchoIndexError(
+            f"slice() end {format_value(finish)} out of range for length {length}",
+            location,
+            code="E2812",
+        )
     return value[begin:finish]
