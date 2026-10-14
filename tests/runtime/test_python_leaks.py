@@ -773,3 +773,76 @@ say(n * 100);
     assert_no_python_leak(result)
     assert "too many digits" in result.output
     assert "E2806" in result.output
+
+
+def _oversized_int_program(body: str) -> str:
+    return (
+        'n: int = "9".repeat(4299).asInt();\n'
+        "huge: int = n * 100;\n"
+        f"{body}\n"
+    )
+
+
+def test_as_float_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("say(asFloat(huge));"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Cannot convert value to float" in result.output
+    assert "too many digits" in result.output
+
+
+def test_list_index_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("xs: list = [1];\nsay(xs[huge]);"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "out of range" in result.output
+
+
+def test_list_index_assign_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("xs: list = [1];\nxs[huge] = 2;"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "out of range" in result.output
+
+
+def test_string_index_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program('s: str = "ab";\nsay(s[huge]);'))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "out of range" in result.output
+
+
+def test_remove_value_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("xs: list = [1];\nxs.removeValue(huge);"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not found" in result.output.lower()
+
+
+def test_insert_at_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("xs: list = [1];\nxs.insertAt(huge, 2);"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "out of range" in result.output
+
+
+def test_pull_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("xs: list = [1];\nxs.pull(huge);"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "out of range" in result.output
+
+
+def test_slice_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program("xs: list = [1];\nsay(xs.slice(huge, huge));"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "out of range" in result.output
+
+
+def test_expect_eq_oversized_integer_is_echo_error_not_python():
+    result = run_echo(_oversized_int_program('expectEq(huge, 1, "nope");'))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nope" in result.output
+    assert "E2827" in result.output

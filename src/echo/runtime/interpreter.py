@@ -195,6 +195,7 @@ from echo.runtime.operators import binary_op, echo_equal, unary_op
 from echo.runtime.values import (
     echo_type_name,
     format_type,
+    format_value,
     is_truthy,
     matches_type,
     raise_exact_shape_error,
@@ -2243,7 +2244,11 @@ class Interpreter:
             if not isinstance(index, int) or isinstance(index, bool):
                 raise EchoTypeError(f"List index must be an integer, got {echo_type_name(index)}", location, code="E2714")
             if index < 0 or index >= len(target):
-                raise EchoIndexError(f"List index {index} out of range", location, code="E2715")
+                raise EchoIndexError(
+                    f"List index {format_value(index)} out of range",
+                    location,
+                    code="E2715",
+                )
             target[index] = value
             return
         raise EchoTypeError(f"Cannot index type {echo_type_name(target)}", location, code="E2716")
@@ -2260,13 +2265,21 @@ class Interpreter:
                 if not isinstance(index, int) or isinstance(index, bool):
                     raise EchoTypeError(f"String index must be an integer, got {echo_type_name(index)}", location, code="E2712")
                 if index < 0 or index >= len(target):
-                    raise EchoIndexError(f"String index {index} out of range", location, code="E2713")
+                    raise EchoIndexError(
+                        f"String index {format_value(index)} out of range",
+                        location,
+                        code="E2713",
+                    )
                 return target[index]
             if isinstance(target, list):
                 if not isinstance(index, int) or isinstance(index, bool):
                     raise EchoTypeError(f"List index must be an integer, got {echo_type_name(index)}", location, code="E2714")
                 if index < 0 or index >= len(target):
-                    raise EchoIndexError(f"List index {index} out of range", location, code="E2715")
+                    raise EchoIndexError(
+                        f"List index {format_value(index)} out of range",
+                        location,
+                        code="E2715",
+                    )
                 return target[index]
             raise EchoTypeError(f"Cannot index type {echo_type_name(target)}", location, code="E2716")
         except EchoRuntimeError:
