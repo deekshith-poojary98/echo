@@ -172,7 +172,12 @@ def string_repeat(value: str, count: object, location: SourceLocation | None = N
         raise EchoTypeError("repeat() count must be an integer", location, code="E2816")
     if count < 0:
         raise EchoRuntimeError("repeat() count must be non-negative", location, code="E2816")
-    return value * count
+    try:
+        return value * count
+    except OverflowError as exc:
+        # CPython cannot use an int larger than sys.maxsize as a repeat count
+        # ("cannot fit 'int' into an index-sized integer"), including "".repeat.
+        raise EchoRuntimeError("repeat() count is too large", location, code="E2816") from exc
 
 
 def string_pad_start(value: str, width: object, fill: object, location: SourceLocation | None = None) -> str:
@@ -203,7 +208,12 @@ def _pad_string(
     if len(value) >= width:
         return value
     needed = width - len(value)
-    padding = (fill * ((needed // len(fill)) + 1))[:needed]
+    try:
+        padding = (fill * ((needed // len(fill)) + 1))[:needed]
+    except OverflowError as exc:
+        # Same index-sized limit as repeat(): 10**19-wide padStart/padEnd
+        # leaked OverflowError instead of E2817.
+        raise EchoRuntimeError(f"{method}() width is too large", location, code="E2817") from exc
     if start:
         return padding + value
     return value + padding

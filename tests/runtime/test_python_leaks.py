@@ -846,3 +846,36 @@ def test_expect_eq_oversized_integer_is_echo_error_not_python():
     assert_no_python_leak(result)
     assert "nope" in result.output
     assert "E2827" in result.output
+
+
+def test_repeat_count_too_large_for_platform_is_echo_error_not_python():
+    # 10**19 exceeds sys.maxsize on 64-bit CPython, so str repeat raises
+    # OverflowError instead of attempting the allocation.
+    result = run_echo('say("x".repeat(10000000000000000000));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "repeat()" in result.output
+    assert "too large" in result.output
+    assert "E2816" in result.output
+
+    result = run_echo('say("".repeat(10000000000000000000));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "repeat()" in result.output
+    assert "too large" in result.output
+
+
+def test_pad_width_too_large_for_platform_is_echo_error_not_python():
+    result = run_echo('say("5".padStart(10000000000000000000, "0"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "padStart()" in result.output
+    assert "too large" in result.output
+    assert "E2817" in result.output
+
+    result = run_echo('say("5".padEnd(10000000000000000000, "0"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "padEnd()" in result.output
+    assert "too large" in result.output
+    assert "E2817" in result.output
