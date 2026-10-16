@@ -1276,6 +1276,12 @@ def do_cwd(args: list[object], host: Host, location: SourceLocation | None = Non
 def do_exit(code: object, location: SourceLocation | None = None) -> None:
     if isinstance(code, bool) or not isinstance(code, int):
         raise EchoTypeError("exit() code must be an integer", location, code="E2808")
+    try:
+        # EchoExit formats the status into its message. 4300+ digit integers
+        # raise ValueError (CVE-2020-10735) instead of exiting.
+        str(code)
+    except ValueError as exc:
+        raise EchoRuntimeError("exit() code is too large", location, code="E2808") from exc
     raise EchoExit(code)
 
 
