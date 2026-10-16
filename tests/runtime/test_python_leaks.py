@@ -626,6 +626,36 @@ def test_lexer_interpolation_trailing_backslash_raises_lex_error_not_index_error
     raise AssertionError("Lexer.tokenize accepted a nested interpolation string ending in a backslash")
 
 
+def _nested_interpolation_source(depth: int) -> str:
+    inner = "1"
+    for _ in range(depth):
+        inner = '"${' + inner + '}"'
+    return f"say({inner});\n"
+
+
+def test_deeply_nested_interpolation_is_echo_error_not_python():
+    # ~250 nested interpolations recurse through Lexer.tokenize before the
+    # parser depth guard can run, leaking RecursionError from run_source.
+    result = run_echo(_nested_interpolation_source(300))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "nested too deeply" in result.output
+    assert "E1100" in result.output
+
+
+def test_lexer_nested_interpolation_raises_lex_error_not_recursion_error():
+    source = _nested_interpolation_source(300)
+    try:
+        Lexer().tokenize(source, filename="<test>")
+    except RecursionError as exc:
+        raise AssertionError("RecursionError leaked from Lexer.tokenize") from exc
+    except LexError as exc:
+        assert "nested too deeply" in exc.message
+        assert exc.code == "E1100"
+        return
+    raise AssertionError("Lexer.tokenize accepted 300 levels of nested interpolation")
+
+
 def test_deeply_nested_parens_is_echo_error_not_python():
     depth = 200
     result = run_echo("(" * depth + "1" + ")" * depth + ";\n")
