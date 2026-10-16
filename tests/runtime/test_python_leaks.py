@@ -809,6 +809,17 @@ def test_ask_oversized_integer_prompt_is_echo_error_not_python():
     assert "E2806" in result.output
 
 
+def test_exit_oversized_integer_is_echo_error_not_python():
+    # EchoExit formatted the status with f"exit({code})", so a 4300+ digit
+    # integer leaked ValueError instead of an Echo diagnostic.
+    result = run_echo(_oversized_int_program("exit(huge);"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "exit()" in result.output
+    assert "too large" in result.output
+    assert "E2808" in result.output
+
+
 def _oversized_int_program(body: str) -> str:
     return (
         'n: int = "9".repeat(4299).asInt();\n'

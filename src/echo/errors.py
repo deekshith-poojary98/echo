@@ -86,7 +86,13 @@ class EchoExit(Exception):
     """Requested by exit(). Not an Echo diagnostic."""
 
     def __init__(self, code: int) -> None:
-        super().__init__(f"exit({code})")
+        try:
+            message = f"exit({code})"
+        except ValueError:
+            # str(int) raises when the value has more digits than
+            # sys.get_int_max_str_digits() (default 4300 on 3.11+).
+            message = "exit(<integer with too many digits>)"
+        super().__init__(message)
         self.code = code
 
 
