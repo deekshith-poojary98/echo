@@ -29,6 +29,22 @@ def test_unterminated_string():
         assert "Unterminated string" in exc.message
 
 
+def test_deeply_nested_interpolation_is_lex_error_not_recursion_error():
+    inner = "1"
+    for _ in range(300):
+        inner = '"${' + inner + '}"'
+    source = f"say({inner});\n"
+    try:
+        tokenize(source)
+    except RecursionError as exc:
+        raise AssertionError("RecursionError leaked from Lexer.tokenize") from exc
+    except LexError as exc:
+        assert "nested too deeply" in exc.message
+        assert exc.code == "E1100"
+        return
+    raise AssertionError("expected LexError")
+
+
 def test_interpolation_nested_string_trailing_backslash_at_eof_is_lex_error():
     # No trailing newline: nested quotes in ${} skipped a backslash and
     # then called _advance() at EOF, leaking IndexError.

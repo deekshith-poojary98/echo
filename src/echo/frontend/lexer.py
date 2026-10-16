@@ -15,11 +15,21 @@ class Lexer:
         self.column = 1
         tokens: list[Token] = []
 
-        while not self._at_end():
-            tokens.extend(self._skip_whitespace_and_collect_comments())
-            if self._at_end():
-                break
-            tokens.extend(self._next_tokens())
+        try:
+            while not self._at_end():
+                tokens.extend(self._skip_whitespace_and_collect_comments())
+                if self._at_end():
+                    break
+                tokens.extend(self._next_tokens())
+        except RecursionError as exc:
+            # Nested interpolations tokenize the inner expression with a new
+            # Lexer. Deep ${"${"...}"} nesting blew the Python stack before
+            # Parser.parse() could convert RecursionError into E1100.
+            raise LexError(
+                "Expression nested too deeply",
+                SourceLocation(self.line, self.column, self.filename),
+                code="E1100",
+            ) from exc
 
         tokens.append(self._make_token(TokenType.EOF, ""))
         return tokens
