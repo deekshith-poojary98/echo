@@ -29,6 +29,20 @@ def test_unterminated_string():
         assert "Unterminated string" in exc.message
 
 
+def test_interpolation_nested_string_trailing_backslash_at_eof_is_lex_error():
+    # No trailing newline: nested quotes in ${} skipped a backslash and
+    # then called _advance() at EOF, leaking IndexError.
+    source = '"hello ${"world\\'
+    try:
+        tokenize(source)
+    except IndexError as exc:
+        raise AssertionError("IndexError leaked from Lexer.tokenize") from exc
+    except LexError as exc:
+        assert "Unterminated string" in exc.message
+        return
+    raise AssertionError("expected LexError")
+
+
 def test_triple_quoted_multiline_string():
     tokens = tokenize('"""hello\nworld"""\n')
     strings = [token.lexeme for token in tokens if token.type == TokenType.STRING]

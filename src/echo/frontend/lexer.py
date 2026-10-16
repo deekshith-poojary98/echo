@@ -234,7 +234,9 @@ class Lexer:
                 while not self._at_end() and self._peek() != quote:
                     if self._peek() == "\\":
                         self._advance()
-                    if self._peek() == "\n":
+                    # A trailing backslash at EOF used to skip the newline
+                    # check and call _advance() past the end (IndexError).
+                    if self._at_end() or self._peek() == "\n":
                         self._error("Unterminated string in interpolation", start_line, start_col)
                     self._advance()
                 if self._peek() == quote:
