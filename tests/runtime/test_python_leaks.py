@@ -924,3 +924,31 @@ def test_pad_width_too_large_for_platform_is_echo_error_not_python():
     assert "padEnd()" in result.output
     assert "too large" in result.output
     assert "E2817" in result.output
+
+
+def test_regex_repetition_too_large_for_platform_is_echo_error_not_python():
+    # CPython's re parser raises OverflowError (not re.error) when a `{n}`
+    # count exceeds an index-sized integer, so regexMatch leaked a traceback.
+    result = run_echo('say(regexMatch("aaa", "a{10000000000000000000}"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "invalid regex" in result.output
+    assert "E2850" in result.output
+
+    result = run_echo('say("aaa".regexMatch("a{1,10000000000000000000}"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "invalid regex" in result.output
+    assert "E2850" in result.output
+
+    result = run_echo('say(regexReplace("aaa", "a{9223372036854775808}", "b"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "invalid regex" in result.output
+    assert "E2850" in result.output
+
+    result = run_echo('say(regexSplit("aaa", "a{10000000000000000000}"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "invalid regex" in result.output
+    assert "E2850" in result.output

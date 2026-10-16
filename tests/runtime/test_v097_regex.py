@@ -52,6 +52,14 @@ def test_regex_invalid_pattern_aborts():
     assert "E2850" in result.output
 
 
+def test_regex_repetition_overflow_is_echo_error():
+    result = run_echo('say(regexFind("aaa", "a{10000000000000000000}"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "invalid regex" in result.output
+    assert "E2850" in result.output
+
+
 def test_regex_type_errors():
     result = run_echo("say(regexMatch(1, \"a\"));\n")
     assert result.exit_code == 1

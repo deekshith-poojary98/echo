@@ -10,7 +10,9 @@ def _compile(pattern: object, method: str, location: SourceLocation | None) -> r
         raise EchoTypeError(f"{method}() pattern must be a string", location, code="E2850")
     try:
         return re.compile(pattern)
-    except re.error as exc:
+    except (re.error, OverflowError) as exc:
+        # CPython raises OverflowError (not re.error) when a `{n}` / `{n,m}`
+        # count cannot fit in an index-sized integer, e.g. a{10**19}.
         raise EchoRuntimeError(f"invalid regex: {exc}", location, code="E2850") from exc
 
 
