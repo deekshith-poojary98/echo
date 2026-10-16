@@ -1,5 +1,5 @@
 from echo.core.jsonutil import parse_json
-from echo.errors import EchoRuntimeError, ParseError
+from echo.errors import EchoRuntimeError, LexError, ParseError
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.runtime.host import Host
@@ -599,6 +599,31 @@ def test_read_file_or_symlink_loop_returns_fallback(tmp_path):
     assert result.exit_code == 0, result.output
     assert_no_python_leak(result)
     assert result.output.strip() == "ok"
+
+
+def test_interpolation_nested_backslash_at_eof_is_echo_error_not_python():
+    # File/source with no trailing newline: ${"..." + trailing \\ crashed
+    # the lexer with IndexError instead of a syntax diagnostic.
+    source = 'say("hello ${"world\\'
+    try:
+        result = run_echo(source)
+    except IndexError as exc:
+        raise AssertionError("IndexError leaked from run_echo") from exc
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "Unterminated string" in result.output
+
+
+def test_lexer_interpolation_trailing_backslash_raises_lex_error_not_index_error():
+    source = '"hello ${"world\\'
+    try:
+        Lexer().tokenize(source, filename="<test>")
+    except IndexError as exc:
+        raise AssertionError("IndexError leaked from Lexer.tokenize") from exc
+    except LexError as exc:
+        assert "Unterminated string" in exc.message
+        return
+    raise AssertionError("Lexer.tokenize accepted a nested interpolation string ending in a backslash")
 
 
 def test_deeply_nested_parens_is_echo_error_not_python():
