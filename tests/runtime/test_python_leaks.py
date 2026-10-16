@@ -775,6 +775,15 @@ say(n * 100);
     assert "E2806" in result.output
 
 
+def test_ask_oversized_integer_prompt_is_echo_error_not_python():
+    # ask() used str(prompt), so a 4300+ digit integer leaked ValueError.
+    result = run_echo(_oversized_int_program("ask(huge);"))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too many digits" in result.output
+    assert "E2806" in result.output
+
+
 def _oversized_int_program(body: str) -> str:
     return (
         'n: int = "9".repeat(4299).asInt();\n'

@@ -1587,10 +1587,17 @@ def do_random_int(low: object, high: object, location: SourceLocation | None = N
 
 
 def do_ask(prompt: object, location: SourceLocation | None = None) -> str:
+    # stringify() matches say() and converts oversized integers / extreme
+    # nesting into EchoRuntimeError. str() leaked ValueError (4300-digit limit)
+    # and printed Python spellings such as True.
+    text = stringify(prompt)
     try:
-        return input(str(prompt))
+        return input(text)
     except EOFError as exc:
         raise EchoRuntimeError("end of input", location, code="E2824") from exc
+    except ValueError as exc:
+        # input() rejects some prompt strings (embedded NUL on some platforms).
+        raise EchoRuntimeError("ask() prompt is invalid", location, code="E2824") from exc
 
 
 def do_read_line(args: list[object], location: SourceLocation | None = None) -> str:
