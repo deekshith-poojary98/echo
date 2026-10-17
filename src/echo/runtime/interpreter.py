@@ -1823,7 +1823,13 @@ class Interpreter:
         location: SourceLocation,
     ) -> bool:
         if isinstance(pattern, LiteralPattern):
-            return echo_equal(value, pattern.value)
+            expected = pattern.value
+            if isinstance(expected, str):
+                # STRING arms store the raw lexeme (same as StringLiteralExpression).
+                # Discriminants go through unescape_string(), so "a\tb" must match
+                # a value that contains a tab, not the two characters '\' and 't'.
+                expected = unescape_string(expected)
+            return echo_equal(value, expected)
         if isinstance(pattern, TypePattern):
             if not matches_type(value, pattern.type):
                 return False

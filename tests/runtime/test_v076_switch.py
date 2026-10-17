@@ -183,6 +183,50 @@ switch user {
     assert result.lines == ["9", "Ada"]
 
 
+def test_string_arm_unescapes_like_string_literals():
+    result = run_echo(
+        r"""
+x: str = "a\tb";
+switch x {
+    "a\tb" { say("tab"); }
+    else { say("missed"); }
+}
+quoted: str = "say \"hi\"";
+switch quoted {
+    "say \"hi\"" { say("quote"); }
+    else { say("missed-quote"); }
+}
+nl: str = "hello\nworld";
+switch nl {
+    "hello\nworld" { say("nl"); }
+    else { say("missed-nl"); }
+}
+slash: str = "\\n";
+switch slash {
+    "\\n" { say("slash"); }
+    else { say("missed-slash"); }
+}
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["tab", "quote", "nl", "slash"]
+
+
+def test_formatted_escaped_string_arm_still_matches():
+    source = r"""
+x: str = "a\tb";
+switch x {
+    "a\tb" { say("tab"); }
+    else { say("missed"); }
+}
+"""
+    formatted = format_source(source)
+    result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "tab"
+    assert format_source(formatted) == formatted
+
+
 def test_abort_inside_arm_still_aborts():
     result = run_echo(
         """
