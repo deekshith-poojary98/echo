@@ -1651,6 +1651,14 @@ class Interpreter:
                 location,
                 code="E2411",
             ) from exc
+        except ValueError as exc:
+            # CPython raises ValueError: list modified during sort when the
+            # comparator mutates `target` (push/pull/index assign, etc.).
+            raise EchoRuntimeError(
+                "order() cannot modify the list while sorting",
+                location,
+                code="E2411",
+            ) from exc
         return target
 
     def _callable_has_arity(self, callback: object, arity: int) -> bool:

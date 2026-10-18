@@ -144,6 +144,27 @@ xs.order();
     assert_no_python_leak(result)
 
 
+def test_order_mutating_comparator_is_echo_error_not_python():
+    # CPython's list.sort raises ValueError when the comparator grows or
+    # shrinks the list. CLI / run_source only catch EchoError.
+    result = run_echo(
+        """
+xs: list = [3, 1, 2];
+fn cmp(a: int, b: int) -> int {
+    use mut xs;
+    xs.push(0);
+    return a - b;
+}
+xs.order(cmp);
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "order()" in result.output
+    assert "while sorting" in result.output
+    assert "E2411" in result.output
+
+
 def test_out_of_range_index_assignment_is_echo_error():
     result = run_echo(
         """
