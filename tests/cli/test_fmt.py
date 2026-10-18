@@ -98,6 +98,19 @@ def test_fmt_keeps_single_quoted_payload_runnable(tmp_path):
     assert output.strip() == 'He said "hi"'
 
 
+def test_fmt_keeps_overflowed_float_literal_runnable(tmp_path):
+    app = tmp_path / "app.echo"
+    app.write_text("say(1e400);\n", encoding="utf-8")
+    code, output = _run_main(["fmt", str(app), "--plain"])
+    assert code == 0
+    assert output == ""
+    rewritten = app.read_text(encoding="utf-8")
+    assert "inf" not in rewritten
+    code, output = _run_main([str(app), "--plain"])
+    assert code == 0, output
+    assert output.strip() == "inf"
+
+
 def test_fmt_parse_error_does_not_write(tmp_path):
     app = tmp_path / "bad.echo"
     original = "say(1)\n"

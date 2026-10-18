@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from echo.frontend.ast.nodes import (
     Argument,
     AssignmentStatement,
@@ -507,6 +509,11 @@ class _Printer:
         if isinstance(value, int) and not isinstance(value, bool):
             return str(value)
         if isinstance(value, float):
+            if math.isinf(value):
+                # float("1e400") overflows to inf. repr/str emit "inf", which
+                # lexes as an identifier, so `echo fmt` used to rewrite
+                # `say(1e400)` into `say(inf)` and break the program.
+                return "-1e400" if value < 0 else "1e400"
             text = repr(value)
             if text.endswith(".0"):
                 return text

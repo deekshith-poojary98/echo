@@ -178,3 +178,29 @@ def test_escaped_hash_key_survives_format_and_lookup():
     assert formatted_result.exit_code == 0, formatted_result.output
     assert formatted_result.output == result.output
     assert formatted_result.output.strip() == "1"
+
+
+def test_overflowed_float_literal_survives_format():
+    # 1e400 becomes IEEE inf in the AST. Printing that as "inf" used to
+    # turn a valid number into an undefined identifier.
+    source = "say(1e400);\nsay(-1e400);\n"
+    formatted = _assert_idempotent(source)
+    result = run_echo(source)
+    formatted_result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert formatted_result.exit_code == 0, formatted_result.output
+    assert formatted_result.output == result.output
+    assert formatted_result.lines == ["inf", "-inf"]
+    assert "inf)" not in formatted
+    assert "-inf)" not in formatted
+
+
+def test_overflowed_float_switch_arm_survives_format():
+    source = "switch 1e400 { 1e400 { say(1); } else { say(0); } }\n"
+    formatted = _assert_idempotent(source)
+    result = run_echo(source)
+    formatted_result = run_echo(formatted)
+    assert result.exit_code == 0, result.output
+    assert formatted_result.exit_code == 0, formatted_result.output
+    assert formatted_result.output == result.output
+    assert formatted_result.output.strip() == "1"
