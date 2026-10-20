@@ -961,6 +961,18 @@ def test_repeat_count_too_large_for_platform_is_echo_error_not_python():
     assert "too large" in result.output
 
 
+def test_repeat_count_too_large_to_allocate_is_echo_error_not_python():
+    # sys.maxsize fits in an index-sized integer, so "x" * n raises
+    # MemoryError instead of OverflowError. CLI / run_source only catch
+    # EchoError, so this used to leak a Python traceback.
+    result = run_echo('say("x".repeat(9223372036854775807));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "repeat()" in result.output
+    assert "too large" in result.output
+    assert "E2816" in result.output
+
+
 def test_pad_width_too_large_for_platform_is_echo_error_not_python():
     result = run_echo('say("5".padStart(10000000000000000000, "0"));\n')
     assert result.exit_code == 1
@@ -970,6 +982,24 @@ def test_pad_width_too_large_for_platform_is_echo_error_not_python():
     assert "E2817" in result.output
 
     result = run_echo('say("5".padEnd(10000000000000000000, "0"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "padEnd()" in result.output
+    assert "too large" in result.output
+    assert "E2817" in result.output
+
+
+def test_pad_width_too_large_to_allocate_is_echo_error_not_python():
+    # sys.maxsize-1 is still index-sized, so building the fill string raises
+    # MemoryError instead of OverflowError.
+    result = run_echo('say("".padStart(9223372036854775806, "x"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "padStart()" in result.output
+    assert "too large" in result.output
+    assert "E2817" in result.output
+
+    result = run_echo('say("".padEnd(9223372036854775806, "x"));\n')
     assert result.exit_code == 1
     assert_no_python_leak(result)
     assert "padEnd()" in result.output

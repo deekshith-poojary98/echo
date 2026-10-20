@@ -23,6 +23,7 @@ PYTHON_EXCEPTION_NAMES = (
     "StopIteration",
     "RecursionError",
     "OverflowError",
+    "MemoryError",
 )
 
 
