@@ -174,9 +174,11 @@ def string_repeat(value: str, count: object, location: SourceLocation | None = N
         raise EchoRuntimeError("repeat() count must be non-negative", location, code="E2816")
     try:
         return value * count
-    except OverflowError as exc:
-        # CPython cannot use an int larger than sys.maxsize as a repeat count
-        # ("cannot fit 'int' into an index-sized integer"), including "".repeat.
+    except (OverflowError, MemoryError) as exc:
+        # OverflowError: count > sys.maxsize ("cannot fit 'int' into an
+        # index-sized integer"), including "".repeat.
+        # MemoryError: count <= sys.maxsize but the allocation cannot succeed,
+        # e.g. "x".repeat(sys.maxsize). CLI / run_source only catch EchoError.
         raise EchoRuntimeError("repeat() count is too large", location, code="E2816") from exc
 
 
@@ -210,13 +212,14 @@ def _pad_string(
     needed = width - len(value)
     try:
         padding = (fill * ((needed // len(fill)) + 1))[:needed]
-    except OverflowError as exc:
-        # Same index-sized limit as repeat(): 10**19-wide padStart/padEnd
-        # leaked OverflowError instead of E2817.
+        if start:
+            return padding + value
+        return value + padding
+    except (OverflowError, MemoryError) as exc:
+        # OverflowError: width > sys.maxsize ("cannot fit 'int' into an
+        # index-sized integer"). MemoryError: width <= sys.maxsize but the
+        # padding allocation cannot succeed, e.g. padStart(sys.maxsize-1).
         raise EchoRuntimeError(f"{method}() width is too large", location, code="E2817") from exc
-    if start:
-        return padding + value
-    return value + padding
 
 
 def replace_first_string(value: str, old: object, new: object, location: SourceLocation | None = None) -> str:
