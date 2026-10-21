@@ -1007,6 +1007,53 @@ def test_pad_width_too_large_to_allocate_is_echo_error_not_python():
     assert "E2817" in result.output
 
 
+def test_range_list_length_too_large_for_platform_is_echo_error_not_python():
+    # rangeList materializes every integer. A bound of 10**19 is a valid Echo
+    # int but cannot fit in an index-sized list length, so CPython would
+    # OverflowError (or the process would grow until OOM) instead of an Echo
+    # diagnostic.
+    result = run_echo("say(rangeList(0, 10000000000000000000));\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "rangeList()" in result.output
+    assert "too large" in result.output
+    assert "E2843" in result.output
+
+    result = run_echo("say(rangeListInclusive(0, 10000000000000000000));\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "rangeListInclusive()" in result.output
+    assert "too large" in result.output
+    assert "E2843" in result.output
+
+
+def test_range_expression_length_too_large_for_platform_is_echo_error_not_python():
+    result = run_echo("say(0...10000000000000000000);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "E2702" in result.output
+
+    result = run_echo("say(0..10000000000000000000);\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "E2702" in result.output
+
+
+def test_oversized_range_with_matching_stride_still_fits():
+    # One step the size of the span is a single element, not 10**19 elements.
+    result = run_echo("say(0...10000000000000000000 by 10000000000000000000);\n")
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "[0]"
+
+    result = run_echo("say(rangeList(10000000000000000000, 0));\n")
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "[]"
+
+
 def test_regex_repetition_too_large_for_platform_is_echo_error_not_python():
     # CPython's re parser raises OverflowError (not re.error) when a `{n}`
     # count exceeds an index-sized integer, so regexMatch leaked a traceback.
