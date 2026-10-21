@@ -876,14 +876,35 @@ def do_range_values(
         stride = _loop_bound(step, location)
     if stride == 0:
         raise EchoRuntimeError("range step 'by 0' is not allowed", location, code="E2702")
-    values: list[int] = []
+    count = _range_count(begin, finish, stride, inclusive)
+    try:
+        # Materializing via repeated append hid OverflowError: a bound such as
+        # 10**19 is a valid Echo int, but the list length cannot fit in an
+        # index-sized integer. [0] * count fails immediately instead of
+        # growing until the process is OOM-killed. CLI / run_source only
+        # catch EchoError.
+        values = [0] * count
+    except (OverflowError, MemoryError) as exc:
+        name = f"{method}() " if method else ""
+        code = "E2843" if method is not None else "E2702"
+        raise EchoRuntimeError(f"{name}range is too large", location, code=code) from exc
     index = begin
-    while (index <= finish if inclusive else index < finish) if stride > 0 else (
-        index >= finish if inclusive else index > finish
-    ):
-        values.append(index)
+    for offset in range(count):
+        values[offset] = index
         index += stride
     return values
+
+
+def _range_count(begin: int, finish: int, stride: int, inclusive: bool) -> int:
+    if stride > 0:
+        last = finish if inclusive else finish - 1
+        if begin > last:
+            return 0
+        return ((last - begin) // stride) + 1
+    last = finish if inclusive else finish + 1
+    if begin < last:
+        return 0
+    return ((begin - last) // (-stride)) + 1
 
 
 def _loop_bound(value: object, location: SourceLocation | None = None) -> int:
