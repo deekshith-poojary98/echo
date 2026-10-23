@@ -121,3 +121,46 @@ say(fileExists("notes.txt"));
     assert real.is_file()
     assert real.read_text(encoding="utf-8") == "keep me"
     assert not link.is_symlink()
+
+
+def test_remove_tree_dotdot_deletes_parent_without_false_error(tmp_path):
+    # resolve_path(follow_symlinks=False) used to keep a trailing ".." segment.
+    # shutil.rmtree then emptied the parent and raised ENOENT, so Echo reported
+    # "path not found" after destroying sibling files.
+    victim = tmp_path / "victim"
+    work = victim / "work"
+    work.mkdir(parents=True)
+    (work / "keep.txt").write_text("keep", encoding="utf-8")
+    sibling = victim / "sibling.txt"
+    sibling.write_text("sibling", encoding="utf-8")
+    result = run_echo('removeTree("..");\nsay("done");\n', host=Host(cwd=work))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "done"
+    assert not victim.exists()
+    assert tmp_path.is_dir()
+
+
+def test_remove_tree_path_with_trailing_dotdot_is_normalized(tmp_path):
+    victim = tmp_path / "victim"
+    scratch = victim / "scratch"
+    scratch.mkdir(parents=True)
+    (victim / "keep.txt").write_text("keep", encoding="utf-8")
+    result = run_echo('removeTree("scratch/..");\nsay("done");\n', host=Host(cwd=victim))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "done"
+    assert not victim.exists()
+    assert tmp_path.is_dir()
+
+
+def test_resolve_path_without_follow_normalizes_dotdot(tmp_path):
+    work = tmp_path / "work"
+    work.mkdir()
+    host = Host(cwd=work)
+    assert host.resolve_path("..", follow_symlinks=False) == tmp_path.resolve()
+    assert host.resolve_path(".", follow_symlinks=False) == work.resolve()
+    alias = work / "alias"
+    alias.symlink_to("missing-target")
+    unresolved = host.resolve_path("alias", follow_symlinks=False)
+    assert unresolved.parent == work.resolve()
+    assert unresolved.name == "alias"
+    assert unresolved.is_symlink()

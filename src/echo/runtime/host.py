@@ -30,16 +30,22 @@ class Host:
 
     def resolve_path(self, path: str, *, follow_symlinks: bool = True) -> Path:
         candidate = Path(path)
-        if candidate.is_absolute():
-            return candidate
         root = self.cwd if self.cwd is not None else Path.cwd()
-        base = root / candidate
+        base = candidate if candidate.is_absolute() else root / candidate
         try:
             if follow_symlinks:
+                if candidate.is_absolute():
+                    return candidate
                 return base.resolve()
             # Resolve parents (and detect symlink cycles there) but keep the
             # final name so delete ops remove the named entry, not its target.
-            return base.parent.resolve() / base.name
+            # Collapse "." / ".." first: rmtree("cwd/..") deletes the parent
+            # then fails with ENOENT, so removeTree("..") used to report
+            # "path not found" after wiping sibling files.
+            logical = Path(os.path.normpath(str(base)))
+            if logical.parent == logical:
+                return logical
+            return logical.parent.resolve() / logical.name
         except RuntimeError as exc:
             # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP),
             # not OSError. Host callers already map OSError to Echo errors.
