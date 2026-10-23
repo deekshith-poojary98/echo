@@ -1393,8 +1393,8 @@ def do_remove_file(path: object, host: Host, location: SourceLocation | None = N
     except IsADirectoryError as exc:
         raise EchoRuntimeError(f"not a file: {path}", location, code="E2802") from exc
     except PermissionError as exc:
-        target = host.resolve_path(path)
-        if target.is_dir():
+        target = host.resolve_path(path, follow_symlinks=False)
+        if target.is_dir() and not target.is_symlink():
             raise EchoRuntimeError(f"not a file: {path}", location, code="E2802") from exc
         raise EchoRuntimeError(f"cannot remove file: {path}", location, code="E2803") from exc
     except (OSError, ValueError) as exc:

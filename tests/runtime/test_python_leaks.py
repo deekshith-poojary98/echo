@@ -594,8 +594,17 @@ def test_symlink_loop_list_files_is_echo_error_not_python(tmp_path):
     _assert_symlink_loop_is_echo_error(tmp_path, 'say(listFiles("cycle"));\n')
 
 
-def test_symlink_loop_remove_file_is_echo_error_not_python(tmp_path):
-    _assert_symlink_loop_is_echo_error(tmp_path, 'removeFile("cycle");\n')
+def test_symlink_loop_remove_file_unlinks_the_cycle(tmp_path):
+    # A self-referential symlink is a directory entry, not a directory.
+    # removeFile must unlink it without following (which would ELOOP).
+    cycle = tmp_path / "cycle"
+    cycle.symlink_to("cycle")
+    result = run_echo('removeFile("cycle");\nsay("ok");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "ok"
+    assert not cycle.is_symlink()
+    assert not cycle.exists()
 
 
 def test_symlink_loop_copy_file_is_echo_error_not_python(tmp_path):
