@@ -28,13 +28,18 @@ class Host:
             return self.environ
         return dict(os.environ)
 
-    def resolve_path(self, path: str) -> Path:
+    def resolve_path(self, path: str, *, follow_symlinks: bool = True) -> Path:
         candidate = Path(path)
         if candidate.is_absolute():
             return candidate
         root = self.cwd if self.cwd is not None else Path.cwd()
+        base = root / candidate
         try:
-            return (root / candidate).resolve()
+            if follow_symlinks:
+                return base.resolve()
+            # Resolve parents (and detect symlink cycles there) but keep the
+            # final name so delete ops remove the named entry, not its target.
+            return base.parent.resolve() / base.name
         except RuntimeError as exc:
             # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP),
             # not OSError. Host callers already map OSError to Echo errors.
@@ -65,13 +70,19 @@ class Host:
         target.mkdir(parents=True, exist_ok=True)
 
     def remove_file(self, path: str) -> None:
-        target = self.resolve_path(path)
-        if target.is_dir():
+        target = self.resolve_path(path, follow_symlinks=False)
+        # is_dir() follows the final symlink. A symlink to a directory is still
+        # a removable directory *entry*, like Unix rm — following first used
+        # to delete the target file/tree and leave a dangling link.
+        if target.is_dir() and not target.is_symlink():
             raise IsADirectoryError(path)
         target.unlink()
 
     def remove_tree(self, path: str) -> None:
-        target = self.resolve_path(path)
+        target = self.resolve_path(path, follow_symlinks=False)
+        if target.is_symlink() or target.is_file():
+            target.unlink()
+            return
         if not target.exists():
             raise FileNotFoundError(path)
         if target.is_dir():

@@ -421,6 +421,40 @@ def test_remove_file_denied_on_restricted_host(tmp_path):
     assert (tmp_path / "notes.txt").is_file()
 
 
+def test_remove_file_unlinks_symlink_not_target(tmp_path):
+    real = tmp_path / "notes.txt"
+    real.write_text("keep me", encoding="utf-8")
+    link = tmp_path / "alias.txt"
+    link.symlink_to("notes.txt")
+    result = run_echo(
+        """
+removeFile("alias.txt");
+say(fileExists("notes.txt"));
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "true"
+    assert real.is_file()
+    assert real.read_text(encoding="utf-8") == "keep me"
+    assert not link.exists()
+    assert not link.is_symlink()
+
+
+def test_remove_file_unlinks_symlink_to_directory(tmp_path):
+    target = tmp_path / "out"
+    target.mkdir()
+    (target / "keep.txt").write_text("keep", encoding="utf-8")
+    link = tmp_path / "alias"
+    link.symlink_to("out")
+    result = run_echo('removeFile("alias");\nsay(isDir("out"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "true"
+    assert target.is_dir()
+    assert (target / "keep.txt").is_file()
+    assert not link.is_symlink()
+
+
 def test_exit_from_imported_module(tmp_path):
     write_modules(
         tmp_path,
