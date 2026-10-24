@@ -1408,6 +1408,10 @@ def do_remove_tree(path: object, host: Host, location: SourceLocation | None = N
     if not isinstance(path, str):
         raise EchoTypeError("removeTree() path must be a string", location, code="E2802")
     _reject_embedded_nul(path, "removeTree", "path", location, "E2802")
+    if path == "":
+        # Path("") joins as the host cwd, so removeTree("") used to rmtree the
+        # working directory and report success. Unix `rm -rf ""` fails instead.
+        raise EchoRuntimeError("removeTree() path must not be empty", location, code="E2802")
     try:
         host.remove_tree(path)
     except FileNotFoundError as exc:
