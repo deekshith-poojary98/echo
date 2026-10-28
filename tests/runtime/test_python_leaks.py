@@ -880,6 +880,25 @@ def test_exit_oversized_integer_is_echo_error_not_python():
     assert "E2808" in result.output
 
 
+def test_exit_status_too_large_for_c_long_is_echo_error_not_python():
+    # 2**63 fits in a Python int (19 digits) and used to pass do_exit's
+    # str(code) check. CLI `raise SystemExit(code)` then leaked
+    # OverflowError: Python int too large to convert to C long.
+    result = run_echo("exit(9223372036854775808);\nsay(\"reached\");\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "exit()" in result.output
+    assert "too large" in result.output
+    assert "E2808" in result.output
+    assert "reached" not in result.lines
+
+    result = run_echo("exit(-9223372036854775809);\nsay(\"reached\");\n")
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "too large" in result.output
+    assert "reached" not in result.lines
+
+
 def _oversized_int_program(body: str) -> str:
     return (
         'n: int = "9".repeat(4299).asInt();\n'
