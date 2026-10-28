@@ -30,7 +30,7 @@ from echo.modules.loader import ModuleLoader
 from echo.modules.records import Module
 from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
-from echo.runtime.host import Host
+from echo.runtime.host import Host, resolve_filesystem_path
 from echo.runtime.interpreter import Interpreter
 from echo.runtime.builtins import builtin_names
 from echo.semantics.analyzer import SemanticAnalyzer
@@ -68,9 +68,9 @@ def run_source(source: str, filename: str = "<input>", *, plain: bool = True, ho
 
 def _resolve_user_path(source_path: str, plain: bool) -> Path | None:
     try:
-        return Path(source_path).expanduser().resolve()
-    except RuntimeError:
-        # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP).
+        return resolve_filesystem_path(Path(source_path).expanduser())
+    except (OSError, RuntimeError):
+        # Symlink cycles: Linux may raise RuntimeError; Darwin raises OSError.
         _print_plain_error("Error", f"cannot resolve source path: {source_path}", plain)
         return None
 

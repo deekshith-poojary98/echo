@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from echo.errors import ModuleResolveError
+from echo.runtime.host import resolve_filesystem_path
 from echo.std import resolve_std_root
 
 
@@ -124,9 +125,9 @@ class ModuleResolver:
 
     def canonicalize(self, path: str | Path) -> Path:
         try:
-            return Path(path).expanduser().resolve()
-        except RuntimeError as exc:
-            # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP).
+            return resolve_filesystem_path(Path(path).expanduser())
+        except (OSError, RuntimeError) as exc:
+            # Symlink cycles: Linux may raise RuntimeError; Darwin raises OSError.
             raise ModuleResolveError(
                 f"cannot resolve module path '{path}'",
                 code="E3002",

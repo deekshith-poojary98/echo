@@ -8,13 +8,13 @@ version = "2.2.1"
 description = "Echo programming language interpreter"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
 dependencies = ["rich>=13.0.0", "PyYAML>=6.0"]
 authors = [{ name = "Deekshith Poojary", email = "deekshithpoojary355@gmail.com" }]
 maintainers = [{ name = "Deekshith Poojary" }]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Topic :: Software Development :: Interpreters"
 ]

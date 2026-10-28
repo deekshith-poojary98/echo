@@ -11,6 +11,7 @@ from echo.frontend.parser import Parser
 from echo.modules.loader import ModuleLoader
 from echo.runtime.context import Environment
 from echo.runtime.functions import EchoFunction
+from echo.runtime.host import resolve_filesystem_path
 from echo.runtime.interpreter import Interpreter
 from echo.runtime.testing import ExpectFailure, TestSession, discover_test_functions, test_unit_matches
 from echo.semantics.analyzer import SemanticAnalyzer
@@ -28,8 +29,8 @@ class TestUnitResult:
 
 def collect_test_files(source_path: str) -> list[Path] | str:
     try:
-        path = Path(source_path).expanduser().resolve()
-    except RuntimeError:
+        path = resolve_filesystem_path(Path(source_path).expanduser())
+    except (OSError, RuntimeError):
         return f"cannot resolve source path: {source_path}"
     if path.is_file():
         return [path]

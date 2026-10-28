@@ -7,6 +7,27 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+def resolve_filesystem_path(path: Path) -> Path:
+    """Absolute-ize and follow symlinks; raise OSError on symlink cycles.
+
+    ``Path.resolve()`` without ``strict=True`` is not portable: Linux may raise
+    ``RuntimeError`` on loops, while Darwin returns the unresolved path and
+    later ``exists()`` / ``is_file()`` quietly report false. Prefer strict
+    resolve so both platforms surface ``OSError`` (ELOOP). Fall back to
+    non-strict only when the final path does not exist yet (create targets).
+    """
+    try:
+        return path.resolve(strict=True)
+    except FileNotFoundError:
+        try:
+            return path.resolve(strict=False)
+        except RuntimeError as exc:
+            raise OSError(str(exc)) from exc
+    except RuntimeError as exc:
+        # Older pathlib raised RuntimeError on symlink cycles (ELOOP).
+        raise OSError(str(exc)) from exc
+
+
 @dataclass
 class Host:
     """Process host for Echo programs. Not language syntax."""
@@ -34,9 +55,7 @@ class Host:
         base = candidate if candidate.is_absolute() else root / candidate
         try:
             if follow_symlinks:
-                if candidate.is_absolute():
-                    return candidate
-                return base.resolve()
+                return resolve_filesystem_path(base)
             # Resolve parents (and detect symlink cycles there) but keep the
             # final name so delete ops remove the named entry, not its target.
             # Collapse "." / ".." first: rmtree("cwd/..") deletes the parent
@@ -45,7 +64,7 @@ class Host:
             logical = Path(os.path.normpath(str(base)))
             if logical.parent == logical:
                 return logical
-            return logical.parent.resolve() / logical.name
+            return resolve_filesystem_path(logical.parent) / logical.name
         except RuntimeError as exc:
             # pathlib.resolve() raises RuntimeError on symlink cycles (ELOOP),
             # not OSError. Host callers already map OSError to Echo errors.
