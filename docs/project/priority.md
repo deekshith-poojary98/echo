@@ -1,6 +1,6 @@
 # Echo remaining-feature priority
 
-Current tagged version tracks **2.2.x**. **1.1.0**–**1.1.9**, **2.0.0**–**2.0.9**, and **2.1.0**–**2.1.9** are complete; **2.2.0** ships `elang ide`. Failure model stays abort + `*Or`.
+Current tagged version tracks **2.2.x**. **1.1.0**–**1.1.9**, **2.0.0**–**2.0.9**, and **2.1.0**–**2.1.9** are complete; **2.2.0** ships `elang ide`; **2.2.1** hardens crash and path safety. Failure model stays abort + `*Or`.
 
 User-facing docs prefer the CLI name **`elang`** (shells reserve `echo`). Historical slices below often say `echo check` / `echo test` / … — that is version history, not the command to type today.
 
@@ -1249,13 +1249,14 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 
 ## 2.2.x — local tooling
 
-**Status: open (2.2.0 shipped).**
+**Status: open (2.2.1 shipped).**
 
 **2.2** is about running Echo without a terminal. Not a language change; failure model unchanged.
 
 | Version | Item | Status |
 | --- | --- | --- |
 | 2.2.0 | `elang ide` desktop editor (Tk) | done |
+| 2.2.1 | Crash hardening + path safety | done |
 
 ### 2.2.0 — desktop IDE
 
@@ -1266,6 +1267,10 @@ Package registry / lockfiles, inheritance, generics, async, VM, `try`/`catch`, `
 - New package `echo.ide`; `runner.run_source` is headless and unit-tested
 - Tkinter only (stdlib) — missing Tk prints an install hint and exits 1
 - MVP: no autocomplete, no debugger, no project tree, no LSP in the window; interactive `ask` / `readLine` are limited
+
+### 2.2.1 — crash hardening + path safety
+
+**Done.** Oversized integers, unbounded recursion, cyclic symlinks, and unsafe `removeTree` / `removeFile` paths abort as Echo errors instead of crashing or deleting the wrong tree. `switch` / hash-literal unescaping and `elang fmt` edge cases stay consistent. No new language syntax.
 
 ## Held (do not implement)
 

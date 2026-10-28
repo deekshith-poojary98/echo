@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.2.1
+
+Crash hardening and path safety. Second **2.2** slice. Failure model unchanged. No new language syntax.
+
+Host / builtins:
+
+- Reject oversized integers so parse, print, diagnostics, `ask`, `exit`, `repeat` / `pad`, `rangeList`, and regex `{n}` counts cannot crash the interpreter
+- Reject unbounded recursion on deeply nested expressions and function calls (`RecursionError` → Echo abort)
+- Reject NUL bytes and non-HTTP URLs so host builtins / `httpGet` cannot crash
+- Reject cyclic symlinks so file builtins cannot crash with Python traceback
+- `removeFile` / `removeTree` no longer delete through symlinks; `removeTree("")` and `removeTree("..")` cannot wipe the working directory or parent
+- `exit()` rejects status values that do not fit in a C `long`
+- `order()` stays safe when the comparator mutates the list; string allocation failures in `repeat` / `pad` abort cleanly
+
+Language / tooling correctness:
+
+- Unescape `switch` string arms and hash-literal keys so escaped literals match and `elang fmt` stay consistent
+- Keep `elang fmt` from rewriting overflowed floats as `inf`, or breaking strings that contain quotes
+- Lexer rejects deeply nested interpolations and interpolation quotes that end with a backslash instead of crashing
+- CLI rejects unreadable source files instead of crashing
+- Formatter string-wrap path is valid on Python 3.10 / 3.11 (no backslash inside f-string expressions)
+
 ## 2.2.0
 
 Desktop IDE. Opens the **2.2.x** series. Failure model unchanged. No new language syntax.

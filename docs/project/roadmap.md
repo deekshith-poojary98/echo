@@ -18,6 +18,7 @@ Already in the language or CLI:
 - **2.0.x** complete (**2.0.0–2.0.9**): path resolution + `std/…` peels (not a package manager)
 - **2.1.x** complete (**2.1.0–2.1.9**): YAML + thin LSP stub + std maturity on 2.0 modules
 - **2.2.0**: `elang ide` desktop editor (Tk window: edit → Run → output)
+- **2.2.1**: crash hardening + path safety (oversized ints, recursion, symlink / `removeTree` guards, fmt / switch unescaping)
 
 ## Next
 
@@ -28,6 +29,7 @@ Already in the language or CLI:
 | Version | Item | Status |
 | --- | --- | --- |
 | 2.2.0 | `elang ide` desktop editor (Tk) | done |
+| 2.2.1 | Crash hardening + path safety | done |
 
 Public message: **2.2 = run Echo without a terminal.**
 

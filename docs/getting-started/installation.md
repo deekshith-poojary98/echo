@@ -87,7 +87,7 @@ elang --version
 **Success looks like this** (version number may match what you installed):
 
 ```text
-Echo 2.2.0
+Echo 2.2.1
 ```
 
 If you see that line, Echo is installed.
