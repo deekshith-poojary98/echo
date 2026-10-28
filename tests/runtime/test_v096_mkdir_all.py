@@ -1,4 +1,4 @@
-from helpers import run_echo
+from helpers import assert_no_python_leak, run_echo
 from echo.runtime.host import Host
 
 
@@ -121,6 +121,30 @@ say(fileExists("notes.txt"));
     assert real.is_file()
     assert real.read_text(encoding="utf-8") == "keep me"
     assert not link.is_symlink()
+
+
+def test_remove_tree_empty_path_does_not_delete_cwd(tmp_path):
+    # Path("") joins as cwd, so removeTree("") used to rmtree the working
+    # directory and return success — e.g. removeTree(envOr("OUT_DIR", "")).
+    keep = tmp_path / "keep.txt"
+    keep.write_text("precious", encoding="utf-8")
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    (nested / "x.txt").write_text("x", encoding="utf-8")
+    result = run_echo('removeTree("");\nsay("reached");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "must not be empty" in result.output
+    assert "E2802" in result.output
+    assert "reached" not in result.lines
+    assert keep.read_text(encoding="utf-8") == "precious"
+    assert (nested / "x.txt").read_text(encoding="utf-8") == "x"
+
+    result = run_echo('"".removeTree();\nsay("reached");\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "must not be empty" in result.output
+    assert keep.read_text(encoding="utf-8") == "precious"
 
 
 def test_remove_tree_dotdot_deletes_parent_without_false_error(tmp_path):
