@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import random
+import struct
 import time
 from pathlib import Path
 
@@ -1301,7 +1302,11 @@ def do_exit(code: object, location: SourceLocation | None = None) -> None:
         # EchoExit formats the status into its message. 4300+ digit integers
         # raise ValueError (CVE-2020-10735) instead of exiting.
         str(code)
-    except ValueError as exc:
+        # SystemExit converts the status to a C long at interpreter shutdown.
+        # 2**63 has only 19 digits, so str() succeeds, then `elang` crashes
+        # with OverflowError after EchoExit is caught.
+        struct.pack("l", code)
+    except (ValueError, OverflowError, struct.error) as exc:
         raise EchoRuntimeError("exit() code is too large", location, code="E2808") from exc
     raise EchoExit(code)
 
