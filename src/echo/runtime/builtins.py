@@ -1292,7 +1292,13 @@ def do_file_exists(path: object, host: Host, location: SourceLocation | None = N
 def do_cwd(args: list[object], host: Host, location: SourceLocation | None = None) -> str:
     if args:
         raise ArgumentError("cwd() takes no arguments", location, code="E2807")
-    return str(host.working_directory())
+    try:
+        return str(host.working_directory())
+    except (OSError, ValueError) as exc:
+        # Host.cwd on a symlink loop used to leak RuntimeError from Path.resolve().
+        # Path.cwd() after the process directory is removed leaks FileNotFoundError.
+        # CLI / run_source only catch EchoError.
+        raise EchoRuntimeError("cannot resolve working directory", location, code="E2802") from exc
 
 
 def do_exit(code: object, location: SourceLocation | None = None) -> None:

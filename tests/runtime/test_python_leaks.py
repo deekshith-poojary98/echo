@@ -631,6 +631,43 @@ def test_read_file_or_symlink_loop_returns_fallback(tmp_path):
     assert result.output.strip() == "ok"
 
 
+def test_cwd_symlink_loop_host_cwd_is_echo_error_not_python(tmp_path):
+    # working_directory() used Path.resolve() after resolve_path() was moved
+    # onto resolve_filesystem_path(), so cwd() leaked RuntimeError when the
+    # Host cwd itself was a symlink loop.
+    cycle = tmp_path / "cycle"
+    cycle.symlink_to("cycle")
+    result = run_echo("say(cwd());\n", host=Host(cwd=cycle))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "working directory" in result.output
+    assert "E2802" in result.output
+
+
+def test_run_symlink_loop_host_cwd_is_echo_error_not_python(tmp_path):
+    cycle = tmp_path / "cycle"
+    cycle.symlink_to("cycle")
+    result = run_echo('run("true", []);\nsay("reached");\n', host=Host(cwd=cycle))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "cannot run" in result.output or "working directory" in result.output
+    assert "reached" not in result.lines
+
+
+def test_cwd_after_process_directory_removed_is_echo_error_not_python(tmp_path, monkeypatch):
+    # Stock CLI leaves Host.cwd unset, so cwd() calls Path.cwd(). After the
+    # process working directory is gone (removeTree(".") or rmdir elsewhere),
+    # os.getcwd() raises FileNotFoundError and used to leak a traceback.
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.chdir(work)
+    result = run_echo('removeTree(".");\nsay(cwd());\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "working directory" in result.output
+    assert "E2802" in result.output
+
+
 def test_interpolation_nested_backslash_at_eof_is_echo_error_not_python():
     # File/source with no trailing newline: ${"..." + trailing \\ crashed
     # the lexer with IndexError instead of a syntax diagnostic.
