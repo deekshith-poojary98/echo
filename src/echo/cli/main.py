@@ -279,7 +279,13 @@ def run_repl(*, plain: bool = True, host: Host | None = None) -> int:
     interpreter = Interpreter(host=host)
     env = Environment()
     session_scope = SemanticAnalyzer.prelude_scope(SourceLocation(1, 1, "<repl>"), host)
-    loader = ModuleLoader()
+    try:
+        loader = ModuleLoader()
+    except EchoError as exc:
+        # ModuleResolver resolves ECHO_STD_ROOT at construction. A symlink
+        # cycle used to leak RuntimeError before the prompt was shown.
+        _print_error(exc, "", plain)
+        return 1
     print(f"Echo {__version__}")
     buffer: list[str] = []
     while True:
@@ -503,21 +509,25 @@ def _main_std(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     from echo.std import list_std_inventory, list_std_modules, resolve_std_root
 
-    if args.path:
-        print(resolve_std_root())
-        return 0
-    if args.count:
-        print(len(list_std_modules()))
-        return 0
-    if args.exports:
-        for specifier, _path, exports in list_std_inventory():
+    try:
+        if args.path:
+            print(resolve_std_root())
+            return 0
+        if args.count:
+            print(len(list_std_modules()))
+            return 0
+        if args.exports:
+            for specifier, _path, exports in list_std_inventory():
+                print(specifier)
+                for name in exports:
+                    print(f"  {name}")
+            return 0
+        for specifier in list_std_modules():
             print(specifier)
-            for name in exports:
-                print(f"  {name}")
         return 0
-    for specifier in list_std_modules():
-        print(specifier)
-    return 0
+    except OSError as exc:
+        print(f"Error: {exc}")
+        return 1
 
 
 def _main_lsp(argv: list[str]) -> int:

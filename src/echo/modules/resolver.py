@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -14,7 +15,15 @@ _DRIVE = re.compile(r"^[A-Za-z]:")
 
 class ModuleResolver:
     def __init__(self, std_root: str | Path | None = None) -> None:
-        self.std_root = resolve_std_root(std_root)
+        try:
+            self.std_root = resolve_std_root(std_root)
+        except OSError as exc:
+            shown = str(std_root) if std_root is not None else os.environ.get("ECHO_STD_ROOT", "")
+            raise ModuleResolveError(
+                f"cannot resolve std root '{shown}'",
+                code="E3002",
+                help_text="ECHO_STD_ROOT is a symlink loop or cannot be resolved",
+            ) from exc
 
     def resolve(self, importer_path: str | Path, module_name: str) -> Path:
         parts = self._parse_specifier(module_name)
