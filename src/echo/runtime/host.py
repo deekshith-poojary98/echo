@@ -71,8 +71,12 @@ class Host:
             raise OSError(str(exc)) from exc
 
     def working_directory(self) -> Path:
-        root = self.cwd if self.cwd is not None else Path.cwd()
-        return root.resolve()
+        try:
+            root = self.cwd if self.cwd is not None else Path.cwd()
+            return resolve_filesystem_path(root)
+        except RuntimeError as exc:
+            # pathlib.resolve() raised RuntimeError on symlink cycles (ELOOP).
+            raise OSError(str(exc)) from exc
 
     def file_exists(self, path: str) -> bool:
         return self.resolve_path(path).is_file()
