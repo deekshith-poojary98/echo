@@ -7,6 +7,7 @@ from pathlib import Path
 from echo.frontend.ast.nodes import ExportDeclaration
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
+from echo.runtime.host import resolve_filesystem_path
 
 
 def std_root() -> Path:
@@ -19,11 +20,18 @@ def resolve_std_root(root: str | Path | None = None) -> Path:
     import os
 
     if root is not None:
-        return Path(root).expanduser().resolve()
-    env = os.environ.get("ECHO_STD_ROOT")
-    if env:
-        return Path(env).expanduser().resolve()
-    return std_root()
+        candidate = Path(root).expanduser()
+    else:
+        env = os.environ.get("ECHO_STD_ROOT")
+        if not env:
+            return std_root()
+        candidate = Path(env).expanduser()
+    try:
+        return resolve_filesystem_path(candidate)
+    except OSError as exc:
+        # Path.resolve() raises RuntimeError/OSError on symlink cycles; CLI /
+        # ModuleResolver construction used to leak that traceback.
+        raise OSError(f"cannot resolve std root: {candidate}") from exc
 
 
 def list_std_module_paths(root: str | Path | None = None) -> list[Path]:

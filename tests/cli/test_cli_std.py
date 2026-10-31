@@ -6,6 +6,7 @@ import pytest
 
 from echo.cli.main import main
 from echo.std import list_std_modules, resolve_std_root, std_root
+from helpers import ExecutionResult, assert_no_python_leak
 
 
 def _run_main(argv: list[str]) -> tuple[int, str]:
@@ -64,6 +65,28 @@ def test_std_respects_echo_std_root(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert code == 0
     assert "std/demo" in output
     assert "  demo" in output
+
+
+def test_std_symlink_loop_echo_std_root_is_error_not_python(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Path.resolve() on a self-symlink raises RuntimeError (Linux) / OSError
+    # (Darwin). elang std used to leak that traceback instead of exiting 1.
+    cycle = tmp_path / "cycle"
+    cycle.symlink_to("cycle")
+    monkeypatch.setenv("ECHO_STD_ROOT", str(cycle))
+    code, output = _run_main(["std"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "cannot resolve std root" in output
+    assert "RuntimeError" not in output
+
+    code, output = _run_main(["std", "--path"])
+    result = ExecutionResult(code, output)
+    assert_no_python_leak(result)
+    assert code == 1
+    assert "cannot resolve std root" in output
 
 
 def test_top_level_help_mentions_std():

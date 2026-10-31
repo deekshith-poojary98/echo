@@ -68,6 +68,26 @@ def test_missing_std_module_names_std_root(tmp_path: Path) -> None:
     assert "echo std" in result.output.lower() or "std" in result.output.lower()
 
 
+def test_std_root_symlink_loop_is_echo_error_not_python(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cycle = tmp_path / "cycle"
+    cycle.symlink_to("cycle")
+    monkeypatch.setenv("ECHO_STD_ROOT", str(cycle))
+    write_modules(
+        tmp_path,
+        {"app.echo": 'import stdOk from "std/meta";\nsay(stdOk());\n'},
+    )
+    result = run_entry(tmp_path)
+    assert_echo_error(result, "E3002", "std root")
+    assert "symlink loop" in result.output.lower() or "cannot resolve" in result.output.lower()
+
+    with pytest.raises(ModuleResolveError) as caught:
+        ModuleResolver()
+    assert caught.value.code == "E3002"
+    assert "std root" in caught.value.message
+
+
 def test_std_root_override(tmp_path: Path) -> None:
     custom = tmp_path / "custom_std"
     custom.mkdir()
