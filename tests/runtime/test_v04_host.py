@@ -643,6 +643,48 @@ def test_run_denied_on_restricted_host():
     assert "not available in this host" in result.output
 
 
+def test_run_uses_host_environ_not_process_environ(monkeypatch):
+    # env()/envOr() honor Host.environ. run() used to omit env=, so a
+    # sandboxed host still leaked the real process environment to children.
+    monkeypatch.setenv("ECHO_LEAK_SECRET", "should-not-leak")
+    result = run_echo(
+        """
+out: hash = run("env", []);
+say(out["code"]);
+say(out["stdout"].contains("ECHO_LEAK_SECRET="));
+say(out["stdout"].contains("ECHO_SANDBOX_MARKER=1"));
+say(envOr("ECHO_LEAK_SECRET", "missing"));
+""",
+        host=Host(environ={"ECHO_SANDBOX_MARKER": "1"}),
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["0", "false", "true", "missing"]
+
+
+def test_run_inherits_process_env_when_host_environ_is_unset(monkeypatch):
+    monkeypatch.setenv("ECHO_INHERIT_MARKER", "visible")
+    result = run_echo(
+        """
+out: hash = run("env", []);
+say(out["stdout"].contains("ECHO_INHERIT_MARKER=visible"));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "true"
+
+
+def test_host_run_process_uses_configured_environ(monkeypatch):
+    monkeypatch.setenv("ECHO_LEAK_SECRET", "should-not-leak")
+    host = Host(environ={"ECHO_SANDBOX_MARKER": "1"})
+    completed = host.run_process("env", [])
+    stdout = str(completed["stdout"])
+    assert completed["code"] == 0
+    assert "ECHO_SANDBOX_MARKER=1" in stdout
+    assert "ECHO_LEAK_SECRET=" not in stdout
+
+
 def test_host_run_process_respects_allow_run():
     host = Host(allow_run=False)
     try:
