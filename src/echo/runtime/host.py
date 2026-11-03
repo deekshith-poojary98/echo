@@ -134,6 +134,10 @@ class Host:
         completed = subprocess.run(
             [command, *args],
             cwd=self.working_directory(),
+            # env()/envOr() read Host.environment(). Omitting env= here made
+            # run() inherit the real process environment, so a sandbox
+            # Host(environ={...}) leaked secrets that Echo code could not see.
+            env=self.environment(),
             capture_output=True,
             text=True,
             encoding="utf-8",
