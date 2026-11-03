@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import quote, unquote, urlencode, urljoin
 
-from echo.errors import EchoTypeError, SourceLocation
+from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
 
 
 def _require_string(
@@ -17,7 +17,13 @@ def _require_string(
 
 
 def url_encode(text: object, location: SourceLocation | None = None) -> str:
-    return quote(_require_string(text, "urlEncode", "text", location), safe="")
+    raw = _require_string(text, "urlEncode", "text", location)
+    try:
+        return quote(raw, safe="")
+    except UnicodeEncodeError as exc:
+        # Unpaired surrogates (e.g. parseJson of "\\uD800") are valid Python
+        # str values but not UTF-8. quote() leaked UnicodeEncodeError.
+        raise EchoRuntimeError("urlEncode() text is not valid Unicode", location, code="E2853") from exc
 
 
 def url_decode(text: object, location: SourceLocation | None = None) -> str:
@@ -40,4 +46,7 @@ def url_query(params: object, location: SourceLocation | None = None) -> str:
         if not isinstance(value, str):
             raise EchoTypeError("urlQuery() param values must be strings", location, code="E2853")
         pairs.append((key, value))
-    return urlencode(pairs)
+    try:
+        return urlencode(pairs)
+    except UnicodeEncodeError as exc:
+        raise EchoRuntimeError("urlQuery() params are not valid Unicode", location, code="E2853") from exc
