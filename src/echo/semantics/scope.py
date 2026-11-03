@@ -10,7 +10,11 @@ class Scope:
         self.parent = parent
         self.symbols: dict[str, Symbol] = {}
         self.is_function = is_function
-        self.is_loop = is_loop or (parent.is_loop if parent else False)
+        # Nested functions start a new control-flow context. Inheriting is_loop
+        # from an enclosing for/while/foreach used to let `break`/`continue`
+        # inside a nested function (or lambda) pass the analyzer, then leak
+        # BreakSignal/ContinueSignal when that function ran outside the loop.
+        self.is_loop = is_loop if is_function else (is_loop or (parent.is_loop if parent else False))
         self.in_function = is_function or (parent.in_function if parent else False)
         self.type_aliases: dict[str, TypeAnnotation] = {}
         self.classes: dict[str, ClassType] = {}
