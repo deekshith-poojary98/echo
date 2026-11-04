@@ -54,6 +54,28 @@ while true {
     assert result.lines == ["1", "3"]
 
 
+def test_nested_function_can_break_its_own_loop_inside_outer_loop():
+    result = run_echo(
+        """
+for i: int in 0..2 {
+    fn inner() -> int {
+        n: int = 0;
+        while true {
+            if n == 1 {
+                break;
+            }
+            n = n + 1;
+        }
+        return n;
+    }
+    say(inner());
+}
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert result.lines == ["1", "1", "1"]
+
+
 def test_foreach_over_hash_iterates_keys():
     result = run_echo(
         """

@@ -1147,6 +1147,45 @@ def test_regex_repetition_too_large_for_platform_is_echo_error_not_python():
     assert "E2850" in result.output
 
 
+def test_nested_function_break_inside_loop_is_echo_error_not_python():
+    # Nested functions inherited the enclosing loop's is_loop flag, so this
+    # passed the analyzer. Calling inner() after the loop leaked BreakSignal
+    # because execute() / function frames did not catch it.
+    result = run_echo(
+        """
+handlers: list = [];
+for i: int in 0..1 {
+    fn inner() -> void {
+        break;
+    }
+    handlers.push(inner);
+}
+handlers[0]();
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "outside loop" in result.output
+    assert "E1004" in result.output
+
+
+def test_nested_lambda_continue_inside_loop_is_echo_error_not_python():
+    result = run_echo(
+        """
+handlers: list = [];
+while true {
+    handlers.push(fn() -> void { continue; });
+    break;
+}
+handlers[0]();
+"""
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "outside loop" in result.output
+    assert "E1004" in result.output
+
+
 def test_json_unpaired_surrogate_is_echo_error_not_python():
     # json.loads("\"\\uD800\"") yields an unpaired surrogate. urlEncode /
     # base64Encode then leaked UnicodeEncodeError from quote() / str.encode.
@@ -1224,3 +1263,4 @@ def test_url_encode_unpaired_surrogate_direct_is_echo_error():
             assert "not valid Unicode" in exc.message
             continue
         raise AssertionError("encode builtin accepted an unpaired surrogate")
+

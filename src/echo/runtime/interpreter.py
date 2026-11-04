@@ -243,6 +243,15 @@ class Interpreter:
                 location,
                 code="E2797",
             ) from exc
+        except (BreakSignal, ContinueSignal) as exc:
+            kind = "break" if isinstance(exc, BreakSignal) else "continue"
+            location = self._frames[-1].call_site if self._frames else program.location
+            raise EchoRuntimeError(
+                f"'{kind}' statement outside loop",
+                location,
+                help_text=f"'{kind}' can only be used inside for/foreach/while loops.",
+                code="E1004",
+            ) from exc
 
     def execute_statement(self, statement: Statement, env: Environment) -> None:
         if isinstance(statement, TypeAliasStatement):
@@ -2136,6 +2145,18 @@ class Interpreter:
                 "Call stack nested too deeply",
                 location,
                 code="E2797",
+            ) from exc
+        except (BreakSignal, ContinueSignal) as exc:
+            # Nested functions used to inherit the enclosing loop's is_loop
+            # flag, so `break`/`continue` compiled. Invoking that function
+            # outside the loop leaked BreakSignal/ContinueSignal because
+            # only for/while/foreach catch those signals.
+            kind = "break" if isinstance(exc, BreakSignal) else "continue"
+            raise EchoRuntimeError(
+                f"'{kind}' statement outside loop",
+                location,
+                help_text=f"'{kind}' can only be used inside for/foreach/while loops.",
+                code="E1004",
             ) from exc
         finally:
             if self._frames:
