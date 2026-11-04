@@ -1184,3 +1184,83 @@ handlers[0]();
     assert_no_python_leak(result)
     assert "outside loop" in result.output
     assert "E1004" in result.output
+
+
+def test_json_unpaired_surrogate_is_echo_error_not_python():
+    # json.loads("\"\\uD800\"") yields an unpaired surrogate. urlEncode /
+    # base64Encode then leaked UnicodeEncodeError from quote() / str.encode.
+    result = run_echo('say(urlEncode(parseJson("\\"\\\\uD800\\"")));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not valid Unicode" in result.output
+    assert "E2806" in result.output
+
+    result = run_echo('say(base64Encode(parseJson("\\"\\\\uDC00\\"")));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not valid Unicode" in result.output
+    assert "E2806" in result.output
+
+    result = run_echo('say(parseJson("{\\"\\\\uD800\\": 1}"));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not valid Unicode" in result.output
+    assert "E2806" in result.output
+
+
+def test_json_surrogate_pair_is_valid_unicode():
+    # A well-formed UTF-16 pair is U+10000, one character, and encodes as UTF-8.
+    result = run_echo(
+        """
+text: str = parseJson("\\"\\\\uD800\\\\uDC00\\"");
+say(text.length());
+say(urlEncode(text));
+say(base64Encode(text));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["1", "%F0%90%80%80", "8JCAgA=="]
+
+
+def test_yaml_unpaired_surrogate_is_echo_error_not_python():
+    result = run_echo('say(urlEncode(yamlParse("\\"\\\\uD800\\"")));\n')
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "E2855" in result.output or "E2806" in result.output
+
+
+def test_yaml_surrogate_pair_normalizes_to_scalar():
+    # PyYAML leaves \\uD800\\uDC00 as two surrogates; json.loads combines them.
+    result = run_echo(
+        """
+text: str = yamlParse("\\"\\\\uD800\\\\uDC00\\"");
+say(text.length());
+say(urlEncode(text));
+"""
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.lines == ["1", "%F0%90%80%80"]
+
+
+def test_url_encode_unpaired_surrogate_direct_is_echo_error():
+    from echo.core.urlutil import url_encode
+    from echo.core.base64util import base64_encode
+    from echo.core.httputil import http_post
+
+    for call, code in (
+        (lambda: url_encode("\ud800"), "E2853"),
+        (lambda: base64_encode("\ud800"), "E2854"),
+        (lambda: http_post("https://example.com", "\ud800"), "E2852"),
+    ):
+        try:
+            call()
+        except UnicodeEncodeError as exc:
+            raise AssertionError("UnicodeEncodeError leaked from encode builtin") from exc
+        except EchoRuntimeError as exc:
+            assert exc.code == code
+            assert "not valid Unicode" in exc.message
+            continue
+        raise AssertionError("encode builtin accepted an unpaired surrogate")
+

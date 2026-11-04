@@ -19,7 +19,16 @@ def _require_string(
 
 def base64_encode(text: object, location: SourceLocation | None = None) -> str:
     raw = _require_string(text, "base64Encode", "text", location)
-    return base64.b64encode(raw.encode("utf-8")).decode("ascii")
+    try:
+        return base64.b64encode(raw.encode("utf-8")).decode("ascii")
+    except UnicodeEncodeError as exc:
+        # Unpaired surrogates cannot be UTF-8 encoded. CLI / run_source only
+        # catch EchoError, so this must not leak UnicodeEncodeError.
+        raise EchoRuntimeError(
+            "base64Encode() text is not valid Unicode",
+            location,
+            code="E2854",
+        ) from exc
 
 
 def base64_decode(text: object, location: SourceLocation | None = None) -> str:

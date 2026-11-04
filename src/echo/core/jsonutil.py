@@ -6,6 +6,27 @@ import math
 from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
 
 
+def as_unicode_text(raw: str, location: SourceLocation | None = None) -> str:
+    """Return a UTF-8-encodable string, combining UTF-16 surrogate pairs.
+
+    ``json.loads`` already turns ``\\uD800\\uDC00`` into U+10000, but PyYAML
+    leaves the two surrogates in the Python string. Unpaired surrogates are
+    not Unicode scalar values: ``urlEncode`` / ``base64Encode`` / ``httpPost``
+    then leak ``UnicodeEncodeError`` because CLI / run_source only catch
+    ``EchoError``.
+    """
+    try:
+        text = raw.encode("utf-16", "surrogatepass").decode("utf-16")
+        text.encode("utf-8")
+        return text
+    except UnicodeError as exc:
+        raise EchoRuntimeError(
+            "JSON string is not valid Unicode",
+            location,
+            code="E2806",
+        ) from exc
+
+
 def parse_json(text: object, location: SourceLocation | None = None) -> object:
     if not isinstance(text, str):
         raise EchoTypeError("parseJson() requires a string", location, code="E2805")
@@ -37,8 +58,10 @@ def write_json(value: object, location: SourceLocation | None = None) -> str:
 
 
 def json_to_echo(raw: object, location: SourceLocation | None = None) -> object:
-    if raw is None or isinstance(raw, (bool, str)):
+    if raw is None or isinstance(raw, bool):
         return raw
+    if isinstance(raw, str):
+        return as_unicode_text(raw, location)
     if isinstance(raw, int) and not isinstance(raw, bool):
         return raw
     if isinstance(raw, float):
@@ -54,7 +77,7 @@ def json_to_echo(raw: object, location: SourceLocation | None = None) -> object:
         for key, item in raw.items():
             if not isinstance(key, str):
                 raise EchoRuntimeError("JSON object keys must be strings", location, code="E2806")
-            result[key] = json_to_echo(item, location)
+            result[as_unicode_text(key, location)] = json_to_echo(item, location)
         return result
     raise EchoRuntimeError("Unsupported JSON value", location, code="E2806")
 

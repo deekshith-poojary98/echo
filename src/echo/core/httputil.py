@@ -13,6 +13,18 @@ HttpOpener = Callable[..., object]
 DEFAULT_TIMEOUT_SECONDS = 30.0
 
 
+def _require_utf8_text(value: str, method: str, what: str, location: SourceLocation | None) -> str:
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise EchoRuntimeError(
+            f"{method}() {what} is not valid Unicode",
+            location,
+            code="E2852",
+        ) from exc
+    return value
+
+
 def _require_url(value: object, method: str, location: SourceLocation | None) -> str:
     if not isinstance(value, str):
         raise EchoTypeError(f"{method}() url must be a string", location, code="E2852")
@@ -25,13 +37,13 @@ def _require_url(value: object, method: str, location: SourceLocation | None) ->
     # responses whose status is None — int(None) leaked TypeError.
     if urlparse(value).scheme.lower() not in {"http", "https"}:
         raise EchoRuntimeError(f"{method}() url must be an http or https URL", location, code="E2852")
-    return value
+    return _require_utf8_text(value, method, "url", location)
 
 
 def _require_body(value: object, method: str, location: SourceLocation | None) -> str:
     if not isinstance(value, str):
         raise EchoTypeError(f"{method}() body must be a string", location, code="E2852")
-    return value
+    return _require_utf8_text(value, method, "body", location)
 
 
 def _require_headers(value: object, method: str, location: SourceLocation | None) -> dict[str, str]:
@@ -43,7 +55,9 @@ def _require_headers(value: object, method: str, location: SourceLocation | None
             raise EchoTypeError(f"{method}() header names must be strings", location, code="E2852")
         if not isinstance(item, str):
             raise EchoTypeError(f"{method}() header values must be strings", location, code="E2852")
-        headers[key] = item
+        name = _require_utf8_text(key, method, "header names", location)
+        text = _require_utf8_text(item, method, "header values", location)
+        headers[name] = text
     return headers
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from echo.core.jsonutil import echo_to_json, json_to_echo
+from echo.core.jsonutil import as_unicode_text, echo_to_json, json_to_echo
 from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
 
 
@@ -93,6 +93,10 @@ def yaml_to_echo(
             for key, item in raw.items():
                 if not isinstance(key, str):
                     raise EchoRuntimeError("YAML mapping keys must be strings", location, code="E2855")
+                try:
+                    key = as_unicode_text(key, location)
+                except EchoRuntimeError as exc:
+                    raise EchoRuntimeError("Unsupported YAML value", location, code="E2855") from exc
                 result[key] = yaml_to_echo(item, location, tracking)
             return result
         finally:
