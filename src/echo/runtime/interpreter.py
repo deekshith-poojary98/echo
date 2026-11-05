@@ -193,6 +193,7 @@ from echo.runtime.functions import (
 )
 from echo.runtime.operators import binary_op, echo_equal, unary_op
 from echo.runtime.values import (
+    echo_print,
     echo_type_name,
     format_type,
     format_value,
@@ -1150,7 +1151,7 @@ class Interpreter:
 
     def _dispatch_builtin(self, method: str, target: object, args: list[object], env: Environment, location: SourceLocation) -> object:
         if method == "say":
-            print(" ".join(stringify(value) for value in args))
+            echo_print(" ".join(stringify(value) for value in args))
             return None
         if method == "trace":
             value = target if target is not None else _first(args, method, location)
@@ -1164,10 +1165,10 @@ class Interpreter:
                 fname = env.current_function_name()
             where = f" (in {fname})"
             at = f" at {location}" if location is not None else ""
-            print(f"TRACE: {rendered}{where}{at}")
+            echo_print(f"TRACE: {rendered}{where}{at}")
             return value
         if method == "eprint":
-            print(" ".join(stringify(value) for value in args), file=sys.stderr)
+            echo_print(" ".join(stringify(value) for value in args), file=sys.stderr)
             return None
         if method == "wait":
             if not args:
@@ -2341,7 +2342,7 @@ class Interpreter:
             rendered = "<nested too deeply>"
         where = f" (in {env.current_function_name()})"
         at = f" at {location}" if location is not None else ""
-        print(f"WATCH: {name} {action} {rendered}{where}{at}")
+        echo_print(f"WATCH: {name} {action} {rendered}{where}{at}")
 
     def watched_snapshot(self, env: Environment | None = None) -> list[tuple[str, str]]:
         snapshot: list[tuple[str, str]] = []

@@ -3,7 +3,7 @@ from echo.errors import EchoRuntimeError, LexError, ParseError
 from echo.frontend.lexer import Lexer
 from echo.frontend.parser import Parser
 from echo.runtime.host import Host
-from helpers import assert_no_python_leak, run_echo
+from helpers import ExecutionResult, assert_no_python_leak, run_echo
 
 
 def test_foreach_over_int_is_echo_error_not_python():
@@ -1263,4 +1263,77 @@ def test_url_encode_unpaired_surrogate_direct_is_echo_error():
             assert "not valid Unicode" in exc.message
             continue
         raise AssertionError("encode builtin accepted an unpaired surrogate")
+
+
+def _run_echo_utf8_stdout(source: str, *, host: Host | None = None) -> ExecutionResult:
+    """Like run_echo, but stdout is a real UTF-8 stream.
+
+    StringIO accepts unpaired surrogates, so it hides the UnicodeEncodeError
+    that ``print`` raises on a UTF-8 tty / pipe.
+    """
+    import io
+    from contextlib import redirect_stdout
+
+    from echo.cli.main import run_source
+
+    buf = io.BytesIO()
+    stream = io.TextIOWrapper(buf, encoding="utf-8", errors="strict", newline="")
+    try:
+        with redirect_stdout(stream):
+            exit_code = run_source(source, filename="<test>", plain=True, host=host)
+        stream.flush()
+    except UnicodeEncodeError as exc:
+        raise AssertionError("UnicodeEncodeError leaked from run_source") from exc
+    return ExecutionResult(exit_code, buf.getvalue().decode("utf-8"))
+
+
+def test_list_files_non_utf8_name_does_not_leak_python(tmp_path):
+    # Linux file names are bytes. A latin-1 ``café.txt`` becomes a Python
+    # str with U+DCE9 via surrogateescape. say(listFiles(".")) then leaked
+    # UnicodeEncodeError because print() encodes stdout as UTF-8.
+    import os
+
+    raw = os.fsencode(tmp_path) + b"/" + b"caf\xe9.txt"
+    fd = os.open(raw, os.O_CREAT | os.O_WRONLY, 0o644)
+    os.write(fd, b"hi")
+    os.close(fd)
+    (tmp_path / "ok.txt").write_text("ok", encoding="utf-8")
+
+    result = _run_echo_utf8_stdout('say(listFiles("."));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert "ok.txt" in result.output
+    assert "caf\\udce9.txt" in result.output
+
+
+def test_say_non_utf8_env_value_does_not_leak_python(monkeypatch):
+    monkeypatch.setenv("ECHO_BAD_NAME", "caf\udce9")
+    result = _run_echo_utf8_stdout('say(env("ECHO_BAD_NAME"));\n')
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "caf\\udce9"
+
+
+def test_read_file_still_opens_non_utf8_listed_name(tmp_path):
+    import os
+
+    raw = os.fsencode(tmp_path) + b"/" + b"caf\xe9.txt"
+    fd = os.open(raw, os.O_CREAT | os.O_WRONLY, 0o644)
+    os.write(fd, b"secret")
+    os.close(fd)
+
+    result = _run_echo_utf8_stdout(
+        """
+names: list = listFiles(".");
+foreach n: str in names {
+    if n != "ok.txt" {
+        say(readFile(n));
+    }
+}
+""",
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "secret"
 
