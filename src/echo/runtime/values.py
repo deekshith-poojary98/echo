@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 from echo.errors import EchoRuntimeError, EchoTypeError, SourceLocation
 from echo.frontend.ast.nodes import (
     ClassType,
@@ -360,6 +362,24 @@ def quote_string(value: str) -> str:
         .replace("\r", "\\r")
     )
     return f'"{escaped}"'
+
+
+def echo_print(text: str, *, file: object | None = None) -> None:
+    """Print ``text`` without leaking ``UnicodeEncodeError``.
+
+    Linux file names and ``os.environ`` values use surrogate-escape for bytes
+    that are not UTF-8. Those strings are valid Python ``str`` values, so
+    ``listFiles`` / ``env`` / ``cwd`` can return them. ``print`` to a UTF-8
+    stdout then raises, and CLI / ``run_source`` only catch ``EchoError``.
+    """
+    stream = sys.stderr if file is sys.stderr else sys.stdout if file is None else file
+    try:
+        print(text, file=stream)
+        return
+    except UnicodeEncodeError:
+        encoding = getattr(stream, "encoding", None) or "utf-8"
+        safe = text.encode(encoding, errors="backslashreplace").decode(encoding, errors="replace")
+        print(safe, file=stream)
 
 
 def stringify(value: object, nested: bool = False, seen: set[int] | None = None) -> str:

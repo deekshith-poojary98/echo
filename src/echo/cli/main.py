@@ -33,6 +33,7 @@ from echo.runtime.functions import EchoFunction
 from echo.runtime.host import Host, resolve_filesystem_path
 from echo.runtime.interpreter import Interpreter
 from echo.runtime.builtins import builtin_names
+from echo.runtime.values import echo_print
 from echo.semantics.analyzer import SemanticAnalyzer
 from echo.semantics.modules import ModuleSymbols
 from echo.semantics.scope import Scope
@@ -211,9 +212,13 @@ def _print_stack(interpreter: Interpreter, plain: bool) -> None:
 
 def _print_plain_error(title: str, message: str, plain: bool) -> None:
     if not plain and Console is not None and Panel is not None:
-        Console().print(Panel(message, title=title, border_style="red", expand=False))
-        return
-    print(f"{title}: {message}")
+        try:
+            Console().print(Panel(message, title=title, border_style="red", expand=False))
+            return
+        except UnicodeEncodeError:
+            # Same surrogate-escape names that crash say() can appear in diagnostics.
+            pass
+    echo_print(f"{title}: {message}")
 
 
 def main(argv: list[str] | None = None) -> int:
