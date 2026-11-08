@@ -1055,6 +1055,17 @@ def do_write_file(path: object, contents: object, host: Host, location: SourceLo
     _reject_embedded_nul(path, "writeFile", "path", location, "E2803")
     target = _resolve_host_path(host, path, location, "E2803")
     try:
+        # Path.write_text() opens with mode "w" before encoding. Surrogate-escaped
+        # env() / listFiles() strings then truncated an existing file to empty
+        # and still aborted with E2803.
+        contents.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise EchoRuntimeError(
+            "writeFile() contents is not valid Unicode",
+            location,
+            code="E2803",
+        ) from exc
+    try:
         target.write_text(contents, encoding="utf-8")
     except (OSError, ValueError) as exc:
         raise EchoRuntimeError(f"cannot write file: {path}", location, code="E2803") from exc
