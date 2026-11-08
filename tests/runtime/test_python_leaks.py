@@ -1337,3 +1337,33 @@ foreach n: str in names {
     assert_no_python_leak(result)
     assert result.output.strip() == "secret"
 
+
+def test_write_file_non_utf8_contents_does_not_truncate_existing(tmp_path):
+    # write_text() used to open with mode "w" before encoding, so a
+    # surrogate-escaped env value truncated keep.txt to empty, then aborted.
+    keep = tmp_path / "keep.txt"
+    keep.write_text("precious", encoding="utf-8")
+    result = run_echo(
+        'writeFile("keep.txt", env("ECHO_BAD_NAME"));\nsay("reached");\n',
+        host=Host(cwd=tmp_path, environ={"ECHO_BAD_NAME": "caf\udce9"}),
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not valid Unicode" in result.output
+    assert "E2803" in result.output
+    assert "reached" not in result.lines
+    assert keep.read_text(encoding="utf-8") == "precious"
+
+
+def test_write_file_non_utf8_contents_does_not_create_empty_file(tmp_path):
+    dest = tmp_path / "out.txt"
+    result = run_echo(
+        'writeFile("out.txt", env("ECHO_BAD_NAME"));\n',
+        host=Host(cwd=tmp_path, environ={"ECHO_BAD_NAME": "caf\udce9"}),
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not valid Unicode" in result.output
+    assert "E2803" in result.output
+    assert not dest.exists()
+
