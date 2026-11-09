@@ -552,6 +552,14 @@ def test_copy_file_directory_src_aborts(tmp_path):
     assert "not a file" in result.output
 
 
+def test_read_file_directory_is_not_a_file(tmp_path):
+    (tmp_path / "folder").mkdir()
+    result = run_echo('say(readFile("folder"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a file" in result.output
+
+
 def test_copy_file_denied_on_restricted_host(tmp_path):
     (tmp_path / "src.bin").write_bytes(b"x")
     result = run_echo(

@@ -1015,6 +1015,16 @@ def _resolve_host_path(
         raise EchoRuntimeError(f"cannot resolve path: {path}", location, code=code) from exc
 
 
+def _existing_non_file(target: Path) -> bool:
+    """True for directories, devices, FIFOs, and sockets.
+
+    ``Path.is_file()`` is False for those, and ``fileExists()`` already uses
+    that check. ``read_text()`` / ``copyfile()`` on ``/dev/zero`` or a FIFO
+    never see EOF, so the CLI would hang until OOM or a writer appears.
+    """
+    return target.exists() and not target.is_file()
+
+
 def do_read_file(path: object, host: Host, location: SourceLocation | None = None) -> str:
     if not host.allow_files:
         raise EchoRuntimeError("readFile() is not available in this host", location, code="E2801")
@@ -1022,6 +1032,8 @@ def do_read_file(path: object, host: Host, location: SourceLocation | None = Non
         raise EchoTypeError("readFile() path must be a string", location, code="E2802")
     _reject_embedded_nul(path, "readFile", "path", location, "E2802")
     target = _resolve_host_path(host, path, location, "E2802")
+    if _existing_non_file(target):
+        raise EchoRuntimeError(f"not a file: {path}", location, code="E2802")
     try:
         return target.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
@@ -1040,6 +1052,8 @@ def do_read_file_or(path: object, fallback: object, host: Host, location: Source
     _reject_embedded_nul(path, "readFileOr", "path", location, "E2802")
     try:
         target = host.resolve_path(path)
+        if _existing_non_file(target):
+            return fallback
         return target.read_text(encoding="utf-8")
     except (FileNotFoundError, UnicodeDecodeError, OSError, ValueError):
         return fallback
@@ -1554,7 +1568,7 @@ def do_copy_file(src: object, dest: object, host: Host, location: SourceLocation
     _reject_embedded_nul(dest, "copyFile", "dest", location, "E2802")
     source = _resolve_host_path(host, src, location, "E2802")
     target = _resolve_host_path(host, dest, location, "E2802")
-    if source.is_dir():
+    if source.is_dir() or _existing_non_file(source):
         raise EchoRuntimeError(f"not a file: {src}", location, code="E2802")
     if target.is_dir():
         raise EchoRuntimeError(f"destination is a directory: {dest}", location, code="E2802")

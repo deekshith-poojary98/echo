@@ -1337,3 +1337,61 @@ foreach n: str in names {
     assert_no_python_leak(result)
     assert result.output.strip() == "secret"
 
+
+def _run_echo_limited(source: str, host: Host, timeout: float = 5.0) -> ExecutionResult:
+    """Fail fast if a builtin hangs (devices/FIFOs used to never EOF)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(run_echo, source, host=host)
+        return future.result(timeout=timeout)
+
+
+def test_read_file_fifo_is_echo_error_not_hang(tmp_path):
+    import os
+
+    os.mkfifo(tmp_path / "pipe")
+    result = _run_echo_limited('say(readFile("pipe"));\n', host=Host(cwd=tmp_path))
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a file" in result.output
+    assert "E2802" in result.output
+
+
+def test_read_file_or_fifo_returns_fallback_not_hang(tmp_path):
+    import os
+
+    os.mkfifo(tmp_path / "pipe")
+    result = _run_echo_limited(
+        'say(readFileOr("pipe", "offline"));\n',
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 0, result.output
+    assert_no_python_leak(result)
+    assert result.output.strip() == "offline"
+
+
+def test_copy_file_fifo_src_is_echo_error_not_hang(tmp_path):
+    import os
+
+    os.mkfifo(tmp_path / "pipe")
+    result = _run_echo_limited(
+        'copyFile("pipe", "out.bin");\n',
+        host=Host(cwd=tmp_path),
+    )
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a file" in result.output
+    assert not (tmp_path / "out.bin").exists()
+
+
+def test_read_file_dev_zero_is_echo_error_not_hang():
+    import os
+
+    if not os.path.exists("/dev/zero"):
+        return
+    result = _run_echo_limited('say(readFile("/dev/zero"));\n', host=Host())
+    assert result.exit_code == 1
+    assert_no_python_leak(result)
+    assert "not a file" in result.output
+

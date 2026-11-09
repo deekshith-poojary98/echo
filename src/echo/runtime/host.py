@@ -124,6 +124,10 @@ class Host:
         target = self.resolve_path(dest)
         if source.is_dir():
             raise IsADirectoryError(src)
+        if source.exists() and not source.is_file():
+            # Devices (/dev/zero) and FIFOs never EOF; copyfile would hang
+            # and fill the destination until the disk is full.
+            raise OSError(f"not a regular file: {src}")
         if target.is_dir():
             raise IsADirectoryError(dest)
         shutil.copyfile(source, target)
